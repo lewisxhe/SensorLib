@@ -186,7 +186,7 @@ public:
     int setSign(uint8_t x, uint8_t y, uint8_t z)
     {
         int sign = x + y * 2 + z * 4;
-        writeRegister(QMC6310_REG_SIGN, sign);
+        return writeRegister(QMC6310_REG_SIGN, sign);
     }
 
     int configMagnetometer(SensorMode mode, MagRange range, OutputRate odr,
