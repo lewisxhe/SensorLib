@@ -118,7 +118,9 @@ public:
 
     void reset()
     {
-        setRegisterBit(QMC6310_REG_CMD2, 0);
+        writeRegister(QMC6310_REG_CMD2, 0x80);
+        delay(10);
+        writeRegister(QMC6310_REG_CMD2, 0x00);
     }
 
     uint8_t getChipID()
@@ -299,6 +301,29 @@ public:
         z = mag[2];
     }
 
+    void dumpCtrlRegister()
+    {
+        uint8_t buffer[2];
+        readRegister(QMC6310_REG_CMD1, buffer, 2);
+        for (int i = 0; i < 2; ++i) {
+#if defined(ARDUINO)
+            Serial.printf("CMD%d: 0x%02x", i + 1, buffer[i]);
+#else
+            printf("CTRL%d: 0x%02x", i + 1, buffer[i]);
+#endif
+#if defined(ARDUINO)
+            Serial.print("\t\t BIN:");
+            Serial.println(buffer[i], BIN);
+#else
+            LOG("\n");
+#endif
+        }
+#if defined(ARDUINO)
+        Serial.println();
+#else
+        printf("\n");
+#endif
+    }
 
 private:
 
