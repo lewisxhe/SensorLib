@@ -32,6 +32,17 @@
 #include "REG/QMC6310Constants.h"
 #include "SensorCommon.tpp"
 
+class Polar
+{
+public:
+    Polar(): polar(0), Gauss(0), uT(0) {}
+    Polar(float polar, float Gauss, float uT): polar(polar), Gauss(Gauss), uT(uT) {}
+    float polar;
+    float Gauss;
+    float uT;
+};
+
+
 class SensorQMC6310 :
     public SensorCommon<SensorQMC6310>
 {
@@ -271,6 +282,27 @@ public:
         return DEV_WIRE_ERR;
     }
 
+    void setDeclination(float dec)
+    {
+        _declination = dec;
+    }
+
+    bool readPolar(Polar &p)
+    {
+        if (isDataReady()) {
+            readData();
+            float x = getX();
+            float y = getY();
+            float z = getZ();
+            float angle = (atan2(x, -y) / PI) * 180.0 + _declination;
+            angle = _convertAngleToPositive(angle);
+            float magnitude = sqrt(x * x + y * y + z * z);
+            p = Polar(angle, magnitude * 100, magnitude);
+            return true;
+        }
+        return false;
+    }
+
     int16_t getRawX()
     {
         return raw[0];
@@ -334,6 +366,18 @@ public:
 
 private:
 
+    float _convertAngleToPositive(float angle)
+    {
+        if (angle >= 360.0) {
+            angle = angle - 360.0;
+        }
+        if (angle < 0) {
+            angle = angle + 360.0;
+        }
+        return angle;
+    }
+
+
     bool initImpl()
     {
         reset();
@@ -348,6 +392,7 @@ private:
 protected:
     int16_t raw[3];
     float mag[3];
+    float _declination;
     float sensitivity;
     int16_t x_offset = 0, y_offset = 0, z_offset = 0;
 };
