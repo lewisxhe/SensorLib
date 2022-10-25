@@ -31,7 +31,7 @@
 #include <SPI.h>
 #include <Arduino.h>
 #include "SensorQMC6310.hpp"
-#include "SH1106Wire.h"
+#include "SH1106Wire.h"         //Oled display from https://github.com/ThingPulse/esp8266-oled-ssd1306
 
 #define I2C1_SDA                    17
 #define I2C1_SCL                    18
