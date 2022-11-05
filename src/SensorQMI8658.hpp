@@ -858,6 +858,15 @@ public:
         return clrRegisterBit(QMI8658_REG_CTRL8, 4);
     }
 
+    enum TagPriority {
+        PRIORITY0,      // (X > Y> Z)
+        PRIORITY1,      // (X > Z > Y)
+        PRIORITY2,      // (Y > X > Z)
+        PRIORITY3,      // (Y > Z > X)
+        PRIORITY4,      // (Z > X > Y)
+        PRIORITY5,      // (Z > Y > X)
+    };
+
     /**
      * @brief   configTap
      * @note    The calculation of the Tap Detection is based on the accelerometer ODR defined by CTRL2.aODR, refer to Table 22 for details.
@@ -880,7 +889,6 @@ public:
                         second tap should be detected after TapWindow and before
                         DTapWindow.
                         E.g., 50 @500Hz ODR
-     *
      * @param  dTapWindow:Defines the maximum time for a valid second Tap for Double Tap,
                         count start from the first peak of the valid first Tap.
                         E.g., 250 @500Hz ODR
@@ -1078,10 +1086,34 @@ public:
     // 11 – INT2 (with initial value 1)
     // 00 – INT1 (with initial value 0)
     // 10 – INT1 (with initial value 1)
-    int configWakeOnMotion(uint8_t WoMThreshold, IntPin pin, bool intVal, uint8_t blankingTime)
+    int configWakeOnMotion(uint8_t WoMThreshold = 0x8F,
+                           IntPin pin = IntPin2,
+                           bool intVal = true,
+                           uint8_t blankingTime = 0x20
+                          )
     {
+
+        //Function .test only
+
         uint8_t val = 0;
+
+        reset();
+
+        clrRegisterBit(QMI8658_REG_CTRL7, 0);
+
+        //setAccelRange
+        if (writeRegister(QMI8658_REG_CTRL2, 0x8F, (ACC_RANGE_8G << 4)) != DEV_WIRE_NONE) {
+            return DEV_WIRE_ERR;
+        }
+
+        // setAccelOutputDataRate
+        if (writeRegister(QMI8658_REG_CTRL2, 0xF0, ACC_ODR_500Hz) != DEV_WIRE_NONE) {
+            return DEV_WIRE_ERR;
+        }
+
+        //set wom
         writeRegister(QMI8658_REG_CAL1_L, WoMThreshold);
+
         if ( pin == IntPin1) {
             if (intVal) {
                 val = 0x02;
@@ -1096,10 +1128,16 @@ public:
                 val = 0x01;
             }
         }
+
         val <<= 6;
         val |= (blankingTime & 0x3F);
         writeRegister(QMI8658_REG_CAL1_H, val);
         writeCommand(CTRL_CMD_WRITE_WOM_SETTING);
+
+        enableAccelerometer();
+
+        enableINT(pin);
+
         return 0;
     }
 
