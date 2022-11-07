@@ -22,9 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      QMI8658_WakeOnMotion.ino
+ * @file      QMI8658_WakeOnMotionCallBack.ino
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2022-11-05
+ * @date      2022-11-07
  *
  */
 #include <Arduino.h>
@@ -49,8 +49,13 @@ bool interruptFlag = false;
 void setFlag(void)
 {
     interruptFlag = true;
-
 }
+
+void wakeUp()
+{
+    Serial.println("Awake!");
+}
+
 
 void setup()
 {
@@ -104,14 +109,17 @@ void setup()
     Serial.print("Device ID:");
     Serial.println(qmi.getChipID(), HEX);
 
-    // enabling wake on motion low power mode with a threshold of 120 mg and
+    // enabling wake on motion low power mode with a threshold of 200 mg and
     // an accelerometer data rate of 128 Hz.
     qmi.configWakeOnMotion();
 
+
+    qmi.setWakeupMotionEventCallBack(wakeUp);
+
     /*
-    * When the QMI8658 is configured as Wom, the interrupt level is arbitrary,
-    * not absolute high or low, and it is in the jump transition state
-    */
+     * When the QMI8658 is configured as Wom, the interrupt level is arbitrary,
+     * not absolute high or low, and it is in the jump transition state
+     */
     pinMode(IMU_INT1, INPUT_PULLUP);
 #ifdef  IMU_INT2
     pinMode(IMU_INT2, INPUT_PULLUP);
@@ -131,23 +139,7 @@ void loop()
 
     if (interruptFlag) {
         interruptFlag = false;
-        uint8_t status =  qmi.getStatusRegister();
-        Serial.printf("status:0x%X BIN:", status);
-        Serial.println(status, BIN);
-
-        if (status & SensorQMI8658::EVENT_SIGNIFICANT_MOTION) {
-            Serial.println("EVENT_SIGNIFICANT_MOTION");
-        } else  if (status & SensorQMI8658::EVENT_NO_MOTION) {
-            Serial.println("EVENT_NO_MOITON");
-        } else  if (status & SensorQMI8658::EVENT_ANY_MOTION) {
-            Serial.println("EVENT_ANY_MOTION");
-        } else  if (status & SensorQMI8658::EVENT_PEDOMETER_MOTION) {
-            Serial.println("EVENT_PEDOMETER_MOTION");
-        } else  if (status & SensorQMI8658::EVENT_WOM_MOTION) {
-            Serial.println("EVENT_WOM_MOTION");
-        } else  if (status & SensorQMI8658::EVENT_TAP_MOTION) {
-            Serial.println("EVENT_TAP_MOTION");
-        }
+        qmi.readSensorStatus();
     }
 }
 
