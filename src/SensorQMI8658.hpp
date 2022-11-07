@@ -713,6 +713,25 @@ public:
         return clrRegisterBit(QMI8658_REG_CTRL7, 7);
     }
 
+    int enableLockingMechanism()
+    {
+        enableSyncSampleMode();
+        if (writeRegister(QMI8658_REG_CAL1_L, 0x01) != DEV_WIRE_NONE) {
+            return DEV_WIRE_ERR;
+        }
+        return writeCommand(CTRL_CMD_AHB_CLOCK_GATING);
+
+    }
+
+    int disableLockingMechanism()
+    {
+        disableSyncSampleMode();
+        if (writeRegister(QMI8658_REG_CAL1_L, 0x00) != DEV_WIRE_NONE) {
+            return DEV_WIRE_ERR;
+        }
+        return writeCommand(CTRL_CMD_AHB_CLOCK_GATING);
+    }
+
 
     void dumpCtrlRegister()
     {

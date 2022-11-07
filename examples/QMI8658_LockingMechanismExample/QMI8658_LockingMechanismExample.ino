@@ -197,7 +197,7 @@ void setup()
     qmi.enableAccelerometer();
 
     //Enable Locking Mechanism
-    qmi.enableSyncSampleMode();
+    qmi.enableLockingMechanism();
 
     // Set locking data event callback
     qmi.setDataLockingEvevntCallBack(lockingMechanismHandler);
