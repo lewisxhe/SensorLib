@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      QMI8658_BallExample.ino
+ * @file      QMI8658_InterruptBlockExample.ino
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2022-10-16
  *
