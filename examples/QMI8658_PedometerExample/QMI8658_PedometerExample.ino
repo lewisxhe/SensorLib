@@ -47,7 +47,7 @@ void setup()
     while (!Serial);
 
 
-#ifdef USE_TBEAMS3
+#ifdef LILYGO_TBEAM_SUPREME_V3_0
     extern  bool setupPower();
     setupPower();
 #endif

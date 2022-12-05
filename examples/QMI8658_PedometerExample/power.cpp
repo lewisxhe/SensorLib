@@ -8,7 +8,7 @@
  */
 
 
-#ifdef USE_TBEAMS3
+#ifdef LILYGO_TBEAM_SUPREME_V3_0
 #include <Wire.h>
 #include "XPowersAXP2101.tpp"
 #include "XPowersAXP192.tpp"
