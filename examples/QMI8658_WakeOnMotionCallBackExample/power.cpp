@@ -69,7 +69,7 @@ bool setupPower()
 
         PMU->setChargeTargetVoltage(XPOWERS_AXP2101_CHG_VOL_4V4);
 
-#elif defined(LILYGO_TBEAM_M2_V1_0)
+#elif defined(LILYGO_TBEAM_SUPREME_V3_0)
 
         //t-beam m.2 inface
         //gps
