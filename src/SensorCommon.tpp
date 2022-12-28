@@ -77,6 +77,14 @@
 #define log_d(...)
 #endif
 
+#ifndef INPUT
+#define INPUT                 (0x0)
+#endif
+
+#ifndef OUTPUT
+#define OUTPUT                (0x1)
+#endif
+
 
 template <class chipType>
 class SensorCommon
@@ -160,6 +168,21 @@ public:
     }
 
 protected:
+
+
+    bool probe()
+    {
+#if defined(ARDUINO)
+        if (__wire) {
+            __wire->beginTransmission(__addr);
+            return __wire->endTransmission() == 0;
+        }
+        return false;
+#endif
+        return true;
+    }
+
+
     int readRegister(uint8_t reg)
     {
         uint8_t val = 0;
