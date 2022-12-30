@@ -175,7 +175,7 @@ private:
     {
         int cfg1 = readConfig(PORT0);
         if (cfg1 == DEV_WIRE_ERR)return false;
-        writePort(PORT0, 0x03);
+        configPort(PORT0, 0x03);
         if (readConfig(PORT0) != 0x03) {
             return false;
         }
