@@ -110,10 +110,10 @@ public:
         }
         switch (mode) {
         case INPUT:
-            clrRegisterBit(registers, 1 << pin);
+            setRegisterBit(registers, pin);
             break;
         case OUTPUT:
-            setRegisterBit(registers, 1 << pin);
+            clrRegisterBit(registers, pin);
             break;
         default:
             break;
@@ -129,7 +129,7 @@ public:
         } else {
             registers = XL9555_CTRL_INP0;
         }
-        return getRegisterBit(registers, 1 << pin);
+        return getRegisterBit(registers, pin);
     }
 
     void digitalWrite(uint8_t pin, uint8_t val)
@@ -141,7 +141,7 @@ public:
         } else {
             registers = XL9555_CTRL_OUTP0;
         }
-        setRegisterBit(registers, 1 << pin);
+        val ? setRegisterBit(registers, pin) : clrRegisterBit(registers,  pin);
     }
 
     void digitalToggle(uint8_t pin)
