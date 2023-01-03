@@ -64,7 +64,7 @@ public:
 
 
 #if defined(ARDUINO)
-    ExtensionIOXL9555(TwoWire &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = XL9555_SLAVE_ADDRESS)
+    ExtensionIOXL9555(TwoWire &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = XL9555_SLAVE_ADDRESS0)
     {
         __wire = &w;
         __sda = sda;
@@ -80,7 +80,7 @@ public:
         __sda = DEFAULT_SDA;
         __scl = DEFAULT_SCL;
 #endif
-        __addr = XL9555_SLAVE_ADDRESS;
+        __addr = XL9555_SLAVE_ADDRESS0;
     }
 
     ~ExtensionIOXL9555()
@@ -155,9 +155,9 @@ public:
         return readRegister(port == PORT0 ? XL9555_CTRL_INP0 : XL9555_CTRL_INP1);
     }
 
-    int writePort(uint8_t port, uint8_t val)
+    int writePort(uint8_t port, uint8_t mask)
     {
-        return writeRegister(port == PORT0 ? XL9555_CTRL_OUTP0 : XL9555_CTRL_OUTP1, val);
+        return writeRegister(port == PORT0 ? XL9555_CTRL_OUTP0 : XL9555_CTRL_OUTP1, mask);
     }
 
     int readConfig(uint8_t port)
@@ -165,10 +165,11 @@ public:
         return readRegister(port == PORT0 ? XL9555_CTRL_CFG0 : XL9555_CTRL_CFG1);
     }
 
-    int configPort(uint8_t port, uint8_t mode)
+    int configPort(uint8_t port, uint8_t mask)
     {
-        return writeRegister(port == PORT0 ? XL9555_CTRL_CFG0 : XL9555_CTRL_CFG1, mode);
+        return writeRegister(port == PORT0 ? XL9555_CTRL_CFG0 : XL9555_CTRL_CFG1, mask);
     }
+
 
 private:
     bool initImpl()
@@ -176,7 +177,8 @@ private:
         int cfg1 = readConfig(PORT0);
         if (cfg1 == DEV_WIRE_ERR)return false;
         configPort(PORT0, 0x03);
-        if (readConfig(PORT0) != 0x03) {
+        uint8_t val = readConfig(PORT0);
+        if (val != 0x03) {
             return false;
         }
         writePort(PORT0, cfg1);
