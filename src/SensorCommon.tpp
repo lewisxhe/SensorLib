@@ -137,7 +137,7 @@ public:
         if (!__spiSetting) {
             return false;
         }
-        if (mosi != -1 && miso != -1 && sck == -1) {
+        if (mosi != -1 && miso != -1 && sck != -1) {
 #if defined(NRF52840_XXAA) || defined(NRF52832_XXAA)
             __spi->begin();
 #else
