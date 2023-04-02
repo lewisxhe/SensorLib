@@ -143,7 +143,7 @@ public:
 #if defined(ARDUINO)
     bool init(TwoWire &w, int sda = SDA, int scl = SCL, uint8_t addr = BMA423_SLAVE_ADDRESS)
     {
-        __wire = &Wire;
+        __wire = &w;
         __sda = SDA;
         __scl = SCL;
         __addr = addr;
