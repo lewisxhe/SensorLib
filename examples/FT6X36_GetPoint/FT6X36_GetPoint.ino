@@ -99,7 +99,7 @@ void setup()
 
 void loop()
 {
-    uint16_t x[2], y[2];
+    int16_t x[2], y[2];
     if (digitalRead(SENSOR_IRQ) == LOW) {
         uint8_t touched = touch.getPoint(x, y, 2);
         for (int i = 0; i < touched; ++i) {

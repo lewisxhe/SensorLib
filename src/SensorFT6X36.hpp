@@ -194,7 +194,7 @@ public:
         writeRegister(FT6X36_REG_INT_STATUS, 0);
     }
 
-    uint8_t getPoint(uint16_t *x, uint16_t *y, uint8_t size)
+    uint8_t getPoint(int16_t *x, int16_t *y, uint8_t size = 1)
     {
         uint8_t touchedID;
         uint8_t buffer[16];
