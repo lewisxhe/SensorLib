@@ -88,6 +88,17 @@ public:
         deinit();
     }
 
+#if defined(ARDUINO)
+    bool init(TwoWire &w, int sda = SDA, int scl = SCL, uint8_t addr = XL9555_SLAVE_ADDRESS0)
+    {
+        __wire = &Wire;
+        __sda = SDA;
+        __scl = SCL;
+        __addr = addr;
+        return begin();
+    }
+#endif
+
     bool init()
     {
         return begin();
