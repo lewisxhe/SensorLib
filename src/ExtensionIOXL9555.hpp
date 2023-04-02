@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      ExtensionIOXL9555.tpp
+ * @file      ExtensionIOXL9555.hpp
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2022-12-27
  *

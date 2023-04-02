@@ -31,7 +31,7 @@
 #include <SPI.h>
 #include <Arduino.h>
 #include <time.h>
-#include "ExtensionIOXL9555.tpp"
+#include "ExtensionIOXL9555.hpp"
 
 #define I2C_SDA                     8
 #define I2C_SCL                     9
