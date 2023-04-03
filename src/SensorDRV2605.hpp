@@ -189,8 +189,19 @@ public:
 private:
     bool initImpl()
     {
-        // uint8_t id = readRegister(DRV2605_REG_STATUS);
-        // Serial.print("Status 0x"); Serial.println(id, HEX);
+        int chipID = readRegister(DRV2605_REG_STATUS);
+        if (chipID == -1) {
+            return false;
+        }
+        chipID >>= 5;
+
+        if (chipID != DRV2604_CHIP_ID &&
+                chipID != DRV2605_CHIP_ID &&
+                chipID != DRV2604L_CHIP_ID &&
+                chipID != DRV2605L_CHIP_ID ) {
+            LOG("ChipID:0x%x should be 0x03 or 0x04 or 0x06 or 0x07\n", chipID);
+            return false;
+        }
 
         writeRegister(DRV2605_REG_MODE, 0x00); // out of standby
 

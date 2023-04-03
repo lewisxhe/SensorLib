@@ -32,6 +32,11 @@
 
 #define DRV2605_SLAVE_ADDRESS       (0x5A)
 
+#define DRV2604_CHIP_ID             (0x04)              //* DRV2604  (contains RAM, does not contain licensed ROM library)
+#define DRV2605_CHIP_ID             (0x03)              //* DRV2605  (contains licensed ROM library, does not contain RAM)
+#define DRV2604L_CHIP_ID            (0x06)              //* DRV2604L (low-voltage version of the DRV2604 device)
+#define DRV2605L_CHIP_ID            (0x07)              //* DRV2605L (low-voltage version of the DRV2605 device)
+
 #define DRV2605_REG_STATUS          (0x00)              //* Status register
 #define DRV2605_REG_MODE            (0x01)              //* Mode register
 #define DRV2605_MODE_INTTRIG        (0x00)              //* Internal trigger mode
