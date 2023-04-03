@@ -12,12 +12,14 @@
 
 Support list:
 
-| Sensor  | Description  | I2C | SPI |
-| ------- | ------------ | --- | --- |
-| PCF8563 | RTC          | ✔️   | ❌   |
-| QMI8658 | IMU          | ✔️   | ✔️   |
-| QMC6310 | MAG          | ✔️   | ❌   |
-| XL9555  | I/O expander | ✔️   | ❌   |
+| Sensor  | Description      | I2C | SPI |
+| ------- | ---------------- | --- | --- |
+| PCF8563 | RTC              | ✔️   | ❌   |
+| QMI8658 | IMU              | ✔️   | ✔️   |
+| QMC6310 | MAG              | ✔️   | ❌   |
+| XL9555  | I/O expander     | ✔️   | ❌   |
+| FT6X36  | Capacitive touch | ✔️   | ❌   |
+| BMA423  | Accelerometer    | ✔️   | ❌   |
 
 
 
