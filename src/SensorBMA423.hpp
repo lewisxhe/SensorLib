@@ -170,6 +170,7 @@ public:
     bool enablePowerSave()
     {
         uint8_t val;
+
         val = readRegister(BMA4_POWER_CONF_ADDR);
         val |= BMA4_ADVANCE_POWER_SAVE_MSK;
         writeRegister(BMA4_POWER_CONF_ADDR, val);
@@ -408,9 +409,25 @@ public:
         }
     }
 
+    uint16_t enableStepDetector(uint8_t enable)
+    {
+        uint8_t feature_config[BMA423_FEATURE_SIZE] = {0};
+        int rslt;
+        /* Step detector enable bit pos. is 1 byte ahead of the base address */
+        uint8_t index = BMA423_STEP_CNTR_OFFSET + 1;
 
+        rslt = readRegister(BMA4_FEATURE_CONFIG_ADDR, feature_config,
+                            BMA423_FEATURE_SIZE);
+        if (rslt != -1) {
+            feature_config[index] = ((feature_config[index] & ~0x08) | ((enable << 3) & 0x08));
+            rslt = writeRegister(BMA4_FEATURE_CONFIG_ADDR, feature_config,
+                                 BMA423_FEATURE_SIZE);
+        }
 
-    bool setFeature(uint8_t feature, uint8_t enable)
+        return rslt != -1;
+    }
+
+    bool enableFeature(uint8_t feature, uint8_t enable)
     {
         uint8_t buffer[BMA423_FEATURE_SIZE] = {0};
         int rslt;
@@ -427,35 +444,129 @@ public:
                 rslt = feature_disable(feature, len, buffer);
             }
         }
-        return rslt != -1;
+        return rslt != 0;
     }
 
-
-    bool enableStepCountIRQ(bool en)
+    bool enableInterrupt(
+        /*! Trigger condition of interrupt pin */
+        uint8_t edge_ctrl = BMA4_LEVEL_TRIGGER,
+        /*! Level of interrupt pin */
+        uint8_t level = BMA4_ACTIVE_HIGH,
+        /*! Behaviour of interrupt pin to open drain */
+        uint8_t od = BMA4_PUSH_PULL,
+        /*! Output enable for interrupt pin */
+        uint8_t output_en = BMA4_OUTPUT_ENABLE,
+        /*! Input enable for interrupt pin */
+        uint8_t input_en = BMA4_INPUT_DISABLE,
+        /*! Variable used to select the interrupt pin1 or pin2 for interrupt configuration. */
+        uint8_t int_line = BMA4_INTR1_MAP
+    )
     {
-        return  (interruptMap(BMA4_INTR1_MAP,  INT_STEP_CNTR, en));
+        uint8_t interrupt_address_array[2] = {BMA4_INT1_IO_CTRL_ADDR, BMA4_INT2_IO_CTRL_ADDR};
+        uint8_t data = 0;
+        if (int_line > 1) {
+            return false;
+        }
+        data = ((uint8_t)((edge_ctrl & BMA4_INT_EDGE_CTRL_MASK) |
+                          ((level << 1) & BMA4_INT_LEVEL_MASK) |
+                          ((od << 2) & BMA4_INT_OPEN_DRAIN_MASK) |
+                          ((output_en << 3) & BMA4_INT_OUTPUT_EN_MASK) |
+                          ((input_en << 4) & BMA4_INT_INPUT_EN_MASK)));
+
+        return  writeRegister(interrupt_address_array[int_line],  &data, 1) != -1;
     }
 
-    bool enableTiltIRQ(bool en)
+    uint16_t readIrqStatus()
     {
-        return  (interruptMap(BMA4_INTR1_MAP, INT_TILT, en));
+        uint8_t data[2] = {0};
+        if (readRegister(BMA4_INT_STAT_0_ADDR, data, 2) != -1) {
+            int_status = data[0] | (data[1] << 8);
+            return int_status;
+        }
+        return 0;
     }
 
-    bool enableWakeupIRQ(bool en)
+    uint16_t getIrqStatus()
     {
-        return  (interruptMap(BMA4_INTR1_MAP, INT_WAKEUP, en));
+        return int_status;
     }
 
-    bool enableAnyNoMotionIRQ(bool en)
+    bool enableStepCountIRQ()
     {
-        return  (interruptMap(BMA4_INTR1_MAP, INT_ANY_NO_MOTION, en));
+        return  (interruptMap(BMA4_INTR1_MAP,  INT_STEP_CNTR, true));
     }
 
-    bool enableActivityIRQ(bool en)
+    bool enableTiltIRQ()
     {
-        return  (interruptMap(BMA4_INTR1_MAP, INT_ACTIVITY, en));
+        return  (interruptMap(BMA4_INTR1_MAP, INT_TILT, true));
     }
 
+    bool enableWakeupIRQ()
+    {
+        return  (interruptMap(BMA4_INTR1_MAP, INT_WAKEUP, true));
+    }
+
+    bool enableAnyNoMotionIRQ()
+    {
+        return  (interruptMap(BMA4_INTR1_MAP, INT_ANY_NO_MOTION, true));
+    }
+
+    bool enableActivityIRQ()
+    {
+        return  (interruptMap(BMA4_INTR1_MAP, INT_ACTIVITY, true));
+    }
+
+
+    bool disableStepCountIRQ()
+    {
+        return  (interruptMap(BMA4_INTR1_MAP,  INT_STEP_CNTR, false));
+    }
+
+    bool disableTiltIRQ()
+    {
+        return  (interruptMap(BMA4_INTR1_MAP, INT_TILT, false));
+    }
+
+    bool disableWakeupIRQ()
+    {
+        return  (interruptMap(BMA4_INTR1_MAP, INT_WAKEUP, false));
+    }
+
+    bool disableAnyNoMotionIRQ()
+    {
+        return  (interruptMap(BMA4_INTR1_MAP, INT_ANY_NO_MOTION, false));
+    }
+
+    bool disableActivityIRQ()
+    {
+        return  (interruptMap(BMA4_INTR1_MAP, INT_ACTIVITY, false));
+    }
+
+
+    inline bool isActivity()
+    {
+        return (int_status & BMA423_ACTIVITY_INT);
+    }
+
+    inline bool isTilt()
+    {
+        return (int_status & BMA423_TILT_INT);
+    }
+
+    inline bool isDoubleTap()
+    {
+        return (int_status & BMA423_WAKEUP_INT);
+    }
+
+    inline bool isAnyNoMotion()
+    {
+        return (int_status & BMA423_ACTIVITY_INT);
+    }
+
+    inline bool isStepCounter()
+    {
+        return (int_status & BMA423_STEP_CNTR_INT);
+    }
 
 private:
 
@@ -464,12 +575,7 @@ private:
         int rslt;
         uint8_t data[3] = {0, 0, 0};
         uint8_t index[2] = {BMA4_INT_MAP_1_ADDR, BMA4_INT_MAP_2_ADDR};
-
-        /* Check the bma4 structure as NULL */
-
-
         rslt = readRegister(BMA4_INT_MAP_1_ADDR, data, 3);
-
         if (enable) {
             /* Feature interrupt mapping */
             data[int_line] |= (uint8_t)(int_map & (0x00FF));
@@ -699,6 +805,9 @@ private:
     {
         return -1;
     }
+
+    uint16_t int_status;
+
 
 protected:
 

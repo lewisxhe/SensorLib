@@ -703,4 +703,26 @@ static const unsigned char bma423_config_file[] = {
 #define BMA4_INPUT_ENABLE           (1)
 #define BMA4_INPUT_DISABLE          (0)
 
+
+/**\name    OUTPUT TYPE ENABLE POSITION AND MASK*/
+#define BMA4_INT_EDGE_CTRL_MASK         (0x01)
+#define BMA4_INT_EDGE_CTRL_POS          (0x00)
+#define BMA4_INT_LEVEL_MASK             (0x02)
+#define BMA4_INT_LEVEL_POS              (0x01)
+#define BMA4_INT_OPEN_DRAIN_MASK        (0x04)
+#define BMA4_INT_OPEN_DRAIN_POS         (0x02)
+#define BMA4_INT_OUTPUT_EN_MASK         (0x08)
+#define BMA4_INT_OUTPUT_EN_POS          (0x03)
+#define BMA4_INT_INPUT_EN_MASK          (0x10)
+#define BMA4_INT_INPUT_EN_POS           (0x04)
+
+
+/**\name Interrupt status macros */
+#define BMA423_STEP_CNTR_INT            (0x02)
+#define BMA423_ACTIVITY_INT             (0x04)
+#define BMA423_TILT_INT                 (0x08)
+#define BMA423_WAKEUP_INT               (0x20)
+#define BMA423_ANY_NO_MOTION_INT        (0x40)
+#define BMA423_ERROR_INT                (0x80)
+
 #endif

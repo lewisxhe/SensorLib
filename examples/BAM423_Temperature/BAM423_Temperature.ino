@@ -32,10 +32,17 @@
 #include <Arduino.h>
 #include "SensorBMA423.hpp"
 
-// lilygo t-watch pin
-#define I2C_SDA                     21
-#define I2C_SCL                     22
-#define BOARD_ACCE_IRQ              39
+#ifndef SENSOR_SDA
+#define SENSOR_SDA  21
+#endif
+
+#ifndef SENSOR_SCL
+#define SENSOR_SCL  22
+#endif
+
+#ifndef SENSOR_IRQ
+#define SENSOR_IRQ  39
+#endif
 
 SensorBMA423 accel;
 
@@ -44,9 +51,9 @@ void setup()
     Serial.begin(115200);
     while (!Serial);
 
-    pinMode(BOARD_ACCE_IRQ, INPUT);
+    pinMode(SENSOR_IRQ, INPUT);
 
-    if (!accel.begin(Wire, BMA423_SLAVE_ADDRESS, I2C_SDA, I2C_SCL)) {
+    if (!accel.begin(Wire, BMA423_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
         Serial.println("Failed to find BMA423 - check your wiring!");
         while (1) {
             delay(1000);
