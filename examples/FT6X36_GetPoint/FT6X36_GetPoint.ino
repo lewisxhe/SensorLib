@@ -47,41 +47,10 @@
 SensorFT6X36 touch;
 
 
-void deviceScan(TwoWire *_port)
-{
-    uint8_t err, addr;
-    int nDevices = 0;
-    for (addr = 1; addr < 127; addr++) {
-        _port->beginTransmission(addr);
-        err = _port->endTransmission();
-        if (err == 0) {
-            Serial.print("I2C device found at address 0x");
-            if (addr < 16)
-                Serial.print("0");
-            Serial.print(addr, HEX);
-            Serial.println(" !");
-            nDevices++;
-        } else if (err == 4) {
-            Serial.print("Unknow error at address 0x");
-            if (addr < 16)
-                Serial.print("0");
-            Serial.println(addr, HEX);
-        }
-    }
-    if (nDevices == 0)
-        Serial.println("No I2C devices found\n");
-    else
-        Serial.println("done\n");
-}
-
-
 void setup()
 {
     Serial.begin(115200);
     while (!Serial);
-
-    Wire.begin(SENSOR_SDA, SENSOR_SCL);
-    deviceScan(&Wire);
 
     pinMode(SENSOR_IRQ, INPUT);
 
