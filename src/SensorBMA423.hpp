@@ -85,13 +85,14 @@ public:
         TEMP_KELVIN,
     };
 
+    // Calculate direction facing the front of the chip
     enum SensorDir {
-        DIRECTION_TOP_EDGE,
-        DIRECTION_BOTTOM_EDGE,
-        DIRECTION_LEFT_EDGE,
-        DIRECTION_RIGHT_EDGE,
-        DIRECTION_DISP_UP,
-        DIRECTION_DISP_DOWN
+        DIRECTION_BOTTOM_LEFT,
+        DIRECTION_TOP_RIGHT,
+        DIRECTION_TOP_LEFT,
+        DIRECTION_BOTTON_RIGHT,
+        DIRECTION_BOTTON,
+        DIRECTION_TOP
     };
 
     enum Feature {
@@ -318,23 +319,24 @@ public:
         uint16_t absZ = abs(z);
         if ((absZ > absX) && (absZ > absY)) {
             if (z > 0) {
-                return  DIRECTION_DISP_DOWN;
+                return  DIRECTION_TOP;
             } else {
-                return DIRECTION_DISP_UP;
+                return DIRECTION_BOTTON;
             }
         } else if ((absY > absX) && (absY > absZ)) {
             if (y > 0) {
-                return DIRECTION_BOTTOM_EDGE;
+                return DIRECTION_TOP_RIGHT;
             } else {
-                return  DIRECTION_TOP_EDGE;
+                return  DIRECTION_BOTTOM_LEFT;
             }
         } else {
             if (x < 0) {
-                return  DIRECTION_RIGHT_EDGE;
+                return  DIRECTION_BOTTON_RIGHT;
             } else {
-                return DIRECTION_LEFT_EDGE;
+                return DIRECTION_TOP_LEFT;
             }
         }
+        return 0;
     }
 
     bool enableStepCounter()
