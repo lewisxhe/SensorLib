@@ -108,7 +108,7 @@ void loop()
                  "\r\n |                | " \
                  "\r\n |________________| \r\n" );
         break;
-    case SensorBMA423::DIRECTION_BOTTON_RIGHT:
+    case SensorBMA423::DIRECTION_BOTTOM_RIGHT:
         sprintf( report, "\r\n  ________________  " \
                  "\r\n |                | " \
                  "\r\n |                | " \
@@ -118,7 +118,7 @@ void loop()
                  "\r\n |             *  | " \
                  "\r\n |________________| \r\n" );
         break;
-    case SensorBMA423::DIRECTION_BOTTON:
+    case SensorBMA423::DIRECTION_BOTTOM:
         sprintf( report, "\r\n  ________________  " \
                  "\r\n |________________| " \
                  "\r\n    *               \r\n" );

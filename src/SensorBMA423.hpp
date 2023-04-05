@@ -90,9 +90,29 @@ public:
         DIRECTION_BOTTOM_LEFT,
         DIRECTION_TOP_RIGHT,
         DIRECTION_TOP_LEFT,
-        DIRECTION_BOTTON_RIGHT,
-        DIRECTION_BOTTON,
+        DIRECTION_BOTTOM_RIGHT,
+        DIRECTION_BOTTOM,
         DIRECTION_TOP
+    };
+
+    // Chip orientation and orientation
+    enum SensorRemap {
+        // Top right corner
+        REMAP_TOP_LAYER_RIGHT_CORNER,
+        // Front bottom left corner
+        REMAP_TOP_LAYER_BOTTOM_LEFT_CORNER,
+        // Top left corner
+        REMAP_TOP_LAYER_LEFT_CORNER,
+        // Top bottom right corner
+        REMAP_TOP_LAYER_BOTTOM_RIGHT_CORNER,
+        // Bottom top right corner
+        REMAP_BOTTOM_LAYER_TOP_RIGHT_CORNER,
+        // Bottom bottom left corner
+        REMAP_BOTTOM_LAYER_BOTTOM_LEFT_CORNER,
+        // Bottom bottom right corner
+        REMAP_BOTTOM_LAYER_BOTTOM_RIGHT_CORNER,
+        // Bottom top left corner
+        REMAP_BOTTOM_LAYER_TOP_LEFT_CORNER,
     };
 
     enum Feature {
@@ -321,7 +341,7 @@ public:
             if (z > 0) {
                 return  DIRECTION_TOP;
             } else {
-                return DIRECTION_BOTTON;
+                return DIRECTION_BOTTOM;
             }
         } else if ((absY > absX) && (absY > absZ)) {
             if (y > 0) {
@@ -331,12 +351,40 @@ public:
             }
         } else {
             if (x < 0) {
-                return  DIRECTION_BOTTON_RIGHT;
+                return  DIRECTION_BOTTOM_RIGHT;
             } else {
                 return DIRECTION_TOP_LEFT;
             }
         }
         return 0;
+    }
+
+    bool setReampAxes(SensorRemap remap)
+    {
+        //Top
+        // No.1 REG: 0x3e -> 0x88   REG: 0x3f -> 0x0
+        // No.2 REG: 0x3e -> 0xac   REG: 0x3f -> 0x0
+        // No.3 REG: 0x3e -> 0x85   REG: 0x3f -> 0x0
+        // No.4 REG: 0x3e -> 0xa1   REG: 0x3f -> 0x0
+
+        // Bottom
+        // No.5 REG: 0x3e -> 0x81   REG: 0x3f -> 0x1
+        // No.6 REG: 0x3e -> 0xa5   REG: 0x3f -> 0x1
+        // No.7 REG: 0x3e -> 0x8c   REG: 0x3f -> 0x1
+        // No.8 REG: 0x3e -> 0xa8   REG: 0x3f -> 0x1
+
+        uint8_t configReg0[] = {0x88, 0xAC, 0x85, 0xA1, 0x81, 0xA5, 0x8C, 0xA8};
+        if (remap > sizeof(configReg0) / sizeof(configReg0[0])) {
+            return false;
+        }
+        uint8_t buffer[BMA423_FEATURE_SIZE] = {0};
+        uint8_t index = BMA423_AXES_REMAP_OFFSET;
+        if (readRegister(BMA4_FEATURE_CONFIG_ADDR,  buffer, BMA423_FEATURE_SIZE) == DEV_WIRE_ERR) {
+            return false;
+        }
+        buffer[index] = configReg0[remap];
+        buffer[index + 1] = remap >= 4 ? 0x00 : 0x01;
+        return writeRegister(BMA4_FEATURE_CONFIG_ADDR,  buffer, BMA423_FEATURE_SIZE) != DEV_WIRE_ERR;
     }
 
     bool enableStepCounter()
