@@ -121,8 +121,8 @@ public:
     bool init(TwoWire &w, int sda = SDA, int scl = SCL, uint8_t addr = QMC6310_SLAVE_ADDRESS)
     {
         __wire = &w;
-        __sda = SDA;
-        __scl = SCL;
+        __sda = sda;
+        __scl = scl;
         __addr = addr;
         return begin();
     }
