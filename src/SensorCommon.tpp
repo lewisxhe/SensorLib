@@ -37,7 +37,7 @@
 #include <SPI.h>
 #endif
 
-
+#define SENSOR_PIN_NONE     (-1)
 #define DEV_WIRE_NONE       (0)
 #define DEV_WIRE_ERR        (-1)
 #define DEV_WIRE_TIMEOUT    (-2)
@@ -85,18 +85,31 @@
 #define OUTPUT                (0x1)
 #endif
 
+#ifndef RISING
+#define RISING                (0x01)
+#endif
+
+#ifndef FALLING
+#define FALLING               (0x02)
+#endif
+
 
 template <class chipType>
 class SensorCommon
 {
-    typedef int (*iic_fptr_t)(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t len);
+    typedef int (*iic_fptr_t)(uint8_t devAddr, int regAddr, uint8_t *data, uint8_t len);
+    typedef int (*digitalReadCb_t)(uint32_t pinNumber);
+    typedef void (*digitalWirteCb_t)(uint32_t pinNumber, uint8_t value);
+    typedef void (*pinModeCb_t)(uint32_t pinNumber, uint8_t mode);
 
 public:
     ~SensorCommon()
     {
+#if defined(ARDUINO)
         if (__spiSetting) {
             delete __spiSetting;
         }
+#endif
     }
 
     void setSpiSetting(uint32_t freq, uint8_t dataOrder = SPI_DATA_ORDER, uint8_t dataMode = SPI_MODE0)
@@ -129,8 +142,8 @@ public:
     {
         LOG("Using SPI interface.\n");
         if (__has_init)return thisChip().initImpl();
-        __spi = &spi;
         __cs  = cs;
+        __spi = &spi;
         pinMode(__cs, OUTPUT);
         digitalWrite(__cs, HIGH);
         __spiSetting = new  DEFAULT_SPISETTING;
@@ -167,6 +180,22 @@ public:
         return __has_init;
     }
 
+    void setDigitalWriteCallback(digitalWirteCb_t cb)
+    {
+        thisDigitalWriteCallback = cb;
+    }
+
+    void setDigitalReadCallback(digitalReadCb_t cb)
+    {
+        thisDigitalReadCallback = cb;
+    }
+
+    void setPinModeCallback(pinModeCb_t cb)
+    {
+        thisPinModeCallback = cb;
+    }
+
+
 protected:
 
 
@@ -182,40 +211,7 @@ protected:
         return true;
     }
 
-
-    int readRegister(uint8_t reg)
-    {
-        uint8_t val = 0;
-        if (thisReadRegCallback) {
-            if (thisReadRegCallback(__addr, reg, &val, 1) != 0) {
-                return DEV_WIRE_NONE;
-            }
-            return val;
-        }
-#if defined(ARDUINO)
-        if (__wire) {
-            __wire->beginTransmission(__addr);
-            __wire->write(reg);
-            if (__wire->endTransmission() != 0) {
-                LOG("I2C Transfer Error!\n");
-                return DEV_WIRE_ERR;
-            }
-            __wire->requestFrom(__addr, 1U);
-            return __wire->read();
-        }
-        if (__spi) {
-            uint8_t  data = 0x00;
-            __spi->beginTransaction(*__spiSetting);
-            digitalWrite(__cs, LOW);
-            __spi->transfer(__readMask != -1 ? (reg  | __readMask) : reg);
-            data = __spi->transfer(0x00);
-            digitalWrite(__cs, HIGH);
-            __spi->endTransaction();
-            return data;
-        }
-#endif
-        return DEV_WIRE_ERR;
-    }
+    //! Write method
 
     int writeRegister(uint8_t reg, uint8_t norVal, uint8_t orVal)
     {
@@ -228,22 +224,34 @@ protected:
         return writeRegister(reg, val);
     }
 
-    int writeRegister(uint8_t reg, uint8_t val)
+    int writeRegister(int reg, uint8_t val, uint8_t regLen = 1)
     {
+        uint8_t msb = reg >> 8;
+        uint8_t lsb = reg & 0xFF;
         if (thisWriteRegCallback) {
             return thisWriteRegCallback(__addr, reg, &val, 1);
         }
 #if defined(ARDUINO)
         if (__wire) {
             __wire->beginTransmission(__addr);
-            __wire->write(reg);
+            if (regLen == 2) {
+                __wire->write(msb);
+                __wire->write(lsb);
+            } else {
+                __wire->write(reg);
+            }
             __wire->write(val);
             return (__wire->endTransmission() == 0) ? DEV_WIRE_NONE : DEV_WIRE_ERR;
         }
         if (__spi) {
             __spi->beginTransaction(*__spiSetting);
             digitalWrite(__cs, LOW);
-            __spi->transfer(reg);
+            if (regLen == 2) {
+                __spi->transfer(msb);
+                __spi->transfer(lsb);
+            } else {
+                __spi->transfer(reg);
+            }
             __spi->transfer(val);
             digitalWrite(__cs, HIGH);
             __spi->endTransaction();
@@ -253,15 +261,108 @@ protected:
         return DEV_WIRE_ERR;
     }
 
-    int readRegister(uint8_t reg, uint8_t *buf, uint8_t lenght)
+    int writeRegister(int reg, uint8_t *buf, uint8_t lenght, uint8_t regLen = 1)
     {
+        uint8_t msb = reg >> 8;
+        uint8_t lsb = reg & 0xFF;
+        if (thisWriteRegCallback) {
+            return thisWriteRegCallback(__addr, reg, buf, lenght);
+        }
+#if defined(ARDUINO)
+        if (__wire) {
+            __wire->beginTransmission(__addr);
+            if (regLen == 2) {
+                __wire->write(msb);
+                __wire->write(lsb);
+            } else {
+                __wire->write(reg);
+            }
+            __wire->write(buf, lenght);
+            return (__wire->endTransmission() == 0) ? 0 : DEV_WIRE_ERR;
+        }
+        if (__spi) {
+            __spi->beginTransaction(*__spiSetting);
+            digitalWrite(__cs, LOW);
+            if (regLen == 2) {
+                __spi->transfer(msb);
+                __spi->transfer(lsb);
+            } else {
+                __spi->transfer(reg);
+            }
+            __spi->transfer(buf, lenght);
+            digitalWrite(__cs, HIGH);
+            __spi->endTransaction();
+            return DEV_WIRE_NONE;
+        }
+#endif
+        return DEV_WIRE_ERR;
+    }
+
+
+    //! Read method
+    int readRegister(int reg, uint8_t regLen = 1)
+    {
+        uint8_t msb = reg >> 8;
+        uint8_t lsb = reg & 0xFF;
+        uint8_t val = 0;
+        if (thisReadRegCallback) {
+            if (thisReadRegCallback(__addr, reg, &val, 1) != 0) {
+                return DEV_WIRE_NONE;
+            }
+            return val;
+        }
+#if defined(ARDUINO)
+        if (__wire) {
+            __wire->beginTransmission(__addr);
+            if (regLen == 2) {
+                __wire->write(msb);
+                __wire->write(lsb);
+            } else {
+                __wire->write(reg);
+            }
+            if (__wire->endTransmission() != 0) {
+                LOG("I2C Transfer Error!\n");
+                return DEV_WIRE_ERR;
+            }
+            __wire->requestFrom(__addr, 1U);
+            return __wire->read();
+        }
+        if (__spi) {
+            uint8_t  data = 0x00;
+            __spi->beginTransaction(*__spiSetting);
+            digitalWrite(__cs, LOW);
+
+            if (regLen == 2) {
+                __spi->transfer(__readMask != -1 ? (msb  | __readMask) : msb);
+                __spi->transfer(__readMask != -1 ? (lsb  | __readMask) : lsb);
+            } else {
+                __spi->transfer(__readMask != -1 ? (reg  | __readMask) : reg);
+            }
+            data = __spi->transfer(0x00);
+            digitalWrite(__cs, HIGH);
+            __spi->endTransaction();
+            return data;
+        }
+#endif
+        return DEV_WIRE_ERR;
+    }
+
+    int readRegister(int reg, uint8_t *buf, uint8_t lenght, uint8_t regLen = 1)
+    {
+        uint8_t msb = reg >> 8;
+        uint8_t lsb = reg & 0xFF;
         if (thisReadRegCallback) {
             return thisReadRegCallback(__addr, reg, buf, lenght);
         }
 #if defined(ARDUINO)
         if (__wire) {
             __wire->beginTransmission(__addr);
-            __wire->write(reg);
+            if (regLen == 2) {
+                __wire->write(msb);
+                __wire->write(lsb);
+            } else {
+                __wire->write(reg);
+            }
             if (__wire->endTransmission() != 0) {
                 return DEV_WIRE_ERR;
             }
@@ -271,7 +372,12 @@ protected:
         if (__spi) {
             __spi->beginTransaction(*__spiSetting);
             digitalWrite(__cs, LOW);
-            __spi->transfer(__readMask != -1 ? (reg  | __readMask) : reg);
+            if (regLen == 2) {
+                __spi->transfer(__readMask != -1 ? (msb  | __readMask) : msb);
+                __spi->transfer(__readMask != -1 ? (lsb  | __readMask) : lsb);
+            } else {
+                __spi->transfer(__readMask != -1 ? (reg  | __readMask) : reg);
+            }
             for (size_t i = 0; i < lenght; i++) {
                 buf[i] = __spi->transfer(0x00);
             }
@@ -283,33 +389,9 @@ protected:
         return DEV_WIRE_ERR;
     }
 
-    int writeRegister(uint8_t reg, uint8_t *buf, uint8_t lenght)
-    {
-        if (thisWriteRegCallback) {
-            return thisWriteRegCallback(__addr, reg, buf, lenght);
-        }
-#if defined(ARDUINO)
-        if (__wire) {
-            __wire->beginTransmission(__addr);
-            __wire->write(reg);
-            __wire->write(buf, lenght);
-            return (__wire->endTransmission() == 0) ? 0 : DEV_WIRE_ERR;
-        }
-        if (__spi) {
-            __spi->beginTransaction(*__spiSetting);
-            digitalWrite(__cs, LOW);
-            __spi->transfer(reg);
-            __spi->transfer(buf, lenght);
-            digitalWrite(__cs, HIGH);
-            __spi->endTransaction();
-            return DEV_WIRE_NONE;
-        }
-#endif
-        return DEV_WIRE_ERR;
-    }
 
 
-    bool inline clrRegisterBit(uint8_t registers, uint8_t bit)
+    bool inline clrRegisterBit(int registers, uint8_t bit)
     {
         int val = readRegister(registers);
         if (val == DEV_WIRE_ERR) {
@@ -318,7 +400,7 @@ protected:
         return  writeRegister(registers, (val & (~_BV(bit)))) == 0;
     }
 
-    bool inline setRegisterBit(uint8_t registers, uint8_t bit)
+    bool inline setRegisterBit(int registers, uint8_t bit)
     {
         int val = readRegister(registers);
         if (val == DEV_WIRE_ERR) {
@@ -327,7 +409,7 @@ protected:
         return  writeRegister(registers, (val | (_BV(bit)))) == 0;
     }
 
-    bool inline getRegisterBit(uint8_t registers, uint8_t bit)
+    bool inline getRegisterBit(int registers, uint8_t bit)
     {
         int val = readRegister(registers);
         if (val == DEV_WIRE_ERR) {
@@ -421,23 +503,26 @@ protected:
     }
 
 protected:
-    bool        __has_init              = false;
+    bool                __has_init              = false;
 #if defined(ARDUINO)
-    TwoWire     *__wire                 = NULL;
-    SPIClass    *__spi                  = NULL;
-    SPISettings *__spiSetting           = NULL;
+    TwoWire             *__wire                 = NULL;
+    SPIClass            *__spi                  = NULL;
+    SPISettings         *__spiSetting           = NULL;
 #endif
-    uint32_t    __freq                  = 1000000;
-    uint8_t     __dataOrder             = SPI_DATA_ORDER;
-    uint8_t     __dataMode              = SPI_MODE0;
-    int         __readMask              = -1;
-    int         __sda                   = -1;
-    int         __scl                   = -1;
-    int         __cs                    = -1;
-    int         __miso                  = -1;
-    int         __mosi                  = -1;
-    int         __sck                   = -1;
-    uint8_t     __addr                  = 0xFF;
-    iic_fptr_t  thisReadRegCallback     = NULL;
-    iic_fptr_t  thisWriteRegCallback    = NULL;
+    uint32_t            __freq                  = 1000000;
+    uint8_t             __dataOrder             = SPI_DATA_ORDER;
+    uint8_t             __dataMode              = SPI_MODE0;
+    int                 __readMask              = -1;
+    int                 __sda                   = -1;
+    int                 __scl                   = -1;
+    int                 __cs                    = -1;
+    int                 __miso                  = -1;
+    int                 __mosi                  = -1;
+    int                 __sck                   = -1;
+    uint8_t             __addr                  = 0xFF;
+    iic_fptr_t          thisReadRegCallback     = NULL;
+    iic_fptr_t          thisWriteRegCallback    = NULL;
+    digitalWirteCb_t    thisDigitalWriteCallback = NULL;
+    digitalReadCb_t     thisDigitalReadCallback  = NULL;
+    pinModeCb_t         thisPinModeCallback = NULL;
 };
