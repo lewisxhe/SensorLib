@@ -121,12 +121,12 @@ public:
 
     void reset()
     {
-        writeRegister(GT911_COMMAND, 0x02, 2);
+        writeRegister(GT911_COMMAND, 0x02);
     }
 
     void sleep()
     {
-        writeRegister(GT911_COMMAND, 0x05, 2);
+        writeRegister(GT911_COMMAND, 0x05);
     }
 
 
@@ -138,7 +138,7 @@ public:
         if (x == NULL || y == NULL || size == 0)
             return DEV_WIRE_ERR;
 
-        int touchPoint = readRegister(GT911_POINT_INFO, 2);
+        int touchPoint = readRegister(GT911_POINT_INFO);
         if (touchPoint == DEV_WIRE_ERR) {
             return DEV_WIRE_ERR;
         }
@@ -150,7 +150,7 @@ public:
         }
         clearBuffer();
 
-        if (readRegister(GT911_POINT_1, buffer, 39, 2) == DEV_WIRE_ERR) {
+        if (readRegister(GT911_POINT_1, buffer, 39) == DEV_WIRE_ERR) {
             return DEV_WIRE_ERR;
         }
 
@@ -197,7 +197,7 @@ public:
                 return digitalRead(__irq) == HIGH;
             }
         } else {
-            uint8_t val = readRegister(GT911_POINT_INFO, 2) & 0x0F;
+            uint8_t val = readRegister(GT911_POINT_INFO) & 0x0F;
             clearBuffer();
             return val & 0x0F;
         }
@@ -207,7 +207,7 @@ public:
     //In the tested GT911 only the falling edge is valid to use, the rest are incorrect
     bool setInterruptMode(uint8_t mode)
     {
-        int val = readRegister(GT911_MODULE_SWITCH_1, 2);
+        int val = readRegister(GT911_MODULE_SWITCH_1);
         val &= 0XFC;
         if (mode == FALLING) {
             val |= 0x03;
@@ -215,13 +215,13 @@ public:
             val |= 0x02;
         }
         __irq_mode = mode;
-        return writeRegister(GT911_MODULE_SWITCH_1, val, 2) != -1;
+        return writeRegister(GT911_MODULE_SWITCH_1, val) != -1;
     }
 
 
     uint8_t getPoint()
     {
-        uint8_t val = readRegister(GT911_POINT_INFO, 2) & 0x0F;
+        uint8_t val = readRegister(GT911_POINT_INFO) & 0x0F;
         clearBuffer();
         return val & 0x0F;
     }
@@ -231,7 +231,7 @@ public:
     {
         char product_id[4] = {0};
         for (int i = 0; i < 4; ++i) {
-            product_id[i] = readRegister(GT911_PRODUCT_ID + i, 2);
+            product_id[i] = readRegister(GT911_PRODUCT_ID + i);
         }
         return atoi(product_id);
     }
@@ -240,7 +240,7 @@ public:
     {
         uint8_t fw_ver[2] = {0};
         for (int i = 0; i < 2; ++i) {
-            fw_ver[i] = readRegister(GT911_FIRMWARE_VERSION + i, 2);
+            fw_ver[i] = readRegister(GT911_FIRMWARE_VERSION + i);
         }
         return fw_ver[0] | (fw_ver[1] << 8);
     }
@@ -250,10 +250,10 @@ public:
         uint8_t x_resolution[2] = {0}, y_resolution[2] = {0};
 
         for (int i = 0; i < 2; ++i) {
-            x_resolution[i] = readRegister(GT911_X_RESOLUTION + i, 2);
+            x_resolution[i] = readRegister(GT911_X_RESOLUTION + i);
         }
         for (int i = 0; i < 2; ++i) {
-            y_resolution[i] = readRegister(GT911_Y_RESOLUTION + i, 2);
+            y_resolution[i] = readRegister(GT911_Y_RESOLUTION + i);
         }
 
         x = x_resolution[0] | (x_resolution[1] << 8);
@@ -263,7 +263,7 @@ public:
 
     int getVendorID()
     {
-        return readRegister(GT911_VENDOR_ID, 2);
+        return readRegister(GT911_VENDOR_ID);
     }
 
     void setRsetUseCallback(bool enable)
@@ -276,7 +276,7 @@ private:
     void inline clearBuffer()
     {
         uint8_t val = 0x00;
-        writeRegister(GT911_POINT_INFO, &val, 1, 2U);
+        writeRegister(GT911_POINT_INFO, 0x00);
     }
 
     void setRstValue(uint8_t value)
@@ -300,6 +300,9 @@ private:
     bool initImpl()
     {
         int x, y;
+
+        // GT911 register address uses two bytes
+        setRegAddressLenght(2);
 
         if (__addr == GT911_SLAVE_ADDRESS_H  &&
                 __rst != SENSOR_PIN_NONE &&

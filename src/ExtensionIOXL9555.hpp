@@ -89,7 +89,7 @@ public:
     }
 
 #if defined(ARDUINO)
-    bool init(TwoWire &w, int sda = SDA, int scl = SCL, uint8_t addr = XL9555_SLAVE_ADDRESS0)
+    bool init(TwoWire &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = XL9555_SLAVE_ADDRESS0)
     {
         __wire = &w;
         __sda = sda;

@@ -93,6 +93,14 @@
 #define FALLING               (0x02)
 #endif
 
+#ifndef LSBFIRST
+#define LSBFIRST 0
+#endif
+
+#ifndef MSBFIRST
+#define MSBFIRST 1
+#endif
+
 
 template <class chipType>
 class SensorCommon
@@ -224,7 +232,7 @@ protected:
         return writeRegister(reg, val);
     }
 
-    int writeRegister(int reg, uint8_t val, uint8_t regLen = 1)
+    int writeRegister(int reg, uint8_t val)
     {
         uint8_t msb = reg >> 8;
         uint8_t lsb = reg & 0xFF;
@@ -234,7 +242,7 @@ protected:
 #if defined(ARDUINO)
         if (__wire) {
             __wire->beginTransmission(__addr);
-            if (regLen == 2) {
+            if (__reg_addr_len == 2) {
                 __wire->write(msb);
                 __wire->write(lsb);
             } else {
@@ -246,7 +254,7 @@ protected:
         if (__spi) {
             __spi->beginTransaction(*__spiSetting);
             digitalWrite(__cs, LOW);
-            if (regLen == 2) {
+            if (__reg_addr_len == 2) {
                 __spi->transfer(msb);
                 __spi->transfer(lsb);
             } else {
@@ -261,7 +269,7 @@ protected:
         return DEV_WIRE_ERR;
     }
 
-    int writeRegister(int reg, uint8_t *buf, uint8_t lenght, uint8_t regLen = 1)
+    int writeRegister(int reg, uint8_t *buf, uint8_t lenght)
     {
         uint8_t msb = reg >> 8;
         uint8_t lsb = reg & 0xFF;
@@ -271,7 +279,7 @@ protected:
 #if defined(ARDUINO)
         if (__wire) {
             __wire->beginTransmission(__addr);
-            if (regLen == 2) {
+            if (__reg_addr_len == 2) {
                 __wire->write(msb);
                 __wire->write(lsb);
             } else {
@@ -283,7 +291,7 @@ protected:
         if (__spi) {
             __spi->beginTransaction(*__spiSetting);
             digitalWrite(__cs, LOW);
-            if (regLen == 2) {
+            if (__reg_addr_len == 2) {
                 __spi->transfer(msb);
                 __spi->transfer(lsb);
             } else {
@@ -300,7 +308,7 @@ protected:
 
 
     //! Read method
-    int readRegister(int reg, uint8_t regLen = 1)
+    int readRegister(int reg)
     {
         uint8_t msb = reg >> 8;
         uint8_t lsb = reg & 0xFF;
@@ -314,7 +322,7 @@ protected:
 #if defined(ARDUINO)
         if (__wire) {
             __wire->beginTransmission(__addr);
-            if (regLen == 2) {
+            if (__reg_addr_len == 2) {
                 __wire->write(msb);
                 __wire->write(lsb);
             } else {
@@ -332,7 +340,7 @@ protected:
             __spi->beginTransaction(*__spiSetting);
             digitalWrite(__cs, LOW);
 
-            if (regLen == 2) {
+            if (__reg_addr_len == 2) {
                 __spi->transfer(__readMask != -1 ? (msb  | __readMask) : msb);
                 __spi->transfer(__readMask != -1 ? (lsb  | __readMask) : lsb);
             } else {
@@ -347,7 +355,7 @@ protected:
         return DEV_WIRE_ERR;
     }
 
-    int readRegister(int reg, uint8_t *buf, uint8_t lenght, uint8_t regLen = 1)
+    int readRegister(int reg, uint8_t *buf, uint8_t lenght, bool sendStop = true)
     {
         uint8_t msb = reg >> 8;
         uint8_t lsb = reg & 0xFF;
@@ -357,13 +365,13 @@ protected:
 #if defined(ARDUINO)
         if (__wire) {
             __wire->beginTransmission(__addr);
-            if (regLen == 2) {
+            if (__reg_addr_len == 2) {
                 __wire->write(msb);
                 __wire->write(lsb);
             } else {
                 __wire->write(reg);
             }
-            if (__wire->endTransmission() != 0) {
+            if (__wire->endTransmission(sendStop) != 0) {
                 return DEV_WIRE_ERR;
             }
             __wire->requestFrom(__addr, lenght);
@@ -372,7 +380,7 @@ protected:
         if (__spi) {
             __spi->beginTransaction(*__spiSetting);
             digitalWrite(__cs, LOW);
-            if (regLen == 2) {
+            if (__reg_addr_len == 2) {
                 __spi->transfer(__readMask != -1 ? (msb  | __readMask) : msb);
                 __spi->transfer(__readMask != -1 ? (lsb  | __readMask) : lsb);
             } else {
@@ -388,8 +396,6 @@ protected:
 #endif
         return DEV_WIRE_ERR;
     }
-
-
 
     bool inline clrRegisterBit(int registers, uint8_t bit)
     {
@@ -450,6 +456,10 @@ protected:
         return ((h5 & 0x1F) << 8) | l8;
     }
 
+    void setRegAddressLenght(uint8_t len)
+    {
+        __reg_addr_len = len;
+    }
     /*
      * CRTP Helper
      */
@@ -520,6 +530,7 @@ protected:
     int                 __mosi                  = -1;
     int                 __sck                   = -1;
     uint8_t             __addr                  = 0xFF;
+    uint8_t             __reg_addr_len          = 1;
     iic_fptr_t          thisReadRegCallback     = NULL;
     iic_fptr_t          thisWriteRegCallback    = NULL;
     digitalWirteCb_t    thisDigitalWriteCallback = NULL;

@@ -118,7 +118,7 @@ public:
     }
 
 #if defined(ARDUINO)
-    bool init(TwoWire &w, int sda = SDA, int scl = SCL, uint8_t addr = QMC6310_SLAVE_ADDRESS)
+    bool init(TwoWire &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = QMC6310_SLAVE_ADDRESS)
     {
         __wire = &w;
         __sda = sda;
