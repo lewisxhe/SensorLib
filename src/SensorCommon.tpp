@@ -133,6 +133,8 @@ public:
         LOG("Using Wire interface.\n");
         if (__has_init)return thisChip().initImpl();
         __wire = &w;
+        __sda = sda;
+        __scl = scl;
 #if defined(NRF52840_XXAA) || defined(NRF52832_XXAA)
         __wire->begin();
 #else
@@ -273,6 +275,13 @@ protected:
     {
         uint8_t msb = reg >> 8;
         uint8_t lsb = reg & 0xFF;
+
+        Serial.print("REG:"); Serial.print(reg); Serial.print(" ");
+        for (int i = 0; i < lenght; ++i) {
+            Serial.print(" 0x"); Serial.print(buf[i], HEX); Serial.print(",");
+        }
+        Serial.println();
+
         if (thisWriteRegCallback) {
             return thisWriteRegCallback(__addr, reg, buf, lenght);
         }
@@ -328,7 +337,7 @@ protected:
             } else {
                 __wire->write(reg);
             }
-            if (__wire->endTransmission() != 0) {
+            if (__wire->endTransmission(__sendStop) != 0) {
                 LOG("I2C Transfer Error!\n");
                 return DEV_WIRE_ERR;
             }
@@ -355,7 +364,7 @@ protected:
         return DEV_WIRE_ERR;
     }
 
-    int readRegister(int reg, uint8_t *buf, uint8_t lenght, bool sendStop = true)
+    int readRegister(int reg, uint8_t *buf, uint8_t lenght)
     {
         uint8_t msb = reg >> 8;
         uint8_t lsb = reg & 0xFF;
@@ -371,7 +380,7 @@ protected:
             } else {
                 __wire->write(reg);
             }
-            if (__wire->endTransmission(sendStop) != 0) {
+            if (__wire->endTransmission(__sendStop) != 0) {
                 return DEV_WIRE_ERR;
             }
             __wire->requestFrom(__addr, lenght);
@@ -460,6 +469,15 @@ protected:
     {
         __reg_addr_len = len;
     }
+
+
+    void setReadRegisterSendStop(bool sendStop)
+    {
+        __sendStop = sendStop;
+    }
+
+
+
     /*
      * CRTP Helper
      */
@@ -529,6 +547,7 @@ protected:
     int                 __miso                  = -1;
     int                 __mosi                  = -1;
     int                 __sck                   = -1;
+    bool                __sendStop              = true;
     uint8_t             __addr                  = 0xFF;
     uint8_t             __reg_addr_len          = 1;
     iic_fptr_t          thisReadRegCallback     = NULL;
