@@ -276,12 +276,6 @@ protected:
         uint8_t msb = reg >> 8;
         uint8_t lsb = reg & 0xFF;
 
-        Serial.print("REG:"); Serial.print(reg); Serial.print(" ");
-        for (int i = 0; i < lenght; ++i) {
-            Serial.print(" 0x"); Serial.print(buf[i], HEX); Serial.print(",");
-        }
-        Serial.println();
-
         if (thisWriteRegCallback) {
             return thisWriteRegCallback(__addr, reg, buf, lenght);
         }
