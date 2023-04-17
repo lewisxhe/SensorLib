@@ -22,72 +22,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      TouchDrvInterface.hpp
+ * @file      TouchDrvAuto.hpp
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2023-04-17
  *
  */
 #pragma once
 
-#include <stdint.h>
+#include "TouchDrvCHSC5816.hpp"
 
 
-class TouchData
+class TouchDrvAuto
 {
 public:
-    uint16_t x[5];
-    uint16_t y[5];
-
-    uint16_t getX(uint8_t index = 0)
-    {
-        return 0;
-    }
-
-    uint16_t getY(uint8_t index = 0)
-    {
-        return 0;
-    }
-
+//todo:
 };
-
-
-
-class TouchDrvInterface
-{
-public:
-    virtual bool init(int rst, int irq) = 0;
-
-    virtual void reset() = 0;
-
-    virtual uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point) = 0;
-
-    virtual uint8_t getGesture() = 0;
-
-    virtual bool isPressed() = 0;
-
-    virtual bool enableInterrupt() = 0;
-
-    virtual bool disableInterrupt() = 0;
-
-    virtual uint8_t getChipID() = 0;
-
-    virtual const char *getModelName() = 0;
-
-    virtual void sleep() = 0;
-
-    virtual void wakeup() = 0;
-
-    virtual void idle() = 0;
-
-    virtual bool writeConfig(uint8_t *data, uint32_t size);
-
-    virtual uint8_t getSupportTouchPoint() = 0;
-
-};
-
-
-
-
-
-
-
