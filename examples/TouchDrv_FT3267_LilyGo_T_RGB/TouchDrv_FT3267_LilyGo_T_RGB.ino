@@ -22,15 +22,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      GT911_GetPoint.ino
+ * @file      TouchDrv_FT3267_LilyGo_T_RGB.ino
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2023-04-12
+ * @date      2023-04-17
  *
  */
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
-#include "TouchDrvGT911.hpp"
+#include "TouchDrvFT6X36.hpp"
 #include "ExtensionIOXL9555.hpp"
 
 #ifndef SENSOR_SDA
@@ -49,52 +49,15 @@
 #define SENSOR_RST  1
 #endif
 
-TouchDrvGT911 touch;
+TouchDrvFT6X36 touch;
 ExtensionIOXL9555 extIO;
-int16_t x[5], y[5];
-
-void scanDevices(void)
-{
-    byte error, address;
-    int nDevices = 0;
-    Serial.println("Scanning for I2C devices ...");
-    for (address = 0x01; address < 0x7f; address++) {
-        Wire.beginTransmission(address);
-        error = Wire.endTransmission();
-        if (error == 0) {
-            Serial.printf("I2C device found at address 0x%02X\n", address);
-            nDevices++;
-        } else if (error != 2) {
-            Serial.printf("Error %d at address 0x%02X\n", error, address);
-        }
-    }
-    if (nDevices == 0) {
-        Serial.println("No I2C devices found");
-    }
-}
-
-
-void digitalWrite_CB(uint32_t pin, uint8_t value)
-{
-    extIO.digitalWrite(pin, value);
-}
-
-void pinMode_CB(uint32_t pin, uint8_t mode)
-{
-    extIO.pinMode(pin, mode);
-}
-
-
 
 void setup()
 {
     Serial.begin(115200);
     while (!Serial);
-    Serial.println("Start!");
 
-    Wire.begin(SENSOR_SDA, SENSOR_SCL);
-
-    scanDevices();
+    pinMode(SENSOR_IRQ, INPUT);
 
     // T-RGB Use 0x20 device address
     if (!extIO.begin(Wire, XL9555_SLAVE_ADDRESS0, SENSOR_SDA, SENSOR_SCL)) {
@@ -103,38 +66,33 @@ void setup()
             delay(1000);
         }
     }
+
     // Set PORT0 as output
     extIO.configPort(ExtensionIOXL9555::PORT0, OUTPUT);
     extIO.writePort(ExtensionIOXL9555::PORT0, 0xFF);
 
+    extIO.digitalWrite(SENSOR_RST, LOW);
+    delay(300);
+    extIO.digitalWrite(SENSOR_RST, HIGH);
+    delay(300);
 
-    touch.setPins(SENSOR_RST, SENSOR_IRQ);
-    touch.setDigitalWriteCallback(digitalWrite_CB);
-    touch.setPinModeCallback(pinMode_CB);
-    touch.setRsetUseCallback(true);
 
-    if (!touch.init(Wire, SENSOR_SDA, SENSOR_SCL, GT911_SLAVE_ADDRESS_L )) {
-        scanDevices();
-
+    if (!touch.begin(Wire, FT3267_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
+        Serial.println("Failed to find FT3267 - check your wiring!");
         while (1) {
-            Serial.println("Failed to find GT911 - check your wiring!");
             delay(1000);
         }
     }
+    touch.interruptTrigger();
 
-    //Set to trigger on falling edge
-    touch.setInterruptMode(FALLING);
-
-    Serial.println("Init GT911 Sensor success!");
-
+    Serial.println("Init FT3267 Sensor success!");
 }
+
 
 void loop()
 {
-
-    if (touch.getTouched()) {
-        uint8_t point = touch.getPoint(x, y, 5);
-        Serial.print("Point:"); Serial.println(point);
+    int16_t x[2], y[2];
+    if (digitalRead(SENSOR_IRQ) == LOW) {
         uint8_t touched = touch.getPoint(x, y, 2);
         for (int i = 0; i < touched; ++i) {
             Serial.print("X[");
@@ -150,9 +108,8 @@ void loop()
         }
         Serial.println();
     }
-    delay(5);
+    delay(50);
 }
-
 
 
 

@@ -22,15 +22,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      FT6232_GetPoint.ino
+ * @file      TouchDrv_FT6232_GetPoint.ino
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2022-04-02
+ * @date      2023-04-02
  *
  */
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
-#include "SensorFT6X36.hpp"
+#include "TouchDrvFT6X36.hpp"
 
 #ifndef SENSOR_SDA
 #define SENSOR_SDA  21
@@ -44,7 +44,7 @@
 #define SENSOR_IRQ  39
 #endif
 
-SensorFT6X36 touch;
+TouchDrvFT6X36 touch;
 
 
 void setup()

@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      SensorFT6X36.tpp
+ * @file      TouchDrvFT6X36.tpp
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2023-04-01
  *
@@ -32,10 +32,10 @@
 #include "REG/FT6X36Constants.h"
 #include "SensorCommon.tpp"
 
-class SensorFT6X36 :
-    public SensorCommon<SensorFT6X36>
+class TouchDrvFT6X36 :
+    public SensorCommon<TouchDrvFT6X36>
 {
-    friend class SensorCommon<SensorFT6X36>;
+    friend class SensorCommon<TouchDrvFT6X36>;
 public:
 
 
@@ -65,7 +65,7 @@ public:
     EventFlag event;
 
 #if defined(ARDUINO)
-    SensorFT6X36(TwoWire &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = FT6X36_SLAVE_ADDRESS)
+    TouchDrvFT6X36(TwoWire &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = FT6X36_SLAVE_ADDRESS)
     {
         __wire = &w;
         __sda = sda;
@@ -74,7 +74,7 @@ public:
     }
 #endif
 
-    SensorFT6X36()
+    TouchDrvFT6X36()
     {
 #if defined(ARDUINO)
         __wire = &Wire;
@@ -84,7 +84,7 @@ public:
         __addr = FT6X36_SLAVE_ADDRESS;
     }
 
-    ~SensorFT6X36()
+    ~TouchDrvFT6X36()
     {
         deinit();
     }
