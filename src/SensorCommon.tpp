@@ -222,7 +222,6 @@ protected:
     }
 
     //! Write method
-
     int writeRegister(uint8_t reg, uint8_t norVal, uint8_t orVal)
     {
         int val = readRegister(reg);
@@ -236,31 +235,33 @@ protected:
 
     int writeRegister(int reg, uint8_t val)
     {
-        uint8_t msb = reg >> 8;
-        uint8_t lsb = reg & 0xFF;
         if (thisWriteRegCallback) {
             return thisWriteRegCallback(__addr, reg, &val, 1);
         }
 #if defined(ARDUINO)
         if (__wire) {
             __wire->beginTransmission(__addr);
-            if (__reg_addr_len == 2) {
-                __wire->write(msb);
-                __wire->write(lsb);
-            } else {
+            if (__reg_addr_len == 1) {
                 __wire->write(reg);
+            } else {
+                for (int i = 0; i < __reg_addr_len; ++i) {
+                    __wire->write(reg >> (8 * ((__reg_addr_len - 1) - i)));
+                }
             }
             __wire->write(val);
             return (__wire->endTransmission() == 0) ? DEV_WIRE_NONE : DEV_WIRE_ERR;
         }
         if (__spi) {
+            uint8_t msb = reg >> 8;
+            uint8_t lsb = reg & 0xFF;
             __spi->beginTransaction(*__spiSetting);
             digitalWrite(__cs, LOW);
-            if (__reg_addr_len == 2) {
-                __spi->transfer(msb);
-                __spi->transfer(lsb);
-            } else {
+            if (__reg_addr_len == 1) {
                 __spi->transfer(reg);
+            } else {
+                for (int i = 0; i < __reg_addr_len; ++i) {
+                    __spi->transfer(reg >> (8 * ((__reg_addr_len - 1) - i)));
+                }
             }
             __spi->transfer(val);
             digitalWrite(__cs, HIGH);
@@ -273,20 +274,18 @@ protected:
 
     int writeRegister(int reg, uint8_t *buf, uint8_t lenght)
     {
-        uint8_t msb = reg >> 8;
-        uint8_t lsb = reg & 0xFF;
-
         if (thisWriteRegCallback) {
             return thisWriteRegCallback(__addr, reg, buf, lenght);
         }
 #if defined(ARDUINO)
         if (__wire) {
             __wire->beginTransmission(__addr);
-            if (__reg_addr_len == 2) {
-                __wire->write(msb);
-                __wire->write(lsb);
-            } else {
+            if (__reg_addr_len == 1) {
                 __wire->write(reg);
+            } else {
+                for (int i = 0; i < __reg_addr_len; ++i) {
+                    __wire->write(reg >> (8 * ((__reg_addr_len - 1) - i)));
+                }
             }
             __wire->write(buf, lenght);
             return (__wire->endTransmission() == 0) ? 0 : DEV_WIRE_ERR;
@@ -294,11 +293,12 @@ protected:
         if (__spi) {
             __spi->beginTransaction(*__spiSetting);
             digitalWrite(__cs, LOW);
-            if (__reg_addr_len == 2) {
-                __spi->transfer(msb);
-                __spi->transfer(lsb);
-            } else {
+            if (__reg_addr_len == 1) {
                 __spi->transfer(reg);
+            } else {
+                for (int i = 0; i < __reg_addr_len; ++i) {
+                    __spi->transfer(reg >> (8 * ((__reg_addr_len - 1) - i)));
+                }
             }
             __spi->transfer(buf, lenght);
             digitalWrite(__cs, HIGH);
@@ -313,8 +313,6 @@ protected:
     //! Read method
     int readRegister(int reg)
     {
-        uint8_t msb = reg >> 8;
-        uint8_t lsb = reg & 0xFF;
         uint8_t val = 0;
         if (thisReadRegCallback) {
             if (thisReadRegCallback(__addr, reg, &val, 1) != 0) {
@@ -325,11 +323,12 @@ protected:
 #if defined(ARDUINO)
         if (__wire) {
             __wire->beginTransmission(__addr);
-            if (__reg_addr_len == 2) {
-                __wire->write(msb);
-                __wire->write(lsb);
-            } else {
+            if (__reg_addr_len == 1) {
                 __wire->write(reg);
+            } else {
+                for (int i = 0; i < __reg_addr_len; ++i) {
+                    __wire->write(reg >> (8 * ((__reg_addr_len - 1) - i)));
+                }
             }
             if (__wire->endTransmission(__sendStop) != 0) {
                 LOG("I2C Transfer Error!\n");
@@ -342,12 +341,14 @@ protected:
             uint8_t  data = 0x00;
             __spi->beginTransaction(*__spiSetting);
             digitalWrite(__cs, LOW);
-
-            if (__reg_addr_len == 2) {
-                __spi->transfer(__readMask != -1 ? (msb  | __readMask) : msb);
-                __spi->transfer(__readMask != -1 ? (lsb  | __readMask) : lsb);
-            } else {
+            if (__reg_addr_len == 1) {
                 __spi->transfer(__readMask != -1 ? (reg  | __readMask) : reg);
+            } else {
+                uint8_t firstBytes = reg >> (8 * ((__reg_addr_len - 1)));
+                __spi->transfer(__readMask != -1 ? (firstBytes  | __readMask) : firstBytes);
+                for (int i = 1; i < __reg_addr_len; ++i) {
+                    __spi->transfer(reg >> (8 * ((__reg_addr_len - 1) - i)));
+                }
             }
             data = __spi->transfer(0x00);
             digitalWrite(__cs, HIGH);
@@ -360,19 +361,18 @@ protected:
 
     int readRegister(int reg, uint8_t *buf, uint8_t lenght)
     {
-        uint8_t msb = reg >> 8;
-        uint8_t lsb = reg & 0xFF;
         if (thisReadRegCallback) {
             return thisReadRegCallback(__addr, reg, buf, lenght);
         }
 #if defined(ARDUINO)
         if (__wire) {
             __wire->beginTransmission(__addr);
-            if (__reg_addr_len == 2) {
-                __wire->write(msb);
-                __wire->write(lsb);
-            } else {
+            if (__reg_addr_len == 1) {
                 __wire->write(reg);
+            } else {
+                for (int i = 0; i < __reg_addr_len; ++i) {
+                    __wire->write(reg >> (8 * ((__reg_addr_len - 1) - i)));
+                }
             }
             if (__wire->endTransmission(__sendStop) != 0) {
                 return DEV_WIRE_ERR;
@@ -383,11 +383,14 @@ protected:
         if (__spi) {
             __spi->beginTransaction(*__spiSetting);
             digitalWrite(__cs, LOW);
-            if (__reg_addr_len == 2) {
-                __spi->transfer(__readMask != -1 ? (msb  | __readMask) : msb);
-                __spi->transfer(__readMask != -1 ? (lsb  | __readMask) : lsb);
-            } else {
+            if (__reg_addr_len == 1) {
                 __spi->transfer(__readMask != -1 ? (reg  | __readMask) : reg);
+            } else {
+                uint8_t firstBytes = reg >> (8 * ((__reg_addr_len - 1)));
+                __spi->transfer(__readMask != -1 ? (firstBytes  | __readMask) : firstBytes);
+                for (int i = 1; i < __reg_addr_len; ++i) {
+                    __spi->transfer(reg >> (8 * ((__reg_addr_len - 1) - i)));
+                }
             }
             for (size_t i = 0; i < lenght; i++) {
                 buf[i] = __spi->transfer(0x00);
