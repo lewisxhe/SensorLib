@@ -283,12 +283,22 @@ public:
         return readRegister(FT6X36_REG_ERROR_STATUS);
     }
 
+    const char *getModelName()
+    {
+        switch (chipID) {
+        case FT6206_CHIPID: return "FT6206";
+        case FT6236_CHIPID: return "FT6236";
+        case FT6236U_CHIPID: return "FT6236U";
+        case FT3267_CHIPID: return "FT3267";
+        default: return "UNKOWN";
+        }
+    }
 
 private:
     bool initImpl()
     {
         uint8_t vendId = readRegister(FT6X36_REG_VENDOR1_ID);
-        uint8_t chipID = readRegister(FT6X36_REG_CHIPID);
+        chipID = readRegister(FT6X36_REG_CHIPID);
 
 #ifdef LOG_PORT
         LOG_PORT.print("Vend ID: 0x");
@@ -308,7 +318,11 @@ private:
             LOG("Vendor id is not match!");
             return false;
         }
-        if ((chipID != FT6206_CHIPID) && (chipID != FT6236_CHIPID) && (chipID != FT6236U_CHIPID)) {
+        if ((chipID != FT6206_CHIPID) &&
+                (chipID != FT6236_CHIPID) &&
+                (chipID != FT6236U_CHIPID)  &&
+                (chipID != FT3267_CHIPID)
+           ) {
             LOG("Vendor id is not match!");
             LOG("ChipID:0x%x should be 0x06 or 0x36 or 0x64\n", chipID);
             return false;
@@ -333,7 +347,7 @@ private:
     }
 
 protected:
-
+    uint8_t chipID;
 };
 
 

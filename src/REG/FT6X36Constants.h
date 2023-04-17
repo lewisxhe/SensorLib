@@ -30,10 +30,12 @@
 
 #pragma once
 
+#define FT3267_SLAVE_ADDRESS       (0x38)
 #define FT5206_SLAVE_ADDRESS       (0x38)
 #define FT6X36_SLAVE_ADDRESS       (0x38)
 
 #define FT6X36_VENDID              (0x11)
+#define FT3267_CHIPID              (0x33)
 #define FT6206_CHIPID              (0x06)
 #define FT6236_CHIPID              (0x36)
 #define FT6236U_CHIPID             (0x64)
