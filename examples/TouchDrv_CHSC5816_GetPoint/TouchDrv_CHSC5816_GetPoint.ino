@@ -33,15 +33,19 @@
 #include "TouchDrvCHSC5816.hpp"
 
 #ifndef SENSOR_SDA
-#define SENSOR_SDA  21
+#define SENSOR_SDA  39
 #endif
 
 #ifndef SENSOR_SCL
-#define SENSOR_SCL  22
+#define SENSOR_SCL  40
 #endif
 
 #ifndef SENSOR_IRQ
-#define SENSOR_IRQ  39
+#define SENSOR_IRQ  13
+#endif
+
+#ifndef SENSOR_RST
+#define SENSOR_RST  14
 #endif
 
 TouchDrvCHSC5816 touch;
@@ -53,17 +57,15 @@ void setup()
     Serial.begin(115200);
     while (!Serial);
 
-    pinMode(SENSOR_IRQ, INPUT);
-
     TouchDrvCHSC5816 *pd1 = static_cast<TouchDrvCHSC5816 *>(pTouch);
 
+    touch.setPins(SENSOR_RST, SENSOR_IRQ);
     if (!touch.begin(Wire, CHSC5816_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
         Serial.println("Failed to find CHSC5816 - check your wiring!");
         while (1) {
             delay(1000);
         }
     }
-    // touch.interruptTrigger();
 
     Serial.println("Init CHSC5816 Touch device success!");
 }
@@ -73,7 +75,7 @@ void loop()
 {
     int16_t x[2], y[2];
     if (digitalRead(SENSOR_IRQ) == LOW) {
-        uint8_t touched = touch.getPoint(x, y, 2);
+        uint8_t touched = touch.getPoint(x, y);
         for (int i = 0; i < touched; ++i) {
             Serial.print("X[");
             Serial.print(i);
@@ -88,7 +90,6 @@ void loop()
         }
         Serial.println();
     }
-    delay(50);
 }
 
 

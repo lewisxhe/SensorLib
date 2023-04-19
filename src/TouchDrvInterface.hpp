@@ -79,9 +79,11 @@ public:
 
     virtual void idle() = 0;
 
-    virtual bool writeConfig(uint8_t *data, uint32_t size);
+    virtual bool writeConfig(uint8_t *data, uint32_t size) = 0;
 
     virtual uint8_t getSupportTouchPoint() = 0;
+
+    virtual bool getResolution(int16_t *x, int16_t *y) = 0;
 
 };
 

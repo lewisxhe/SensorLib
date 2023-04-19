@@ -42,6 +42,21 @@ typedef struct __CHSC5816_Header {
     uint16_t dif_offet;
 } CHSC5816_Header_t;
 
+union __CHSC5816_PointReg {
+    struct {
+        uint8_t status;
+        uint8_t fingerNumber;
+        uint8_t x_l8;
+        uint8_t y_l8;
+        uint8_t z;
+        uint8_t x_h4: 4;
+        uint8_t y_h4: 4;
+        uint8_t id: 4;
+        uint8_t event: 4;
+        uint8_t p2;
+    } rp;
+    unsigned char data[8];
+};
 
 class TouchDrvCHSC5816 :
     public TouchDrvInterface,
@@ -104,6 +119,12 @@ public:
         return initImpl();
     }
 
+    void setPins(int rst, int irq)
+    {
+        __irq = irq;
+        __rst = rst;
+    }
+
     void reset()
     {
         if (__rst != SENSOR_PIN_NONE) {
@@ -114,19 +135,30 @@ public:
         }
     }
 
-    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point)
-    {
-        union rpt_point_t *ppt;
-        uint8_t buffer[8];
-        readRegister(CHSC5816_REG_POINT, buffer, 8);
 
-        //todo:
-        return 0;
+
+    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point = 1)
+    {
+        __CHSC5816_PointReg touch;
+        readRegister(CHSC5816_REG_POINT, touch.data, 8);
+        if (touch.rp.status != 0xFF && touch.rp.fingerNumber == 0) {
+            return 0;
+        }
+        if (x_array) {
+            *x_array = (unsigned int)(touch.rp.x_h4 << 8) | touch.rp.x_l8;
+        }
+        if (y_array) {
+            *y_array = (unsigned int)(touch.rp.y_h4 << 8) | touch.rp.y_l8;
+        }
+        return 1;
     }
 
     bool isPressed()
     {
-        return false;
+        if (__irq != SENSOR_PIN_NONE) {
+            return digitalRead(__irq) == LOW;
+        }
+        return getPoint(NULL, NULL);
     }
 
     bool enableInterrupt()
@@ -185,10 +217,25 @@ public:
 
     uint8_t getSupportTouchPoint()
     {
-        return 0;
+        return 1;
     }
 
-
+    bool getResolution(int16_t *x, int16_t *y)
+    {
+        uint8_t buffer[16] = {
+            0xFC, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0xe9
+        };
+        writeRegister(CHSC5816_REG_CMD_BUFF, buffer, 16);
+        memset(buffer, 0, 16);
+        readRegister(CHSC5816_REG_CMD_BUFF, buffer, 16);
+        for (int i = 0; i < 16; ++i) {
+            Serial.print(buffer[i], HEX);
+            Serial.print(",");
+        }
+        Serial.println();
+        return true;
+    }
 
     uint8_t getGesture()
     {
@@ -202,37 +249,45 @@ private:
         memset(&tmp, 0, sizeof(CHSC5816_Header_t));
         memset(&__header, 0, sizeof(CHSC5816_Header_t));
 
-        readRegister(CHSC5816_REG_IMG_HEAD, (uint8_t *)&__header, sizeof(__header));
+        uint32_t bootClean = 0x00;
+        writeRegister(CHSC5816_REG_BOOT_STATE, (uint8_t *)&bootClean, 4);
 
-        delay(5);
+        reset();
 
-        readRegister(CHSC5816_REG_IMG_HEAD, (uint8_t *)&tmp, sizeof(tmp));
-
-        if (memcmp(&tmp, &__header, sizeof(CHSC5816_Header_t)) != 0 ) {
-            return false;
+        for (int i = 0; i < 10; ++i) {
+            delay(10);
+            readRegister(CHSC5816_REG_IMG_HEAD, (uint8_t *)&__header, sizeof(CHSC5816_Header_t));
+            readRegister(CHSC5816_REG_IMG_HEAD, (uint8_t *)&tmp, sizeof(CHSC5816_Header_t));
+            if (memcmp(&tmp, &__header, sizeof(CHSC5816_Header_t)) != 0 ) {
+                continue;
+            }
+            if (__header.sig == CHSC5816_SIG_VALUE) {
+                return true;
+            }
         }
-
-        if (__header.sig == CHSC5816_SIG_VALUE) {
-        }
-
-        return true;
+        return false;
     }
 
     bool initImpl()
     {
         setRegAddressLenght(4);
 
-        if (__irq) {
+        if (__irq != SENSOR_PIN_NONE) {
             pinMode(__irq, INPUT);
         }
 
-        if (__rst) {
+        if (__rst != SENSOR_PIN_NONE) {
             pinMode(__rst, OUTPUT);
         }
 
         reset();
 
-        return checkOnline();
+        if (checkOnline()) {
+            reset();
+            return true;
+        }
+
+        return false;
     }
 
     int getReadMaskImpl()
@@ -242,10 +297,8 @@ private:
 
 
 protected:
-    int __rst;
-    int __irq;
-    int __irq_mode;
-    bool __rst_use_cb = false;
+    int __rst = SENSOR_PIN_NONE;
+    int __irq = SENSOR_PIN_NONE;
     CHSC5816_Header_t __header;
 };
 

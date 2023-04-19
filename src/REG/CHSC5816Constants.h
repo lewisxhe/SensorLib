@@ -35,13 +35,16 @@
 #define CHSC5816_REG_CMD_BUFF                  (0x20000000U)
 #define CHSC5816_REG_RSP_BUFF                  (0x20000000U)
 #define CHSC5816_REG_IMG_HEAD                  (0x20000014U)
-#define CHSC5816_REG_POINT                     (0x2000002C)
+#define CHSC5816_REG_POINT                     (0x2000002CU)
 #define CHSC5816_REG_WR_BUFF                   (0x20002000U)
 #define CHSC5816_REG_RD_BUFF                   (0x20002400U)
 #define CHSC5816_REG_HOLD_MCU                  (0x40007000U)
 #define CHSC5816_REG_AUTO_FEED                 (0x40007010U)
 #define CHSC5816_REG_REMAP_MCU                 (0x40007000U)
 #define CHSC5816_REG_RELEASE_MCU               (0x40007000U)
+#define CHSC5816_REG_BOOT_STATE                (0x20000018U)
+
+
 
 #define CHSC5816_HOLD_MCU_VAL                  (0x12044000U)
 #define CHSC5816_AUTO_FEED_VAL                 (0x0000925aU)
