@@ -49,7 +49,7 @@
 
 // #define LOG_PORT Serial
 #ifdef LOG_PORT
-#define LOG(fmt, ...) LOG_PORT.printf("[%s] " fmt , __func__, ##__VA_ARGS__)
+#define LOG(fmt, ...) LOG_PORT.printf("[%s] " fmt "\n", __func__, ##__VA_ARGS__)
 #define LOG_BIN(x)    LOG_PORT.println(x,BIN);
 #else
 #define LOG(fmt, ...)
