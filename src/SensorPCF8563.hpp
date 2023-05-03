@@ -209,6 +209,12 @@ public:
         // end();
     }
 
+    void setDateTime(RTC_DateTime datetime)
+    {
+        setDateTime(datetime.year, datetime.month, datetime.day, datetime.hour, datetime.minute, datetime.second);
+    }
+
+
     void setDateTime(uint16_t year,
                      uint8_t month,
                      uint8_t day,
@@ -554,7 +560,22 @@ private:
                 count++;
             }
         }
-        return (count == 3);
+        if (count != 3 ) {
+            return false;
+        }
+
+        // Determine whether the hardware clock year, month, and day match the internal time of the RTC.
+        // If they do not match, it will be updated to the compilation date
+        RTC_DateTime compileDatetime =  RTC_DateTime(__DATE__, __TIME__);
+        RTC_DateTime hwDatetime = getDateTime();
+        if (compileDatetime.year != hwDatetime.year ||
+                compileDatetime.month != hwDatetime.month ||
+                compileDatetime.day != hwDatetime.month
+           ) {
+            LOG("No match yy:mm:dd . set datetime to compilation date time");
+            setDateTime(compileDatetime);
+        }
+        return true;
     }
 
     int getReadMaskImpl()
