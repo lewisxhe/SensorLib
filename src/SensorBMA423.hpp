@@ -800,6 +800,7 @@ private:
         val = readRegister(BMA4_INTERNAL_STAT);
         if (val == BMA4_ASIC_INITIALIZED) {
             LOG("%s No need configure!\n", __func__);
+            readIrqStatus();    //clear irq status
             return true;
         }
 
