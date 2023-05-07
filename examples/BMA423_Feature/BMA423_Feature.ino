@@ -78,10 +78,10 @@ void setup()
     accel.enableAccelerometer();
 
     // Enable pedometer steps
-    accel.enableStepCounter();
+    accel.enablePedometer();
 
     // Emptying the pedometer steps
-    accel.resetStepCounter();
+    accel.resetPedometer();
 
     // Enable sensor features
     accel.enableFeature(SensorBMA423::FEATURE_STEP_CNTR |
@@ -92,7 +92,7 @@ void setup()
                         true);
 
     // Pedometer interrupt enable
-    accel.enableStepCountIRQ();
+    accel.enablePedometerIRQ();
     // Tilt interrupt enable
     accel.enableTiltIRQ();
     // DoubleTap interrupt enable
@@ -102,7 +102,7 @@ void setup()
     // Activity interruption enable
     accel.enableActivityIRQ();
     // Chip interrupt function enable
-    accel.enableInterrupt();
+    accel.configInterrupt();
 
 }
 
@@ -116,8 +116,8 @@ void loop()
         uint16_t status =   accel.readIrqStatus();
         Serial.printf("Accelerometer interrupt mask : 0x%x\n", status);
 
-        if (accel.isStepCounter()) {
-            uint32_t stepCounter = accel.getStepCounter();
+        if (accel.isPedometer()) {
+            uint32_t stepCounter = accel.getPedometerCounter();
             Serial.printf("Step count interrupt,step Counter:%u\n", stepCounter);
         }
         if (accel.isActivity()) {

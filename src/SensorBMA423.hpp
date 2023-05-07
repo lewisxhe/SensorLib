@@ -117,22 +117,22 @@ public:
 
     enum Feature {
         /**\name Feature enable macros for the sensor */
-        FEATURE_STEP_CNTR = 1,
+        FEATURE_STEP_CNTR   = 0x01,
         /**\name Below macros are mutually exclusive */
-        FEATURE_ANY_MOTION = 2,
-        FEATURE_NO_MOTION = 0x04,
-        FEATURE_ACTIVITY = 0x08,
-        FEATURE_TILT = 0x10,
-        FEATURE_WAKEUP = 0x20,
+        FEATURE_ANY_MOTION  = 0x02,
+        FEATURE_NO_MOTION   = 0x04,
+        FEATURE_ACTIVITY    = 0x08,
+        FEATURE_TILT        = 0x10,
+        FEATURE_WAKEUP      = 0x20,
     };
 
     /**\name Interrupt status macros */
     enum FeatureInterrupt {
-        INT_STEP_CNTR    = 0X02,
-        INT_ACTIVITY     = 0X04,
-        INT_TILT         = 0X05,
-        INT_WAKEUP       = 0X20,
-        INT_ANY_NO_MOTION = 0X40,
+        INT_STEP_CNTR     = 0x02,
+        INT_ACTIVITY      = 0x04,
+        INT_TILT          = 0x05,
+        INT_WAKEUP        = 0x20,
+        INT_ANY_NO_MOTION = 0x40,
     };
 
 #if defined(ARDUINO)
@@ -387,15 +387,8 @@ public:
         return writeRegister(BMA4_FEATURE_CONFIG_ADDR,  buffer, BMA423_FEATURE_SIZE) != DEV_WIRE_ERR;
     }
 
-    bool enableStepCounter()
-    {
-        return setStepCounter(true) != -1;
-    }
 
-    bool disableStepCounter()
-    {
-        return setStepCounter(false) != -1;
-    }
+
 
     bool setStepCounterWatermark(uint16_t watermark)
     {
@@ -407,7 +400,7 @@ public:
         uint16_t data = 0;
 
         rslt = readRegister(BMA4_FEATURE_CONFIG_ADDR, buffer, BMA423_FEATURE_SIZE);
-        if (rslt != -1) {
+        if (rslt != DEV_WIRE_ERR) {
             wm_lsb = buffer[index];
             wm_msb = buffer[index + 1] << 8;
             data = wm_lsb | wm_msb;
@@ -419,62 +412,49 @@ public:
             /* Writes stepcounter watermark settings in the sensor */
             rslt = writeRegister(BMA4_FEATURE_CONFIG_ADDR, buffer, BMA423_FEATURE_SIZE);
         }
-        return rslt != -1;
+        return rslt != DEV_WIRE_ERR;
     }
 
-    bool setStepCounter(bool enable)
+    bool disablePedometer()
+    {
+        return enablePedometer(false) != DEV_WIRE_ERR;
+    }
+
+    bool enablePedometer(bool enable = true)
     {
         int rslt;
         uint8_t buffer[BMA423_FEATURE_SIZE] = {0};
         /* Step detector enable bit pos. is 1 byte ahead of the base address */
         uint8_t index = BMA423_STEP_CNTR_OFFSET + 1;
         rslt = readRegister(BMA4_FEATURE_CONFIG_ADDR, buffer, BMA423_FEATURE_SIZE);
-        if (rslt != -1) {
+        if (rslt != DEV_WIRE_ERR) {
             buffer[index] = ((buffer[index] & ~0x08) | ((enable << 3) & 0x08));
             rslt = writeRegister(BMA4_FEATURE_CONFIG_ADDR, buffer, BMA423_FEATURE_SIZE);
         }
-        return rslt != -1;
+        return rslt != DEV_WIRE_ERR;
     }
 
-    uint32_t getStepCounter()
+    uint32_t getPedometerCounter()
     {
         uint8_t buffer[4] = {0};
         /* Reads the step counter output data from the gpio register */
         int rslt = readRegister(BMA4_STEP_CNT_OUT_0_ADDR, buffer, 4);
-        if (rslt != -1) {
+        if (rslt != DEV_WIRE_ERR) {
             return ((uint32_t)buffer[0]) | ((uint32_t)buffer[1] << 8) | ((uint32_t)buffer[2] << 16) | ((uint32_t)buffer[3] << 24);
         }
-        return 0;
+        return DEV_WIRE_NONE;
     }
 
-    void resetStepCounter()
+    void resetPedometer()
     {
         uint8_t buffer[BMA423_FEATURE_SIZE] = {0};
         /* Reset bit is 1 byte ahead of base address */
         uint8_t index = BMA423_STEP_CNTR_OFFSET + 1;
         int rslt = readRegister(BMA4_FEATURE_CONFIG_ADDR, buffer, BMA423_FEATURE_SIZE);
-        if (rslt != -1) {
+        if (rslt != DEV_WIRE_ERR) {
             buffer[index] = ((buffer[index] & ~0x04U) | ((1 << 2U) & 0x04U));
             writeRegister(BMA4_FEATURE_CONFIG_ADDR, buffer, BMA423_FEATURE_SIZE);
         }
-    }
-
-    uint16_t enableStepDetector(uint8_t enable)
-    {
-        uint8_t feature_config[BMA423_FEATURE_SIZE] = {0};
-        int rslt;
-        /* Step detector enable bit pos. is 1 byte ahead of the base address */
-        uint8_t index = BMA423_STEP_CNTR_OFFSET + 1;
-
-        rslt = readRegister(BMA4_FEATURE_CONFIG_ADDR, feature_config,
-                            BMA423_FEATURE_SIZE);
-        if (rslt != -1) {
-            feature_config[index] = ((feature_config[index] & ~0x08) | ((enable << 3) & 0x08));
-            rslt = writeRegister(BMA4_FEATURE_CONFIG_ADDR, feature_config,
-                                 BMA423_FEATURE_SIZE);
-        }
-
-        return rslt != -1;
     }
 
     bool enableFeature(uint8_t feature, uint8_t enable)
@@ -485,7 +465,7 @@ public:
         /* Update the length for read and write */
         update_len(&len, feature, enable);
         rslt = readRegister(BMA4_FEATURE_CONFIG_ADDR, buffer, len);
-        if (rslt != -1) {
+        if (rslt != DEV_WIRE_ERR) {
             if (enable) {
                 /* Enables the feature */
                 rslt = feature_enable(feature, len, buffer);
@@ -494,10 +474,25 @@ public:
                 rslt = feature_disable(feature, len, buffer);
             }
         }
-        return rslt != 0;
+        return rslt != DEV_WIRE_ERR;
     }
 
-    bool enableInterrupt(
+    uint16_t readIrqStatus()
+    {
+        uint8_t data[2] = {0};
+        if (readRegister(BMA4_INT_STAT_0_ADDR, data, 2) != DEV_WIRE_ERR) {
+            int_status = data[0] | (data[1] << 8);
+            return int_status;
+        }
+        return DEV_WIRE_NONE;
+    }
+
+    uint16_t getIrqStatus()
+    {
+        return int_status;
+    }
+
+    bool configInterrupt(
         /*! Trigger condition of interrupt pin */
         uint8_t edge_ctrl = BMA4_LEVEL_TRIGGER,
         /*! Level of interrupt pin */
@@ -523,73 +518,65 @@ public:
                           ((output_en << 3) & BMA4_INT_OUTPUT_EN_MASK) |
                           ((input_en << 4) & BMA4_INT_INPUT_EN_MASK)));
 
-        return  writeRegister(interrupt_address_array[int_line],  &data, 1) != -1;
+        this->int_line = int_line;
+
+        return  writeRegister(interrupt_address_array[int_line],  &data, 1) != DEV_WIRE_ERR;
     }
 
-    uint16_t readIrqStatus()
+    bool configreFeatureInterrupt(uint16_t  feature_interrupt_mask, bool enable)
     {
-        uint8_t data[2] = {0};
-        if (readRegister(BMA4_INT_STAT_0_ADDR, data, 2) != -1) {
-            int_status = data[0] | (data[1] << 8);
-            return int_status;
-        }
-        return 0;
+        return  interruptMap(int_line,  feature_interrupt_mask, enable);
     }
 
-    uint16_t getIrqStatus()
-    {
-        return int_status;
-    }
 
-    bool enableStepCountIRQ()
+    bool enablePedometerIRQ()
     {
-        return  (interruptMap(BMA4_INTR1_MAP,  INT_STEP_CNTR, true));
+        return  (interruptMap(int_line,  INT_STEP_CNTR, true));
     }
 
     bool enableTiltIRQ()
     {
-        return  (interruptMap(BMA4_INTR1_MAP, INT_TILT, true));
+        return  (interruptMap(int_line, INT_TILT, true));
     }
 
     bool enableWakeupIRQ()
     {
-        return  (interruptMap(BMA4_INTR1_MAP, INT_WAKEUP, true));
+        return  (interruptMap(int_line, INT_WAKEUP, true));
     }
 
     bool enableAnyNoMotionIRQ()
     {
-        return  (interruptMap(BMA4_INTR1_MAP, INT_ANY_NO_MOTION, true));
+        return  (interruptMap(int_line, INT_ANY_NO_MOTION, true));
     }
 
     bool enableActivityIRQ()
     {
-        return  (interruptMap(BMA4_INTR1_MAP, INT_ACTIVITY, true));
+        return  (interruptMap(int_line, INT_ACTIVITY, true));
     }
 
-
-    bool disableStepCountIRQ()
+    bool disablePedometerIRQ()
     {
-        return  (interruptMap(BMA4_INTR1_MAP,  INT_STEP_CNTR, false));
+        return  (interruptMap(int_line,  INT_STEP_CNTR, false));
     }
 
     bool disableTiltIRQ()
     {
-        return  (interruptMap(BMA4_INTR1_MAP, INT_TILT, false));
+        return  (interruptMap(int_line, INT_TILT, false));
     }
 
     bool disableWakeupIRQ()
     {
-        return  (interruptMap(BMA4_INTR1_MAP, INT_WAKEUP, false));
+        return  (interruptMap(int_line, INT_WAKEUP, false));
     }
 
     bool disableAnyNoMotionIRQ()
     {
-        return  (interruptMap(BMA4_INTR1_MAP, INT_ANY_NO_MOTION, false));
+        return  (interruptMap(int_line, INT_ANY_NO_MOTION, false));
     }
 
     bool disableActivityIRQ()
     {
-        return  (interruptMap(BMA4_INTR1_MAP, INT_ACTIVITY, false));
+        return  (interruptMap(int_line, INT_ACTIVITY, false));
     }
 
 
@@ -613,7 +600,7 @@ public:
         return (int_status & BMA423_ACTIVITY_INT);
     }
 
-    inline bool isStepCounter()
+    inline bool isPedometer()
     {
         return (int_status & BMA423_STEP_CNTR_INT);
     }
@@ -651,7 +638,7 @@ private:
             rslt = writeRegister(BMA4_INT_MAP_DATA_ADDR, &data[2], 1);
 
         }
-        return rslt != -1;
+        return rslt != DEV_WIRE_ERR;
     }
 
     /*!
@@ -660,7 +647,7 @@ private:
     bool setInterruptMode(uint8_t mode)
     {
         if (mode == BMA4_NON_LATCH_MODE || mode == BMA4_LATCH_MODE)
-            return writeRegister(BMA4_INTR_LATCH_ADDR, &mode, 1) != -1;
+            return writeRegister(BMA4_INTR_LATCH_ADDR, &mode, 1) != DEV_WIRE_ERR;
         return false;
     }
 
@@ -718,7 +705,7 @@ private:
             buffer[index] = buffer[index] & (~BMA423_ANY_NO_MOTION_AXIS_EN_MSK);
         }
         /* Write the configured settings in the sensor */
-        return writeRegister(BMA4_FEATURE_CONFIG_ADDR, buffer, len) != -1;
+        return writeRegister(BMA4_FEATURE_CONFIG_ADDR, buffer, len) != DEV_WIRE_ERR;
     }
 
     int feature_enable(uint8_t feature, uint8_t len, uint8_t *buffer)
@@ -771,7 +758,7 @@ private:
         }
 
         /* Write the feature enable settings in the sensor */
-        return writeRegister(BMA4_FEATURE_CONFIG_ADDR, buffer, len) != -1;
+        return writeRegister(BMA4_FEATURE_CONFIG_ADDR, buffer, len) != DEV_WIRE_ERR;
     }
 
     void update_len(uint8_t *len, uint8_t feature, uint8_t enable)
@@ -854,11 +841,11 @@ private:
 
     int getReadMaskImpl()
     {
-        return -1;
+        return DEV_WIRE_ERR;
     }
 
     uint16_t int_status;
-
+    uint8_t int_line;
 
 protected:
 
