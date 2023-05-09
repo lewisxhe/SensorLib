@@ -1,0 +1,39 @@
+name: PlatformIO CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        example: [examples/BAM423_Accelerometer/BAM423_Accelerometer.ino,examples/BAM423_Orientation/BAM423_Orientation.ino,examples/BAM423_Temperature/BAM423_Temperature.ino,examples/BMA423_Feature/BMA423_Feature.ino,examples/CM32181_LightSensor/CM32181_LightSensor.ino,examples/DRV2605_Basic/DRV2605_Basic.ino,examples/PCF8563_AlarmByUnits/PCF8563_AlarmByUnits.ino,examples/PCF8563_SimpleTime/PCF8563_SimpleTime.ino,examples/PCF8563_TimeLib/PCF8563_TimeLib.ino,examples/PCF8563_TimeSynchronization/PCF8563_TimeSynchronization.ino,examples/QMC6310_CalibrateExample/QMC6310_CalibrateExample.ino,examples/QMC6310_CompassExample/QMC6310_CompassExample.ino,examples/QMC6310_GetDataExample/QMC6310_GetDataExample.ino,examples/QMC6310_GetPolarExample/QMC6310_GetPolarExample.ino,examples/QMI8658_BlockExample/QMI8658_BlockExample.ino,examples/QMI8658_GetDataExample/QMI8658_GetDataExample.ino,examples/QMI8658_InterruptBlockExample/QMI8658_InterruptBlockExample.ino,examples/QMI8658_InterruptExample/QMI8658_InterruptExample.ino,examples/QMI8658_LockingMechanismExample/QMI8658_LockingMechanismExample.ino,examples/QMI8658_MadgwickAHRS/QMI8658_MadgwickAHRS.ino,examples/QMI8658_PedometerExample/QMI8658_PedometerExample.ino,examples/QMI8658_ReadFromFifoExample/QMI8658_ReadFromFifoExample.ino,examples/QMI8658_WakeOnMotion/QMI8658_WakeOnMotion.ino,examples/QMI8658_WakeOnMotionCallBackExample/QMI8658_WakeOnMotionCallBackExample.ino,examples/TouchDrv_CHSC5816_GetPoint/TouchDrv_CHSC5816_GetPoint.ino,examples/TouchDrv_CSTxxx_GetPoint/TouchDrv_CSTxxx_GetPoint.ino,examples/TouchDrv_FT3267_LilyGo_T_RGB/TouchDrv_FT3267_LilyGo_T_RGB.ino,examples/TouchDrv_FT6232_GetPoint/TouchDrv_FT6232_GetPoint.ino,examples/TouchDrv_GT911_GetPoint/TouchDrv_GT911_GetPoint.ino,examples/TouchDrv_GT911_LilyGo_T_RGB/TouchDrv_GT911_LilyGo_T_RGB.ino,examples/XL9555_ExtensionIOInterrupt/XL9555_ExtensionIOInterrupt.ino,examples/XL9555_ExtensionIORead/XL9555_ExtensionIORead.ino,examples/XL9555_ExtensionIOWirte/XL9555_ExtensionIOWirte.ino,]
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+
+      - name: Install MadgwickAHRS library
+        # https://github.com/arduino-libraries/MadgwickAHRS
+        run: pio pkg install --library "arduino-libraries/Madgwick@^1.2.0" -g
+
+      - name: Install esp8266-oled-ssd1306 library
+        # https://github.com/ThingPulse/esp8266-oled-ssd1306
+        run: pio pkg install --library "thingpulse/ESP8266 and ESP32 OLED driver for SSD1306 displays @ ^4.4.0" -g
+
+      - name: Run PlatformIO
+        run: pio ci --lib="." --board=esp32dev --board=esp32-c3-devkitm-1
+        env:
+  
+          PLATFORMIO_CI_SRC: ${{ matrix.example }}
