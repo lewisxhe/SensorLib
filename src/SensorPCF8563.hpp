@@ -554,6 +554,7 @@ private:
     {
         // Check whether RTC time is valid? If it is invalid, it can be judged
         // that there is a problem with the hardware, or the RTC power supply voltage is too low
+        /*
         int count = 0;
         for (int i = 0; i < 3; ++i) {
             if (!getRegisterBit(PCF8563_SEC_REG, 7)) {
@@ -561,6 +562,19 @@ private:
             }
         }
         if (count != 3 ) {
+            return false;
+        }
+        */
+
+        // 230704:Does not use power-off judgment, if the RTC backup battery is not installed,
+        //    it will return failure. Here only to judge whether the device communication is normal
+
+        //Check device is online
+        int ret = readRegister(PCF8563_SEC_REG);
+        if (ret == DEV_WIRE_ERR) {
+            return false;
+        }
+        if (BCD2DEC(ret & 0x7F) > 59) {
             return false;
         }
 
