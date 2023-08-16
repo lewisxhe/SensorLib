@@ -580,15 +580,15 @@ private:
 
         // Determine whether the hardware clock year, month, and day match the internal time of the RTC.
         // If they do not match, it will be updated to the compilation date
-        RTC_DateTime compileDatetime =  RTC_DateTime(__DATE__, __TIME__);
-        RTC_DateTime hwDatetime = getDateTime();
-        if (compileDatetime.year != hwDatetime.year ||
-                compileDatetime.month != hwDatetime.month ||
-                compileDatetime.day != hwDatetime.month
-           ) {
-            LOG("No match yy:mm:dd . set datetime to compilation date time");
-            setDateTime(compileDatetime);
-        }
+        // RTC_DateTime compileDatetime =  RTC_DateTime(__DATE__, __TIME__);
+        // RTC_DateTime hwDatetime = getDateTime();
+        // if (compileDatetime.year != hwDatetime.year ||
+        //         compileDatetime.month != hwDatetime.month ||
+        //         compileDatetime.day != hwDatetime.month
+        //    ) {
+        //     LOG("No match yy:mm:dd . set datetime to compilation date time");
+        //     setDateTime(compileDatetime);
+        // }
         return true;
     }
 
