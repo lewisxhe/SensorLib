@@ -64,6 +64,11 @@
 #define DEFAULT_SDA     (0xFF)
 #define DEFAULT_SCL     (0xFF)
 #define DEFAULT_SPISETTING  SPISettings()
+#elif defined(ARDUINO_ARCH_RP2040)
+#define SPI_DATA_ORDER  SPI_MSB_FIRST
+#define DEFAULT_SDA     (0xFF)
+#define DEFAULT_SCL     (0xFF)
+#define DEFAULT_SPISETTING  SPISettings()
 #else   //esp32
 #define SPI_DATA_ORDER  SPI_MSBFIRST
 #define DEFAULT_SDA     (SDA)
@@ -72,9 +77,15 @@
 #endif
 
 #ifndef ESP32
-#define log_e(...)
-#define log_i(...)
-#define log_d(...)
+#ifndef log_e
+#define log_e(...)          Serial.printf(__VA_ARGS__)
+#endif
+#ifndef log_i
+#define log_i(...)          Serial.printf(__VA_ARGS__)
+#endif
+#ifndef log_d
+#define log_d(...)          Serial.printf(__VA_ARGS__)
+#endif
 #endif
 
 #ifndef INPUT
@@ -91,14 +102,6 @@
 
 #ifndef FALLING
 #define FALLING               (0x02)
-#endif
-
-#ifndef LSBFIRST
-#define LSBFIRST 0
-#endif
-
-#ifndef MSBFIRST
-#define MSBFIRST 1
 #endif
 
 
@@ -137,6 +140,11 @@ public:
         __scl = scl;
 #if defined(NRF52840_XXAA) || defined(NRF52832_XXAA)
         __wire->begin();
+#elif defined(ARDUINO_ARCH_RP2040)
+        __wire->end();
+        __wire->setSDA(__sda);
+        __wire->setSCL(__scl);
+        __wire->begin();
 #else
         __wire->begin(__sda, __scl);
 #endif
@@ -148,7 +156,13 @@ public:
         return __has_init;
     }
 
-    bool begin(int cs, int mosi = -1, int miso = -1, int sck = -1, SPIClass &spi = SPI)
+    bool begin(int cs, int mosi = -1, int miso = -1, int sck = -1,
+#if defined(ARDUINO_ARCH_RP2040)
+               SPIClassRP2040 &spi = SPI
+#else
+               SPIClass &spi = SPI
+#endif
+              )
     {
         LOG("Using SPI interface.\n");
         if (__has_init)return thisChip().initImpl();
@@ -162,6 +176,11 @@ public:
         }
         if (mosi != -1 && miso != -1 && sck != -1) {
 #if defined(NRF52840_XXAA) || defined(NRF52832_XXAA)
+            __spi->begin();
+#elif defined(ARDUINO_ARCH_RP2040)
+            __spi->setSCK(sck);
+            __spi->setRX(miso);
+            __spi->setTX(mosi);
             __spi->begin();
 #else
             __spi->begin(sck, miso, mosi);
@@ -334,7 +353,7 @@ protected:
                 LOG("I2C Transfer Error!\n");
                 return DEV_WIRE_ERR;
             }
-            __wire->requestFrom(__addr, 1U);
+            __wire->requestFrom(__addr, 1U, false);
             return __wire->read();
         }
         if (__spi) {
@@ -490,6 +509,11 @@ protected:
             log_i("SDA:%d SCL:%d", __sda, __scl);
 #if defined(NRF52840_XXAA) || defined(NRF52832_XXAA)
             __wire->begin();
+#elif defined(ARDUINO_ARCH_RP2040)
+            __wire->end();
+            __wire->setSDA(__sda);
+            __wire->setSCL(__scl);
+            __wire->begin();
 #else
             __wire->begin(__sda, __scl);
 #endif
@@ -531,8 +555,13 @@ protected:
     bool                __has_init              = false;
 #if defined(ARDUINO)
     TwoWire             *__wire                 = NULL;
+#if defined(ARDUINO_ARCH_RP2040)
+    SPIClassRP2040      *__spi                  = NULL;
+#else
     SPIClass            *__spi                  = NULL;
-    SPISettings         *__spiSetting           = NULL;
+#endif
+
+    SPISettings          *__spiSetting           = NULL;
 #endif
     uint32_t            __freq                  = 1000000;
     uint8_t             __dataOrder             = SPI_DATA_ORDER;
