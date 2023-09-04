@@ -141,7 +141,7 @@ public:
     {
         __CHSC5816_PointReg touch;
         readRegister(CHSC5816_REG_POINT, touch.data, 8);
-        if (touch.rp.status != 0xFF && touch.rp.fingerNumber == 0) {
+        if (touch.rp.status == 0xFF && touch.rp.fingerNumber == 0) {
             return 0;
         }
         if (x_array) {
