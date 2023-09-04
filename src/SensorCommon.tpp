@@ -291,10 +291,10 @@ protected:
         return DEV_WIRE_ERR;
     }
 
-    int writeRegister(int reg, uint8_t *buf, uint8_t lenght)
+    int writeRegister(int reg, uint8_t *buf, uint8_t length)
     {
         if (thisWriteRegCallback) {
-            return thisWriteRegCallback(__addr, reg, buf, lenght);
+            return thisWriteRegCallback(__addr, reg, buf, length);
         }
 #if defined(ARDUINO)
         if (__wire) {
@@ -306,7 +306,7 @@ protected:
                     __wire->write(reg >> (8 * ((__reg_addr_len - 1) - i)));
                 }
             }
-            __wire->write(buf, lenght);
+            __wire->write(buf, length);
             return (__wire->endTransmission() == 0) ? 0 : DEV_WIRE_ERR;
         }
         if (__spi) {
@@ -319,7 +319,7 @@ protected:
                     __spi->transfer(reg >> (8 * ((__reg_addr_len - 1) - i)));
                 }
             }
-            __spi->transfer(buf, lenght);
+            __spi->transfer(buf, length);
             digitalWrite(__cs, HIGH);
             __spi->endTransaction();
             return DEV_WIRE_NONE;
@@ -378,10 +378,10 @@ protected:
         return DEV_WIRE_ERR;
     }
 
-    int readRegister(int reg, uint8_t *buf, uint8_t lenght)
+    int readRegister(int reg, uint8_t *buf, uint8_t length)
     {
         if (thisReadRegCallback) {
-            return thisReadRegCallback(__addr, reg, buf, lenght);
+            return thisReadRegCallback(__addr, reg, buf, length);
         }
 #if defined(ARDUINO)
         if (__wire) {
@@ -396,8 +396,8 @@ protected:
             if (__wire->endTransmission(__sendStop) != 0) {
                 return DEV_WIRE_ERR;
             }
-            __wire->requestFrom(__addr, lenght);
-            return __wire->readBytes(buf, lenght) == lenght ? DEV_WIRE_NONE : DEV_WIRE_ERR;
+            __wire->requestFrom(__addr, length);
+            return __wire->readBytes(buf, length) == length ? DEV_WIRE_NONE : DEV_WIRE_ERR;
         }
         if (__spi) {
             __spi->beginTransaction(*__spiSetting);
@@ -411,7 +411,7 @@ protected:
                     __spi->transfer(reg >> (8 * ((__reg_addr_len - 1) - i)));
                 }
             }
-            for (size_t i = 0; i < lenght; i++) {
+            for (size_t i = 0; i < length; i++) {
                 buf[i] = __spi->transfer(0x00);
             }
             digitalWrite(__cs, HIGH);
