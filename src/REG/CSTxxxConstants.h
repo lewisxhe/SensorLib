@@ -30,6 +30,24 @@
 
 #pragma once
 
-#define CSTXXX_SLAVE_ADDRESS       (0x15)
+#define CSTXXX_SLAVE_ADDRESS        (0x15)
+#define CST816T_SLAVE_ADDRESS       (0x15)
+#define CST226SE_SLAVE_ADDRESS      (0x5A)
 
-#define CSTXXX_REG_STATUS          (0x00)
+#define CSTXXX_REG_STATUS           (0x00)
+#define CSTXXX_REG_MODEL_ID         (0xA8)
+#define CSTXXX_REG_CHIP_TYPE_L      (0xAA)
+#define CSTXXX_REG_CHIP_TYPE_H      (0xAB)
+
+#define CST816T_MODEL_ID            (0x22)
+#define CST226SE_MODEL_ID           (0x08)
+
+
+
+
+
+
+
+
+
+

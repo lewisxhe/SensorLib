@@ -31,6 +31,7 @@
 
 #include <stdint.h>
 
+typedef void (*home_button_callback_t)(void *user_data);
 
 class TouchData
 {

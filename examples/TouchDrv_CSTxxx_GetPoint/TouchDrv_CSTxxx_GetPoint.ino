@@ -56,19 +56,45 @@ void setup()
     Serial.begin(115200);
     while (!Serial);
 
+#if SENSOR_RST != -1
+    pinMode(SENSOR_RST, OUTPUT);
+    digitalWrite(SENSOR_RST, LOW);
+    delay(3);
+    digitalWrite(SENSOR_RST, HIGH);
+    delay(5);
+    delay(1000);
+#endif
+
+    // Search for known CSTxxx device addresses
+    uint8_t address = 0xFF;
+    Wire.begin(SENSOR_SDA, SENSOR_SCL);
+    Wire.beginTransmission(CST816T_SLAVE_ADDRESS);
+    if (Wire.endTransmission() == 0) {
+        address = CST816T_SLAVE_ADDRESS;
+    }
+    Wire.beginTransmission(CST226SE_SLAVE_ADDRESS);
+    if (Wire.endTransmission() == 0) {
+        address = CST226SE_SLAVE_ADDRESS;
+    }
+    while (address == 0xFF) {
+        Serial.println("Could't find touch chip!"); delay(1000);
+    }
+
     touch.setPins(SENSOR_RST, SENSOR_IRQ);
-    touch.init(Wire, SENSOR_SDA, SENSOR_SCL, CSTXXX_SLAVE_ADDRESS);
-    Serial.println("CSTxxx is not a standard I2C device, and it is impossible to read whether the device is online through any register, please ensure that the device is connected to the host");
+    touch.init(Wire, SENSOR_SDA, SENSOR_SCL, address);
+
+    // Depending on the touch panel, not all touch panels have touch buttons.
+    touch.setHomeButtonCallback([](void *user_data) {
+        Serial.println("Home key pressed!");
+    }, NULL);
 }
 
 void loop()
 {
-    uint8_t point = touch.getPoint(x, y, 5);
-    if (point) {
-        Serial.print("Point:");
-        Serial.print(point);
-        Serial.print(" ");
-        uint8_t touched = touch.getPoint(x, y, 2);
+
+    uint8_t touched = touch.getPoint(x, y, touch.getMaxDetectedPoint());
+    if (touched) {
+
         for (int i = 0; i < touched; ++i) {
             Serial.print("X[");
             Serial.print(i);
@@ -83,6 +109,7 @@ void loop()
         }
         Serial.println();
     }
+
     delay(5);
 }
 
