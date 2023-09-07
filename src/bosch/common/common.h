@@ -68,7 +68,11 @@ typedef struct bhy_config {
             int miso;
             int mosi;
             int sck;
+#if defined(ARDUINO_ARCH_RP2040)
+            SPIClassRP2040 *spi;
+#else
             SPIClass *spi;
+#endif
         } spi_dev;
     } u  ;
 } bhy_config_t;

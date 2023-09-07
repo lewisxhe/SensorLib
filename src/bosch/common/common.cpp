@@ -97,7 +97,14 @@ bool setup_interfaces(bool reset_power, bhy_config_t config)
     pinMode(config.irq, INPUT_PULLDOWN);
     switch (config.intf) {
     case BHY2_I2C_INTERFACE:
+#if defined(ARDUINO_ARCH_RP2040)
+        config.u.i2c_dev.wire->end();
+        config.u.i2c_dev.wire->setSDA(config.u.i2c_dev.sda);
+        config.u.i2c_dev.wire->setSCL(config.u.i2c_dev.scl);
+        config.u.i2c_dev.wire->begin();
+#else
         config.u.i2c_dev.wire->begin(config.u.i2c_dev.sda, config.u.i2c_dev.scl);
+#endif
         config.u.i2c_dev.wire->beginTransmission(config.u.i2c_dev.addr);
         if (config.u.i2c_dev.wire->endTransmission() != 0) {
             return false;
@@ -105,7 +112,15 @@ bool setup_interfaces(bool reset_power, bhy_config_t config)
         break;
     case BHY2_SPI_INTERFACE:
         pinMode(config.u.spi_dev.cs, OUTPUT);
+
+#if defined(ARDUINO_ARCH_RP2040)
+        config.u.spi_dev.spi->setSCK(config.u.spi_dev.sck);
+        config.u.spi_dev.spi->setRX(config.u.spi_dev.miso);
+        config.u.spi_dev.spi->setTX(config.u.spi_dev.mosi);
+        config.u.spi_dev.spi->begin();
+#else
         config.u.spi_dev.spi->begin(config.u.spi_dev.sck, config.u.spi_dev.miso, config.u.spi_dev.mosi);
+#endif
         break;
     default:
         break;
@@ -113,8 +128,12 @@ bool setup_interfaces(bool reset_power, bhy_config_t config)
     return true;
 }
 
-
+#if defined(ARDUINO_ARCH_RP2040)
+static SPISettings  __spiSetting = SPISettings();
+#else
 static SPISettings  __spiSetting = SPISettings(4000000, SPI_MSBFIRST, SPI_MODE0);
+#endif
+
 
 int8_t bhy2_spi_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr)
 {
@@ -1079,6 +1098,5 @@ void check_bhy2_api(unsigned int line, const char *func, int8_t val)
                       get_api_error(val));
         delay(1000);
     }
-    esp_restart();
 }
 
