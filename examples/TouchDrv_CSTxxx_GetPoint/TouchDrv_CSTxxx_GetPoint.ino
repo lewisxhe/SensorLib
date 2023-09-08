@@ -92,7 +92,7 @@ void setup()
 void loop()
 {
 
-    uint8_t touched = touch.getPoint(x, y, touch.getMaxDetectedPoint());
+    uint8_t touched = touch.getPoint(x, y, touch.getSupportTouchPoint());
     if (touched) {
 
         for (int i = 0; i < touched; ++i) {
