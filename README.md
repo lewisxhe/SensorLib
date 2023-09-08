@@ -12,14 +12,21 @@
 
 Support list:
 
-| Sensor  | Description      | I2C | SPI |
-| ------- | ---------------- | --- | --- |
-| PCF8563 | RTC              | ✔️   | ❌   |
-| QMI8658 | IMU              | ✔️   | ✔️   |
-| QMC6310 | MAG              | ✔️   | ❌   |
-| XL9555  | I/O expander     | ✔️   | ❌   |
-| FT6X36  | Capacitive touch | ✔️   | ❌   |
-| BMA423  | Accelerometer    | ✔️   | ❌   |
+| Sensor              | Description          | I2C | SPI |
+| ------------------- | -------------------- | --- | --- |
+| NXP PCF8563/HYM8563 | Real-time clock      | ✔️   | ❌   |
+| NXP PCF85063        | Real-time clock      | ✔️   | ❌   |
+| QMI8658             | IMU                  | ✔️   | ✔️   |
+| QMC6310             | Magnetic Sensor      | ✔️   | ❌   |
+| XL9555              | I/O expander         | ✔️   | ❌   |
+| BMA423              | Accelerometer        | ✔️   | ❌   |
+| DRV2605             | Haptic Driver        | ✔️   | ❌   |
+| CM32181             | Ambient Light Sensor | ✔️   | ❌   |
+| FT6X36              | Capacitive touch     | ✔️   | ❌   |
+| CST816T             | Capacitive touch     | ✔️   | ❌   |
+| CST226SE            | Capacitive touch     | ✔️   | ❌   |
+| CHSC5816            | Capacitive touch     | ✔️   | ❌   |
+| GT911               | Capacitive touch     | ✔️   | ❌   |
 
 
 
