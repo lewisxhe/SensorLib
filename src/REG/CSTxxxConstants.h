@@ -39,9 +39,10 @@
 #define CSTXXX_REG_CHIP_TYPE_L      (0xAA)
 #define CSTXXX_REG_CHIP_TYPE_H      (0xAB)
 
-#define CST816T_MODEL_ID            (0x22)
-#define CST226SE_MODEL_ID           (0x08)
+#define CST816T_MODEL_ID            (0x5356)
+#define CST226SE_MODEL_ID           (0xA8)
 
+#define CST226SE_BUFFER_NUM         (28)
 
 
 

@@ -114,13 +114,44 @@ public:
 
     uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point = 1)
     {
+        uint8_t point = 0;
+        if (!x_array && !y_array || !get_point) {
+            return 0;
+        }
         switch (__model) {
         case CST816T_MODEL_ID:
-            return __getCST816T(x_array, y_array, get_point);
+            return updateCST816T(x_array, y_array, get_point);
         case CST226SE_MODEL_ID:
-            return __getCST226SE(x_array, y_array, get_point);
+            point = updateCST226SE();
+            if (point) {
+                for (int i = 0; i < get_point; i++) {
+                    x_array[i] =  report.x[i];
+                    y_array[i] =  report.y[i];
+                }
+            }
+            break;
         default:
             return 0;
+        }
+        return point;
+    }
+
+    const TouchData getPoint()
+    {
+        uint8_t point = 0;
+        TouchData data;
+        switch (__model) {
+        case CST816T_MODEL_ID:
+            // return updateCST816T(x_array, y_array, get_point);
+            //TODO:
+            return TouchData();
+        case CST226SE_MODEL_ID:
+            point = updateCST226SE();
+            if (point) {
+                return report;
+            }
+        default:
+            break;
         }
     }
 
@@ -162,10 +193,12 @@ public:
     //2uA
     void sleep()
     {
+        writeRegister(0xD1, 0x05);
     }
 
     void wakeup()
     {
+
     }
 
     void idle()
@@ -180,24 +213,20 @@ public:
 
     uint8_t getSupportTouchPoint()
     {
-        return 1;
+        return __maxPoint;
     }
 
     bool getResolution(int16_t *x, int16_t *y)
     {
-        return false;
+        *x = resX;
+        *y = resY;
+        return true;
     }
 
     uint8_t getGesture()
     {
         return 0;
     }
-
-    uint8_t getMaxDetectedPoint()
-    {
-        return __maxPoint;
-    }
-
 
     void setHomeButtonCallback(home_button_callback_t cb, void *user_data = NULL)
     {
@@ -207,23 +236,19 @@ public:
 
 private:
 
-    uint8_t __getCST226SE(int16_t *x_array, int16_t *y_array, uint8_t get_point)
+    uint8_t updateCST226SE()
     {
-        uint8_t buffer[26];
+        uint8_t buffer[CST226SE_BUFFER_NUM];
         uint8_t index = 0;
 
-        if (!x_array && !y_array || !get_point) {
-            return 0;
-        }
-
-        if (readRegister(CSTXXX_REG_STATUS, buffer, 26) == DEV_WIRE_ERR) {
+        if (readRegister(CSTXXX_REG_STATUS, buffer, CST226SE_BUFFER_NUM) == DEV_WIRE_ERR) {
             return 0;
         }
 
 #ifdef LOG_PORT
         LOG_PORT.print("RAW:");
-        for (int i = 0; i < 26; ++i) {
-            LOG_PORT.print(buffer[i], HEX); LOG_PORT.print(",");
+        for (int i = 0; i < CST226SE_BUFFER_NUM; ++i) {
+            LOG_PORT.printf("%02X,", buffer[i]);
         }
         LOG_PORT.println();
 #endif
@@ -232,14 +257,13 @@ private:
             if (__homeButtonCb) {
                 __homeButtonCb(this->user_data);
             }
-            return 1;
+            return 0;
         }
 
         if (buffer[6] != 0xAB)return 0;
         if (buffer[0] == 0xAB)return 0;
-        if (buffer[5] == 0x80) {
-            return 0;
-        }
+        if (buffer[5] == 0x80)return 0;
+
         uint8_t point = buffer[5] & 0x7F;
         if (point > 5  || !point) {
             writeRegister(0x00, 0xAB);
@@ -247,21 +271,25 @@ private:
         }
 
         for (int i = 0; i < point; i++) {
-            x_array[i] = (int16_t)((buffer[index + 1] << 4) | ((buffer[index + 3] >> 4) & 0x0F));
-            y_array[i] = (int16_t)((buffer[index + 2] << 4) | (buffer[index + 3] & 0x0F));
-            index = (i == 0) ?  (index + 2) :  (index + 5);
+            report.id[i] = buffer[index] >> 4;
+            report.status[i] = buffer[index] & 0x0F;
+            report.x[i] = (uint16_t)((buffer[index + 1] << 4) | ((buffer[index + 3] >> 4) & 0x0F));
+            report.y[i] = (uint16_t)((buffer[index + 2] << 4) | (buffer[index + 3] & 0x0F));
+            report.pressure[i] = buffer[index + 4];
+            index = (i == 0) ?  (index + 7) :  (index + 5);
         }
 
 #ifdef LOG_PORT
-        for (int i = 0; i < point; i++) {
-            LOG_PORT.printf("[%d] --> X:%d Y:%d \n", i, x_array[i], y_array[i]);
+        for (int i = 0; i < 5; i++) {
+            LOG_PORT.printf("[%d]-X:%u Y:%u P:%u sta:%u ", report.id[i], report.x[i], report.y[i], report.pressure[i], report.status[i]);
         }
+        LOG_PORT.println();
 #endif
-        return 0;
+        return point;
     }
 
 
-    uint8_t __getCST816T(int16_t *x_array, int16_t *y_array, uint8_t get_point)
+    uint8_t updateCST816T(int16_t *x_array, int16_t *y_array, uint8_t get_point)
     {
         uint8_t buffer[13];
         if (readRegister(CSTXXX_REG_STATUS, buffer, 13) == DEV_WIRE_ERR) {
@@ -301,8 +329,10 @@ private:
 
     bool initImpl()
     {
+        uint8_t buffer[8];
+
         setReadRegisterSendStop(false);
-        setRegAddressLenght(1);
+        setRegAddressLenght(2);
 
         if (__irq != SENSOR_PIN_NONE) {
             pinMode(__irq, INPUT);
@@ -314,25 +344,88 @@ private:
 
         reset();
 
-        //Model ID Register : 0xA8
-        //CST816T   : 0X22 , One point
-        //CST226SE  : 0X08 , five point
-        __model =  readRegister(CSTXXX_REG_MODEL_ID);
+        // Enter Command mode
+        writeRegister(0xD1, 0x01);
+        delay(10);
+        readRegister(0xD1FC, buffer, 4);
+        uint32_t checkcode = 0;
+        checkcode = buffer[3];
+        checkcode <<= 8;
+        checkcode |= buffer[2];
+        checkcode <<= 8;
+        checkcode |= buffer[1];
+        checkcode <<= 8;
+        checkcode |= buffer[0];
 
+        log_i("Chip checkcode:0x%x.\r\n", checkcode);
+
+        readRegister(0xD1F8, buffer, 4);
+        resX = ( buffer[1] << 8) | buffer[0];
+        resY = ( buffer[3] << 8) | buffer[2];
+        log_i("Chip resolution X:%u Y:%u\r\n", resX, resY);
+
+        readRegister(0xD204, buffer, 4);
+        uint32_t chipType = buffer[3];
+        chipType <<= 8;
+        chipType |= buffer[2];
+
+
+        uint32_t ProjectID = buffer[1];
+        ProjectID <<= 8;
+        ProjectID |= buffer[0];
+
+        log_i("Chip type :0x%X, ProjectID:0X%x\r\n",
+              chipType, ProjectID);
+
+
+        readRegister(0xD208, buffer, 8);
+
+        uint32_t fwVersion = buffer[3];
+        fwVersion <<= 8;
+        fwVersion |= buffer[2];
+        fwVersion <<= 8;
+        fwVersion |= buffer[1];
+        fwVersion <<= 8;
+        fwVersion |= buffer[0];
+
+        uint32_t checksum = buffer[7];
+        checksum <<= 8;
+        checksum |= buffer[6];
+        checksum <<= 8;
+        checksum |= buffer[5];
+        checksum <<= 8;
+        checksum |= buffer[4];
+
+
+        log_i("Chip ic version:0x%X, checksum:0x%X\n",
+              fwVersion, checksum);
+
+        if (fwVersion == 0xA5A5A5A5) {
+            log_i(" Chip ic don't have firmware. \n");
+            return false;
+        }
+        if ((checkcode & 0xffff0000) != 0xCACA0000) {
+            log_i("firmware info read error .\n");
+            return false;
+        }
+
+        // Exit Command mode
+        writeRegister(0xD1, 0x09);
+
+        __model = chipType;
         switch (__model) {
         case CST816T_MODEL_ID:
-            Serial.println("Find CST816T");
+            log_i("Find CST816T");
             __maxPoint = 1;
             break;
         case CST226SE_MODEL_ID:
-            Serial.println("Find CST226SE");
+            log_i("Find CST226SE");
             __maxPoint = 5;
             break;
-        default:
-            Serial.print("Find device ID :"); Serial.println(__model);
-            __maxPoint = 1;
-            break;
+        default: return false;
         }
+
+        setRegAddressLenght(1);
 
         return probe();
     }
@@ -346,10 +439,12 @@ private:
 protected:
     int __rst = SENSOR_PIN_NONE;
     int __irq = SENSOR_PIN_NONE;
-    uint8_t __model = 0xFF;
+    uint32_t __model = 0xFF;
     uint8_t __maxPoint = 1;
     home_button_callback_t __homeButtonCb = NULL;
     void *user_data = NULL;
+    TouchData report;
+    uint16_t resX, resY;
 };
 
 

@@ -36,19 +36,31 @@ typedef void (*home_button_callback_t)(void *user_data);
 class TouchData
 {
 public:
+    TouchData() {}
+    ~TouchData() {}
+    uint8_t available;
+    uint8_t id[5];
     uint16_t x[5];
     uint16_t y[5];
+    uint8_t  status[5];
+    uint8_t  pressure[5];
 
     uint16_t getX(uint8_t index = 0)
     {
-        return 0;
+        return x[index];
     }
-
     uint16_t getY(uint8_t index = 0)
     {
-        return 0;
+        return y[index];
     }
-
+    uint16_t getPressure(uint8_t index = 0)
+    {
+        return pressure[index];
+    }
+    uint16_t getStatus(uint8_t index = 0)
+    {
+        return status[index];
+    }
 };
 
 
