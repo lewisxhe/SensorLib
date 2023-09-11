@@ -300,11 +300,20 @@ private:
             return 0;
         }
 
+        // Only suitable for AMOLED 1.91 inch
+        // RAW:00,00,01,80,78,02,58,00,00,FF,FF,FF,FF,
+        if (buffer[2] == 0x01 && buffer[3] == 0x80 && buffer[4] == 0x78 && buffer[5] == 0x02 && buffer[6] == 0x58) {
+            if (__homeButtonCb) {
+                __homeButtonCb(this->user_data);
+            }
+            return 0;
+        }
+
         uint8_t point = buffer[2] & 0x0F;
 #ifdef LOG_PORT
         LOG_PORT.print("RAW:");
         for (int i = 0; i < 13; ++i) {
-            LOG_PORT.print(buffer[i], HEX); LOG_PORT.print(",");
+            LOG_PORT.printf("%02X,", buffer[i]);
         }
         LOG_PORT.println();
 #endif
@@ -396,7 +405,7 @@ private:
         checksum <<= 8;
         checksum |= buffer[4];
 
-
+#if 0  //Skip firmware detection
         log_i("Chip ic version:0x%X, checksum:0x%X\n",
               fwVersion, checksum);
 
@@ -408,6 +417,8 @@ private:
             log_i("firmware info read error .\n");
             return false;
         }
+#endif
+
 
         // Exit Command mode
         writeRegister(0xD1, 0x09);
