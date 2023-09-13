@@ -73,7 +73,7 @@ void setup()
             SAMPLING_X1_8
             SAMPLING_X1_4
     */
-    light.setSampling(SAMPLING_X2);
+    light.setSampling(SensorCM32181::SAMPLING_X2);
 
     //Power On sensor
     light.powerOn();
