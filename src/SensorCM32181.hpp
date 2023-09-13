@@ -32,27 +32,41 @@
 #include "REG/CM32181Constants.h"
 #include "SensorCommon.tpp"
 
-enum sensor_sampling {
-    SAMPLING_X1,
-    SAMPLING_X2,
-    SAMPLING_X1_8,
-    SAMPLING_X1_4,
-};
-
-enum sensor_integration_time {
-    INTEGRATION_TIME_100MS,
-    INTEGRATION_TIME_200MS,
-    INTEGRATION_TIME_400MS,
-    INTEGRATION_TIME_800MS,
-    INTEGRATION_TIME_25MS = 6,
-    INTEGRATION_TIME_50MS = 8,
-};
-
 class SensorCM32181 :
     public SensorCommon<SensorCM32181>
 {
     friend class SensorCommon<SensorCM32181>;
 public:
+
+
+    enum Sampling {
+        SAMPLING_X1,    //ALS Sensitivity x 1
+        SAMPLING_X2,    //ALS Sensitivity x 2
+        SAMPLING_X1_8,  //ALS Sensitivity x (1/8)
+        SAMPLING_X1_4,  //ALS Sensitivity x (1/4)
+    };
+
+    enum IntegrationTime {
+        INTEGRATION_TIME_25MS = 0x0C,
+        INTEGRATION_TIME_50MS = 0x08,
+        INTEGRATION_TIME_100MS = 0x00, //0000 = 100ms
+        INTEGRATION_TIME_200MS, //0001 = 200ms
+        INTEGRATION_TIME_400MS, //0010 = 400ms
+        INTEGRATION_TIME_800MS, //0011 = 800ms
+    };
+
+    enum PowerSaveMode {
+        PowerSaveMode1 = 0x00,
+        PowerSaveMode2,
+        PowerSaveMode3,
+        PowerSaveMode4
+    };
+
+    enum InterruptEvent {
+        ALS_EVENT_LOW_TRIGGER = 0x00,
+        ALS_EVENT_HIGH_TRIGGER,
+        ALS_EVENT_NULL,
+    };
 
 #if defined(ARDUINO)
     SensorCM32181(TwoWire &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = CM32181_SLAVE_ADDRESS)
@@ -100,59 +114,80 @@ public:
         // end();
     }
 
-    void setSampling(sensor_sampling tempSampling  = SAMPLING_X1,
-                     sensor_integration_time int_time = INTEGRATION_TIME_200MS,
+    void setSampling(Sampling tempSampling  = SAMPLING_X1,
+                     IntegrationTime int_time = INTEGRATION_TIME_200MS,
                      bool enable_interrupt = false)
     {
-
-        uint8_t buffer[2] = {0};
-        uint16_t value = (tempSampling << 11);
-        value |= (int_time << 6);
-        value |= enable_interrupt;
-        buffer[0] = (value >> 8) & 0xFF;
-        buffer[1] = (value) & 0xFF;
-        writeRegister(CM32181_REG_ALS_CONF, buffer, 2);
+        uint16_t data;
+        readRegister(CM32181_REG_ALS_CONF, (uint8_t *)&data, 2);
+        data &= ~(0x03 << 11);
+        data |= tempSampling << 11;
+        data &= ~(0xF << 6);
+        data |= int_time << 6;
+        bitWrite(data, 1, enable_interrupt);
+        readRegister(CM32181_REG_ALS_CONF, (uint8_t *)&data, 2);
     }
 
-
-    //todo:
-    void setIntThreshold(uint16_t high_threshold, uint16_t low_threshold)
+    void setIntThreshold(uint16_t low_threshold, uint16_t high_threshold)
     {
+
         uint8_t buffer[2] = {0};
-        buffer[1] = (high_threshold >> 8) & 0xFF;
-        buffer[0] = (high_threshold) & 0xFF;
+        buffer[1] = highByte(high_threshold);
+        buffer[0] = lowByte(high_threshold);;
         writeRegister(CM32181_REG_ALS_THDH, buffer, 2);
-        buffer[1] = (low_threshold >> 8) & 0xFF;
-        buffer[0] = (low_threshold) & 0xFF;
+        buffer[1] = highByte(low_threshold);
+        buffer[0] = lowByte(low_threshold);
         writeRegister(CM32181_REG_ALS_THDL, buffer, 2);
     }
 
+
+    void powerSave(PowerSaveMode mode, bool enable)
+    {
+        uint16_t data = 0x00;
+        readRegister(CM32181_REG_ALS_PSM, (uint8_t *)&data, 2);
+        data |= mode << 1;
+        enable ? data |= 0x01 : data |= 0x00;
+        writeRegister(CM32181_REG_ALS_PSM, (uint8_t *)&data, 2);
+    }
+
     // Read CM32181_REG_ALS_STATUS register to clear interrupt
-    uint8_t getInterruptStatus()
+    InterruptEvent getIrqStatus()
     {
-        uint8_t buffer[2];
-        readRegister(CM32181_REG_ALS_STATUS, buffer, 2);
-        return (buffer[1] >> 6) ;
+        uint16_t data;
+        readRegister(CM32181_REG_ALS_STATUS, (uint8_t *)&data, 2);
+        return bitRead(data, 15) ? ALS_EVENT_LOW_TRIGGER :  bitRead(data, 14) ? ALS_EVENT_HIGH_TRIGGER : ALS_EVENT_NULL;
     }
 
-    void enableIRQ()
+    void enableINT()
     {
-        setRegisterBit(CM32181_REG_ALS_CONF, 1);
+        uint16_t data;
+        readRegister(CM32181_REG_ALS_CONF, (uint8_t *)&data, 2);
+        bitWrite(data, 1, 1);
+        writeRegister(CM32181_REG_ALS_CONF, (uint8_t *)&data, 2);
     }
 
-    void disableIRQ()
+    void disableINT()
     {
-        clrRegisterBit(CM32181_REG_ALS_CONF, 1);
+        uint16_t data;
+        readRegister(CM32181_REG_ALS_CONF, (uint8_t *)&data, 2);
+        bitWrite(data, 1, 0);
+        writeRegister(CM32181_REG_ALS_CONF, (uint8_t *)&data, 2);
     }
 
     void powerOn()
     {
-        clrRegisterBit(CM32181_REG_ALS_CONF, 0);
+        uint16_t data;
+        readRegister(CM32181_REG_ALS_CONF, (uint8_t *)&data, 2);
+        bitClear(data, 0);
+        writeRegister(CM32181_REG_ALS_CONF, (uint8_t *)&data, 2);
     }
 
     void powerDown()
     {
-        setRegisterBit(CM32181_REG_ALS_CONF, 1);
+        uint16_t data;
+        readRegister(CM32181_REG_ALS_CONF, (uint8_t *)&data, 2);
+        bitSet(data, 0);
+        writeRegister(CM32181_REG_ALS_CONF, (uint8_t *)&data, 2);
     }
 
     uint16_t getRaw()
@@ -171,7 +206,7 @@ public:
     {
         uint8_t buffer[2] = {0};
         readRegister(CM32181_REG_ID, buffer, 2);
-        return  buffer[0] & 0xFF;
+        return  lowByte(buffer[0]);
     }
 
 private:
@@ -181,7 +216,8 @@ private:
         setReadRegisterSendStop(false);
 
         int chipID = getChipID();
-        Serial.printf("chipID:%d\n", chipID);
+        log_i("chipID:%d\n", chipID);
+
         if (chipID == DEV_WIRE_ERR  ) {
             return false;
         }

@@ -56,6 +56,15 @@
 #define LOG_BIN(x)
 #endif
 
+#ifndef ESP32
+#define lowByte(w) ((uint8_t) ((w) & 0xff))
+#define highByte(w) ((uint8_t) ((w) >> 8))
+#define bitRead(value, bit) (((value) >> (bit)) & 0x01)
+#define bitSet(value, bit) ((value) |= (1UL << (bit)))
+#define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
+#define bitToggle(value, bit) ((value) ^= (1UL << (bit)))
+#define bitWrite(value, bit, bitvalue) ((bitvalue) ? bitSet(value, bit) : bitClear(value, bit))
+#endif
 
 #define SENSORLIB_ATTR_NOT_IMPLEMENTED    __attribute__((error("Not implemented")))
 
@@ -104,6 +113,13 @@
 #define FALLING               (0x02)
 #endif
 
+typedef union  {
+    struct {
+        uint8_t low;
+        uint8_t high;
+    } bits;
+    uint16_t full;
+} RegData_t;
 
 template <class chipType>
 class SensorCommon
@@ -291,6 +307,11 @@ protected:
         return DEV_WIRE_ERR;
     }
 
+    int writeRegister(int reg, RegData_t data)
+    {
+        return writeRegister(reg, (uint8_t *)&data.full, 2);
+    }
+
     int writeRegister(int reg, uint8_t *buf, uint8_t length)
     {
         if (thisWriteRegCallback) {
@@ -376,6 +397,11 @@ protected:
         }
 #endif
         return DEV_WIRE_ERR;
+    }
+
+    int readRegister(int reg, RegData_t *data)
+    {
+        return readRegister(reg, (uint8_t *)data, 2);
     }
 
     int readRegister(int reg, uint8_t *buf, uint8_t length)
