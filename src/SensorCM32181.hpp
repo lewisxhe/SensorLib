@@ -115,8 +115,8 @@ public:
     }
 
     void setSampling(Sampling tempSampling  = SAMPLING_X1,
-                     IntegrationTime int_time = INTEGRATION_TIME_200MS,
-                     bool enable_interrupt = false)
+                     IntegrationTime int_time = INTEGRATION_TIME_200MS
+                    )
     {
         uint16_t data;
         readRegister(CM32181_REG_ALS_CONF, (uint8_t *)&data, 2);
@@ -124,7 +124,6 @@ public:
         data |= tempSampling << 11;
         data &= ~(0xF << 6);
         data |= int_time << 6;
-        bitWrite(data, 1, enable_interrupt);
         readRegister(CM32181_REG_ALS_CONF, (uint8_t *)&data, 2);
     }
 

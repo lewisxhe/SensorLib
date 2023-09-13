@@ -74,8 +74,8 @@ void setup()
             SAMPLING_X1_4
     */
     light.setSampling(SensorCM32181::SAMPLING_X2,
-                      SensorCM32181::INTEGRATION_TIME_400MS,
-                      true);
+                      SensorCM32181::INTEGRATION_TIME_400MS
+                     );
 
     // Set high and low thresholds. If the threshold is higher or lower than the set threshold, an interrupt will be triggered.
     uint16_t lowThresholdRaw = 100;
@@ -84,12 +84,16 @@ void setup()
 
     //Power On sensor
     light.powerOn();
+
+    // Turn on interrupt
+    light.enableINT();
 }
 
 
 void loop()
 {
-    if (digitalRead(SENSOR_IRQ) == LOW) {
+    int pinVal = digitalRead(SENSOR_IRQ) ;
+    if (pinVal == LOW) {
 
         // After triggering the interrupt, the interrupt status must be read
         SensorCM32181::InterruptEvent event =  light.getIrqStatus();
@@ -116,7 +120,7 @@ void loop()
         // Get conversion data , The manual does not provide information on how to obtain the
         //  calibration value, now use the calibration value 0.28 provided by the manual
         float lux = light.getLux();
-        Serial.printf("IRQ:%d RAW:%u Lux:%.2f\n", digitalRead(SENSOR_IRQ), raw, lux);
+        Serial.printf("IRQ:%d RAW:%u Lux:%.2f\n", pinVal, raw, lux);
 
 
         // Turn on interrupts
