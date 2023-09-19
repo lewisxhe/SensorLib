@@ -106,9 +106,9 @@ public:
     {
         if (__rst != SENSOR_PIN_NONE) {
             digitalWrite(__rst, LOW);
-            delay(3);
+            delay(30);
             digitalWrite(__rst, HIGH);
-            delay(5);
+            delay(50);
         }
     }
 
@@ -157,8 +157,16 @@ public:
 
     bool isPressed()
     {
+        static uint32_t lastPulse = 0;
         if (__irq != SENSOR_PIN_NONE) {
-            return digitalRead(__irq) == LOW;
+            int val = digitalRead(__irq) == LOW;
+            if (val) {
+                //Filter low levels with intervals greater than 1000ms
+                val = (millis() - lastPulse > 1000) ?  false : true;
+                lastPulse = millis();
+                return val;
+            }
+            return false;
         }
         return getPoint(NULL, NULL);
     }
@@ -202,6 +210,16 @@ public:
         default:
             break;
         }
+
+#ifdef ESP32
+        if (__irq != SENSOR_PIN_NONE) {
+            pinMode(__irq, OPEN_DRAIN);
+        }
+        if (__rst != SENSOR_PIN_NONE) {
+            pinMode(__rst, OPEN_DRAIN);
+        }
+#endif
+
     }
 
     void wakeup()
