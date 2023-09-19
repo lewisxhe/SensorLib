@@ -190,15 +190,23 @@ public:
         }
     }
 
-    //2uA
     void sleep()
     {
-        writeRegister(0xD1, 0x05);
+        switch (__model) {
+        case CST816T_MODEL_ID:
+            writeRegister(0xE5, 0x03);
+            break;
+        case CST226SE_MODEL_ID:
+            writeRegister(0xD1, 0x05);
+            break;
+        default:
+            break;
+        }
     }
 
     void wakeup()
     {
-
+        reset();
     }
 
     void idle()

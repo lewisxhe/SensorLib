@@ -87,6 +87,13 @@ void setup()
     touch.setHomeButtonCallback([](void *user_data) {
         Serial.println("Home key pressed!");
     }, NULL);
+
+
+    // Unable to obtain coordinates after turning on sleep , During sleep state, the external IRQ must be set to high impedance
+    // CST816T sleep current = 1.1 uA
+    // CST226SE sleep current = 60 uA
+    // touch.sleep();
+
 }
 
 void loop()
