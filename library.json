@@ -1,29 +1,31 @@
 {
-    "name": "SensorLib",
-    "version": "0.1.0",
-    "description": "Arduino library written for PCF8563, QMI8658, QMC6310, XL9555",
-    "keywords": "QMC6310 QMI8658 IMU Sensor,PCF8563,XL9555",
-    "authors": [{
-        "name": "LewisHe",
-        "url": "https://github.com/lewisxhe",
-        "maintainer": true
-    }],
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/lewisxhe/SensorsLib.git"
-    },
-    "homepage": "https://github.com/lewisxhe/SensorsLib",
-    "export": {
-        "include": [
-            "LICENSE",
-            "library.json",
-            "library.properties",
-            "README.md",
-            "keywords.txt",
-            "src/*",
-            "examples/*"
-        ]
-    },
-    "frameworks": ["arduino"],
-    "platforms": "esp32"
+  "name": "SensorLib",
+  "version": "0.1.1",
+  "description": "Commonly used I2C , SPI device Arduino libraries",
+  "keywords": "QMC6310 QMI8658,PCF8563,PCF85063,XL9555,BMA423,BHI260AP,DRV2605,CM32181,LTR553,FT6236,FT6336,CST816,CST226,CHSC5816,GT911",
+  "authors": [
+    {
+      "name": "LewisHe",
+      "url": "https://github.com/lewisxhe",
+      "maintainer": true
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lewisxhe/SensorsLib.git"
+  },
+  "homepage": "https://github.com/lewisxhe/SensorsLib",
+  "export": {
+    "include": [
+      "LICENSE",
+      "library.json",
+      "library.properties",
+      "README.md",
+      "keywords.txt",
+      "src/*",
+      "examples/*"
+    ]
+  },
+  "frameworks": ["arduino"],
+  "platforms": "esp32"
 }
