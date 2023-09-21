@@ -47,7 +47,7 @@ public:
     TouchDrvCSTXXX(TwoWire &w,
                    int sda = DEFAULT_SDA,
                    int scl = DEFAULT_SCL,
-                   uint8_t addr = CSTXXX_SLAVE_ADDRESS): __swapXY(false), __mirrorX(false), __mirrorY(false), __resX(0), __resY(0)
+                   uint8_t addr = CSTXXX_SLAVE_ADDRESS)
     {
         __wire = & w;
         __sda = sda;
@@ -58,7 +58,7 @@ public:
     }
 #endif
 
-    TouchDrvCSTXXX(): __swapXY(false), __mirrorX(false), __mirrorY(false), __resX(0), __resY(0)
+    TouchDrvCSTXXX()
     {
 #if defined(ARDUINO)
         __wire = &Wire;
@@ -185,7 +185,7 @@ public:
         return false;
     }
 
-    uint8_t getChipID()
+    uint32_t getChipID()
     {
         return __chipID;
     }
@@ -288,43 +288,7 @@ public:
         this->user_data = user_data;
     }
 
-
-    void setSwapXY(bool swap)
-    {
-        __swapXY = swap;
-    }
-
-    void setMirrorXY(bool mirrorX, bool mirrorY)
-    {
-        __mirrorX = mirrorX;
-        __mirrorY = mirrorY;
-    }
-
-    void setMaxCoordinates(uint16_t x, uint16_t y)
-    {
-        __xMax = x;
-        __yMax = y;
-    }
-
-
 private:
-
-    void updateXY(uint8_t pointNum, int16_t *xBuffer, int16_t *yBuffer)
-    {
-        for (int i = 0; i < pointNum; ++i) {
-            if (__swapXY) {
-                uint16_t tmp = xBuffer[i];
-                xBuffer[i] = yBuffer[i];
-                yBuffer[i] = tmp;
-            }
-            if (__mirrorX && __xMax ) {
-                xBuffer[i] = __xMax - xBuffer[i];
-            }
-            if (__mirrorY && __yMax) {
-                yBuffer[i] = __yMax - yBuffer[i];
-            }
-        }
-    }
 
     uint8_t updateCST226SE()
     {
@@ -591,8 +555,7 @@ protected:
     home_button_callback_t __homeButtonCb = NULL;
     void *user_data = NULL;
     TouchData report;
-    uint16_t __resX, __resY, __xMax, __yMax;
-    bool __swapXY, __mirrorX, __mirrorY;
+
 };
 
 

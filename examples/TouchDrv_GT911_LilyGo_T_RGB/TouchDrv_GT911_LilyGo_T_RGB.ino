@@ -132,7 +132,7 @@ void setup()
 void loop()
 {
 
-    if (touch.getTouched()) {
+    if (touch.isPressed()) {
         uint8_t point = touch.getPoint(x, y, 5);
         Serial.print("Point:"); Serial.println(point);
         uint8_t touched = touch.getPoint(x, y, 2);

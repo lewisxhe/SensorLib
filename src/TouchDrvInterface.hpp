@@ -68,6 +68,8 @@ public:
 class TouchDrvInterface
 {
 public:
+    TouchDrvInterface();
+
     virtual bool init(int rst, int irq) = 0;
 
     virtual void reset() = 0;
@@ -82,7 +84,7 @@ public:
 
     virtual bool disableInterrupt() = 0;
 
-    virtual uint8_t getChipID() = 0;
+    virtual uint32_t getChipID() = 0;
 
     virtual const char *getModelName() = 0;
 
@@ -98,6 +100,17 @@ public:
 
     virtual bool getResolution(int16_t *x, int16_t *y) = 0;
 
+    void setSwapXY(bool swap);
+
+    void setMirrorXY(bool mirrorX, bool mirrorY);
+
+    void setMaxCoordinates(uint16_t x, uint16_t y);
+
+    void updateXY(uint8_t pointNum, int16_t *xBuffer, int16_t *yBuffer);
+
+protected:
+    uint16_t __resX, __resY, __xMax, __yMax;
+    bool __swapXY, __mirrorX, __mirrorY;
 };
 
 

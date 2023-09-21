@@ -30,6 +30,7 @@
 
 
 #include "REG/GT911Constants.h"
+#include "TouchDrvInterface.hpp"
 #include "SensorCommon.tpp"
 
 
@@ -41,6 +42,7 @@ typedef struct GT911_Struct {
 } GT911Point_t;
 
 class TouchDrvGT911 :
+    public TouchDrvInterface,
     public SensorCommon<TouchDrvGT911>
 {
     friend class SensorCommon<TouchDrvGT911>;
@@ -93,9 +95,11 @@ public:
     }
 #endif
 
-    bool init()
+    bool init(int rst, int irq)
     {
-        return begin();
+        __rst = rst;
+        __irq = irq;
+        return initImpl();
     }
 
     void deinit()
@@ -129,20 +133,54 @@ public:
         writeRegister(GT911_COMMAND, 0x05);
     }
 
+    void wakeup()
+    {
 
-    uint8_t getPoint(int16_t *x, int16_t *y, uint8_t size = 1)
+    }
+
+    void idle()
+    {
+
+    }
+
+    bool writeConfig(uint8_t *data, uint32_t size)
+    {
+        return false;
+    }
+
+    uint8_t getSupportTouchPoint()
+    {
+        return 5;
+    }
+
+    bool enableInterrupt()
+    {
+        return false;
+    }
+
+    bool disableInterrupt()
+    {
+        return false;
+    }
+
+    uint8_t getGesture()
+    {
+        return 0;
+    }
+
+    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t size = 1)
     {
         uint8_t touchedID;
         uint8_t buffer[39];
 
-        if (x == NULL || y == NULL || size == 0)
+        if (!x_array || !y_array || size == 0)
             return DEV_WIRE_ERR;
 
         int touchPoint = readRegister(GT911_POINT_INFO);
         if (touchPoint == DEV_WIRE_ERR) {
             return DEV_WIRE_ERR;
         }
-        // Serial.printf("touchPoint:%d\n", touchPoint);
+
         touchPoint &= 0x0F;
         if (touchPoint == 0) {
             clearBuffer();
@@ -167,8 +205,8 @@ public:
             p[i].size = buffer[0x05 + i * 8] ;
             p[i].size |= (buffer[0x06 + i * 8] << 8) ;
 
-            x[i] = p[i].x;
-            y[i] = p[i].y;
+            x_array[i] = p[i].x;
+            y_array[i] = p[i].y;
         }
 
 #ifdef LOG_PORT
@@ -184,11 +222,13 @@ public:
         LOG_PORT.println();
 #endif
 
+        updateXY(touchPoint, x_array, y_array);
+
         return touchPoint;
     }
 
 
-    bool getTouched()
+    bool isPressed()
     {
         if (__irq != SENSOR_PIN_NONE) {
             if (__irq_mode == FALLING) {
@@ -227,7 +267,7 @@ public:
     }
 
 
-    int getProductID()
+    uint32_t getChipID()
     {
         char product_id[4] = {0};
         for (int i = 0; i < 4; ++i) {
@@ -245,7 +285,7 @@ public:
         return fw_ver[0] | (fw_ver[1] << 8);
     }
 
-    void getResolution(int &x, int &y)
+    bool getResolution(int16_t *x, int16_t *y)
     {
         uint8_t x_resolution[2] = {0}, y_resolution[2] = {0};
 
@@ -256,9 +296,9 @@ public:
             y_resolution[i] = readRegister(GT911_Y_RESOLUTION + i);
         }
 
-        x = x_resolution[0] | (x_resolution[1] << 8);
-        y = y_resolution[0] | (y_resolution[1] << 8);
-
+        *x = x_resolution[0] | (x_resolution[1] << 8);
+        *y = y_resolution[0] | (y_resolution[1] << 8);
+        return true;
     }
 
     int getVendorID()
@@ -269,6 +309,11 @@ public:
     void setRsetUseCallback(bool enable)
     {
         __rst_use_cb = enable;
+    }
+
+    const char *getModelName()
+    {
+        return "GT911";
     }
 
 private:
@@ -299,7 +344,7 @@ private:
 
     bool initImpl()
     {
-        int x, y;
+        int16_t x, y;
 
         // GT911 register address uses two bytes
         setRegAddressLenght(2);
@@ -308,7 +353,7 @@ private:
                 __rst != SENSOR_PIN_NONE &&
                 __irq != SENSOR_PIN_NONE) {
 
-            LOG("GT911 using 0x28 address!\n");
+            log_i("GT911 using 0x28 address!\n");
             // pinMode(__rst, OUTPUT);
             setRstPinMode(OUTPUT);
             pinMode(__irq, OUTPUT);
@@ -325,7 +370,7 @@ private:
                    __rst != SENSOR_PIN_NONE &&
                    __irq != SENSOR_PIN_NONE) {
 
-            LOG("GT911 using 0xBA address!\n");
+            log_i("GT911 using 0xBA address!\n");
 
             // pinMode(__rst, OUTPUT);
             setRstPinMode(OUTPUT);
@@ -344,17 +389,17 @@ private:
         }
 
 
-        LOG("Product id:%d\n", getProductID());
+        log_i("Product id:%d\n", getChipID());
 
-        if (getProductID() != 911) {
-            LOG("Not find device GT911\n");
+        if (getChipID() != 911) {
+            log_i("Not find device GT911\n");
             return false;
         }
-        LOG("Firmware version: 0x%x\n", getFwVersion());
-        getResolution(x, y);
-        LOG("Resolution : X = %d Y = %d\n", x, y);
+        log_i("Firmware version: 0x%x\n", getFwVersion());
+        getResolution(&x, &y);
+        log_i("Resolution : X = %d Y = %d\n", x, y);
 
-        LOG("Vendor id:%d\n", getVendorID());
+        log_i("Vendor id:%d\n", getVendorID());
 
 
         return true;

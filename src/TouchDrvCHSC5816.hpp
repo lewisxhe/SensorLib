@@ -150,6 +150,9 @@ public:
         if (y_array) {
             *y_array = (unsigned int)(touch.rp.y_h4 << 8) | touch.rp.y_l8;
         }
+
+        updateXY(1, x_array, y_array);
+
         return 1;
     }
 
@@ -171,9 +174,9 @@ public:
         return false;
     }
 
-    uint8_t getChipID()
+    uint32_t getChipID()
     {
-        return false;
+        return 0x00;
     }
 
     const char *getModelName()
