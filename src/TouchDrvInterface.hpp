@@ -40,8 +40,8 @@ public:
     ~TouchData() {}
     uint8_t available;
     uint8_t id[5];
-    uint16_t x[5];
-    uint16_t y[5];
+    int16_t x[5];
+    int16_t y[5];
     uint8_t  status[5];
     uint8_t  pressure[5];
 

@@ -51,6 +51,26 @@
 TouchDrvCSTXXX touch;
 int16_t x[5], y[5];
 
+void scanDevices(void)
+{
+    byte error, address;
+    int nDevices = 0;
+    Serial.println("Scanning for I2C devices ...");
+    for (address = 0x01; address < 0x7f; address++) {
+        Wire.beginTransmission(address);
+        error = Wire.endTransmission();
+        if (error == 0) {
+            Serial.printf("I2C device found at address 0x%02X\n", address);
+            nDevices++;
+        } else if (error != 2) {
+            Serial.printf("Error %d at address 0x%02X\n", error, address);
+        }
+    }
+    if (nDevices == 0) {
+        Serial.println("No I2C devices found");
+    }
+}
+
 void setup()
 {
     Serial.begin(115200);
@@ -59,22 +79,30 @@ void setup()
 #if SENSOR_RST != -1
     pinMode(SENSOR_RST, OUTPUT);
     digitalWrite(SENSOR_RST, LOW);
-    delay(3);
+    delay(30);
     digitalWrite(SENSOR_RST, HIGH);
-    delay(5);
-    delay(1000);
+    delay(50);
+    // delay(1000);
 #endif
 
     // Search for known CSTxxx device addresses
     uint8_t address = 0xFF;
     Wire.begin(SENSOR_SDA, SENSOR_SCL);
-    Wire.beginTransmission(CST816T_SLAVE_ADDRESS);
+
+    // Scan I2C devices
+    scanDevices();
+
+    Wire.beginTransmission(CST816_SLAVE_ADDRESS);
     if (Wire.endTransmission() == 0) {
-        address = CST816T_SLAVE_ADDRESS;
+        address = CST816_SLAVE_ADDRESS;
     }
     Wire.beginTransmission(CST226SE_SLAVE_ADDRESS);
     if (Wire.endTransmission() == 0) {
         address = CST226SE_SLAVE_ADDRESS;
+    }
+    Wire.beginTransmission(CST328_SLAVE_ADDRESS);
+    if (Wire.endTransmission() == 0) {
+        address = CST328_SLAVE_ADDRESS;
     }
     while (address == 0xFF) {
         Serial.println("Could't find touch chip!"); delay(1000);
@@ -83,25 +111,35 @@ void setup()
     touch.setPins(SENSOR_RST, SENSOR_IRQ);
     touch.init(Wire, SENSOR_SDA, SENSOR_SCL, address);
 
+
+    Serial.print("Model :"); Serial.println(touch.getModelName());
+
     // Depending on the touch panel, not all touch panels have touch buttons.
     touch.setHomeButtonCallback([](void *user_data) {
         Serial.println("Home key pressed!");
     }, NULL);
 
 
-    // Unable to obtain coordinates after turning on sleep , During sleep state, the external IRQ must be set to high impedance
+    // Unable to obtain coordinates after turning on sleep
     // CST816T sleep current = 1.1 uA
     // CST226SE sleep current = 60 uA
     // touch.sleep();
+
+    // Set touch max xy
+    // touch.setMaxCoordinates(536, 240);
+
+    // Set swap xy
+    // touch.setSwapXY(true);
+
+    // Set mirror xy
+    // touch.setMirrorXY(true, true);
 
 }
 
 void loop()
 {
-
     uint8_t touched = touch.getPoint(x, y, touch.getSupportTouchPoint());
     if (touched) {
-
         for (int i = 0; i < touched; ++i) {
             Serial.print("X[");
             Serial.print(i);

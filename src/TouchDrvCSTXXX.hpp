@@ -47,9 +47,9 @@ public:
     TouchDrvCSTXXX(TwoWire &w,
                    int sda = DEFAULT_SDA,
                    int scl = DEFAULT_SCL,
-                   uint8_t addr = CSTXXX_SLAVE_ADDRESS)
+                   uint8_t addr = CSTXXX_SLAVE_ADDRESS): __swapXY(false), __mirrorX(false), __mirrorY(false), __resX(0), __resY(0)
     {
-        __wire = &w;
+        __wire = & w;
         __sda = sda;
         __scl = scl;
         __rst = SENSOR_PIN_NONE;
@@ -58,7 +58,7 @@ public:
     }
 #endif
 
-    TouchDrvCSTXXX()
+    TouchDrvCSTXXX(): __swapXY(false), __mirrorX(false), __mirrorY(false), __resX(0), __resY(0)
     {
 #if defined(ARDUINO)
         __wire = &Wire;
@@ -118,10 +118,12 @@ public:
         if (!x_array && !y_array || !get_point) {
             return 0;
         }
-        switch (__model) {
-        case CST816T_MODEL_ID:
-            return updateCST816T(x_array, y_array, get_point);
-        case CST226SE_MODEL_ID:
+        switch (__chipID) {
+        case CST816S_CHIP_ID:
+        case CST816T_CHIP_ID:
+        case CST716_CHIP_ID:
+            return updateCST8xx(x_array, y_array, get_point);
+        case CST226SE_CHIP_ID:
             point = updateCST226SE();
             if (point) {
                 for (int i = 0; i < get_point; i++) {
@@ -140,12 +142,14 @@ public:
     {
         uint8_t point = 0;
         TouchData data;
-        switch (__model) {
-        case CST816T_MODEL_ID:
-            // return updateCST816T(x_array, y_array, get_point);
+        switch (__chipID) {
+        case CST816S_CHIP_ID:
+        case CST816T_CHIP_ID:
+        case CST716_CHIP_ID:
+            // return updateCST8xx(x_array, y_array, get_point);
             //TODO:
             return TouchData();
-        case CST226SE_MODEL_ID:
+        case CST226SE_CHIP_ID:
             point = updateCST226SE();
             if (point) {
                 return report;
@@ -183,28 +187,52 @@ public:
 
     uint8_t getChipID()
     {
-        return false;
+        return __chipID;
     }
 
     const char *getModelName()
     {
-        switch (__model) {
-        case CST816T_MODEL_ID:
+        switch (__chipID) {
+        case CST816S_CHIP_ID:
+            return "CST816S";
+        case CST816T_CHIP_ID:
             return "CST816T";
-        case CST226SE_MODEL_ID:
+        case CST716_CHIP_ID:
+            return "CST716";
+        case CST226SE_CHIP_ID:
             return "CST226SE";
         default:
             return "UNKONW";
         }
     }
 
+    void disableAutoSleep()
+    {
+        switch (__chipID) {
+        case CST816S_CHIP_ID:
+        case CST816T_CHIP_ID:
+            reset();
+            delay(50);
+            writeRegister(0xFE, 0x01);
+            break;
+        case CST716_CHIP_ID:
+        case CST226SE_CHIP_ID:
+        default:
+            break;
+        }
+    }
+
     void sleep()
     {
-        switch (__model) {
-        case CST816T_MODEL_ID:
+        switch (__chipID) {
+        case CST816S_CHIP_ID:
+        case CST816T_CHIP_ID:
             writeRegister(0xE5, 0x03);
             break;
-        case CST226SE_MODEL_ID:
+        case CST716_CHIP_ID:
+            writeRegister(0xA5, 0x03);
+            break;
+        case CST226SE_CHIP_ID:
             writeRegister(0xD1, 0x05);
             break;
         default:
@@ -244,8 +272,8 @@ public:
 
     bool getResolution(int16_t *x, int16_t *y)
     {
-        *x = resX;
-        *y = resY;
+        *x = __resX;
+        *y = __resY;
         return true;
     }
 
@@ -260,7 +288,43 @@ public:
         this->user_data = user_data;
     }
 
+
+    void setSwapXY(bool swap)
+    {
+        __swapXY = swap;
+    }
+
+    void setMirrorXY(bool mirrorX, bool mirrorY)
+    {
+        __mirrorX = mirrorX;
+        __mirrorY = mirrorY;
+    }
+
+    void setMaxCoordinates(uint16_t x, uint16_t y)
+    {
+        __xMax = x;
+        __yMax = y;
+    }
+
+
 private:
+
+    void updateXY(uint8_t pointNum, int16_t *xBuffer, int16_t *yBuffer)
+    {
+        for (int i = 0; i < pointNum; ++i) {
+            if (__swapXY) {
+                uint16_t tmp = xBuffer[i];
+                xBuffer[i] = yBuffer[i];
+                yBuffer[i] = tmp;
+            }
+            if (__mirrorX && __xMax ) {
+                xBuffer[i] = __xMax - xBuffer[i];
+            }
+            if (__mirrorY && __yMax) {
+                yBuffer[i] = __yMax - yBuffer[i];
+            }
+        }
+    }
 
     uint8_t updateCST226SE()
     {
@@ -305,17 +369,20 @@ private:
             index = (i == 0) ?  (index + 7) :  (index + 5);
         }
 
+        updateXY(point, report.x, report.y);
+
 #ifdef LOG_PORT
         for (int i = 0; i < 5; i++) {
             LOG_PORT.printf("[%d]-X:%u Y:%u P:%u sta:%u ", report.id[i], report.x[i], report.y[i], report.pressure[i], report.status[i]);
         }
         LOG_PORT.println();
 #endif
+
         return point;
     }
 
 
-    uint8_t updateCST816T(int16_t *x_array, int16_t *y_array, uint8_t get_point)
+    uint8_t updateCST8xx(int16_t *x_array, int16_t *y_array, uint8_t get_point)
     {
         uint8_t buffer[13];
         if (readRegister(CSTXXX_REG_STATUS, buffer, 13) == DEV_WIRE_ERR) {
@@ -352,33 +419,44 @@ private:
             y_array[1] =  ((buffer[((uint8_t)0x11)] & 0x0F) << 8 | buffer[((uint8_t)0x12)]);
         }
 
+
 #ifdef LOG_PORT
         for (int i = 0; i < point; i++) {
             LOG_PORT.printf("[%d] --> X:%d Y:%d \n", i, x_array[i], y_array[i]);
         }
 #endif
+        updateXY(point, x_array, y_array);
 
         return point;
 
     }
 
-    bool initImpl()
+    // CST8xx
+    bool initSelfCapacitiveTouch()
     {
-        uint8_t buffer[8];
+        setRegAddressLenght(1);
 
-        setReadRegisterSendStop(false);
+        int chip_id =   readRegister(0xA7);
+        log_i("Chip ID:0x%x", chip_id);
+
+        int version =   readRegister(0xA9);
+        log_i("Version :0x%x", version);
+
+        if (chip_id != CST816S_CHIP_ID &&
+                chip_id != CST816T_CHIP_ID  &&
+                chip_id != CST716_CHIP_ID) {
+            return false;
+        }
+        __chipID = chip_id;
+        return true;
+    }
+
+    // CST226SE
+    bool initMutualCapacitiveTouch()
+    {
         setRegAddressLenght(2);
 
-        if (__irq != SENSOR_PIN_NONE) {
-            pinMode(__irq, INPUT);
-        }
-
-        if (__rst != SENSOR_PIN_NONE) {
-            pinMode(__rst, OUTPUT);
-        }
-
-        reset();
-
+        uint8_t buffer[8];
         // Enter Command mode
         writeRegister(0xD1, 0x01);
         delay(10);
@@ -395,9 +473,9 @@ private:
         log_i("Chip checkcode:0x%x.\r\n", checkcode);
 
         readRegister(0xD1F8, buffer, 4);
-        resX = ( buffer[1] << 8) | buffer[0];
-        resY = ( buffer[3] << 8) | buffer[2];
-        log_i("Chip resolution X:%u Y:%u\r\n", resX, resY);
+        __resX = ( buffer[1] << 8) | buffer[0];
+        __resY = ( buffer[3] << 8) | buffer[2];
+        log_i("Chip resolution X:%u Y:%u\r\n", __resX, __resY);
 
         readRegister(0xD204, buffer, 4);
         uint32_t chipType = buffer[3];
@@ -431,31 +509,63 @@ private:
         checksum <<= 8;
         checksum |= buffer[4];
 
-#if 0  //Skip firmware detection
-        log_i("Chip ic version:0x%X, checksum:0x%X\n",
+        log_i("Chip ic version:0x%X, checksum:0x%X",
               fwVersion, checksum);
 
         if (fwVersion == 0xA5A5A5A5) {
-            log_i(" Chip ic don't have firmware. \n");
+            log_i("Chip ic don't have firmware. ");
             return false;
         }
         if ((checkcode & 0xffff0000) != 0xCACA0000) {
-            log_i("firmware info read error .\n");
+            log_i("Firmware info read error .");
             return false;
         }
-#endif
 
+        __chipID = chipType;
 
         // Exit Command mode
         writeRegister(0xD1, 0x09);
+        return true;
+    }
 
-        __model = chipType;
-        switch (__model) {
-        case CST816T_MODEL_ID:
+    bool initImpl()
+    {
+        bool rslt = false;
+
+        setReadRegisterSendStop(false);
+
+        if (__irq != SENSOR_PIN_NONE) {
+            pinMode(__irq, INPUT);
+        }
+
+        if (__rst != SENSOR_PIN_NONE) {
+            pinMode(__rst, OUTPUT);
+        }
+
+        reset();
+
+        rslt = initMutualCapacitiveTouch();
+
+        if (!rslt) {
+            rslt = initSelfCapacitiveTouch();
+        }
+
+        switch (__chipID) {
+        case CST816S_CHIP_ID:
+            log_i("Find CST816S");
+            __maxPoint = 1;
+            // disableAutoSleep();
+            break;
+        case CST816T_CHIP_ID:
             log_i("Find CST816T");
             __maxPoint = 1;
+            // disableAutoSleep();
             break;
-        case CST226SE_MODEL_ID:
+        case CST716_CHIP_ID:
+            log_i("Find CST716");
+            __maxPoint = 1;
+            break;
+        case CST226SE_CHIP_ID:
             log_i("Find CST226SE");
             __maxPoint = 5;
             break;
@@ -476,12 +586,13 @@ private:
 protected:
     int __rst = SENSOR_PIN_NONE;
     int __irq = SENSOR_PIN_NONE;
-    uint32_t __model = 0xFF;
     uint8_t __maxPoint = 1;
+    uint8_t __chipID = 0xFF;
     home_button_callback_t __homeButtonCb = NULL;
     void *user_data = NULL;
     TouchData report;
-    uint16_t resX, resY;
+    uint16_t __resX, __resY, __xMax, __yMax;
+    bool __swapXY, __mirrorX, __mirrorY;
 };
 
 
