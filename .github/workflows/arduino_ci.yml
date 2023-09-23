@@ -1,4 +1,4 @@
-name: PlatformIO CI
+name: Arduino_CI
 
 on:
   pull_request:
@@ -7,12 +7,15 @@ on:
       - 'examples/**'
       - 'src/**'
 
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
-        example:
+        board: ["esp32:esp32:esp32s3"]
+        examples:
           [
             examples/BAM423_Accelerometer/BAM423_Accelerometer.ino,
             examples/BAM423_Orientation/BAM423_Orientation.ino,
@@ -53,29 +56,33 @@ jobs:
             examples/XL9555_ExtensionIOWirte/XL9555_ExtensionIOWirte.ino,
           ]
 
+    env:
+      BOARD: ${{ matrix.board }}
+      EXAMPLES: ${{matrix.examples}}
+
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/pip
-            ~/.platformio/.cache
-          key: ${{ runner.os }}-pio
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.9"
-      - name: Install PlatformIO Core
-        run: pip install --upgrade platformio
 
-      - name: Install MadgwickAHRS library
-        # https://github.com/arduino-libraries/MadgwickAHRS
-        run: pio pkg install --library "arduino-libraries/Madgwick@^1.2.0" -g
+      - name: Install Arduino Ci
+        run: |
+          if [[ "$BOARD" =~ "esp32:esp32:" ]]; then
+            wget https://downloads.arduino.cc/arduino-cli/arduino-cli_latest_Linux_64bit.tar.gz -O arduino-cli.tar.gz ;
+            sudo tar xf arduino-cli.tar.gz -C /usr/local/bin arduino-cli ;
+            arduino-cli config init ;
+            sed -i 's/additional_urls: \[\]/additional_urls:["https:\/\/espressif.github.io\/arduino-esp32\/package_esp32_dev_index.json"]/' ~/.arduino15/arduino-cli.yaml ;
+            arduino-cli core update-index ;
+            arduino-cli core install esp32:esp32 ;
+            fi
+            
 
-      - name: Install esp8266-oled-ssd1306 library
-        # https://github.com/ThingPulse/esp8266-oled-ssd1306
-        run: pio pkg install --library "thingpulse/ESP8266 and ESP32 OLED driver for SSD1306 displays @ ^4.4.0" -g
-
-      - name: Run PlatformIO
-        run: pio ci --lib="." --board=esp32dev --board=esp32-c3-devkitm-1
-        env:
-          PLATFORMIO_CI_SRC: ${{ matrix.example }}
+      - name: Build examples
+        run: |
+          mkdir -p $HOME/Arduino/libraries ;
+          cd $HOME/Arduino/libraries ;
+          git clone https://github.com/ThingPulse/esp8266-oled-ssd1306 ;
+          git clone https://github.com/arduino-libraries/MadgwickAHRS ;
+          
+          cd $GITHUB_WORKSPACE ;
+          if [[ "$BOARD" =~ "esp32:esp32:"        ]]; then
+            arduino-cli compile -besp32:esp32:esp32s3 --library . $PWD/$EXAMPLES ;
+          fi ;
