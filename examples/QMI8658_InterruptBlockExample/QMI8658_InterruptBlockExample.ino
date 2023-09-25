@@ -30,6 +30,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <SPI.h>
+#ifndef ARDUINO_ARCH_RP2040
 #include "SensorQMI8658.hpp"
 #include <MadgwickAHRS.h>       //MadgwickAHRS from https://github.com/arduino-libraries/MadgwickAHRS
 #include "SH1106Wire.h"         //Oled display from https://github.com/ThingPulse/esp8266-oled-ssd1306
@@ -255,6 +256,17 @@ void loop()
         microsPrevious = microsPrevious + microsPerReading;
     }
 }
+#else
+void setup()
+{
+    Serial.begin(115200);
+}
 
+void loop()
+{
+    Serial.println("display lib not support RP2040");
+    delay(1000);
+}
+#endif
 
 

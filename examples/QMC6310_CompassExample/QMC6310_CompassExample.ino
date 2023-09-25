@@ -30,6 +30,8 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
+
+#ifndef ARDUINO_ARCH_RP2040
 #include "SensorQMC6310.hpp"
 #include "SH1106Wire.h"         //Oled display from https://github.com/ThingPulse/esp8266-oled-ssd1306
 
@@ -219,4 +221,14 @@ void loop()
 
     delay(100);
 }
+#else
+void setup()
+{
+    Serial.begin(115200);
+}
 
+void loop()
+{
+    Serial.println("display lib not support RP2040"); delay(1000);
+}
+#endif
