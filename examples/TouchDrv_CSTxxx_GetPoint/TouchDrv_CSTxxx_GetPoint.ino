@@ -87,7 +87,13 @@ void setup()
 
     // Search for known CSTxxx device addresses
     uint8_t address = 0xFF;
+
+#ifdef ARDUINO_ARCH_RP2040
+    Wire.setSCL(SENSOR_SCL);
+    Wire.setSDA(SENSOR_SDA);
+#else
     Wire.begin(SENSOR_SDA, SENSOR_SCL);
+#endif
 
     // Scan I2C devices
     scanDevices();

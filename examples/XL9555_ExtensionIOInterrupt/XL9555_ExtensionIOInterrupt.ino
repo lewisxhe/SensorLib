@@ -44,7 +44,6 @@ void setup()
     Serial.begin(115200);
     while (!Serial);
 
-    Wire.begin(I2C_SDA, I2C_SCL);
 
     // Device address 0x20~0x27
     if (!extIO.begin(Wire, XL9555_SLAVE_ADDRESS4, I2C_SDA, I2C_SCL)) {

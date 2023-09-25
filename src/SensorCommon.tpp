@@ -37,6 +37,11 @@
 #include <SPI.h>
 #endif
 
+#ifdef ARDUINO_ARCH_MBED
+// Not supported at the moment
+#error The Arduino RP2040 MBED board package is not supported when PIO is used. Use the community package by Earle Philhower.
+#endif
+
 #define SENSOR_PIN_NONE     (-1)
 #define DEV_WIRE_NONE       (0)
 #define DEV_WIRE_ERR        (-1)
@@ -56,13 +61,31 @@
 #define LOG_BIN(x)
 #endif
 
-#ifndef ESP32
+#ifndef lowByte
 #define lowByte(w) ((uint8_t) ((w) & 0xff))
+#endif
+
+#ifndef highByte
 #define highByte(w) ((uint8_t) ((w) >> 8))
+#endif
+
+#ifndef bitRead
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
+#endif
+
+#ifndef bitSet
 #define bitSet(value, bit) ((value) |= (1UL << (bit)))
+#endif
+
+#ifndef bitClear
 #define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
+#endif
+
+#ifndef bitToggle
 #define bitToggle(value, bit) ((value) ^= (1UL << (bit)))
+#endif
+
+#ifndef bitWrite
 #define bitWrite(value, bit, bitvalue) ((bitvalue) ? bitSet(value, bit) : bitClear(value, bit))
 #endif
 

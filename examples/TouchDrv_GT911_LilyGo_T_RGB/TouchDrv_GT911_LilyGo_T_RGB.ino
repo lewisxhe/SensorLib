@@ -92,7 +92,12 @@ void setup()
     while (!Serial);
     Serial.println("Start!");
 
+#ifdef ARDUINO_ARCH_RP2040
+    Wire.setSCL(SENSOR_SCL);
+    Wire.setSDA(SENSOR_SDA);
+#else
     Wire.begin(SENSOR_SDA, SENSOR_SCL);
+#endif
 
     scanDevices();
 

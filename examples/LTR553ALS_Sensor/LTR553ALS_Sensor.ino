@@ -53,8 +53,6 @@ void setup()
 
     pinMode(SENSOR_IRQ, INPUT_PULLUP);
 
-    Wire.begin(SENSOR_SDA, SENSOR_SCL);
-
     if (!als.begin(Wire, LTR553_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
         Serial.println("Failed to find LTR553 - check your wiring!");
         while (1) {
