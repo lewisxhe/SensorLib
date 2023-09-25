@@ -45,6 +45,10 @@
 #define SENSOR_IRQ  -1
 #endif
 
+
+#define I2C1_SDA    22      //Display Wire SDA Pin
+#define I2C1_SCL    21      //Display Wire SCL Pin
+
 SH1106Wire display(0x3c, I2C1_SDA, I2C1_SCL);
 SensorQMC6310 qmc;
 
