@@ -32,9 +32,9 @@
 #include <Arduino.h>
 #include "SensorPCF85063.hpp"
 
-#define I2C_SDA                     9
-#define I2C_SCL                     8
-#define RTC_IRQ                     7
+#define SENSOR_SDA                     9
+#define SENSOR_SCL                     8
+#define SENSOR_IRQ                     7
 
 SensorPCF85063 rtc;
 uint32_t lastMillis;
@@ -44,9 +44,9 @@ void setup()
     Serial.begin(115200);
     while (!Serial);
 
-    pinMode(RTC_IRQ, INPUT_PULLUP);
+    pinMode(SENSOR_IRQ, INPUT_PULLUP);
 
-    if (!rtc.begin(Wire, PCF85063_SLAVE_ADDRESS, I2C_SDA, I2C_SCL)) {
+    if (!rtc.begin(Wire, PCF85063_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
         Serial.println("Failed to find PCF8563 - check your wiring!");
         while (1) {
             delay(1000);

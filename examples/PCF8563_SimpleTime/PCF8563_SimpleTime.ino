@@ -33,9 +33,9 @@
 #include "SensorPCF8563.hpp"
 
 // lilygo t-beam-s3-core pin
-#define I2C_SDA                     42
-#define I2C_SCL                     41
-#define RTC_IRQ                     14
+#define SENSOR_SDA                     42
+#define SENSOR_SCL                     41
+#define SENSOR_IRQ                     14
 
 SensorPCF8563 rtc;
 uint32_t lastMillis;
@@ -45,14 +45,11 @@ void setup()
     Serial.begin(115200);
     while (!Serial);
 
-#ifdef LILYGO_TBEAM_SUPREME_V3_0
-    extern  bool setupPower();
-    setupPower();
-#endif
 
-    pinMode(RTC_IRQ, INPUT_PULLUP);
 
-    if (!rtc.begin(Wire, PCF8563_SLAVE_ADDRESS, I2C_SDA, I2C_SCL)) {
+    pinMode(SENSOR_IRQ, INPUT_PULLUP);
+
+    if (!rtc.begin(Wire, PCF8563_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
         Serial.println("Failed to find PCF8563 - check your wiring!");
         while (1) {
             delay(1000);

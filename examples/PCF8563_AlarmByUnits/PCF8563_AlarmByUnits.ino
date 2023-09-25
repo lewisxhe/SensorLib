@@ -34,14 +34,14 @@
 #include "SensorPCF8563.hpp"
 
 #ifdef ESP32
-#define I2C_SDA                     42
-#define I2C_SCL                     41
-#define RTC_IRQ                     14
+#define SENSOR_SDA                     42
+#define SENSOR_SCL                     41
+#define SENSOR_IRQ                     14
 #else
 #define _PINNUM(port, pin)    ((port)*32 + (pin))
-#define I2C_SDA             _PINNUM(0,26)
-#define I2C_SCL             _PINNUM(0,27)
-#define RTC_IRQ             _PINNUM(0,16)
+#define SENSOR_SDA             _PINNUM(0,26)
+#define SENSOR_SCL             _PINNUM(0,27)
+#define SENSOR_IRQ             _PINNUM(0,16)
 #endif
 
 
@@ -61,19 +61,16 @@ void setup()
     Serial.begin(115200);
     while (!Serial);
 
-#ifdef LILYGO_TBEAM_SUPREME_V3_0
-    extern  bool setupPower();
-    setupPower();
-#endif
 
-    if (!rtc.begin(Wire, PCF8563_SLAVE_ADDRESS, I2C_SDA, I2C_SCL)) {
+
+    if (!rtc.begin(Wire, PCF8563_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
         Serial.println("Failed to find PCF8563 - check your wiring!");
         while (1) {
             delay(1000);
         }
     }
 
-    pinMode(RTC_IRQ, INPUT_PULLUP);
+    pinMode(SENSOR_IRQ, INPUT_PULLUP);
 
     rtc.setDateTime(2022, nextMonth, nextDay, nextHour, nextMinute, nextSecond);
 
@@ -108,7 +105,7 @@ void printDateTime()
 void  testAlarmMinute()
 {
     while (1) {
-        if (digitalRead(RTC_IRQ) == LOW) {
+        if (digitalRead(SENSOR_IRQ) == LOW) {
             Serial.println("testAlarmMinute Interrupt .... ");
             if (rtc.isAlarmActive()) {
                 Serial.println("Alarm active");
@@ -132,7 +129,7 @@ void  testAlarmMinute()
 void  testAlarmHour()
 {
     while (1) {
-        if (digitalRead(RTC_IRQ) == LOW) {
+        if (digitalRead(SENSOR_IRQ) == LOW) {
             Serial.println("testAlarmHour Interrupt .... ");
             if (rtc.isAlarmActive()) {
                 Serial.println("Alarm active");
@@ -160,7 +157,7 @@ void  testAlarmHour()
 void  testAlarmDay()
 {
     while (1) {
-        if (digitalRead(RTC_IRQ) == LOW) {
+        if (digitalRead(SENSOR_IRQ) == LOW) {
             Serial.println("testAlarmDay Interrupt .... ");
             if (rtc.isAlarmActive()) {
                 Serial.println("Alarm active");
