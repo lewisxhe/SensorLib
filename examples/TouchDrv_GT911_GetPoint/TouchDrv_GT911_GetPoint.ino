@@ -60,7 +60,7 @@ void setup()
 
     touch.setPins(SENSOR_RST, SENSOR_IRQ);
 
-    if (!touch.init(Wire,  SENSOR_SDA, SENSOR_SCL, GT911_SLAVE_ADDRESS_L )) {
+    if (!touch.init(Wire,  SENSOR_SDA, SENSOR_SCL, GT911_SLAVE_ADDRESS_H )) {
         while (1) {
             Serial.println("Failed to find GT911 - check your wiring!");
             delay(1000);
@@ -77,9 +77,7 @@ void setup()
 void loop()
 {
     if (touch.isPressed()) {
-        uint8_t point = touch.getPoint(x, y, 5);
-        Serial.print("Point:"); Serial.println(point);
-        uint8_t touched = touch.getPoint(x, y, 2);
+        uint8_t touched = touch.getPoint(x, y, touch.getSupportTouchPoint());
         for (int i = 0; i < touched; ++i) {
             Serial.print("X[");
             Serial.print(i);

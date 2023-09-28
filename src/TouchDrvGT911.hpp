@@ -125,6 +125,11 @@ public:
 
     void reset()
     {
+        if (__rst != SENSOR_PIN_NONE) {
+            setRstPinMode(OUTPUT);
+            setRstValue(HIGH);
+            delay(10);
+        }
         writeRegister(GT911_COMMAND, 0x02);
     }
 
@@ -174,11 +179,11 @@ public:
         uint8_t buffer[39];
 
         if (!x_array || !y_array || size == 0)
-            return DEV_WIRE_ERR;
+            return 0;
 
         int touchPoint = readRegister(GT911_POINT_INFO);
         if (touchPoint == DEV_WIRE_ERR) {
-            return DEV_WIRE_ERR;
+            return 0;
         }
 
         touchPoint &= 0x0F;
@@ -189,7 +194,7 @@ public:
         clearBuffer();
 
         if (readRegister(GT911_POINT_1, buffer, 39) == DEV_WIRE_ERR) {
-            return DEV_WIRE_ERR;
+            return 0;
         }
 
 
