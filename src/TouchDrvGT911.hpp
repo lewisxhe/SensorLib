@@ -130,6 +130,9 @@ public:
             setRstValue(HIGH);
             delay(10);
         }
+        if (__irq != SENSOR_PIN_NONE) {
+            pinMode(__irq, INPUT);
+        }
         writeRegister(GT911_COMMAND, 0x02);
     }
 
