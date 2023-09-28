@@ -33,9 +33,17 @@
 #include <time.h>
 #include "ExtensionIOXL9555.hpp"
 
-#define SENSOR_SDA                     8
-#define SENSOR_SCL                     9
-#define SENSOR_IRQ                      3
+#ifndef SENSOR_SDA
+#define SENSOR_SDA  17
+#endif
+
+#ifndef SENSOR_SCL
+#define SENSOR_SCL  18
+#endif
+
+#ifndef SENSOR_IRQ
+#define SENSOR_IRQ  -1
+#endif
 
 ExtensionIOXL9555 extIO;
 
@@ -54,10 +62,10 @@ void setup()
     }
 
     pinMode(SENSOR_IRQ, INPUT_PULLUP);
-    // Set PORT0 as input
-    extIO.configPort(ExtensionIOXL9555::PORT0, INPUT);
-    // Set PORT1 as input
-    extIO.configPort(ExtensionIOXL9555::PORT1, INPUT);
+    // Set PORT0 as input,mask = 0xFF = all pin input
+    extIO.configPort(ExtensionIOXL9555::PORT0, 0xFF);
+    // Set PORT1 as input,mask = 0xFF = all pin input
+    extIO.configPort(ExtensionIOXL9555::PORT1, 0xFF);
 }
 
 void loop()
