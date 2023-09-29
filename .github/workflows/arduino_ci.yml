@@ -4,9 +4,8 @@ on:
   pull_request:
   push:
     paths:
-      - 'examples/**'
-      - 'src/**'
-
+      - "examples/**"
+      - "src/**"
 
 jobs:
   build:
@@ -69,11 +68,10 @@ jobs:
             wget https://downloads.arduino.cc/arduino-cli/arduino-cli_latest_Linux_64bit.tar.gz -O arduino-cli.tar.gz ;
             sudo tar xf arduino-cli.tar.gz -C /usr/local/bin arduino-cli ;
             arduino-cli config init ;
-            sed -i 's/additional_urls: \[\]/additional_urls:["https:\/\/espressif.github.io\/arduino-esp32\/package_esp32_dev_index.json"]/' ~/.arduino15/arduino-cli.yaml ;
+            arduino-cli config add board_manager.additional_urls https://espressif.github.io/arduino-esp32/package_esp32_dev_index.json ;
             arduino-cli core update-index ;
             arduino-cli core install esp32:esp32 ;
             fi
-            
 
       - name: Build examples
         run: |
@@ -81,7 +79,7 @@ jobs:
           cd $HOME/Arduino/libraries ;
           git clone https://github.com/ThingPulse/esp8266-oled-ssd1306 ;
           git clone https://github.com/arduino-libraries/MadgwickAHRS ;
-          
+
           cd $GITHUB_WORKSPACE ;
           if [[ "$BOARD" =~ "esp32:esp32:"        ]]; then
             arduino-cli compile -besp32:esp32:esp32s3 --library . $PWD/$EXAMPLES ;
