@@ -38,9 +38,8 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
-#include <Arduino.h>
-#include <SPI.h>
-#include <Wire.h>
+
+#include "SensorLib.h"
 #include "bosch/bhy2.h"
 #include "bosch/bhi3.h"
 #include "bosch/bhi3_multi_tap.h"
@@ -61,27 +60,21 @@ typedef struct bhy_config {
             int sda;
             int scl;
             int addr;
-            TwoWire *wire;
+            PLATFORM_WIRE_TYPE *wire;
         } i2c_dev;
         struct  {
             int cs;
             int miso;
             int mosi;
             int sck;
-#if defined(ARDUINO_ARCH_RP2040)
-            SPIClassRP2040 *spi;
-#else
-            SPIClass *spi;
-#endif
+            PLATFORM_SPI_TYPE *spi;
         } spi_dev;
     } u  ;
 } bhy_config_t;
 
-#define BHY2_WORK_BUFFER_SIZE       2048
-#define BHY2_RD_WR_LEN              64    /* MCU maximum read write length */
+#define BHY2_RD_WR_LEN              256    /* MCU maximum read write length */
 #define BHY2_ASSERT(x)             if (x) check_bhy2_api(__LINE__, __FUNCTION__, x)
 
-const char *get_coines_error(int16_t rslt);
 const char *get_api_error(int8_t error_code);
 const char *get_sensor_error_text(uint8_t sensor_error);
 const char *get_sensor_name(uint8_t sensor_id);
@@ -89,23 +82,27 @@ float get_sensor_default_scaling(uint8_t sensor_id);
 const char *get_sensor_parse_format(uint8_t sensor_id);
 const char *get_sensor_axis_names(uint8_t sensor_id);
 
-bool setup_interfaces(bool reset_power, bhy_config_t config);
-void close_interfaces(enum bhy2_intf intf);
-int8_t bhy2_spi_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr);
-int8_t bhy2_spi_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr);
-int8_t bhy2_i2c_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr);
-int8_t bhy2_i2c_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr);
-void bhy2_delay_us(uint32_t us, void *private_data);
+
+class SensorInterfaces
+{
+public:
+    static bool setup_interfaces(bool reset_power, bhy_config_t config);
+    static void close_interfaces(enum bhy2_intf intf);
+    static int8_t bhy2_spi_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr);
+    static int8_t bhy2_spi_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr);
+    static int8_t bhy2_i2c_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr);
+    static int8_t bhy2_i2c_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr);
+    static void bhy2_delay_us(uint32_t us, void *private_data);
+
+private:
+    static SPISettings  __spiSetting;
+
+};
+
+
 void check_bhy2_api(unsigned int line, const char *func, int8_t val);
 void time_to_s_ns(uint64_t time_ticks, uint32_t *s, uint32_t *ns, uint64_t *tns);
 
-#define PRINT(format, ...)      Serial.printf(format,##__VA_ARGS__)
-#define INFO(format, ...)       Serial.printf("[I]" format,##__VA_ARGS__)
-#define PRINT_I(format, ...)    Serial.printf(format,##__VA_ARGS__)
-#define WARNING(format, ...)    Serial.printf("[W]" format,##__VA_ARGS__)
-#define PRINT_W(format, ...)    Serial.printf(format,##__VA_ARGS__)
-#define ERROR(format, ...)      Serial.printf("[E]" format,##__VA_ARGS__)
-#define PRINT_E(format, ...)    Serial.printf(format,##__VA_ARGS__)
 
 
 #endif /* _COMMON_H_ */

@@ -29,19 +29,17 @@
  *            Simplification for Arduino
  */
 
-
-#include "SensorCommon.tpp"
-#include "bosch/common/common.h"
-
-#define BHI260AP_SLAVE_ADDRESS          0x28
-#define BHY_PROCESS_BUFFER_SZIE         512
+#include "bosch/BoschParse.h"
+#include "bosch/SensorBhy2Define.h"
+#include "bosch/firmware/BHI260AP.fw.h"
 
 class SensorBHI260AP
 {
+    friend class BoschParse;
 public:
 
 #if defined(ARDUINO)
-    SensorBHI260AP(TwoWire &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = BHI260AP_SLAVE_ADDRESS)
+    SensorBHI260AP(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = BHI260AP_SLAVE_ADDRESS)
     {
         __handler.u.i2c_dev.scl = scl;
         __handler.u.i2c_dev.sda = sda;
@@ -51,7 +49,9 @@ public:
     }
 #endif
 
-    SensorBHI260AP(int cs, int mosi = -1, int miso = -1, int sck = -1, SPIClass &spi = SPI)
+    SensorBHI260AP(int cs, int mosi = -1, int miso = -1, int sck = -1,
+                   PLATFORM_SPI_TYPE &spi = SPI
+                  )
     {
         __handler.u.spi_dev.cs = cs;
         __handler.u.spi_dev.miso = miso;
@@ -75,10 +75,11 @@ public:
     {
         __handler.irq = irq;
         __handler.rst = rst;
+
     }
 
 #if defined(ARDUINO)
-    bool init(TwoWire &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = BHI260AP_SLAVE_ADDRESS)
+    bool init(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = BHI260AP_SLAVE_ADDRESS)
     {
         __handler.u.i2c_dev.scl = scl;
         __handler.u.i2c_dev.sda = sda;
@@ -87,8 +88,11 @@ public:
         __handler.intf = BHY2_I2C_INTERFACE;
         return initImpl();
     }
+#endif
 
-    bool init(SPIClass &spi, int cs, int mosi = MOSI, int miso = MISO, int sck = SCK)
+    bool init(
+        PLATFORM_SPI_TYPE &spi,
+        int cs, int mosi = MOSI, int miso = MISO, int sck = SCK)
     {
         __handler.u.spi_dev.cs = cs;
         __handler.u.spi_dev.miso = miso;
@@ -98,7 +102,6 @@ public:
         __handler.intf = BHY2_SPI_INTERFACE;
         return initImpl();
     }
-#endif
 
     bool init()
     {
@@ -111,22 +114,36 @@ public:
             free(processBuffer);
         }
         processBuffer = NULL;
+
+        if (__handler.irq != SENSOR_PIN_NONE) {
+            detachInterrupt(__handler.irq);
+        }
         // end();
     }
 
     void reset()
     {
-        bhy2_soft_reset(bhy2);
+        if (__handler.rst != SENSOR_PIN_NONE) {
+            digitalWrite(__handler.rst, HIGH);
+            delay(5);
+            digitalWrite(__handler.rst, HIGH);
+            delay(10);
+            digitalWrite(__handler.rst, HIGH);
+            delay(5);
+        }
     }
 
     void update()
     {
-        if (!processBuffer)
+        if (!processBuffer) {
             return;
-        if (__handler.irq != -1) {
-            if ( digitalRead(__handler.irq) == HIGH) {
-                bhy2_get_and_process_fifo(processBuffer, BHY2_WORK_BUFFER_SIZE, bhy2);
+        }
+        if (__handler.irq != SENSOR_PIN_NONE) {
+            if (__data_available) {
+                bhy2_get_and_process_fifo(processBuffer, processBufferSize, bhy2);
             }
+        } else {
+            bhy2_get_and_process_fifo(processBuffer, processBufferSize, bhy2);
         }
     }
 
@@ -214,12 +231,13 @@ public:
 
     bool isReady()
     {
-        uint8_t  boot_status;
+        uint8_t  boot_status = 0;
         __error_code = bhy2_get_boot_status(&boot_status, bhy2);
+        log_i("boot_status:0x%x", boot_status);
         if (__error_code != BHY2_OK) {
             return false;
         }
-        return boot_status & BHY2_BST_HOST_INTERFACE_READY;
+        return boot_status & BHY2_BST_HOST_INTERFACE_READY == false;
     }
 
     uint16_t getKernelVersion()
@@ -233,28 +251,50 @@ public:
         return version;
     }
 
-    enum EventID {
-        EVENT_ID_PADDING = (0),
-        EVENT_ID_TS_SMALL_DELTA = (251),
-        EVENT_ID_TS_LARGE_DELTA = (252),
-        EVENT_ID_TS_FULL = (253),
-        EVENT_ID_META_EVENT = (254),
-        EVENT_ID_TS_SMALL_DELTA_WU = (245),
-        EVENT_ID_TS_LARGE_DELTA_WU = (246),
-        EVENT_ID_TS_FULL_WU = (247),
-        EVENT_ID_META_EVENT_WU = (248),
-        EVENT_ID_FILLER = (255),
-        EVENT_ID_DEBUG_MSG = (250),
-        EVENT_ID_BHY2_LOG_UPDATE_SUB = (243),
-        EVENT_ID_BHY2_LOG_DOSTEP = (244),
-    };
 
-    bool registerEventCallback(EventID event_id, bhy2_fifo_parse_callback_t callback, void *private_data)
+
+    void onEvent(BhySensorEvent event_id, BhyEventCb callback)
     {
-        __error_code = bhy2_register_fifo_parse_callback(event_id, callback, private_data, bhy2);
-        return __error_code == BHY2_OK;
+        SensorEventCbList_t newEventHandler;
+        newEventHandler.cb = callback;
+        newEventHandler.event = event_id;
+        BoschParse::bhyEventVector.push_back(newEventHandler);
     }
 
+    void removeEvent(BhySensorEvent event_id, BhyEventCb callback)
+    {
+        if (!callback) {
+            return;
+        }
+        for (uint32_t i = 0; i < BoschParse::bhyEventVector.size(); i++) {
+            SensorEventCbList_t entry = BoschParse::bhyEventVector[i];
+            if (entry.cb == callback && entry.event == event_id) {
+                BoschParse::bhyEventVector.erase(BoschParse::bhyEventVector.begin() + i);
+            }
+        }
+    }
+
+
+    void onResultEvent(BhySensorID sensor_id, BhyParseDataCallback callback)
+    {
+        ParseCallBackList_t newEventHandler;
+        newEventHandler.cb = callback;
+        newEventHandler.id = sensor_id;
+        BoschParse::bhyParseEventVector.push_back(newEventHandler);
+    }
+
+    void removeResultEvent(BhySensorID sensor_id, BhyParseDataCallback callback)
+    {
+        if (!callback) {
+            return;
+        }
+        for (uint32_t i = 0; i < BoschParse::bhyParseEventVector.size(); i++) {
+            ParseCallBackList_t entry = BoschParse::bhyParseEventVector[i];
+            if (entry.cb == callback && entry.id == sensor_id) {
+                BoschParse::bhyParseEventVector.erase(BoschParse::bhyParseEventVector.begin() + i);
+            }
+        }
+    }
 
     void setProcessBufferSize(uint32_t size)
     {
@@ -266,38 +306,36 @@ public:
     {
         uint8_t sensor_error;
         uint8_t boot_status;
+
+        log_i("Upload Firmware ...");
+
         __error_code = bhy2_get_boot_status(&boot_status, bhy2);
-        if (__error_code != BHY2_OK) {
-            return false;
-        }
+        BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_get_boot_status failed!", false);
+
         if (write2Flash) {
             if (boot_status & BHY2_BST_FLASH_DETECTED) {
                 uint32_t start_addr = BHY2_FLASH_SECTOR_START_ADDR;
                 uint32_t end_addr = start_addr + length;
                 log_i("Flash detected. Erasing flash to upload firmware\r\n");
                 __error_code = bhy2_erase_flash(start_addr, end_addr, bhy2);
-                if (__error_code != BHY2_OK) {
-                    return false;
-                }
+                BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_erase_flash failed!", false);
             } else {
                 log_e("Flash not detected\r\n");
                 return false;
             }
             printf("Loading firmware into FLASH.\r\n");
             __error_code = bhy2_upload_firmware_to_flash(firmware, length, bhy2);
-            if (__error_code != BHY2_OK) {
-                return false;
-            }
+            BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_upload_firmware_to_flash failed!", false);
         } else {
             log_i("Loading firmware into RAM.\r\n");
+            log_i("upload size = %u", length);
             __error_code = bhy2_upload_firmware_to_ram(firmware, length, bhy2);
+            BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_upload_firmware_to_ram failed!", false);
         }
 
         log_i("Loading firmware into RAM Done\r\n");
         __error_code = bhy2_get_error_value(&sensor_error, bhy2);
-        if (__error_code != BHY2_OK) {
-            return false;
-        }
+        BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_get_error_value failed!", false);
         if (sensor_error != BHY2_OK) {
             __error_code = bhy2_get_error_value(&sensor_error, bhy2);
             log_e("%s\r\n", get_sensor_error_text(sensor_error));
@@ -312,6 +350,7 @@ public:
             log_i("Booting from RAM.\r\n");
             __error_code = bhy2_boot_from_ram(bhy2);
         }
+        BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2 boot failed!", false);
 
         __error_code = bhy2_get_error_value(&sensor_error, bhy2);
         if (sensor_error) {
@@ -321,62 +360,99 @@ public:
         return sensor_error == BHY2_OK;
     }
 
+    String getError()
+    {
+        String err = get_api_error(__error_code);
+        err += " Code:" + String(__error_code);
+        return err;
+    }
 
+    bool configure(uint8_t sensor_id, float sample_rate, uint32_t report_latency_ms)
+    {
+        __error_code = bhy2_set_virt_sensor_cfg(sensor_id, sample_rate, report_latency_ms, bhy2);
+        BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_set_virt_sensor_cfg failed!", false);
+        log_i("Enable %s at %.2fHz.\r\n", get_sensor_name(sensor_id), sample_rate);
+        return true;
+    }
+
+    float getScaling(uint8_t sensor_id)
+    {
+        return get_sensor_default_scaling(sensor_id);
+    }
+
+    void setFirmware(const uint8_t *image, size_t image_len, bool write_flash)
+    {
+        __firmware = image;
+        __firmware_size = image_len;
+        __write_flash = write_flash;
+    }
 
 private:
+
+    static void IRAM_ATTR handleISR(void *available)
+    {
+        *(bool *)(available) = true;
+    }
+
 
     bool initImpl()
     {
         int8_t rslt;
         uint8_t product_id = 0;
 
+        if (__handler.rst != SENSOR_PIN_NONE) {
+            pinMode(__handler.rst, OUTPUT);
+        }
+
+        reset();
+
         switch (__handler.intf) {
         case BHY2_I2C_INTERFACE:
-
-            if (!__handler.u.i2c_dev.wire) {
-                log_e("Wire ptr NULL");
+            BHY2_RLST_CHECK(!__handler.u.i2c_dev.wire, "Wire ptr NULL", false);
+            if (!SensorInterfaces::setup_interfaces(true, __handler)) {
+                log_e("setup_interfaces failed");
                 return false;
             }
-
-            setup_interfaces(true, __handler); /* Perform a power on reset */
-
-            rslt = bhy2_init(BHY2_I2C_INTERFACE, bhy2_i2c_read,  bhy2_i2c_write, bhy2_delay_us, BHY2_RD_WR_LEN, &__handler, &__handler.bhy2);
-
-            rslt |= bhy2_set_host_intf_ctrl(BHY2_I2C_INTERFACE, &__handler.bhy2);
+            __error_code = bhy2_init(BHY2_I2C_INTERFACE,
+                                     SensorInterfaces::bhy2_i2c_read,
+                                     SensorInterfaces::bhy2_i2c_write,
+                                     SensorInterfaces::bhy2_delay_us,
+                                     BHY2_RD_WR_LEN, &__handler, &__handler.bhy2);
+            BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_init failed!", false);
+            // __error_code = bhy2_set_host_intf_ctrl(BHY2_I2C_INTERFACE, &__handler.bhy2);
+            // BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_set_host_intf_ctrl failed!", false);
             break;
 
         case BHY2_SPI_INTERFACE:
-
-            if (!__handler.u.spi_dev.spi) {
-                log_e("SPI ptr NULL");
+            BHY2_RLST_CHECK(!__handler.u.spi_dev.spi, "SPI ptr NULL", false);
+            if (!SensorInterfaces::setup_interfaces(true, __handler)) {
+                log_e("setup_interfaces failed");
                 return false;
             }
-
-            setup_interfaces(true, __handler); /* Perform a power on reset */
-
-            rslt = bhy2_init(BHY2_SPI_INTERFACE,  bhy2_spi_read,  bhy2_spi_write, bhy2_delay_us, BHY2_RD_WR_LEN, &__handler, &__handler.bhy2);
-
-            rslt |= bhy2_set_host_intf_ctrl(BHY2_SPI_INTERFACE, &__handler.bhy2);
+            __error_code = bhy2_init(BHY2_SPI_INTERFACE,
+                                     SensorInterfaces::bhy2_spi_read,
+                                     SensorInterfaces::bhy2_spi_write,
+                                     SensorInterfaces::bhy2_delay_us,
+                                     BHY2_RD_WR_LEN,
+                                     &__handler,
+                                     &__handler.bhy2);
+            BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_init failed!", false);
+            // __error_code = bhy2_set_host_intf_ctrl(BHY2_SPI_INTERFACE, &__handler.bhy2);
+            // BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_set_host_intf_ctrl failed!", false);
             break;
         default:
             return false;
         }
 
 
-
-        if (rslt != BHY2_OK) {
-            return false;
-        }
-
         bhy2 = &__handler.bhy2;
 
-        rslt = bhy2_soft_reset(bhy2);
-        if (rslt != BHY2_OK) {
-            log_e("reset bhy2 failed!");
-            return false;
-        }
+        __error_code = bhy2_soft_reset(bhy2);
+        BHY2_RLST_CHECK(__error_code != BHY2_OK, "reset bhy2 failed!", false);
 
-        rslt = bhy2_get_product_id(&product_id, bhy2);
+        __error_code = bhy2_get_product_id(&product_id, bhy2);
+        BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_get_product_id failed!", false);
+
 
         /* Check for a valid product ID */
         if (product_id != BHY2_PRODUCT_ID) {
@@ -386,26 +462,79 @@ private:
             log_i("BHI260/BHA260 found. Product ID read %X\r\n", product_id);
         }
 
+        if (!__firmware) {
+            // Default write to ram
+            setFirmware(bhy2_firmware_image, sizeof(bhy2_firmware_image), false);
+        }
 
-        bhy2_update_virtual_sensor_list(bhy2);
+        if (!isReady()) {
+            if (!uploadFirmware(__firmware, __firmware_size, __write_flash)) {
+                log_e("uploadFirmware failed!");
+                return false;
+            }
+        }
 
-        bhy2_get_virt_sensor_list(bhy2);
+        uint16_t version = getKernelVersion();
+        BHY2_RLST_CHECK(!version, "getKernelVersion failed!", false);
+        log_i("Boot successful. Kernel version %u.\r\n", version);
 
+        //Set event callback
+        __error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT, BoschParse::parseMetaEvent, NULL, bhy2);
+        BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_register_fifo_parse_callback failed!", false);
+
+
+        __error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT_WU, BoschParse::parseMetaEvent, NULL, bhy2);
+        BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_register_fifo_parse_callback failed!", false);
+
+
+        // All sensors' data are handled in the same generic way
+        for (uint8_t i = 1; i < BHY2_SENSOR_ID_MAX; i++) {
+            bhy2_register_fifo_parse_callback(i, BoschParse::parseData, NULL, bhy2);
+        }
+
+        //Set process buffer
 #if     defined(ESP32) && defined(BOARD_HAS_PSRAM)
         processBuffer = (uint8_t *)ps_malloc(processBufferSize);
 #else
         processBuffer = (uint8_t *)malloc(processBufferSize);
 #endif
+        BHY2_RLST_CHECK(!processBuffer, "process buffer malloc failed!", false);
 
-        return processBuffer == NULL;
+        __error_code = bhy2_get_and_process_fifo(processBuffer, processBufferSize, bhy2);
+        if (__error_code != BHY2_OK) {
+            log_e("bhy2_get_and_process_fifo failed");
+            free(processBuffer);
+            return false;
+        }
+
+        /* Update the callback table to enable parsing of sensor hintr_ctrl */
+        bhy2_update_virtual_sensor_list(bhy2);
+
+        bhy2_get_virt_sensor_list(bhy2);
+
+
+        if (__handler.irq != SENSOR_PIN_NONE) {
+#if defined(ARDUINO_ARCH_RP2040)
+            attachInterruptParam((pin_size_t)(__handler.irq), handleISR, (PinStatus )RISING, (void *)&__data_available);
+#else
+            // attachInterrupt(__handler.irq, std::bind(&SensorBHI260AP::handleISR, this), RISING);
+            attachInterruptArg(__handler.irq, handleISR, (void *)&__data_available, RISING);
+#endif
+        }
+
+        return __error_code == BHY2_OK;
     }
 
 protected:
-    struct bhy2_dev             *bhy2 = NULL;
-    bhy_config_t                __handler;
-    uint8_t __error_code;
-    uint8_t *processBuffer = NULL;
-    size_t processBufferSize = BHY_PROCESS_BUFFER_SZIE;
+    struct bhy2_dev  *bhy2 = NULL;
+    bhy_config_t     __handler;
+    int8_t           __error_code;
+    volatile bool    __data_available;
+    uint8_t          *processBuffer = NULL;
+    size_t           processBufferSize = BHY_PROCESS_BUFFER_SZIE;
+    const uint8_t    *__firmware;
+    size_t          __firmware_size;
+    bool            __write_flash;
 };
 
 
