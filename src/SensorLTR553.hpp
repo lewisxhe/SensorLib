@@ -111,7 +111,7 @@ public:
     };
 
 #if defined(ARDUINO)
-    SensorLTR553(TwoWire &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = LTR553_SLAVE_ADDRESS)
+    SensorLTR553(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = LTR553_SLAVE_ADDRESS)
     {
         __wire = &w;
         __sda = sda;
@@ -136,7 +136,7 @@ public:
     }
 
 #if defined(ARDUINO)
-    bool init(TwoWire &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = LTR553_SLAVE_ADDRESS)
+    bool init(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = LTR553_SLAVE_ADDRESS)
     {
         __wire = &w;
         __sda = sda;

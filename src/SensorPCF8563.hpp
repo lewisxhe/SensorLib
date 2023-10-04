@@ -50,7 +50,7 @@ public:
 
 
 #if defined(ARDUINO)
-    SensorPCF8563(TwoWire &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = PCF8563_SLAVE_ADDRESS)
+    SensorPCF8563(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = PCF8563_SLAVE_ADDRESS)
     {
         __wire = &w;
         __sda = sda;
@@ -75,7 +75,7 @@ public:
     }
 
 #if defined(ARDUINO)
-    bool init(TwoWire &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = PCF8563_SLAVE_ADDRESS)
+    bool init(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = PCF8563_SLAVE_ADDRESS)
     {
         __wire = &w;
         __sda = sda;

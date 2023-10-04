@@ -69,7 +69,7 @@ public:
     };
 
 #if defined(ARDUINO)
-    SensorCM32181(TwoWire &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = CM32181_SLAVE_ADDRESS)
+    SensorCM32181(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = CM32181_SLAVE_ADDRESS)
     {
         __wire = &w;
         __sda = sda;
@@ -94,7 +94,7 @@ public:
     }
 
 #if defined(ARDUINO)
-    bool init(TwoWire &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = CM32181_SLAVE_ADDRESS)
+    bool init(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = CM32181_SLAVE_ADDRESS)
     {
         __wire = &w;
         __sda = sda;

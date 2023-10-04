@@ -38,7 +38,7 @@ class SensorDRV2605 :
 public:
 
 #if defined(ARDUINO)
-    SensorDRV2605(TwoWire &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = DRV2605_SLAVE_ADDRESS)
+    SensorDRV2605(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = DRV2605_SLAVE_ADDRESS)
     {
         __wire = &w;
         __sda = sda;
@@ -63,7 +63,7 @@ public:
     }
 
 #if defined(ARDUINO)
-    bool init(TwoWire &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = DRV2605_SLAVE_ADDRESS)
+    bool init(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = DRV2605_SLAVE_ADDRESS)
     {
         __wire = &w;
         __sda = sda;

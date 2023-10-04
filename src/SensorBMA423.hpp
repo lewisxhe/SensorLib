@@ -136,7 +136,7 @@ public:
     };
 
 #if defined(ARDUINO)
-    SensorBMA423(TwoWire &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = BMA423_SLAVE_ADDRESS)
+    SensorBMA423(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = BMA423_SLAVE_ADDRESS)
     {
         __wire = &w;
         __sda = sda;
@@ -162,7 +162,7 @@ public:
 
 
 #if defined(ARDUINO)
-    bool init(TwoWire &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = BMA423_SLAVE_ADDRESS)
+    bool init(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = BMA423_SLAVE_ADDRESS)
     {
         __wire = &w;
         __sda = sda;

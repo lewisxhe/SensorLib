@@ -44,7 +44,7 @@ public:
 
 
 #if defined(ARDUINO)
-    TouchDrvCSTXXX(TwoWire &w,
+    TouchDrvCSTXXX(PLATFORM_WIRE_TYPE &w,
                    int sda = DEFAULT_SDA,
                    int scl = DEFAULT_SCL,
                    uint8_t addr = CSTXXX_SLAVE_ADDRESS)
@@ -76,7 +76,7 @@ public:
     }
 
 #if defined(ARDUINO)
-    bool init(TwoWire &w,
+    bool init(PLATFORM_WIRE_TYPE &w,
               int sda = DEFAULT_SDA,
               int scl = DEFAULT_SCL,
               uint8_t addr = CSTXXX_SLAVE_ADDRESS)

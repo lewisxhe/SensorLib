@@ -50,7 +50,7 @@ public:
 
 
 #if defined(ARDUINO)
-    TouchDrvGT911(TwoWire &w,
+    TouchDrvGT911(PLATFORM_WIRE_TYPE &w,
                   int sda = DEFAULT_SDA,
                   int scl = DEFAULT_SCL,
                   uint8_t addr = GT911_SLAVE_ADDRESS_H)
@@ -82,7 +82,7 @@ public:
     }
 
 #if defined(ARDUINO)
-    bool init(TwoWire &w,
+    bool init(PLATFORM_WIRE_TYPE &w,
               int sda = DEFAULT_SDA,
               int scl = DEFAULT_SCL,
               uint8_t addr = GT911_SLAVE_ADDRESS_H)

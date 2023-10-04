@@ -158,7 +158,7 @@ public:
     };
 
 #if defined(ARDUINO)
-    SensorQMI8658(TwoWire &w, int sda = SDA, int scl = SCL, uint8_t addr = QMI8658_L_SLAVE_ADDRESS)
+    SensorQMI8658(PLATFORM_WIRE_TYPE &w, int sda = SDA, int scl = SCL, uint8_t addr = QMI8658_L_SLAVE_ADDRESS)
     {
         __wire = &w;
         __sda = sda;
@@ -166,7 +166,7 @@ public:
         __addr = addr;
     }
 
-    SensorQMI8658(int cs, int mosi = -1, int miso = -1, int sck = -1, SPIClass &spi = SPI)
+    SensorQMI8658(int cs, int mosi = -1, int miso = -1, int sck = -1, PLATFORM_SPI_TYPE &spi = SPI)
     {
         __spi = &spi;
         __cs = cs;
@@ -194,7 +194,7 @@ public:
     }
 
 #if defined(ARDUINO)
-    bool init(TwoWire &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = QMI8658_L_SLAVE_ADDRESS)
+    bool init(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = QMI8658_L_SLAVE_ADDRESS)
     {
         __wire = &w;
         __sda = sda;
