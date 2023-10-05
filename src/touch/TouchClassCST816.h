@@ -2,7 +2,7 @@
  *
  * @license MIT License
  *
- * Copyright (c) 2022 lewis he
+ * Copyright (c) 2023 lewis he
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,23 +22,60 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      CSTxxxConstants.h
+ * @file      TouchClassCST816.h
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2023-04-24
- *
+ * @date      2023-10-06
  */
+#include "../TouchDrvInterface.hpp"
+#include "../SensorCommon.tpp"
 
-#pragma once
+class TouchClassCST816 : public TouchDrvInterface,
+    public SensorCommon<TouchClassCST816>
+{
+    friend class SensorCommon<TouchClassCST816>;
 
-#define CSTXXX_SLAVE_ADDRESS        (0x15)
-#define CST816_SLAVE_ADDRESS        (0x15)
-#define CST328_SLAVE_ADDRESS        (0x1A)
-#define CST226SE_SLAVE_ADDRESS      (0x5A)
+public:
+    TouchClassCST816(PLATFORM_WIRE_TYPE &wire, int sda, int scl, uint8_t address);
 
-#define CST816S_CHIP_ID             (0xB4)
-#define CST816T_CHIP_ID             (0xB5)
-#define CST716_CHIP_ID              (0x20)
-#define CST226SE_CHIP_ID            (0xA8)
+    bool init();
+
+    void reset();
+
+    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point);
+
+    bool isPressed();
+
+    const char *getModelName();
+
+    void sleep();
+
+    void wakeup();
+
+    void idle();
+
+    uint8_t getSupportTouchPoint();
+
+    bool getResolution(int16_t *x, int16_t *y);
+
+    void setCenterButtonCoordinate(int16_t x, int16_t y);
+
+    void setHomeButtonCallback(home_button_callback_t cb, void *user_data);
+
+    void disableAutoSleep();
+
+private:
+
+    TouchClassCST816() {};
+
+    bool initImpl();
+    int getReadMaskImpl();
+
+protected:
+    int16_t __center_btn_x;
+    int16_t __center_btn_y;
+};
+
+
 
 
 
