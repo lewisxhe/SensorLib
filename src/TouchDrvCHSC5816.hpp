@@ -112,17 +112,9 @@ public:
     }
 #endif
 
-    bool init(int rst, int irq)
+    bool init()
     {
-        __rst = rst;
-        __irq = irq;
-        return initImpl();
-    }
-
-    void setPins(int rst, int irq)
-    {
-        __irq = irq;
-        __rst = rst;
+        return begin();
     }
 
     void reset()
@@ -164,21 +156,6 @@ public:
         return getPoint(NULL, NULL);
     }
 
-    bool enableInterrupt()
-    {
-        return false;
-    }
-
-    bool disableInterrupt()
-    {
-        return false;
-    }
-
-    uint32_t getChipID()
-    {
-        return 0x00;
-    }
-
     const char *getModelName()
     {
         return "CHSC5816";
@@ -208,11 +185,6 @@ public:
         writeRegister(CHSC5816_REG_CMD_BUFF, buffer, 16);
     }
 
-    bool writeConfig(uint8_t *data, uint32_t size)
-    {
-        return false;
-    }
-
     uint8_t getSupportTouchPoint()
     {
         return 1;
@@ -235,10 +207,6 @@ public:
         return true;
     }
 
-    uint8_t getGesture()
-    {
-        return 0;
-    }
 
 private:
     bool checkOnline()
@@ -295,8 +263,6 @@ private:
 
 
 protected:
-    int __rst = SENSOR_PIN_NONE;
-    int __irq = SENSOR_PIN_NONE;
     CHSC5816_Header_t __header;
 };
 

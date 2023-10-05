@@ -95,23 +95,17 @@ public:
     }
 #endif
 
-    bool init(int rst, int irq)
+    bool init()
     {
-        __rst = rst;
-        __irq = irq;
-        return initImpl();
+        return begin();
     }
+
 
     void deinit()
     {
         // end();
     }
 
-    void setPins(int rst, int irq)
-    {
-        __irq = irq;
-        __rst = rst;
-    }
 
     void setIrqPin(int irq)
     {
@@ -151,30 +145,11 @@ public:
 
     }
 
-    bool writeConfig(uint8_t *data, uint32_t size)
-    {
-        return false;
-    }
-
     uint8_t getSupportTouchPoint()
     {
         return 5;
     }
 
-    bool enableInterrupt()
-    {
-        return false;
-    }
-
-    bool disableInterrupt()
-    {
-        return false;
-    }
-
-    uint8_t getGesture()
-    {
-        return 0;
-    }
 
     uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t size = 1)
     {
@@ -420,8 +395,6 @@ private:
 
 
 protected:
-    int __rst;
-    int __irq;
     int __irq_mode;
     bool __rst_use_cb = false;
 };

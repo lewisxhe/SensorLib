@@ -27,12 +27,30 @@
  * @date      2023-09-21
  *
  */
-
+#include <Arduino.h>
 #include "TouchDrvInterface.hpp"
 
-TouchDrvInterface::TouchDrvInterface() : __swapXY(false), __mirrorX(false), __mirrorY(false), __resX(0), __resY(0)
+TouchDrvInterface::TouchDrvInterface() : __swapXY(false),
+    __mirrorX(false), __mirrorY(false),
+    __resX(0), __resY(0),
+    __irq(-1), __rst(-1),
+    __chipID(0x00),
+    __homeButtonCb(NULL),
+    __userData(NULL)
 {
 
+}
+
+uint32_t TouchDrvInterface::getChipID()
+{
+    return __chipID;
+}
+
+
+void TouchDrvInterface::setPins(int rst, int irq)
+{
+    __irq = irq;
+    __rst = rst;
 }
 
 void TouchDrvInterface::setSwapXY(bool swap)

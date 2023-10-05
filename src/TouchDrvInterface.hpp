@@ -30,6 +30,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdio.h>
 
 typedef void (*home_button_callback_t)(void *user_data);
 
@@ -70,21 +71,13 @@ class TouchDrvInterface
 public:
     TouchDrvInterface();
 
-    virtual bool init(int rst, int irq) = 0;
+    virtual bool init() = 0;
 
     virtual void reset() = 0;
 
     virtual uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point) = 0;
 
-    virtual uint8_t getGesture() = 0;
-
     virtual bool isPressed() = 0;
-
-    virtual bool enableInterrupt() = 0;
-
-    virtual bool disableInterrupt() = 0;
-
-    virtual uint32_t getChipID() = 0;
 
     virtual const char *getModelName() = 0;
 
@@ -94,11 +87,13 @@ public:
 
     virtual void idle() = 0;
 
-    virtual bool writeConfig(uint8_t *data, uint32_t size) = 0;
-
     virtual uint8_t getSupportTouchPoint() = 0;
 
     virtual bool getResolution(int16_t *x, int16_t *y) = 0;
+
+    uint32_t getChipID();
+
+    void setPins(int rst, int irq);
 
     void setSwapXY(bool swap);
 
@@ -111,6 +106,12 @@ public:
 protected:
     uint16_t __resX, __resY, __xMax, __yMax;
     bool __swapXY, __mirrorX, __mirrorY;
+    int __rst;
+    int __irq;
+    uint32_t __chipID;
+    home_button_callback_t __homeButtonCb;
+    void *__userData;
+
 };
 
 

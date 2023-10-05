@@ -102,11 +102,9 @@ public:
     }
 #endif
 
-    bool init(int rst, int irq)
+    bool init()
     {
-        __rst = rst;
-        __irq = irq;
-        return initImpl();
+        return begin();
     }
 
     void deinit()
@@ -282,11 +280,6 @@ public:
         writeRegister(FT6X36_REG_POWER_MODE, PMODE_DEEPSLEEP);
     }
 
-    bool writeConfig(uint8_t *data, uint32_t size)
-    {
-        return false;
-    }
-
     void wakeup()
     {
         reset();
@@ -328,15 +321,6 @@ public:
         }
     }
 
-    bool enableInterrupt()
-    {
-        return false;
-    }
-
-    bool disableInterrupt()
-    {
-        return false;
-    }
 
     bool getResolution(int16_t *x, int16_t *y)
     {
@@ -353,12 +337,6 @@ public:
             digitalWrite(__rst, HIGH);
             delay(5);
         }
-    }
-
-    void setPins(int rst, int irq)
-    {
-        __irq = irq;
-        __rst = rst;
     }
 
 private:
@@ -410,8 +388,6 @@ private:
 
 protected:
     uint8_t chipID;
-    int __rst = SENSOR_PIN_NONE;
-    int __irq = SENSOR_PIN_NONE;
 };
 
 

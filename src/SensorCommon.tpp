@@ -69,7 +69,7 @@ public:
 #if defined(ARDUINO)
     bool begin(PLATFORM_WIRE_TYPE &w, uint8_t addr, int sda, int scl)
     {
-        LOG("Using Wire interface.\n");
+        log_i("Using Wire interface.\n");
         if (__has_init)return thisChip().initImpl();
         __wire = &w;
         __sda = sda;
@@ -96,7 +96,7 @@ public:
                PLATFORM_SPI_TYPE &spi = SPI
               )
     {
-        LOG("Using SPI interface.\n");
+        log_i("Using SPI interface.\n");
         if (__has_init)return thisChip().initImpl();
         __cs  = cs;
         __spi = &spi;
@@ -131,7 +131,7 @@ public:
 
     bool begin(uint8_t addr, iic_fptr_t readRegCallback, iic_fptr_t writeRegCallback)
     {
-        LOG("Using Custom interface.\n");
+        log_i("Using Custom interface.\n");
         if (__has_init)return thisChip().initImpl();
         thisReadRegCallback = readRegCallback;
         thisWriteRegCallback = writeRegCallback;
@@ -287,7 +287,7 @@ protected:
                 }
             }
             if (__wire->endTransmission(__sendStop) != 0) {
-                LOG("I2C Transfer Error!\n");
+                log_i("I2C Transfer Error!\n");
                 return DEV_WIRE_ERR;
             }
             __wire->requestFrom(__addr, 1U, false);
