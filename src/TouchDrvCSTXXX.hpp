@@ -76,7 +76,7 @@ public:
             }
         }
 
-        return drv == NULL;
+        return drv != NULL;
     }
 
     void reset()
