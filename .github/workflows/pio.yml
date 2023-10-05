@@ -17,7 +17,6 @@ jobs:
             examples/BAM423_Accelerometer/BAM423_Accelerometer.ino,
             examples/BAM423_Orientation/BAM423_Orientation.ino,
             examples/BAM423_Temperature/BAM423_Temperature.ino,
-            examples/BHI260AP_Accelerometer/BHI260AP_Accelerometer.ino,
             examples/BMA423_Feature/BMA423_Feature.ino,
             examples/CM32181_LightSensor/CM32181_LightSensor.ino,
             examples/CM32181_LightSensorInterrupt/CM32181_LightSensorInterrupt.ino,
