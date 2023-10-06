@@ -126,7 +126,7 @@ public:
         if (__handler.rst != SENSOR_PIN_NONE) {
             digitalWrite(__handler.rst, HIGH);
             delay(5);
-            digitalWrite(__handler.rst, HIGH);
+            digitalWrite(__handler.rst, LOW);
             delay(10);
             digitalWrite(__handler.rst, HIGH);
             delay(5);
