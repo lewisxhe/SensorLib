@@ -36,6 +36,14 @@
 #include <vector>
 #include <functional>
 
+
+enum BoschOrientation {
+    BHY2_DIRECTION_TOP_RIGHT,
+    BHY2_DIRECTION_TOP_LEFT,
+    BHY2_DIRECTION_BOTTOM_LEFT,
+    BHY2_DIRECTION_BOTTOM_RIGHT,
+};
+
 class BoschParse
 {
 public:
@@ -45,4 +53,5 @@ public:
     static void parseData(const struct bhy2_fifo_parse_data_info *fifo, void *user_data);
 
     static void parseMetaEvent(const struct bhy2_fifo_parse_data_info *callback_info, void *user_data);
+
 };
