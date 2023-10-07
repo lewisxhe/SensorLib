@@ -126,7 +126,7 @@ public:
         if (__handler.rst != SENSOR_PIN_NONE) {
             digitalWrite(__handler.rst, HIGH);
             delay(5);
-            digitalWrite(__handler.rst, HIGH);
+            digitalWrite(__handler.rst, LOW);
             delay(10);
             digitalWrite(__handler.rst, HIGH);
             delay(5);
@@ -173,6 +173,7 @@ public:
 
     void printSensors(Stream &port)
     {
+        uint8_t cnt = 0;
         bool presentBuff[256];
 
         for (uint16_t i = 0; i < sizeof(bhy2->present_buff); i++) {
@@ -184,12 +185,14 @@ public:
         port.println("Present sensors: ");
         for (int i = 0; i < (int)sizeof(presentBuff); i++) {
             if (presentBuff[i]) {
+                cnt++;
                 port.print(i);
                 port.print(" - ");
                 port.print(get_sensor_name(i));
                 port.println();
             }
         }
+        port.printf("Total %u Sensor online .\n", cnt);
     }
 
 
@@ -373,6 +376,14 @@ public:
         BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_set_virt_sensor_cfg failed!", false);
         log_i("Enable %s at %.2fHz.\r\n", get_sensor_name(sensor_id), sample_rate);
         return true;
+    }
+
+    struct bhy2_virt_sensor_conf getConfigure(uint8_t sensor_id)
+    {
+        bhy2_virt_sensor_conf conf;
+        bhy2_get_virt_sensor_cfg(sensor_id, &conf, bhy2);
+        log_i("range:%u sample_rate:%f latency:%u sensitivity:%u\n", conf.range, conf.sample_rate, conf.latency, conf.sensitivity);
+        return conf;
     }
 
     float getScaling(uint8_t sensor_id)

@@ -38,7 +38,6 @@ void BoschParse::parseData(const struct bhy2_fifo_parse_data_info *fifo, void *u
 {
     int8_t size = fifo->data_size - 1;
 
-    if(fifo->sensor_id == 1 || fifo->sensor_id ==10)return;
 #ifdef LOG_PORT
     LOG_PORT.print("Sensor: ");
     LOG_PORT.print(fifo->sensor_id);
