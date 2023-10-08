@@ -46,7 +46,7 @@
     } while (0)
 
 typedef void (*BhyEventCb)(uint8_t event, uint8_t *data, uint32_t size);
-typedef void (*BhyParseDataCallback)(float scaling, uint8_t *data, uint32_t size);
+typedef void (*BhyParseDataCallback)(uint8_t sensor_id, uint8_t *data, uint32_t size);
 
 
 

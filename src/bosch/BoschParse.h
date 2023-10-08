@@ -54,4 +54,5 @@ public:
 
     static void parseMetaEvent(const struct bhy2_fifo_parse_data_info *callback_info, void *user_data);
 
+    static void parseDebugMessage(const struct bhy2_fifo_parse_data_info *callback_info, void *callback_ref);
 };

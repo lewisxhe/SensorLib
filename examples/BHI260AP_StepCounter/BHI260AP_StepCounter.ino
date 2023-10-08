@@ -22,9 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      BHI260AP_6DoF.ino
+ * @file      BHI260AP_StepCounter.ino
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2023-09-06
+ * @date      2023-10-08
  *
  */
 #include <Wire.h>
@@ -46,41 +46,28 @@
 #define BHI260AP_RST          47
 #endif
 
-
 SensorBHI260AP bhy;
-void accel_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len)
-{
-    struct bhy2_data_xyz data;
-    float scaling_factor = get_sensor_default_scaling(sensor_id);
-    bhy2_parse_xyz(data_ptr, &data);
-    Serial.print(bhy.getSensorName(sensor_id));
-    Serial.print(":");
-    Serial.printf("x: %f, y: %f, z: %f;\r\n",
-                  data.x * scaling_factor,
-                  data.y * scaling_factor,
-                  data.z * scaling_factor
-                 );
-}
 
 
-void gyro_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len)
+void step_detector_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_t len)
 {
-    struct bhy2_data_xyz data;
-    float scaling_factor = get_sensor_default_scaling(sensor_id);
-    bhy2_parse_xyz(data_ptr, &data);
+    Serial.print(bhy.getSensorName(sensor_id));
+    Serial.println(" detected.");
+}
+
+void step_counter_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_t len)
+{
     Serial.print(bhy.getSensorName(sensor_id));
     Serial.print(":");
-    Serial.printf("x: %f, y: %f, z: %f;\r\n",
-                  data.x * scaling_factor,
-                  data.y * scaling_factor,
-                  data.z * scaling_factor
-                 );
+    Serial.println(bhy2_parse_step_counter(data_ptr));
 }
+
 
 void setup()
 {
     Serial.begin(115200);
     while (!Serial);
+
 
     // Set the reset pin and interrupt pin, if any
     bhy.setPins(BHI260AP_RST, BHI260AP_IRQ);
@@ -113,17 +100,16 @@ void setup()
     float sample_rate = 100.0;      /* Read out hintr_ctrl measured at 100Hz */
     uint32_t report_latency_ms = 0; /* Report immediately */
 
-    // Enable acceleration
+    // Direction Step count  relies on the accelerometer, and the accelerometer needs to be turned on first.
     bhy.configure(SENSOR_ID_ACC_PASS, sample_rate, report_latency_ms);
-    // Enable gyroscope
-    bhy.configure(SENSOR_ID_GYRO_PASS, sample_rate, report_latency_ms);
+    // Enable Step detector
+    bhy.configure(SENSOR_ID_STD, sample_rate, report_latency_ms);
+    // Enable Step counter
+    bhy.configure(SENSOR_ID_STC, sample_rate, report_latency_ms);
 
-    // Set the acceleration sensor result callback function
-    bhy.onResultEvent(SENSOR_ID_ACC_PASS, accel_process_callback);
-
-    // Set the gyroscope sensor result callback function
-    bhy.onResultEvent(SENSOR_ID_GYRO_PASS, gyro_process_callback);
-
+    // Set the number of steps to detect the callback function
+    bhy.onResultEvent(SENSOR_ID_STD, step_detector_process_callback);
+    bhy.onResultEvent(SENSOR_ID_STC, step_counter_process_callback);
 }
 
 
@@ -133,6 +119,5 @@ void loop()
     bhy.update();
     delay(50);
 }
-
 
 

@@ -46,7 +46,7 @@
 #define BHI260AP_RST          47
 #endif
 
-void OrientationCallback(float scaling_factor, uint8_t *data_ptr, uint32_t len);
+void orientation_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len);
 
 SensorBHI260AP bhy;
 
@@ -92,7 +92,7 @@ void setup()
     // Enable direction detection
     bhy.configure(SENSOR_ID_DEVICE_ORI, sample_rate, report_latency_ms);
     // Set the direction detection result output processing function
-    bhy.onResultEvent(SENSOR_ID_DEVICE_ORI, OrientationCallback);
+    bhy.onResultEvent(SENSOR_ID_DEVICE_ORI, orientation_process_callback);
 }
 
 
@@ -104,7 +104,7 @@ void loop()
 }
 
 
-void OrientationCallback(float scaling_factor, uint8_t *data_ptr, uint32_t len)
+void orientation_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_t len)
 {
     char report[256];
     uint8_t direction = *data_ptr;
@@ -154,7 +154,8 @@ void OrientationCallback(float scaling_factor, uint8_t *data_ptr, uint32_t len)
         sprintf( report, "None of the 3D orientation axes is set in BHI260 - accelerometer.\r\n" );
         break;
     }
-    Serial.print("Direction:");
+    Serial.print(bhy.getSensorName(sensor_id));
+    Serial.print(":");
     Serial.println(direction);
     Serial.println(report);
 }

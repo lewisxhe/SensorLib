@@ -94,6 +94,13 @@ void bhy2_parse_orientation(const uint8_t *data, struct bhy2_data_orientation *o
  */
 void bhy2_parse_xyz(const uint8_t *data, struct bhy2_data_xyz *vector);
 
+/**
+ * @brief Function to parse FIFO frame data into step counter
+ * @param[in] data      : Reference to the data buffer storing data from the FIFO
+ * @return[out]         : Reference to the data buffer to step counter
+ */
+uint32_t bhy2_parse_step_counter(const uint8_t *data);
+
 /* End of CPP Guard */
 #ifdef __cplusplus
 }

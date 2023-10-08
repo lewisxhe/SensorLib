@@ -22,9 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      BHI260AP_6DoF.ino
+ * @file      BHI260AP_DebugInfo.ino
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2023-09-06
+ * @date      2023-10-08
  *
  */
 #include <Wire.h>
@@ -46,41 +46,21 @@
 #define BHI260AP_RST          47
 #endif
 
-
 SensorBHI260AP bhy;
-void accel_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len)
+
+
+void quaternion_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len)
 {
-    struct bhy2_data_xyz data;
-    float scaling_factor = get_sensor_default_scaling(sensor_id);
-    bhy2_parse_xyz(data_ptr, &data);
-    Serial.print(bhy.getSensorName(sensor_id));
-    Serial.print(":");
-    Serial.printf("x: %f, y: %f, z: %f;\r\n",
-                  data.x * scaling_factor,
-                  data.y * scaling_factor,
-                  data.z * scaling_factor
-                 );
+    Serial.println(bhy.getSensorName(sensor_id));
 }
 
 
-void gyro_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len)
-{
-    struct bhy2_data_xyz data;
-    float scaling_factor = get_sensor_default_scaling(sensor_id);
-    bhy2_parse_xyz(data_ptr, &data);
-    Serial.print(bhy.getSensorName(sensor_id));
-    Serial.print(":");
-    Serial.printf("x: %f, y: %f, z: %f;\r\n",
-                  data.x * scaling_factor,
-                  data.y * scaling_factor,
-                  data.z * scaling_factor
-                 );
-}
 
 void setup()
 {
     Serial.begin(115200);
     while (!Serial);
+
 
     // Set the reset pin and interrupt pin, if any
     bhy.setPins(BHI260AP_RST, BHI260AP_IRQ);
@@ -107,23 +87,12 @@ void setup()
 
     Serial.println("Init BHI260AP Sensor success!");
 
-    // Output all available sensors to Serial
-    bhy.printSensors(Serial);
 
-    float sample_rate = 100.0;      /* Read out hintr_ctrl measured at 100Hz */
-    uint32_t report_latency_ms = 0; /* Report immediately */
+    // Output all current sensor information
+    bhy.printInfo(Serial);
 
-    // Enable acceleration
-    bhy.configure(SENSOR_ID_ACC_PASS, sample_rate, report_latency_ms);
-    // Enable gyroscope
-    bhy.configure(SENSOR_ID_GYRO_PASS, sample_rate, report_latency_ms);
-
-    // Set the acceleration sensor result callback function
-    bhy.onResultEvent(SENSOR_ID_ACC_PASS, accel_process_callback);
-
-    // Set the gyroscope sensor result callback function
-    bhy.onResultEvent(SENSOR_ID_GYRO_PASS, gyro_process_callback);
-
+    // Output interrupt configuration information to Serial
+    bhy.printInterruptCtrl(Serial);
 }
 
 
@@ -133,6 +102,4 @@ void loop()
     bhy.update();
     delay(50);
 }
-
-
 
