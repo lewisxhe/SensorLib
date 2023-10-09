@@ -38,7 +38,6 @@ void BoschParse::parseData(const struct bhy2_fifo_parse_data_info *fifo, void *u
 {
     int8_t size = fifo->data_size - 1;
 
-    if(fifo->sensor_id == 1 || fifo->sensor_id ==10)return;
 #ifdef LOG_PORT
     LOG_PORT.print("Sensor: ");
     LOG_PORT.print(fifo->sensor_id);
@@ -57,7 +56,7 @@ void BoschParse::parseData(const struct bhy2_fifo_parse_data_info *fifo, void *u
         if (entry.cb ) {
             if (entry.id == fifo->sensor_id) {
                 if (entry.cb) {
-                    entry.cb(get_sensor_default_scaling(fifo->sensor_id), fifo->data_ptr, size);
+                    entry.cb(fifo->sensor_id, fifo->data_ptr, size);
                 }
             }
         }
@@ -147,4 +146,28 @@ void BoschParse::parseMetaEvent(const struct bhy2_fifo_parse_data_info *callback
             }
         }
     }
+}
+
+
+void BoschParse::parseDebugMessage(const struct bhy2_fifo_parse_data_info *callback_info, void *callback_ref)
+{
+    uint32_t s, ns;
+    uint64_t tns;
+    uint8_t msg_length = 0;
+    uint8_t debug_msg[17] = { 0 }; /* Max payload size is 16 bytes, adds a trailing zero if the payload is full */
+
+    if (!callback_info) {
+        log_i("Null reference\r\n");
+
+        return;
+    }
+
+    time_to_s_ns(*callback_info->time_stamp, &s, &ns, &tns);
+
+    msg_length = callback_info->data_ptr[0];
+
+    memcpy(debug_msg, &callback_info->data_ptr[1], msg_length);
+    debug_msg[msg_length] = '\0'; /* Terminate the string */
+
+    log_i("[DEBUG MSG]; T: %lu.%09lu; %s\r\n", s, ns, debug_msg);
 }

@@ -22,9 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      BHI260AP_6DoF.ino
+ * @file      BHI260AP_Orientation.ino
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2023-09-06
+ * @date      2023-10-07
  *
  */
 #include <Wire.h>
@@ -46,41 +46,15 @@
 #define BHI260AP_RST          47
 #endif
 
+void orientation_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len);
 
 SensorBHI260AP bhy;
-void accel_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len)
-{
-    struct bhy2_data_xyz data;
-    float scaling_factor = get_sensor_default_scaling(sensor_id);
-    bhy2_parse_xyz(data_ptr, &data);
-    Serial.print(bhy.getSensorName(sensor_id));
-    Serial.print(":");
-    Serial.printf("x: %f, y: %f, z: %f;\r\n",
-                  data.x * scaling_factor,
-                  data.y * scaling_factor,
-                  data.z * scaling_factor
-                 );
-}
-
-
-void gyro_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len)
-{
-    struct bhy2_data_xyz data;
-    float scaling_factor = get_sensor_default_scaling(sensor_id);
-    bhy2_parse_xyz(data_ptr, &data);
-    Serial.print(bhy.getSensorName(sensor_id));
-    Serial.print(":");
-    Serial.printf("x: %f, y: %f, z: %f;\r\n",
-                  data.x * scaling_factor,
-                  data.y * scaling_factor,
-                  data.z * scaling_factor
-                 );
-}
 
 void setup()
 {
     Serial.begin(115200);
     while (!Serial);
+
 
     // Set the reset pin and interrupt pin, if any
     bhy.setPins(BHI260AP_RST, BHI260AP_IRQ);
@@ -113,17 +87,12 @@ void setup()
     float sample_rate = 100.0;      /* Read out hintr_ctrl measured at 100Hz */
     uint32_t report_latency_ms = 0; /* Report immediately */
 
-    // Enable acceleration
+    // Direction detection relies on the accelerometer, and the accelerometer needs to be turned on first.
     bhy.configure(SENSOR_ID_ACC_PASS, sample_rate, report_latency_ms);
-    // Enable gyroscope
-    bhy.configure(SENSOR_ID_GYRO_PASS, sample_rate, report_latency_ms);
-
-    // Set the acceleration sensor result callback function
-    bhy.onResultEvent(SENSOR_ID_ACC_PASS, accel_process_callback);
-
-    // Set the gyroscope sensor result callback function
-    bhy.onResultEvent(SENSOR_ID_GYRO_PASS, gyro_process_callback);
-
+    // Enable direction detection
+    bhy.configure(SENSOR_ID_DEVICE_ORI, sample_rate, report_latency_ms);
+    // Set the direction detection result output processing function
+    bhy.onResultEvent(SENSOR_ID_DEVICE_ORI, orientation_process_callback);
 }
 
 
@@ -135,4 +104,58 @@ void loop()
 }
 
 
+void orientation_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_t len)
+{
+    char report[256];
+    uint8_t direction = *data_ptr;
+    switch (direction) {
+    case BHY2_DIRECTION_BOTTOM_LEFT:
+        sprintf( report, "\r\n  ________________  " \
+                 "\r\n |                | " \
+                 "\r\n |                | " \
+                 "\r\n |                | " \
+                 "\r\n |                | " \
+                 "\r\n |                | " \
+                 "\r\n |  *             | " \
+                 "\r\n |________________| \r\n" );
 
+        break;
+    case BHY2_DIRECTION_TOP_RIGHT:
+        sprintf( report, "\r\n  ________________  " \
+                 "\r\n |                | " \
+                 "\r\n |             *  | " \
+                 "\r\n |                | " \
+                 "\r\n |                | " \
+                 "\r\n |                | " \
+                 "\r\n |                | " \
+                 "\r\n |________________| \r\n" );
+        break;
+    case BHY2_DIRECTION_TOP_LEFT:
+        sprintf( report, "\r\n  ________________  " \
+                 "\r\n |                | " \
+                 "\r\n |  *             | " \
+                 "\r\n |                | " \
+                 "\r\n |                | " \
+                 "\r\n |                | " \
+                 "\r\n |                | " \
+                 "\r\n |________________| \r\n" );
+        break;
+    case BHY2_DIRECTION_BOTTOM_RIGHT:
+        sprintf( report, "\r\n  ________________  " \
+                 "\r\n |                | " \
+                 "\r\n |                | " \
+                 "\r\n |                | " \
+                 "\r\n |                | " \
+                 "\r\n |                | " \
+                 "\r\n |             *  | " \
+                 "\r\n |________________| \r\n" );
+        break;
+    default:
+        sprintf( report, "None of the 3D orientation axes is set in BHI260 - accelerometer.\r\n" );
+        break;
+    }
+    Serial.print(bhy.getSensorName(sensor_id));
+    Serial.print(":");
+    Serial.println(direction);
+    Serial.println(report);
+}

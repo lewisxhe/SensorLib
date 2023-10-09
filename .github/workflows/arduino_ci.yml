@@ -53,6 +53,9 @@ jobs:
             examples/XL9555_ExtensionIORead/XL9555_ExtensionIORead.ino,
             examples/XL9555_ExtensionIOWirte/XL9555_ExtensionIOWirte.ino,
             examples/BHI260AP_6DoF/BHI260AP_6DoF.ino,
+            examples/BHI260AP_Orientation/BHI260AP_Orientation.ino,
+            examples/BHI260AP_DebugInfo/BHI260AP_DebugInfo.ino,
+            examples/BHI260AP_StepCounter/BHI260AP_StepCounter.ino,
           ]
 
     env:

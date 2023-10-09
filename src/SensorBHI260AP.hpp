@@ -33,12 +33,14 @@
 #include "bosch/SensorBhy2Define.h"
 #include "bosch/firmware/BHI260AP.fw.h"
 
+#if !defined(ARDUINO)
+#error "Currently only supports Arduino"
+#endif
+
 class SensorBHI260AP
 {
     friend class BoschParse;
 public:
-
-#if defined(ARDUINO)
     SensorBHI260AP(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = BHI260AP_SLAVE_ADDRESS)
     {
         __handler.u.i2c_dev.scl = scl;
@@ -47,7 +49,6 @@ public:
         __handler.u.i2c_dev.wire = &w;
         __handler.intf = BHY2_I2C_INTERFACE;
     }
-#endif
 
     SensorBHI260AP(int cs, int mosi = -1, int miso = -1, int sck = -1,
                    PLATFORM_SPI_TYPE &spi = SPI
@@ -78,7 +79,6 @@ public:
 
     }
 
-#if defined(ARDUINO)
     bool init(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = BHI260AP_SLAVE_ADDRESS)
     {
         __handler.u.i2c_dev.scl = scl;
@@ -88,7 +88,6 @@ public:
         __handler.intf = BHY2_I2C_INTERFACE;
         return initImpl();
     }
-#endif
 
     bool init(
         PLATFORM_SPI_TYPE &spi,
@@ -173,6 +172,7 @@ public:
 
     void printSensors(Stream &port)
     {
+        uint8_t cnt = 0;
         bool presentBuff[256];
 
         for (uint16_t i = 0; i < sizeof(bhy2->present_buff); i++) {
@@ -184,14 +184,130 @@ public:
         port.println("Present sensors: ");
         for (int i = 0; i < (int)sizeof(presentBuff); i++) {
             if (presentBuff[i]) {
+                cnt++;
                 port.print(i);
                 port.print(" - ");
                 port.print(get_sensor_name(i));
                 port.println();
             }
         }
+        port.printf("Total %u Sensor online .\n", cnt);
     }
 
+
+    bool printInfo(Stream &stream)
+    {
+        uint16_t kernel_version = 0, user_version = 0;
+        uint16_t rom_version = 0;
+        uint8_t product_id = 0;
+        uint8_t host_status = 0, feat_status = 0;
+        uint8_t boot_status = 0;
+        uint8_t sensor_error;
+        struct bhy2_sensor_info info;
+
+        /* Get product_id */
+        __error_code = (bhy2_get_product_id(&product_id, bhy2));
+        BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_get_product_id failed!", false);
+
+        /* Get Kernel version */
+        __error_code = (bhy2_get_kernel_version(&kernel_version, bhy2));
+        BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_get_kernel_version failed!", false);
+
+        /* Get User version */
+        __error_code = (bhy2_get_user_version(&user_version, bhy2));
+        BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_get_user_version failed!", false);
+
+        /* Get ROM version */
+        __error_code = (bhy2_get_rom_version(&rom_version, bhy2));
+        BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_get_rom_version failed!", false);
+
+        __error_code = (bhy2_get_host_status(&host_status, bhy2));
+        BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_get_host_status failed!", false);
+
+        __error_code = (bhy2_get_feature_status(&feat_status, bhy2));
+        BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_get_feature_status failed!", false);
+
+        stream.printf("Product ID     : %02x\r\n", product_id);
+        stream.printf("Kernel version : %04u\r\n", kernel_version);
+        stream.printf("User version   : %04u\r\n", user_version);
+        stream.printf("ROM version    : %04u\r\n", rom_version);
+        stream.printf("Power state    : %s\r\n", (host_status & BHY2_HST_POWER_STATE) ? "sleeping" : "active");
+        stream.printf("Host interface : %s\r\n", (host_status & BHY2_HST_HOST_PROTOCOL) ? "SPI" : "I2C");
+        stream.printf("Feature status : 0x%02x\r\n", feat_status);
+
+        /* Read boot status */
+        __error_code = (bhy2_get_boot_status(&boot_status, bhy2));
+        BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_get_boot_status failed!", false);
+
+        stream.printf("Boot Status : 0x%02x: \r\n", boot_status);
+
+        if (boot_status & BHY2_BST_FLASH_DETECTED) {
+            stream.println("\tFlash detected. ");
+        }
+
+        if (boot_status & BHY2_BST_FLASH_VERIFY_DONE) {
+            stream.println("\tFlash verify done. ");
+        }
+
+        if (boot_status & BHY2_BST_FLASH_VERIFY_ERROR) {
+            stream.println("Flash verification failed. ");
+        }
+
+        if (boot_status & BHY2_BST_NO_FLASH) {
+            stream.println("\tNo flash installed. ");
+        }
+
+        if (boot_status & BHY2_BST_HOST_INTERFACE_READY) {
+            stream.println("\tHost interface ready. ");
+        }
+
+        if (boot_status & BHY2_BST_HOST_FW_VERIFY_DONE) {
+            stream.println("\tFirmware verification done. ");
+        }
+
+        if (boot_status & BHY2_BST_HOST_FW_VERIFY_ERROR) {
+            stream.println("\tFirmware verification error. ");
+        }
+
+        if (boot_status & BHY2_BST_HOST_FW_IDLE) {
+            stream.println("\tFirmware halted. ");
+        }
+
+        /* Read error value */
+        __error_code = (bhy2_get_error_value(&sensor_error, bhy2));
+        BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_get_error_value failed!", false);
+        if (sensor_error) {
+            log_e("%s\r\n", get_sensor_error_text(sensor_error));
+        }
+
+
+        if (feat_status & BHY2_FEAT_STATUS_OPEN_RTOS_MSK) {
+
+            bhy2_update_virtual_sensor_list(bhy2);
+
+            /* Get present virtual sensor */
+            bhy2_get_virt_sensor_list(bhy2);
+
+            stream.printf("Virtual sensor list.\r\n");
+            stream.printf("Sensor ID |                          Sensor Name |  ID | Ver |  Min rate |  Max rate |\r\n");
+            stream.printf("----------+--------------------------------------+-----+-----+-----------+-----------|\r\n");
+            for (uint8_t i = 0; i < BHY2_SENSOR_ID_MAX; i++) {
+                if (bhy2_is_sensor_available(i, bhy2)) {
+                    if (i < BHY2_SENSOR_ID_CUSTOM_START) {
+                        stream.printf(" %8u | %36s ", i, get_sensor_name(i));
+                    }
+                    __error_code = (bhy2_get_sensor_info(i, &info, bhy2));
+                    BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_get_sensor_info failed!", false);
+                    stream.printf("| %3u | %3u | %9.4f | %9.4f |\r\n",
+                                  info.driver_id,
+                                  info.driver_version,
+                                  info.min_rate.f_val,
+                                  info.max_rate.f_val);
+                }
+            }
+        }
+        return true;
+    }
 
     bool setInterruptCtrl(uint8_t data)
     {
@@ -375,6 +491,14 @@ public:
         return true;
     }
 
+    struct bhy2_virt_sensor_conf getConfigure(uint8_t sensor_id)
+    {
+        bhy2_virt_sensor_conf conf;
+        bhy2_get_virt_sensor_cfg(sensor_id, &conf, bhy2);
+        log_i("range:%u sample_rate:%f latency:%u sensitivity:%u\n", conf.range, conf.sample_rate, conf.latency, conf.sensitivity);
+        return conf;
+    }
+
     float getScaling(uint8_t sensor_id)
     {
         return get_sensor_default_scaling(sensor_id);
@@ -385,6 +509,11 @@ public:
         __firmware = image;
         __firmware_size = image_len;
         __write_flash = write_flash;
+    }
+
+    static const char *getSensorName(uint8_t sensor_id)
+    {
+        return get_sensor_name(sensor_id);
     }
 
 private:
@@ -482,15 +611,11 @@ private:
         __error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT, BoschParse::parseMetaEvent, NULL, bhy2);
         BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_register_fifo_parse_callback failed!", false);
 
-
         __error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT_WU, BoschParse::parseMetaEvent, NULL, bhy2);
         BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_register_fifo_parse_callback failed!", false);
 
-
-        // All sensors' data are handled in the same generic way
-        for (uint8_t i = 1; i < BHY2_SENSOR_ID_MAX; i++) {
-            bhy2_register_fifo_parse_callback(i, BoschParse::parseData, NULL, bhy2);
-        }
+        // __error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_DEBUG_MSG, BoschParse::parseDebugMessage, NULL, bhy2);
+        // BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_register_fifo_parse_callback parseDebugMessage failed!", false);
 
         //Set process buffer
 #if     defined(ESP32) && defined(BOARD_HAS_PSRAM)
@@ -510,14 +635,20 @@ private:
         /* Update the callback table to enable parsing of sensor hintr_ctrl */
         bhy2_update_virtual_sensor_list(bhy2);
 
+        /* Get present virtual sensor */
         bhy2_get_virt_sensor_list(bhy2);
 
+        // Only register valid sensor IDs
+        for (uint8_t i = 0; i < BHY2_SENSOR_ID_MAX; i++) {
+            if (bhy2_is_sensor_available(i, bhy2)) {
+                bhy2_register_fifo_parse_callback(i, BoschParse::parseData, NULL, bhy2);
+            }
+        }
 
         if (__handler.irq != SENSOR_PIN_NONE) {
 #if defined(ARDUINO_ARCH_RP2040)
             attachInterruptParam((pin_size_t)(__handler.irq), handleISR, (PinStatus )RISING, (void *)&__data_available);
 #else
-            // attachInterrupt(__handler.irq, std::bind(&SensorBHI260AP::handleISR, this), RISING);
             attachInterruptArg(__handler.irq, handleISR, (void *)&__data_available, RISING);
 #endif
         }
