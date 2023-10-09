@@ -41,7 +41,7 @@ class SensorBHI260AP
 {
     friend class BoschParse;
 public:
-    SensorBHI260AP(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = BHI260AP_SLAVE_ADDRESS)
+    SensorBHI260AP(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = BHI260AP_SLAVE_ADDRESS_L)
     {
         __handler.u.i2c_dev.scl = scl;
         __handler.u.i2c_dev.sda = sda;
@@ -79,7 +79,7 @@ public:
 
     }
 
-    bool init(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = BHI260AP_SLAVE_ADDRESS)
+    bool init(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = BHI260AP_SLAVE_ADDRESS_L)
     {
         __handler.u.i2c_dev.scl = scl;
         __handler.u.i2c_dev.sda = sda;
