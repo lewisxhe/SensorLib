@@ -61,7 +61,9 @@ void setup()
 
 #ifdef BHY2_USE_I2C
     // Using I2C interface
-    if (!bhy.init(Wire, BHI260AP_SLAVE_ADDRESS, BHI260AP_SDA, BHI260AP_SCL)) {
+    // BHI260AP_SLAVE_ADDRESS_L = 0x28
+    // BHI260AP_SLAVE_ADDRESS_H = 0x29
+    if (!bhy.init(Wire, BHI260AP_SLAVE_ADDRESS_L, BHI260AP_SDA, BHI260AP_SCL)) {
         Serial.print("Failed to init BHI260AP - ");
         Serial.println(bhy.getError());
         while (1) {

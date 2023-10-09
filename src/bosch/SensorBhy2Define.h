@@ -32,7 +32,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define BHI260AP_SLAVE_ADDRESS          0x28
+#define BHI260AP_SLAVE_ADDRESS_L          0x28
+#define BHI260AP_SLAVE_ADDRESS_H          0x29
 #define BHY_PROCESS_BUFFER_SZIE         512
 
 #define BHY2_RLST_CHECK(ret, str, val) \
