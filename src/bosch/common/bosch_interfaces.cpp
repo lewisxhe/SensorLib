@@ -127,7 +127,6 @@ int8_t SensorInterfaces::bhy2_i2c_read(uint8_t reg_addr, uint8_t *reg_data, uint
     }
     pConfig->u.i2c_dev.wire->requestFrom(pConfig->u.i2c_dev.addr, length);
     return pConfig->u.i2c_dev.wire->readBytes(reg_data, length) == length ? DEV_WIRE_NONE : DEV_WIRE_ERR;
-    return DEV_WIRE_NONE;
 }
 
 int8_t SensorInterfaces::bhy2_i2c_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr)

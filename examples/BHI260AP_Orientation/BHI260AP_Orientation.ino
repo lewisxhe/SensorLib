@@ -63,7 +63,7 @@ void setup()
     // Using I2C interface
     // BHI260AP_SLAVE_ADDRESS_L = 0x28
     // BHI260AP_SLAVE_ADDRESS_H = 0x29
-    if (!bhy.init(Wire, BHI260AP_SLAVE_ADDRESS_L, BHI260AP_SDA, BHI260AP_SCL)) {
+    if (!bhy.init(Wire, BHI260AP_SDA, BHI260AP_SCL, BHI260AP_SLAVE_ADDRESS_L)) {
         Serial.print("Failed to init BHI260AP - ");
         Serial.println(bhy.getError());
         while (1) {
