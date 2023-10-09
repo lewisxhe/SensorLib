@@ -59,6 +59,10 @@
 #define DEFAULT_SPISETTING  SPISettings(__freq, __dataOrder, __dataMode);
 #endif
 
+enum SensorLibInterface {
+    SENSORLIB_SPI_INTERFACE = 1,
+    SENSORLIB_I2C_INTERFACE
+};
 
 typedef struct __SensorLibPins {
     int irq;
@@ -78,7 +82,8 @@ typedef struct __SensorLibPins {
             PLATFORM_SPI_TYPE *spi;
         } spi_dev;
     } u  ;
-} SensorLibPins;
+    SensorLibInterface intf;
+} SensorLibConfigure;
 
 
 

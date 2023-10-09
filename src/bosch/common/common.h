@@ -38,8 +38,7 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
-
-#include "SensorLib.h"
+#include "bosch_interfaces.h"
 #include "bosch/bhy2.h"
 #include "bosch/bhi3.h"
 #include "bosch/bhi3_multi_tap.h"
@@ -49,60 +48,18 @@
 #include "bosch/bhy2_head_tracker.h"
 
 
-
-typedef struct bhy_config {
-    enum bhy2_intf intf;
-    struct bhy2_dev bhy2;
-    int irq;
-    int rst;
-    union   __ {
-        struct  {
-            int sda;
-            int scl;
-            int addr;
-            PLATFORM_WIRE_TYPE *wire;
-        } i2c_dev;
-        struct  {
-            int cs;
-            int miso;
-            int mosi;
-            int sck;
-            PLATFORM_SPI_TYPE *spi;
-        } spi_dev;
-    } u  ;
-} bhy_config_t;
-
-#define BHY2_RD_WR_LEN              256    /* MCU maximum read write length */
 #define BHY2_ASSERT(x)             if (x) check_bhy2_api(__LINE__, __FUNCTION__, x)
 
+
+
+void check_bhy2_api(unsigned int line, const char *func, int8_t val);
+void time_to_s_ns(uint64_t time_ticks, uint32_t *s, uint32_t *ns, uint64_t *tns);
 const char *get_api_error(int8_t error_code);
 const char *get_sensor_error_text(uint8_t sensor_error);
 const char *get_sensor_name(uint8_t sensor_id);
 float get_sensor_default_scaling(uint8_t sensor_id);
 const char *get_sensor_parse_format(uint8_t sensor_id);
 const char *get_sensor_axis_names(uint8_t sensor_id);
-
-
-class SensorInterfaces
-{
-public:
-    static bool setup_interfaces(bool reset_power, bhy_config_t config);
-    static void close_interfaces(enum bhy2_intf intf);
-    static int8_t bhy2_spi_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr);
-    static int8_t bhy2_spi_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr);
-    static int8_t bhy2_i2c_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr);
-    static int8_t bhy2_i2c_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr);
-    static void bhy2_delay_us(uint32_t us, void *private_data);
-
-private:
-    static SPISettings  __spiSetting;
-
-};
-
-
-void check_bhy2_api(unsigned int line, const char *func, int8_t val);
-void time_to_s_ns(uint64_t time_ticks, uint32_t *s, uint32_t *ns, uint64_t *tns);
-
 
 
 #endif /* _COMMON_H_ */

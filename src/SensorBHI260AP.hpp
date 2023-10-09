@@ -33,6 +33,9 @@
 #include "bosch/SensorBhy2Define.h"
 #include "bosch/firmware/BHI260AP.fw.h"
 
+
+#define BHY2_RD_WR_LEN              256    /* MCU maximum read write length */
+
 #if !defined(ARDUINO)
 #error "Currently only supports Arduino"
 #endif
@@ -47,7 +50,7 @@ public:
         __handler.u.i2c_dev.sda = sda;
         __handler.u.i2c_dev.addr = addr;
         __handler.u.i2c_dev.wire = &w;
-        __handler.intf = BHY2_I2C_INTERFACE;
+        __handler.intf = SENSORLIB_I2C_INTERFACE;
     }
 
     SensorBHI260AP(int cs, int mosi = -1, int miso = -1, int sck = -1,
@@ -59,7 +62,7 @@ public:
         __handler.u.spi_dev.mosi = mosi;
         __handler.u.spi_dev.sck = sck;
         __handler.u.spi_dev.spi = &spi;
-        __handler.intf = BHY2_SPI_INTERFACE;
+        __handler.intf = SENSORLIB_SPI_INTERFACE;
     }
 
     ~SensorBHI260AP()
@@ -85,7 +88,7 @@ public:
         __handler.u.i2c_dev.sda = sda;
         __handler.u.i2c_dev.addr = addr;
         __handler.u.i2c_dev.wire = &w;
-        __handler.intf = BHY2_I2C_INTERFACE;
+        __handler.intf = SENSORLIB_I2C_INTERFACE;
         return initImpl();
     }
 
@@ -98,7 +101,7 @@ public:
         __handler.u.spi_dev.mosi = mosi;
         __handler.u.spi_dev.sck = sck;
         __handler.u.spi_dev.spi = &spi;
-        __handler.intf = BHY2_SPI_INTERFACE;
+        __handler.intf = SENSORLIB_SPI_INTERFACE;
         return initImpl();
     }
 
@@ -113,6 +116,11 @@ public:
             free(processBuffer);
         }
         processBuffer = NULL;
+
+        if (bhy2) {
+            free(bhy2);
+            bhy2 = NULL;
+        }
 
         if (__handler.irq != SENSOR_PIN_NONE) {
             detachInterrupt(__handler.irq);
@@ -167,7 +175,7 @@ public:
 
     bhy2_dev *getHandler()
     {
-        return &__handler.bhy2;
+        return bhy2;
     }
 
     void printSensors(Stream &port)
@@ -535,10 +543,13 @@ private:
 
         reset();
 
+        bhy2 = (struct bhy2_dev *)malloc(sizeof(struct bhy2_dev ));
+        BHY2_RLST_CHECK(!bhy2, " Device handler malloc failed!", false);
+
         switch (__handler.intf) {
         case BHY2_I2C_INTERFACE:
             BHY2_RLST_CHECK(!__handler.u.i2c_dev.wire, "Wire ptr NULL", false);
-            if (!SensorInterfaces::setup_interfaces(true, __handler)) {
+            if (!SensorInterfaces::setup_interfaces(__handler)) {
                 log_e("setup_interfaces failed");
                 return false;
             }
@@ -546,15 +557,15 @@ private:
                                      SensorInterfaces::bhy2_i2c_read,
                                      SensorInterfaces::bhy2_i2c_write,
                                      SensorInterfaces::bhy2_delay_us,
-                                     BHY2_RD_WR_LEN, &__handler, &__handler.bhy2);
+                                     BHY2_RD_WR_LEN, &__handler, bhy2);
             BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_init failed!", false);
-            // __error_code = bhy2_set_host_intf_ctrl(BHY2_I2C_INTERFACE, &__handler.bhy2);
+            // __error_code = bhy2_set_host_intf_ctrl(BHY2_I2C_INTERFACE, bhy2);
             // BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_set_host_intf_ctrl failed!", false);
             break;
 
         case BHY2_SPI_INTERFACE:
             BHY2_RLST_CHECK(!__handler.u.spi_dev.spi, "SPI ptr NULL", false);
-            if (!SensorInterfaces::setup_interfaces(true, __handler)) {
+            if (!SensorInterfaces::setup_interfaces(__handler)) {
                 log_e("setup_interfaces failed");
                 return false;
             }
@@ -564,9 +575,9 @@ private:
                                      SensorInterfaces::bhy2_delay_us,
                                      BHY2_RD_WR_LEN,
                                      &__handler,
-                                     &__handler.bhy2);
+                                     bhy2);
             BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_init failed!", false);
-            // __error_code = bhy2_set_host_intf_ctrl(BHY2_SPI_INTERFACE, &__handler.bhy2);
+            // __error_code = bhy2_set_host_intf_ctrl(BHY2_SPI_INTERFACE, bhy2);
             // BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_set_host_intf_ctrl failed!", false);
             break;
         default:
@@ -574,7 +585,6 @@ private:
         }
 
 
-        bhy2 = &__handler.bhy2;
 
         __error_code = bhy2_soft_reset(bhy2);
         BHY2_RLST_CHECK(__error_code != BHY2_OK, "reset bhy2 failed!", false);
@@ -658,7 +668,7 @@ private:
 
 protected:
     struct bhy2_dev  *bhy2 = NULL;
-    bhy_config_t     __handler;
+    SensorLibConfigure __handler;
     int8_t           __error_code;
     volatile bool    __data_available;
     uint8_t          *processBuffer = NULL;
