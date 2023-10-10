@@ -181,6 +181,10 @@ bool TouchClassCST226::initImpl()
 {
     setRegAddressLenght(2);
 
+    if (__rst != SENSOR_PIN_NONE) {
+        pinMode(__rst, OUTPUT);
+    }
+
     reset();
 
     uint8_t buffer[8];

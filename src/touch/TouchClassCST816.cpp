@@ -223,6 +223,10 @@ bool TouchClassCST816::initImpl()
 {
     setRegAddressLenght(1);
 
+    if (__rst != SENSOR_PIN_NONE) {
+        pinMode(__rst, OUTPUT);
+    }
+
     reset();
 
     int chip_id =   readRegister(CST8xx_REG_CHIP_ID);
