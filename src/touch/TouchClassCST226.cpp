@@ -100,7 +100,7 @@ uint8_t TouchClassCST226::getPoint(int16_t *x_array, int16_t *y_array, uint8_t g
     updateXY(point, report.x, report.y);
 
 #ifdef LOG_PORT
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < point; i++) {
         LOG_PORT.printf("[%d]-X:%u Y:%u P:%u sta:%u ", report.id[i], report.x[i], report.y[i], report.pressure[i], report.status[i]);
     }
     LOG_PORT.println();
@@ -140,7 +140,7 @@ const char *TouchClassCST226::getModelName()
 
 void TouchClassCST226::sleep()
 {
-    writeRegister(0xE5, 0x03);
+    writeRegister(0xD1, 0x05);
 #ifdef ESP32
     if (__irq != SENSOR_PIN_NONE) {
         pinMode(__irq, OPEN_DRAIN);
