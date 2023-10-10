@@ -2,7 +2,7 @@
  *
  * @license MIT License
  *
- * Copyright (c) 2022 lewis he
+ * Copyright (c) 2023 lewis he
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -46,8 +46,20 @@
 
 class SensorBMM150
 {
-    friend class BoschParse;
 public:
+
+    enum  PowerMode {
+        POWERMODE_NORMAL,
+        POWERMODE_FORCED,
+        POWERMODE_SLEEP,
+        POWERMODE_SUSPEND,
+    };
+
+    enum InterruptLevel {
+        INTERRUPT_HIGH_ACTIVE,
+        INTERRUPT_LOW_ACTIVE,
+    };
+
     SensorBMM150(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = BMM150_DEFAULT_I2C_ADDRESS)
     {
         __handler.u.i2c_dev.scl = scl;
@@ -133,6 +145,98 @@ public:
         }
     }
 
+    void sleep()
+    {
+        setMode(POWERMODE_SLEEP);
+    }
+
+    bool setMode(PowerMode mode)
+    {
+        settings.pwr_mode = mode;
+        return  bmm150_set_op_mode(&settings, dev) == BMM150_OK;
+    }
+
+    bool setThreshold(uint8_t high_th, uint8_t low_th)
+    {
+        settings.int_settings.high_threshold = high_th;
+        settings.int_settings.low_threshold = low_th;
+        return bmm150_set_sensor_settings(BMM150_SEL_HIGH_THRESHOLD_SETTING, &settings, dev) == BMM150_OK;
+    }
+
+    bool setInterruptLevel(InterruptLevel level)
+    {
+        settings.int_settings.high_int_en = level;
+        return bmm150_set_sensor_settings(BMM150_SEL_HIGH_THRESHOLD_INT, &settings, dev) == BMM150_OK;
+    }
+
+    bool enableINT()
+    {
+        settings.int_settings.int_pin_en = BMM150_INT_ENABLE;
+        return bmm150_set_sensor_settings(BMM150_SEL_INT_PIN_EN, &settings, dev) == BMM150_OK;
+    }
+
+    bool disableINT()
+    {
+        settings.int_settings.int_pin_en = BMM150_INT_DISABLE;
+        return bmm150_set_sensor_settings(BMM150_SEL_INT_PIN_EN, &settings, dev) == BMM150_OK;
+    }
+
+    bool enabledDtatReady()
+    {
+        settings.int_settings.drdy_pin_en = BMM150_INT_ENABLE;
+        return bmm150_set_sensor_settings(BMM150_SEL_DRDY_PIN_EN, &settings, dev) == BMM150_OK;
+    }
+
+    bool disabledDtatReady()
+    {
+        settings.int_settings.drdy_pin_en = BMM150_INT_DISABLE;
+        return bmm150_set_sensor_settings(BMM150_SEL_DRDY_PIN_EN, &settings, dev) == BMM150_OK;
+    }
+
+    uint8_t getChipID()
+    {
+        return dev->chip_id;
+    }
+
+    uint8_t getInterruptStatus()
+    {
+        bmm150_get_interrupt_status(dev);
+        return dev->int_status;
+    }
+
+    bool isDataReady()
+    {
+        return dev->int_status & BMM150_INT_ASSERTED_DRDY;
+    }
+
+    bool isLowThreshold()
+    {
+        return dev->int_status & BMM150_INT_ASSERTED_LOW_THRES;
+    }
+
+    bool isHighThreshold()
+    {
+        return dev->int_status & BMM150_INT_ASSERTED_HIGH_THRES;
+    }
+
+    struct bmm150_mag_data getMag()
+    {
+        struct bmm150_mag_data data = {0};
+        bmm150_read_mag_data(&data, dev);
+        return data;
+    }
+
+    bool getMag(int16_t &x, int16_t &y, int16_t &z)
+    {
+        struct bmm150_mag_data data;
+        if (bmm150_read_mag_data(&data, dev) != BMM150_OK) {
+            return false;
+        }
+        x = data.x;
+        y = data.y;
+        z = data.z;
+        return true;
+    }
 
 private:
 
@@ -141,11 +245,12 @@ private:
         *(bool *)(available) = true;
     }
 
-
     bool initImpl()
     {
         int8_t rslt;
         uint8_t product_id = 0;
+
+        memset(&settings, 0, sizeof(settings));
 
         if (__handler.rst != SENSOR_PIN_NONE) {
             pinMode(__handler.rst, OUTPUT);
@@ -202,6 +307,8 @@ private:
             return false;
         }
 
+        bmm150_get_sensor_settings(&settings, dev);
+
         if (__handler.irq != SENSOR_PIN_NONE) {
 #if defined(ARDUINO_ARCH_RP2040)
             attachInterruptParam((pin_size_t)(__handler.irq), handleISR, (PinStatus )RISING, (void *)&__data_available);
@@ -214,6 +321,7 @@ private:
     }
 
 protected:
+    struct bmm150_settings settings;
     struct bmm150_dev *dev = NULL;
     SensorLibConfigure __handler;
     int8_t           __error_code;
