@@ -42,7 +42,7 @@ public:
         ALS_IRQ_ACTIVE_HIGH // INT pin is considered active when it is a logic 1
     };
     enum IrqMode {
-        ALS_IRQ_ONLY_PS,    // Only PS measurement can trigger interrupt
+        ALS_IRQ_ONLY_PS = 1,    // Only PS measurement can trigger interrupt
         ALS_IRQ_ONLY_ALS,   // Only ALS measurement can trigger interrupt
         ALS_IRQ_BOTH,       // Both ALS and PS measurement can trigger interrupt
     };
@@ -235,21 +235,15 @@ public:
     // defined by the upper and lower threshold limits before asserting the interrupt.
     void setProximityPersists(uint8_t count)
     {
-        writeRegister(LTR553_REG_INTERRUPT_PERSIST, 0x0F, count - 1);
+        writeRegister(LTR553_REG_INTERRUPT_PERSIST, 0x0F, count == 0 ? 0 : count - 1);
     }
 
     void setProximityThreshold(uint16_t low, uint16_t high)
     {
-        uint8_t buffer[4] = {
-            (uint8_t)(high & 0xFF),
-            (uint8_t)((high >> 8) & 0xFF),
-            (uint8_t)(low & 0xFF),
-            (uint8_t)((low >> 8) & 0xFF),
-        };
-        writeRegister(LTR553_REG_PS_THRES_UP_0, (uint8_t)(high & 0xFF));
-        writeRegister(LTR553_REG_PS_THRES_UP_1, (uint8_t)((high >> 8) & 0xFF) & 0x03);
-        writeRegister(LTR553_REG_PS_THRES_LOW_0, (uint8_t)(low & 0xFF));
-        writeRegister(LTR553_REG_PS_THRES_LOW_1, (uint8_t)((low >> 8) & 0xFF) & 0x03);
+        writeRegister(LTR553_REG_PS_THRES_UP_0, lowByte(high));
+        writeRegister(LTR553_REG_PS_THRES_UP_1, lowByte(high >> 8) & 0x0F);
+        writeRegister(LTR553_REG_PS_THRES_LOW_0, lowByte(low));
+        writeRegister(LTR553_REG_PS_THRES_LOW_1, lowByte(low >> 8) & 0x0F);
     }
 
     void setProximityRate(PsRate rate)
@@ -277,7 +271,7 @@ public:
         clrRegisterBit(LTR553_REG_PS_CONTR, 5);
     }
 
-    int getProximity(bool *saturated )
+    int getProximity(bool *saturated = NULL )
     {
         uint8_t buffer[2] = {0};
         int val = readRegister(LTR553_REG_PS_DATA_0, buffer, 2);

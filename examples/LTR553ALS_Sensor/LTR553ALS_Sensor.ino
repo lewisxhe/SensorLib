@@ -68,7 +68,7 @@ void setup()
 
     // Set the high and low thresholds of the proximity sensor.
     // If the value exceeds or falls below the set value, an interrupt will be triggered.
-    // als.setProximityThreshold(10, 30);
+    als.setProximityThreshold(10, 30);
 
     // Controls the Light Sensor N number of times the measurement data is outside the range
     // defined by the upper and lower threshold limits before asserting the interrupt.
@@ -147,26 +147,46 @@ void setup()
     // Number of pulses
     als.setPsLedPulses(1);
 
+    // Enable proximity sensor saturation indication
+    als.enablePsIndicator();
+
     // Enable ambient light sensor
     als.enableLightSensor();
 
     // Enable proximity sensor
     als.enableProximity();
 
-    // Enable proximity sensor saturation indication
-    als.enablePsIndicator();
 }
 
+bool canRead()
+{
+#if SENSOR_IRQ != -1
+    return digitalRead(SENSOR_IRQ) == LOW;
+#else
+    static uint32_t lastReadMillis;
+    if (millis() > lastReadMillis) {
+        lastReadMillis = millis() + 500;
+        return true;
+    }
+    return false;
+#endif
+}
 
 void loop()
 {
+    /*
+    * PS Saturation Flag is used for monitoring the internal IC saturation.
+    * It will be flagged when the IC has reached saturation
+    * and not able to perform any further PS measurement
+    * */
     bool saturated;
-    Serial.print(" IRQ:"); Serial.print (digitalRead(SENSOR_IRQ));
-    Serial.print(" ALS: CH1:"); Serial.print(als.getLightSensor(1));
-    Serial.print(" -  CH0:"); Serial.print(als.getLightSensor(0));
-    Serial.print(" -  PS:"); Serial.print(als.getProximity(&saturated));
-    Serial.print(" -  "); Serial.println(saturated ? "PS saturated" : "PS not saturated");
-    delay(500);
+    if (canRead()) {
+        Serial.print(" ALS: CH1:"); Serial.print(als.getLightSensor(1));
+        Serial.print(" -  CH0:"); Serial.print(als.getLightSensor(0));
+        Serial.print(" -  PS:"); Serial.print(als.getProximity(&saturated));
+        Serial.print(" -  "); Serial.println(saturated ? "PS saturated" : "PS not saturated");
+    }
+    delay(5);
 }
 
 
