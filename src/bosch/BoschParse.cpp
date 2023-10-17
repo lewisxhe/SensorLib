@@ -71,6 +71,10 @@ void BoschParse::parseMetaEvent(const struct bhy2_fifo_parse_data_info *callback
     uint8_t byte1 = callback_info->data_ptr[1];
     uint8_t byte2 = callback_info->data_ptr[2];
     const char *event_text;
+    // Remove warning
+    (void)byte1;
+    (void)byte2;
+    (void)event_text;
 
     if (callback_info->sensor_id == BHY2_SYS_ID_META_EVENT) {
         event_text = "[META EVENT]";
