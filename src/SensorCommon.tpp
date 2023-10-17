@@ -203,8 +203,6 @@ protected:
             return (__wire->endTransmission() == 0) ? DEV_WIRE_NONE : DEV_WIRE_ERR;
         }
         if (__spi) {
-            uint8_t msb = reg >> 8;
-            uint8_t lsb = reg & 0xFF;
             __spi->beginTransaction(*__spiSetting);
             digitalWrite(__cs, LOW);
             if (__reg_addr_len == 1) {

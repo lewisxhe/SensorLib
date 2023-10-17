@@ -267,7 +267,7 @@ public:
         used with delay of 1 ms */
         writeRegister(BMA4_ACCEL_CONFIG_ADDR, buffer[0]);
         delay(2);
-        writeRegister(BMA4_ACCEL_CONFIG_ADDR + 1, buffer[2]);
+        writeRegister(BMA4_ACCEL_CONFIG_ADDR + 1, buffer[1]);
         return true;
     }
 
@@ -332,7 +332,7 @@ public:
 
     uint8_t direction()
     {
-        int16_t x, y, z;
+        int16_t x = 0, y = 0, z = 0;
         getAccelerometer(x, y, z);
         uint16_t absX = abs(x);
         uint16_t absY = abs(y);
@@ -417,7 +417,7 @@ public:
 
     bool disablePedometer()
     {
-        return enablePedometer(false) != DEV_WIRE_ERR;
+        return enablePedometer(false);
     }
 
     bool enablePedometer(bool enable = true)
@@ -655,7 +655,6 @@ private:
     bool feature_disable(uint8_t feature, uint8_t len, uint8_t *buffer)
     {
         uint8_t index = 0;
-        int rslt;
 
         /* Disable step counter */
         if ((feature & FEATURE_STEP_CNTR) > 0) {
@@ -711,7 +710,6 @@ private:
     int feature_enable(uint8_t feature, uint8_t len, uint8_t *buffer)
     {
         uint8_t index = 0;
-        uint16_t rslt;
 
         /* Enable step counter */
         if ((feature & FEATURE_STEP_CNTR) > 0) {

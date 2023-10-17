@@ -153,7 +153,6 @@ public:
 
     uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t size = 1)
     {
-        uint8_t touchedID;
         uint8_t buffer[39];
 
         if (!x_array || !y_array || size == 0)
@@ -303,7 +302,6 @@ private:
 
     void inline clearBuffer()
     {
-        uint8_t val = 0x00;
         writeRegister(GT911_POINT_INFO, 0x00);
     }
 

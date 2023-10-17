@@ -67,8 +67,8 @@ typedef struct ParseCallBackList {
     static uint8_t current_id;
     uint8_t id;
     BhyParseDataCallback cb;
-    uint8_t *data;
     uint32_t data_length;
+    uint8_t *data;
     ParseCallBackList() : id(current_id++), cb(NULL),  data_length(0), data(NULL)
     {
     }

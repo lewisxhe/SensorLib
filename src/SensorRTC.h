@@ -107,8 +107,15 @@ public:
                  uint8_t hour,
                  uint8_t minute,
                  uint8_t second
-                ) : year(year), month(month), day(day), hour(hour), minute(minute), second(second), week(week)
+                )
     {
+        this->year = year;
+        this->month = month;
+        this->day = day;
+        this->hour = hour;
+        this->minute = minute;
+        this->second = second;
+        this->week = week;
     };
     uint16_t year;
     uint8_t month;

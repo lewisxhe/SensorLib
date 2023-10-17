@@ -179,7 +179,7 @@ void loop()
     * It will be flagged when the IC has reached saturation
     * and not able to perform any further PS measurement
     * */
-    bool saturated;
+    bool saturated = false;
     if (canRead()) {
         Serial.print(" ALS: CH1:"); Serial.print(als.getLightSensor(1));
         Serial.print(" -  CH0:"); Serial.print(als.getLightSensor(0));

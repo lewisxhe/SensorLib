@@ -247,9 +247,6 @@ private:
 
     bool initImpl()
     {
-        int8_t rslt;
-        uint8_t product_id = 0;
-
         memset(&settings, 0, sizeof(settings));
 
         if (__handler.rst != SENSOR_PIN_NONE) {

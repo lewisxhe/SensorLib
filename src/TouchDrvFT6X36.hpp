@@ -198,7 +198,6 @@ public:
 
     uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t size = 1)
     {
-        uint8_t touchedID;
         uint8_t buffer[16];
 
         if (!x_array || !y_array || !size)
@@ -208,14 +207,14 @@ public:
             return 0;
         }
 
-        uint8_t mode = buffer[0];
+        // uint8_t mode = buffer[0];
         //REG 0x01
-        uint8_t gestrue = buffer[1];
+        // uint8_t gestrue = buffer[1];
         //REG 0x02
         uint8_t point = buffer[2] & 0x0F;
 
         //REG 0x03 ~ 0x04
-        uint8_t eventFlag = (buffer[3] & 0xC0) >> 6;
+        // uint8_t eventFlag = (buffer[3] & 0xC0) >> 6;
         uint16_t posX = ((buffer[3] & 0x0F) << 8) | buffer[4];
         //REG 0x05 ~ 0x06
         uint16_t posY = ((buffer[5] & 0x0F) << 8) | buffer[6] ;

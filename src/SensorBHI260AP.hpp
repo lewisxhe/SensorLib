@@ -361,7 +361,7 @@ public:
         if (__error_code != BHY2_OK) {
             return false;
         }
-        return boot_status & BHY2_BST_HOST_INTERFACE_READY == false;
+        return (boot_status & BHY2_BST_HOST_INTERFACE_READY) == false;
     }
 
     uint16_t getKernelVersion()
@@ -534,7 +534,6 @@ private:
 
     bool initImpl()
     {
-        int8_t rslt;
         uint8_t product_id = 0;
 
         if (__handler.rst != SENSOR_PIN_NONE) {

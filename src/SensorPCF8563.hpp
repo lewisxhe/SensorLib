@@ -190,14 +190,20 @@ public:
     {
         uint8_t buffer[4] = {0};
         if (minute != PCF8563_NO_ALARM) {
-            buffer[0] = DEC2BCD(constrain(minute, 0, 59));
+            if (minute > 59) {
+                minute = 59;
+            }
+            buffer[0] = DEC2BCD(minute);
             buffer[0] &= ~PCF8563_ALARM_ENABLE;
         } else {
             buffer[0] = PCF8563_ALARM_ENABLE;
         }
 
         if (hour != PCF8563_NO_ALARM) {
-            buffer[1] = DEC2BCD(constrain(hour, 0, 23));
+            if (hour > 23) {
+                hour = 23;
+            }
+            buffer[1] = DEC2BCD(hour);
             buffer[1] &= ~PCF8563_ALARM_ENABLE;
         } else {
             buffer[1] = PCF8563_ALARM_ENABLE;
@@ -209,7 +215,10 @@ public:
             buffer[2] = PCF8563_ALARM_ENABLE;
         }
         if (week != PCF8563_NO_ALARM) {
-            buffer[3] = DEC2BCD(constrain(week, 0, 6));
+            if (week > 6) {
+                week = 6;
+            }
+            buffer[3] = DEC2BCD(week);
             buffer[3] &= ~PCF8563_ALARM_ENABLE;
         } else {
             buffer[3] = PCF8563_ALARM_ENABLE;
