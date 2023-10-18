@@ -41,7 +41,7 @@
 #define CST816S_CHIP_ID             (0xB4)
 #define CST816T_CHIP_ID             (0xB5)
 #define CST716_CHIP_ID              (0x20)
-
+#define CST820_CHIP_ID              (0xB7)
 
 TouchClassCST816::TouchClassCST816(PLATFORM_WIRE_TYPE &wire, int sda, int scl, uint8_t address):
     __center_btn_x(0),
@@ -152,6 +152,8 @@ const char *TouchClassCST816::getModelName()
         return "CST816T";
     case CST716_CHIP_ID:
         return "CST716";
+    case CST820_CHIP_ID:
+        return "CST820";
     default:
         break;
     }
@@ -209,6 +211,7 @@ void TouchClassCST816::disableAutoSleep()
     switch (__chipID) {
     case CST816S_CHIP_ID:
     case CST816T_CHIP_ID:
+    case CST820_CHIP_ID:
         reset();
         delay(50);
         writeRegister(CST8xx_REG_DIS_AUTOSLEEP, 0x01);
@@ -238,6 +241,7 @@ bool TouchClassCST816::initImpl()
     //CST226SE : A7 = 0X20
     if (chip_id != CST816S_CHIP_ID &&
             chip_id != CST816T_CHIP_ID  &&
+            chip_id != CST820_CHIP_ID &&
             (chip_id != CST716_CHIP_ID || version == 0)) {
         return false;
     }
