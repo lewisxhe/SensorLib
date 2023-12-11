@@ -34,7 +34,6 @@
 #include "bosch/firmware/BHI260AP.fw.h"
 
 
-#define BHY2_RD_WR_LEN              256    /* MCU maximum read write length */
 
 #if !defined(ARDUINO)
 #error "Currently only supports Arduino"
@@ -547,6 +546,8 @@ private:
 
         switch (__handler.intf) {
         case BHY2_I2C_INTERFACE:
+            // esp32s3 test I2C maximum read and write is 64 bytes
+            __max_rw_lenght = 64;
             BHY2_RLST_CHECK(!__handler.u.i2c_dev.wire, "Wire ptr NULL", false);
             if (!SensorInterfaces::setup_interfaces(__handler)) {
                 log_e("setup_interfaces failed");
@@ -556,13 +557,15 @@ private:
                                      SensorInterfaces::bhy2_i2c_read,
                                      SensorInterfaces::bhy2_i2c_write,
                                      SensorInterfaces::bhy2_delay_us,
-                                     BHY2_RD_WR_LEN, &__handler, bhy2);
+                                     __max_rw_lenght, &__handler, bhy2);
             BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_init failed!", false);
             // __error_code = bhy2_set_host_intf_ctrl(BHY2_I2C_INTERFACE, bhy2);
             // BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_set_host_intf_ctrl failed!", false);
             break;
 
         case BHY2_SPI_INTERFACE:
+            // esp32s3 test SPI maximum read and write is 256 bytes
+            __max_rw_lenght = 256;
             BHY2_RLST_CHECK(!__handler.u.spi_dev.spi, "SPI ptr NULL", false);
             if (!SensorInterfaces::setup_interfaces(__handler)) {
                 log_e("setup_interfaces failed");
@@ -572,7 +575,7 @@ private:
                                      SensorInterfaces::bhy2_spi_read,
                                      SensorInterfaces::bhy2_spi_write,
                                      SensorInterfaces::bhy2_delay_us,
-                                     BHY2_RD_WR_LEN,
+                                     __max_rw_lenght,
                                      &__handler,
                                      bhy2);
             BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_init failed!", false);
@@ -675,6 +678,7 @@ protected:
     const uint8_t    *__firmware;
     size_t          __firmware_size;
     bool            __write_flash;
+    uint16_t        __max_rw_lenght;
 };
 
 
