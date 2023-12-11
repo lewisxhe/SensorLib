@@ -59,3 +59,5 @@
 #define PCF85063_CTRL1_HOUR_FORMAT_12H_MASK     (1<<1u)
 
 
+#define PCF85063_NO_ALARM        (0xFF)
+#define PCF85063_ALARM_ENABLE    (0x80)

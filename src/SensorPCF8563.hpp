@@ -154,11 +154,12 @@ public:
     {
         uint8_t buffer[4];
         readRegister(PCF8563_ALRM_MIN_REG, buffer, 4);
-        buffer[0] = BCD2DEC(buffer[0] & 0x80);
-        buffer[1] = BCD2DEC(buffer[1] & 0x40);
-        buffer[2] = BCD2DEC(buffer[2] & 0x40);
-        buffer[3] = BCD2DEC(buffer[3] & 0x08);
-        return RTC_Alarm(buffer[0], buffer[1], buffer[2], buffer[3]);
+        buffer[0] = BCD2DEC(buffer[0] & 0x80); //minute
+        buffer[1] = BCD2DEC(buffer[1] & 0x40); //hour
+        buffer[2] = BCD2DEC(buffer[2] & 0x40); //day
+        buffer[3] = BCD2DEC(buffer[3] & 0x08); //weekday
+        // RTC_Alarm(uint8_t hour, uint8_t minute, uint8_t second, uint8_t day, uint8_t week)
+        return RTC_Alarm(buffer[1], buffer[0], 0, buffer[2], buffer[3]);
     }
 
     void enableAlarm()
@@ -183,7 +184,7 @@ public:
 
     void setAlarm(RTC_Alarm alarm)
     {
-        setAlarm(alarm.minute, alarm.hour, alarm.day, alarm.week);
+        setAlarm( alarm.hour, alarm.minute, alarm.day, alarm.week);
     }
 
     void setAlarm(uint8_t hour, uint8_t minute, uint8_t day, uint8_t week)

@@ -32,9 +32,17 @@
 #include <Arduino.h>
 #include "SensorPCF85063.hpp"
 
-#define SENSOR_SDA                     9
-#define SENSOR_SCL                     8
-#define SENSOR_IRQ                     7
+#ifndef SENSOR_SDA
+#define SENSOR_SDA  17
+#endif
+
+#ifndef SENSOR_SCL
+#define SENSOR_SCL  18
+#endif
+
+#ifndef SENSOR_IRQ
+#define SENSOR_IRQ  7
+#endif
 
 SensorPCF85063 rtc;
 uint32_t lastMillis;
@@ -60,13 +68,8 @@ void setup()
     uint8_t minute = 24;
     uint8_t second = 30;
 
-    // rtc.setDateTime(year, month, day, hour, minute, second);
+    rtc.setDateTime(year, month, day, hour, minute, second);
 
-    // Set 12-hour mode
-    rtc.set12Hour();
-
-    // Set 24-hour mode
-    // rtc.set24Hour();
 }
 
 
@@ -78,9 +81,6 @@ void loop()
         Serial.printf(" Year :"); Serial.print(datetime.year);
         Serial.printf(" Month:"); Serial.print(datetime.month);
         Serial.printf(" Day :"); Serial.print(datetime.day);
-        if (rtc.is12HourMode()) {
-            Serial.print(" "); Serial.print(datetime.AMPM); Serial.print("M ");
-        }
         Serial.printf(" Hour:"); Serial.print(datetime.hour);
         Serial.printf(" Minute:"); Serial.print(datetime.minute);
         Serial.printf(" Sec :"); Serial.println(datetime.second);
