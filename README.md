@@ -1,15 +1,16 @@
 ```
- _____                                 _      _  _     
-/  ___|                               | |    (_)| |    
-\ `--.   ___  _ __   ___   ___   _ __ | |     _ | |__  
- `--. \ / _ \| '_ \ / __| / _ \ | '__|| |    | || '_ \ 
+ _____                                 _      _  _
+/  ___|                               | |    (_)| |
+\ `--.   ___  _ __   ___   ___   _ __ | |     _ | |__
+ `--. \ / _ \| '_ \ / __| / _ \ | '__|| |    | || '_ \
 /\__/ /|  __/| | | |\__ \| (_) || |   | |____| || |_) |
-\____/  \___||_| |_||___/ \___/ |_|   \_____/|_||_.__/ 
-                 ···   ···                   
->  Commonly used I2C , SPI device libraries
-                                                      
+\____/  \___||_| |_||___/ \___/ |_|   \_____/|_||_.__/
+                 ···   ···
+>  Commonly used I2C , SPI device multi-platform libraries
+
 ```
 
+[![Build esp-idf](https://github.com/lewisxhe/SensorLib/actions/workflows/esp-idf.yml/badge.svg)](https://github.com/lewisxhe/SensorLib/actions/workflows/esp-idf.yml)
 [![Arduino CI](https://github.com/lewisxhe/SensorLib/actions/workflows/arduino_ci.yml/badge.svg)](https://github.com/lewisxhe/SensorLib/actions/workflows/arduino_ci.yml)
 [![PlatformIO CI](https://github.com/lewisxhe/SensorLib/actions/workflows/pio.yml/badge.svg)](https://github.com/lewisxhe/SensorLib/actions/workflows/pio.yml)
 [![arduino-library-badge](https://www.ardu-badge.com/badge/SensorLib.svg?)](https://www.ardu-badge.com/SensorLib)
@@ -35,31 +36,29 @@
 ![LTR553](https://img.shields.io/badge/LTR553-brown)
 ![FT6X36](https://img.shields.io/badge/FT6X36-red)
 ![CST816T](https://img.shields.io/badge/CST816T-red)
+![CST816D](https://img.shields.io/badge/CST816D-red)
+![CST816S](https://img.shields.io/badge/CST816S-red)
 ![CST226SE](https://img.shields.io/badge/CST226SE-red)
 ![CHSC5816](https://img.shields.io/badge/CHSC5816-red)
 ![GT911](https://img.shields.io/badge/GT911-red)
-
-
 
 Support list:
 
 | Sensor          | Description              | I2C | SPI |
 | --------------- | ------------------------ | --- | --- |
-| PCF8563/HYM8563 | Real-time clock          | ✔️   | ❌   |
-| PCF85063        | Real-time clock          | ✔️   | ❌   |
-| QMI8658         | IMU                      | ✔️   | ✔️   |
-| BHI260AP        | IMU                      | ✔️   | ✔️   |
-| QMC6310         | Magnetic Sensor          | ✔️   | ❌   |
-| BMM150          | Magnetic Sensor          | ✔️   | ❌   |
-| XL9555          | I/O expander             | ✔️   | ❌   |
-| BMA423          | Accelerometer            | ✔️   | ❌   |
-| DRV2605         | Haptic Driver            | ✔️   | ❌   |
-| CM32181         | Ambient Light Sensor     | ✔️   | ❌   |
-| LTR553          | Light & Proximity Sensor | ✔️   | ❌   |
-| FT6X36          | Capacitive touch         | ✔️   | ❌   |
-| CST816T         | Capacitive touch         | ✔️   | ❌   |
-| CST226SE        | Capacitive touch         | ✔️   | ❌   |
-| CHSC5816        | Capacitive touch         | ✔️   | ❌   |
-| GT911           | Capacitive touch         | ✔️   | ❌   |
-
-
+| PCF8563/HYM8563 | Real-time clock          | ✔️  | ❌  |
+| PCF85063        | Real-time clock          | ✔️  | ❌  |
+| QMI8658         | IMU                      | ✔️  | ✔️  |
+| BHI260AP        | IMU                      | ✔️  | ✔️  |
+| QMC6310         | Magnetic Sensor          | ✔️  | ❌  |
+| BMM150          | Magnetic Sensor          | ✔️  | ❌  |
+| XL9555          | I/O expander             | ✔️  | ❌  |
+| BMA423          | Accelerometer            | ✔️  | ❌  |
+| DRV2605         | Haptic Driver            | ✔️  | ❌  |
+| CM32181         | Ambient Light Sensor     | ✔️  | ❌  |
+| LTR553          | Light & Proximity Sensor | ✔️  | ❌  |
+| FT6X36          | Capacitive touch         | ✔️  | ❌  |
+| CST816S/T/D     | Capacitive touch         | ✔️  | ❌  |
+| CST226SE        | Capacitive touch         | ✔️  | ❌  |
+| CHSC5816        | Capacitive touch         | ✔️  | ❌  |
+| GT911           | Capacitive touch         | ✔️  | ❌  |
