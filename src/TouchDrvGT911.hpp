@@ -82,22 +82,34 @@ public:
     }
 
 #if defined(ARDUINO)
-    bool init(PLATFORM_WIRE_TYPE &w,
-              int sda = DEFAULT_SDA,
-              int scl = DEFAULT_SCL,
-              uint8_t addr = GT911_SLAVE_ADDRESS_H)
+    bool begin(PLATFORM_WIRE_TYPE &w,
+               uint8_t addr = GT911_SLAVE_ADDRESS_H,
+               int sda = DEFAULT_SDA,
+               int scl = DEFAULT_SCL
+              )
     {
-        __wire = &w;
-        __sda = sda;
-        __scl = scl;
-        __addr = addr;
-        return begin();
+        return SensorCommon::begin(w, addr, sda, scl);
     }
+
+#elif defined(ESP_PLATFORM) && !defined(ARDUINO)
+
+#if ((ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,0,0)) && defined(CONFIG_SENSORLIB_ESP_IDF_NEW_API))
+    bool begin(i2c_master_bus_handle_t i2c_dev_bus_handle, uint8_t addr)
+    {
+        return SensorCommon::begin(i2c_dev_bus_handle, addr);
+    }
+#else
+    bool begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
+    {
+        return SensorCommon::begin(port_num, addr, sda, scl);
+    }
+#endif //ESP_IDF_VERSION
+
 #endif
 
-    bool init()
+    bool begin(uint8_t addr, iic_fptr_t readRegCallback, iic_fptr_t writeRegCallback)
     {
-        return begin();
+        return SensorCommon::begin(addr, readRegCallback, writeRegCallback);
     }
 
 
@@ -127,17 +139,21 @@ public:
         if (__irq != SENSOR_PIN_NONE) {
             pinMode(__irq, INPUT);
         }
-        writeRegister(GT911_COMMAND, 0x02);
+        // writeRegister(GT911_COMMAND, 0x02);
+        writeCommand(0x02);
     }
 
     void sleep()
     {
-        writeRegister(GT911_COMMAND, 0x05);
+        // writeRegister(GT911_COMMAND, 0x05);
+        writeCommand(0x05);
     }
+
+
 
     void wakeup()
     {
-
+        reset();
     }
 
     void idle()
@@ -150,33 +166,26 @@ public:
         return 5;
     }
 
-
     uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t size = 1)
     {
         uint8_t buffer[39];
+        uint8_t touchPoint = 0;
+        GT911Point_t p[5];
 
         if (!x_array || !y_array || size == 0)
             return 0;
 
-        int touchPoint = readRegister(GT911_POINT_INFO);
-        if (touchPoint == DEV_WIRE_ERR) {
-            return 0;
-        }
-
-        touchPoint &= 0x0F;
+        touchPoint = getPoint();
         if (touchPoint == 0) {
-            clearBuffer();
-            return 0;
-        }
-        clearBuffer();
-
-        if (readRegister(GT911_POINT_1, buffer, 39) == DEV_WIRE_ERR) {
             return 0;
         }
 
-
-        //debug.
-        GT911Point_t p[5];
+        // GT911_POINT_1  0X814F
+        uint8_t write_buffer[2] = {0x81, 0x4F};
+        if (writeThenRead(write_buffer, SENSORLIB_COUNT(write_buffer),
+                          buffer, 39) == DEV_WIRE_ERR) {
+            return 0;
+        }
 
         for (uint8_t i = 0; i < size; i++) {
             p[i].trackID = buffer[i * 8];
@@ -219,9 +228,7 @@ public:
                 return digitalRead(__irq) == HIGH;
             }
         } else {
-            uint8_t val = readRegister(GT911_POINT_INFO) & 0x0F;
-            clearBuffer();
-            return val & 0x0F;
+            return getPoint();
         }
         return false;
     }
@@ -229,7 +236,8 @@ public:
     //In the tested GT911 only the falling edge is valid to use, the rest are incorrect
     bool setInterruptMode(uint8_t mode)
     {
-        int val = readRegister(GT911_MODULE_SWITCH_1);
+        // GT911_MODULE_SWITCH_1 0x804D
+        uint8_t val = readGT911(GT911_MODULE_SWITCH_1);
         val &= 0XFC;
         if (mode == FALLING) {
             val |= 0x03;
@@ -237,13 +245,14 @@ public:
             val |= 0x02;
         }
         __irq_mode = mode;
-        return writeRegister(GT911_MODULE_SWITCH_1, val) != -1;
+        return writeGT911(GT911_MODULE_SWITCH_1, val) != DEV_WIRE_ERR;
     }
 
 
     uint8_t getPoint()
     {
-        uint8_t val = readRegister(GT911_POINT_INFO) & 0x0F;
+        // GT911_POINT_INFO 0X814E
+        uint8_t val = readGT911(GT911_POINT_INFO) & 0x0F;
         clearBuffer();
         return val & 0x0F;
     }
@@ -252,8 +261,9 @@ public:
     uint32_t getChipID()
     {
         char product_id[4] = {0};
+        // GT911_PRODUCT_ID 0x8140
         for (int i = 0; i < 4; ++i) {
-            product_id[i] = readRegister(GT911_PRODUCT_ID + i);
+            product_id[i] = readGT911(GT911_PRODUCT_ID + i);
         }
         return atoi(product_id);
     }
@@ -261,8 +271,9 @@ public:
     uint16_t getFwVersion()
     {
         uint8_t fw_ver[2] = {0};
+        // GT911_FIRMWARE_VERSION 0x8144
         for (int i = 0; i < 2; ++i) {
-            fw_ver[i] = readRegister(GT911_FIRMWARE_VERSION + i);
+            fw_ver[i] = readGT911(GT911_FIRMWARE_VERSION + i);
         }
         return fw_ver[0] | (fw_ver[1] << 8);
     }
@@ -272,10 +283,10 @@ public:
         uint8_t x_resolution[2] = {0}, y_resolution[2] = {0};
 
         for (int i = 0; i < 2; ++i) {
-            x_resolution[i] = readRegister(GT911_X_RESOLUTION + i);
+            x_resolution[i] = readGT911(GT911_X_RESOLUTION + i);
         }
         for (int i = 0; i < 2; ++i) {
-            y_resolution[i] = readRegister(GT911_Y_RESOLUTION + i);
+            y_resolution[i] = readGT911(GT911_Y_RESOLUTION + i);
         }
 
         *x = x_resolution[0] | (x_resolution[1] << 8);
@@ -285,7 +296,7 @@ public:
 
     int getVendorID()
     {
-        return readRegister(GT911_VENDOR_ID);
+        return readGT911(GT911_VENDOR_ID);
     }
 
     void setRsetUseCallback(bool enable)
@@ -300,9 +311,32 @@ public:
 
 private:
 
+    uint8_t readGT911(uint16_t cmd)
+    {
+        uint8_t value = 0x00;
+        uint8_t write_buffer[2] = {highByte(cmd), lowByte(cmd)};
+        writeThenRead(write_buffer, SENSORLIB_COUNT(write_buffer),
+                      &value, 1);
+        return value;
+    }
+
+    int writeGT911(uint16_t cmd, uint8_t value)
+    {
+        uint8_t write_buffer[3] = {highByte(cmd), lowByte(cmd), value};
+        return writeBuffer(write_buffer, SENSORLIB_COUNT(write_buffer));
+    }
+
+
+    void writeCommand(uint8_t command)
+    {
+        // GT911_COMMAND 0x8040
+        uint8_t write_buffer[3] = {0x80, 0x40, command};
+        writeBuffer(write_buffer, SENSORLIB_COUNT(write_buffer));
+    }
+
     void inline clearBuffer()
     {
-        writeRegister(GT911_POINT_INFO, 0x00);
+        writeGT911(GT911_POINT_INFO, 0x00);
     }
 
     void setRstValue(uint8_t value)
@@ -326,9 +360,6 @@ private:
     bool initImpl()
     {
         int16_t x, y;
-
-        // GT911 register address uses two bytes
-        setRegAddressLenght(2);
 
         if (__addr == GT911_SLAVE_ADDRESS_H  &&
                 __rst != SENSOR_PIN_NONE &&
@@ -379,10 +410,7 @@ private:
         log_i("Firmware version: 0x%x\n", getFwVersion());
         getResolution(&x, &y);
         log_i("Resolution : X = %d Y = %d\n", x, y);
-
         log_i("Vendor id:%d\n", getVendorID());
-
-
         return true;
     }
 

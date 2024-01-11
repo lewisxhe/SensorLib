@@ -31,6 +31,7 @@
 #include "REG/CSTxxxConstants.h"
 #include "touch/TouchClassCST226.h"
 #include "touch/TouchClassCST816.h"
+#include "SensorCommon.tpp"
 
 class TouchDrvCSTXXX
 {
@@ -53,24 +54,26 @@ public:
         _irq = irq;
     }
 
-    bool init(PLATFORM_WIRE_TYPE &wire,
-              int sda,
-              int scl,
-              uint8_t address)
+#if defined(ARDUINO)
+    bool begin(PLATFORM_WIRE_TYPE &wire,
+               uint8_t address,
+               int sda,
+               int scl
+              )
     {
         if (!drv) {
-            drv = new TouchClassCST816(wire, sda, scl, address);
+            drv = new TouchClassCST816();
             drv->setPins(_rst, _irq);
-            if (!drv->init()) {
+            if (!drv->begin(wire, address, sda, scl)) {
                 delete drv;
                 drv = NULL;
             }
         }
 
         if (!drv) {
-            drv = new TouchClassCST226(wire, sda, scl, address);
+            drv = new TouchClassCST226();
             drv->setPins(_rst, _irq);
-            if (!drv->init()) {
+            if (!drv->begin(wire, address, sda, scl)) {
                 delete drv;
                 drv = NULL;
             }
@@ -78,6 +81,78 @@ public:
 
         return drv != NULL;
     }
+#elif defined(ESP_PLATFORM)
+#if ((ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,0,0)) && defined(CONFIG_SENSORLIB_ESP_IDF_NEW_API))
+    bool begin(i2c_master_bus_handle_t i2c_dev_bus_handle, uint8_t addr)
+    {
+        if (!drv) {
+            drv = new TouchClassCST816();
+            drv->setPins(_rst, _irq);
+            if (!drv->begin(i2c_dev_bus_handle, addr)) {
+                delete drv;
+                drv = NULL;
+            }
+        }
+
+        if (!drv) {
+            drv = new TouchClassCST226();
+            drv->setPins(_rst, _irq);
+            if (!drv->begin(i2c_dev_bus_handle, addr)) {
+                delete drv;
+                drv = NULL;
+            }
+        }
+        return drv != NULL;
+    }
+#else
+    bool begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
+    {
+        if (!drv) {
+            drv = new TouchClassCST816();
+            drv->setPins(_rst, _irq);
+            if (!drv->begin(port_num, addr, sda, scl)) {
+                delete drv;
+                drv = NULL;
+            }
+        }
+
+        if (!drv) {
+            drv = new TouchClassCST226();
+            drv->setPins(_rst, _irq);
+            if (!drv->begin(port_num, addr, sda, scl)) {
+                delete drv;
+                drv = NULL;
+            }
+        }
+        return drv != NULL;
+    }
+#endif //ESP_IDF_VERSION
+#endif//ARDUINO
+
+
+    bool begin(uint8_t address, iic_fptr_t readRegCallback, iic_fptr_t writeRegCallback)
+    {
+        if (!drv) {
+            drv = new TouchClassCST816();
+            drv->setPins(_rst, _irq);
+            if (!drv->begin(address, readRegCallback, writeRegCallback)) {
+                delete drv;
+                drv = NULL;
+            }
+        }
+
+        if (!drv) {
+            drv = new TouchClassCST226();
+            drv->setPins(_rst, _irq);
+            if (!drv->begin(address, readRegCallback, writeRegCallback)) {
+                delete drv;
+                drv = NULL;
+            }
+        }
+
+        return drv != NULL;
+    }
+
 
     void reset()
     {
@@ -133,18 +208,48 @@ public:
         return drv->getResolution(x, y);
     }
 
+    void setCenterButtonCoordinate(uint16_t x, uint16_t y)
+    {
+        if (!drv)return ;
+        const char *model = drv->getModelName();
+        if (strncmp(model, "CST8", 3) == 0) {
+            TouchClassCST816 *pT = static_cast<TouchClassCST816 *>(drv);
+            pT->setCenterButtonCoordinate(x, y);
+        }
+    }
+
     void setHomeButtonCallback(home_button_callback_t callback, void *user_data = NULL)
     {
         if (!drv)return ;
-        String model = drv->getModelName();
-        if (model.startsWith("CST8")) {
+        const char *model = drv->getModelName();
+        if (strncmp(model, "CST8", 3) == 0) {
             TouchClassCST816 *pT = static_cast<TouchClassCST816 *>(drv);
             pT->setHomeButtonCallback(callback, user_data);
-            pT->setCenterButtonCoordinate(600, 120);  // Only suitable for AMOLED 1.91 inch
+            // pT->setCenterButtonCoordinate(600, 120);  // Only suitable for AMOLED 1.91 inch
 
-        } else if (model.startsWith("CST2")) {
+        } if (strncmp(model, "CST2", 3) == 0) {
             TouchClassCST226 *pT = static_cast<TouchClassCST226 *>(drv);
             pT->setHomeButtonCallback(callback, user_data);
+        }
+    }
+
+    void disableAutoSleep()
+    {
+        if (!drv)return ;
+        const char *model = drv->getModelName();
+        if (strncmp(model, "CST8", 3) == 0) {
+            TouchClassCST816 *pT = static_cast<TouchClassCST816 *>(drv);
+            pT->disableAutoSleep();
+        }
+    }
+
+    void enableAutoSleep()
+    {
+        if (!drv)return ;
+        const char *model = drv->getModelName();
+        if (strncmp(model, "CST8", 3) == 0) {
+            TouchClassCST816 *pT = static_cast<TouchClassCST816 *>(drv);
+            pT->enableAutoSleep();
         }
     }
 

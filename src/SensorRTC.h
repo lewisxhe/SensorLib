@@ -27,8 +27,12 @@
  * @date      2023-09-07
  *
  */
-
+#ifdef ARDUINO
 #include <Arduino.h>
+#else
+#include <stdint.h>
+#endif /*defined(ARDUINO)*/
+
 #include <sys/time.h>
 
 #define RTC_DAYS_IN_JANUARY     (31u)

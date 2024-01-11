@@ -77,18 +77,10 @@ public:
 #if defined(ARDUINO)
     bool init(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = PCF8563_SLAVE_ADDRESS)
     {
-        __wire = &w;
-        __sda = sda;
-        __scl = scl;
-        __addr = addr;
-        return begin();
+        return SensorCommon::begin(w, addr, sda, scl);
     }
 #endif
 
-    bool init()
-    {
-        return begin();
-    }
 
     void deinit()
     {
@@ -190,6 +182,11 @@ public:
     void setAlarm(uint8_t hour, uint8_t minute, uint8_t day, uint8_t week)
     {
         uint8_t buffer[4] = {0};
+
+        RTC_DateTime datetime =  getDateTime();
+
+        uint8_t daysInMonth =  getDaysInMonth(datetime.month, datetime.year);
+
         if (minute != PCF8563_NO_ALARM) {
             if (minute > 59) {
                 minute = 59;
@@ -210,7 +207,8 @@ public:
             buffer[1] = PCF8563_ALARM_ENABLE;
         }
         if (day != PCF8563_NO_ALARM) {
-            buffer[2] = DEC2BCD(constrain(day, 1, 31));
+            //TODO:Check  day in Month
+            buffer[2] = DEC2BCD(((day) < (1) ? (1) : ((day) > (daysInMonth) ? (daysInMonth) : (day))));
             buffer[2] &= ~PCF8563_ALARM_ENABLE;
         } else {
             buffer[2] = PCF8563_ALARM_ENABLE;

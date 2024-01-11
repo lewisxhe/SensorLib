@@ -30,7 +30,10 @@
 
 #include "REG/QMI8658Constants.h"
 #include "SensorCommon.tpp"
-
+#ifndef ARDUINO
+#include <math.h>
+#include <stdio.h>
+#endif
 typedef struct __IMUdata {
     float x;
     float y;
@@ -196,18 +199,9 @@ public:
 #if defined(ARDUINO)
     bool init(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = QMI8658_L_SLAVE_ADDRESS)
     {
-        __wire = &w;
-        __sda = sda;
-        __scl = scl;
-        __addr = addr;
-        return begin();
+        return SensorCommon::begin(w, addr, sda, scl);
     }
 #endif
-
-    bool init()
-    {
-        return begin();
-    }
 
     void deinit()
     {
@@ -768,9 +762,13 @@ public:
 #endif
 
         buffer[0] =  readRegister(QMI8658_REG_FIFOCTRL);
+#if defined(ARDUINO)
         Serial.printf("FIFOCTRL: REG:0x%02X HEX:0x%02X ",  QMI8658_REG_FIFOCTRL, buffer[0]);
         Serial.print(" BIN:0b");
         Serial.println(buffer[0], BIN);
+#else
+        printf("FIFOCTRL: REG:0x%02X HEX:0x%02X \n",  QMI8658_REG_FIFOCTRL, buffer[0]);
+#endif
 
     }
 

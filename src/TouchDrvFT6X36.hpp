@@ -92,20 +92,36 @@ public:
     }
 
 #if defined(ARDUINO)
-    bool init(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = FT6X36_SLAVE_ADDRESS)
+
+    bool begin(PLATFORM_WIRE_TYPE &w,
+               uint8_t addr = FT6X36_SLAVE_ADDRESS,
+               int sda = DEFAULT_SDA,
+               int scl = DEFAULT_SCL)
     {
-        __wire = &w;
-        __sda = sda;
-        __scl = scl;
-        __addr = addr;
-        return begin();
+        return SensorCommon::begin(w, addr, sda, scl);
     }
+
+#elif defined(ESP_PLATFORM) && !defined(ARDUINO)
+
+#if ((ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,0,0)) && defined(CONFIG_SENSORLIB_ESP_IDF_NEW_API))
+    bool begin(i2c_master_bus_handle_t i2c_dev_bus_handle, uint8_t addr)
+    {
+        return SensorCommon::begin(i2c_dev_bus_handle, addr);
+    }
+#else
+    bool begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
+    {
+        return SensorCommon::begin(port_num, addr, sda, scl);
+    }
+#endif //ESP_IDF_VERSION
+
 #endif
 
-    bool init()
+    bool begin(uint8_t addr, iic_fptr_t readRegCallback, iic_fptr_t writeRegCallback)
     {
-        return begin();
+        return SensorCommon::begin(addr, readRegCallback, writeRegCallback);
     }
+
 
     void deinit()
     {

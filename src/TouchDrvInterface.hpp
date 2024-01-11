@@ -31,6 +31,8 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include "SensorLib.h"
+#include "SensorCommon.tpp"
 
 typedef void (*home_button_callback_t)(void *user_data);
 
@@ -73,7 +75,21 @@ public:
 
     virtual ~TouchDrvInterface();
 
-    virtual bool init() = 0;
+#if defined(ARDUINO)
+
+    virtual bool begin(PLATFORM_WIRE_TYPE &wire, uint8_t address, int sda, int scl) = 0;
+
+#elif defined(ESP_PLATFORM) && !defined(ARDUINO)
+
+#if ((ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,0,0)) && defined(CONFIG_SENSORLIB_ESP_IDF_NEW_API))
+    virtual bool begin(i2c_master_bus_handle_t i2c_dev_bus_handle, uint8_t addr) = 0;
+#else
+    virtual bool begin(i2c_port_t port_num, uint8_t addr, int sda, int scl) = 0;
+#endif //ESP_IDF_VERSION
+
+#endif //defined(ESP_PLATFORM) && !defined(ARDUINO)
+
+    virtual bool begin(uint8_t addr, iic_fptr_t readRegCallback, iic_fptr_t writeRegCallback)  = 0;
 
     virtual void reset() = 0;
 

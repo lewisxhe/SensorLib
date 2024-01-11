@@ -99,22 +99,32 @@ public:
     }
 
 #if defined(ARDUINO)
-    bool init(PLATFORM_WIRE_TYPE &w,
-              int sda = DEFAULT_SDA,
-              int scl = DEFAULT_SCL,
-              uint8_t addr = CHSC5816_SLAVE_ADDRESS)
+    bool begin(PLATFORM_WIRE_TYPE &w,
+               uint8_t addr = CHSC5816_SLAVE_ADDRESS,
+               int sda = DEFAULT_SDA,
+               int scl = DEFAULT_SCL)
     {
-        __wire = &w;
-        __sda = sda;
-        __scl = scl;
-        __addr = addr;
-        return begin();
+        return SensorCommon::begin(w, addr, sda, scl);
     }
 #endif
 
-    bool init()
+#if defined(ESP_PLATFORM) && !defined(ARDUINO)
+#if ((ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,0,0)) && defined(CONFIG_SENSORLIB_ESP_IDF_NEW_API))
+    bool begin(i2c_master_bus_handle_t i2c_dev_bus_handle, uint8_t addr)
     {
-        return begin();
+        return SensorCommon::begin(i2c_dev_bus_handle, addr);
+    }
+#else
+    bool begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
+    {
+        return SensorCommon::begin(port_num, addr, sda, scl);
+    }
+#endif //ESP_IDF_VERSION
+#endif
+
+    bool begin(uint8_t addr, iic_fptr_t readRegCallback, iic_fptr_t writeRegCallback)
+    {
+        return SensorCommon::begin(addr, readRegCallback, writeRegCallback);
     }
 
     void reset()
@@ -127,12 +137,13 @@ public:
         }
     }
 
-
-
     uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point = 1)
     {
         __CHSC5816_PointReg touch;
-        readRegister(CHSC5816_REG_POINT, touch.data, 8);
+
+        // CHSC5816_REG_POINT
+        uint8_t write_buffer[] = {0x20, 0x00, 0x00, 0x2c};
+        writeThenRead(write_buffer, SENSORLIB_COUNT(write_buffer), touch.data, 8);
         if (touch.rp.status == 0xFF && touch.rp.fingerNumber == 0) {
             return 0;
         }
@@ -164,11 +175,12 @@ public:
     //2uA
     void sleep()
     {
-        uint8_t buffer[16] = {
+        uint8_t write_buffer[] = {
+            0x20, 0x00, 0x00, 0x00, // CHSC5816_REG_CMD_BUFF
             0xF8, 0x16, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0xE9
         };
-        writeRegister(CHSC5816_REG_CMD_BUFF, buffer, 16);
+        writeBuffer(write_buffer, SENSORLIB_COUNT(write_buffer));
     }
 
     void wakeup()
@@ -178,11 +190,12 @@ public:
 
     void idle()
     {
-        uint8_t buffer[16] = {
+        uint8_t write_buffer[] = {
+            0x20, 0x00, 0x00, 0x00, // CHSC5816_REG_CMD_BUFF
             0x20, 0x16, 0x02, 0x00, 0xDB, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0xE9
         };
-        writeRegister(CHSC5816_REG_CMD_BUFF, buffer, 16);
+        writeBuffer(write_buffer, SENSORLIB_COUNT(write_buffer));
     }
 
     uint8_t getSupportTouchPoint()
@@ -192,6 +205,7 @@ public:
 
     bool getResolution(int16_t *x, int16_t *y)
     {
+        /*
         uint8_t buffer[16] = {
             0xFC, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0xe9
@@ -205,6 +219,8 @@ public:
         }
         Serial.println();
         return true;
+        */
+        return false;
     }
 
 
@@ -215,15 +231,34 @@ private:
         memset(&tmp, 0, sizeof(CHSC5816_Header_t));
         memset(&__header, 0, sizeof(CHSC5816_Header_t));
 
-        uint32_t bootClean = 0x00;
-        writeRegister(CHSC5816_REG_BOOT_STATE, (uint8_t *)&bootClean, 4);
+        // CHSC5816_REG_BOOT_STATE 0x20000018
+        uint8_t write_buffer[] = {0x20, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 0x00};
+
+        if (writeBuffer(write_buffer, SENSORLIB_COUNT(write_buffer)) == DEV_WIRE_ERR) {
+            log_e("writeBuffer clean boot state failed!\n");
+            return false;
+        }
 
         reset();
 
         for (int i = 0; i < 10; ++i) {
             delay(10);
-            readRegister(CHSC5816_REG_IMG_HEAD, (uint8_t *)&__header, sizeof(CHSC5816_Header_t));
-            readRegister(CHSC5816_REG_IMG_HEAD, (uint8_t *)&tmp, sizeof(CHSC5816_Header_t));
+            // CHSC5816_REG_IMG_HEAD 0x20000014
+            uint8_t write_buffer[] = {0x20, 0x00, 0x00, 0x14};
+            if (writeThenRead(write_buffer, SENSORLIB_COUNT(write_buffer),
+                              (uint8_t *)&__header,
+                              sizeof(CHSC5816_Header_t)) == DEV_WIRE_ERR) {
+                printf("readRegister 1 failed!\n");
+                return false;
+            }
+
+            if (writeThenRead(write_buffer, SENSORLIB_COUNT(write_buffer),
+                              (uint8_t *)&tmp,
+                              sizeof(CHSC5816_Header_t)) == DEV_WIRE_ERR) {
+                printf("readRegister 2 failed!\n");
+                return false;
+            }
+
             if (memcmp(&tmp, &__header, sizeof(CHSC5816_Header_t)) != 0 ) {
                 continue;
             }
@@ -236,7 +271,6 @@ private:
 
     bool initImpl()
     {
-        setRegAddressLenght(4);
 
         if (__irq != SENSOR_PIN_NONE) {
             pinMode(__irq, INPUT);

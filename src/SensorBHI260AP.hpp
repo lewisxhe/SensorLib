@@ -35,9 +35,7 @@
 
 
 
-#if !defined(ARDUINO)
-#error "Currently only supports Arduino"
-#endif
+#if defined(ARDUINO)
 
 class SensorBHI260AP
 {
@@ -682,6 +680,7 @@ protected:
 };
 
 
+#endif /*defined(ARDUINO)*/
 
 
 

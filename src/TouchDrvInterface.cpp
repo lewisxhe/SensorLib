@@ -27,7 +27,6 @@
  * @date      2023-09-21
  *
  */
-#include <Arduino.h>
 #include "TouchDrvInterface.hpp"
 
 TouchDrvInterface::TouchDrvInterface() :

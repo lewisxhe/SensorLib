@@ -33,9 +33,7 @@
 #include "bosch/BMM150/bmm150.h"
 #include "bosch/SensorBhy2Define.h"
 
-#if !defined(ARDUINO)
-#error "Currently only supports Arduino"
-#endif
+#if defined(ARDUINO)
 
 /*! @name I2C ADDRESS       */
 #define BMM150_DEFAULT_I2C_ADDRESS                UINT8_C(0x10)
@@ -326,6 +324,7 @@ protected:
 };
 
 
+#endif /*defined(ARDUINO)*/
 
 
 
