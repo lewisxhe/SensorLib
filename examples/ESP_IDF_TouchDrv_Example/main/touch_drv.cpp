@@ -70,7 +70,7 @@ esp_err_t touch_drv_init()
     i2c_drv_device_init(address);
 
     ESP_LOGI(TAG, "Implemented using read and write callback methods");
-    if (touch.init(address, i2c_read_callback, i2c_write_callback)) {
+    if (touch.begin(address, i2c_read_callback, i2c_write_callback)) {
         ESP_LOGI(TAG, "Init touch SUCCESS!");
     } else {
         ESP_LOGE(TAG, "Init touch FAILED!");
@@ -88,7 +88,7 @@ esp_err_t touch_drv_init()
     // * which is useful when the bus shares multiple devices.
     extern i2c_master_bus_handle_t bus_handle;
 
-    if (touch.init(bus_handle, address)) {
+    if (touch.begin(bus_handle, address)) {
         ESP_LOGI(TAG, "Init touch SUCCESS!");
     } else {
         ESP_LOGE(TAG, "Init touch FAILED!");
@@ -98,7 +98,7 @@ esp_err_t touch_drv_init()
 #else
 
     ESP_LOGI(TAG, "Implemented using built-in read and write methods (Use lower version < 5.0 API)");
-    if (touch.init((i2c_port_t)CONFIG_I2C_MASTER_PORT_NUM, address, CONFIG_SENSOR_SDA, CONFIG_SENSOR_SCL)) {
+    if (touch.begin((i2c_port_t)CONFIG_I2C_MASTER_PORT_NUM, address, CONFIG_SENSOR_SDA, CONFIG_SENSOR_SCL)) {
         ESP_LOGI(TAG, "Init touch SUCCESS!");
     } else {
         ESP_LOGE(TAG, "Init touch FAILED!");
