@@ -58,9 +58,31 @@ void setup()
     Serial.begin(115200);
     while (!Serial);
 
+    Wire.begin(SENSOR_SDA, SENSOR_SCL);
+    /*
+    * The touch reset pin uses hardware pull-up,
+    * and the function of setting the I2C device address cannot be used.
+    * Use scanning to obtain the touch device address.
+    * * */
+    uint8_t touchAddress = 0;
+    Wire.beginTransmission(0x14);
+    if (Wire.endTransmission() == 0) {
+        touchAddress = 0x14;
+    }
+    Wire.beginTransmission(0x5D);
+    if (Wire.endTransmission() == 0) {
+        touchAddress = 0x5D;
+    }
+    if (touchAddress == 0) {
+        while (1) {
+            Serial.println("Failed to find GT911 - check your wiring!");
+            delay(1000);
+        }
+    }
+
     touch.setPins(SENSOR_RST, SENSOR_IRQ);
 
-    if (!touch.init(Wire,  SENSOR_SDA, SENSOR_SCL, GT911_SLAVE_ADDRESS_H )) {
+    if (!touch.begin(Wire,  touchAddress, SENSOR_SDA, SENSOR_SCL )) {
         while (1) {
             Serial.println("Failed to find GT911 - check your wiring!");
             delay(1000);

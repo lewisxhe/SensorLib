@@ -115,10 +115,17 @@ void setup()
     }
 
     touch.setPins(SENSOR_RST, SENSOR_IRQ);
-    touch.init(Wire, SENSOR_SDA, SENSOR_SCL, address);
+    touch.begin(Wire, address, SENSOR_SDA, SENSOR_SCL);
 
 
     Serial.print("Model :"); Serial.println(touch.getModelName());
+
+    // T-Display-S3 CST816 touch panel, touch button coordinates are is 85 , 160
+    touch.setCenterButtonCoordinate(85, 360);
+
+    // T-Display-AMOLED 1.91 Inch CST816T touch panel, touch button coordinates is 600, 120.
+    // touch.setCenterButtonCoordinate(600, 120);  // Only suitable for AMOLED 1.91 inch
+
 
     // Depending on the touch panel, not all touch panels have touch buttons.
     touch.setHomeButtonCallback([](void *user_data) {

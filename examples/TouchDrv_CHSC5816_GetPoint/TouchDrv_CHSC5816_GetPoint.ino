@@ -50,14 +50,10 @@
 
 TouchDrvCHSC5816 touch;
 
-TouchDrvInterface *pTouch;
-
 void setup()
 {
     Serial.begin(115200);
     while (!Serial);
-
-    TouchDrvCHSC5816 *pd1 = static_cast<TouchDrvCHSC5816 *>(pTouch);
 
     touch.setPins(SENSOR_RST, SENSOR_IRQ);
     if (!touch.begin(Wire, CHSC5816_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
