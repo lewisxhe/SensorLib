@@ -99,6 +99,11 @@ uint8_t TouchClassCST816::getPoint(int16_t *x_array, int16_t *y_array, uint8_t g
         return 0;
     }
 
+    // Some CST816T will return all 0xFF after turning off automatic sleep.
+    if (buffer[2] == 0xFF) {
+        return 0;
+    }
+
     // Only suitable for AMOLED 1.91 inch
     // RAW:00,00,01,80,78,02,58,00,00,FF,FF,FF,FF,
     // if (buffer[2] == 0x01 && buffer[3] == 0x80 && buffer[4] == 0x78 && buffer[5] == 0x02 && buffer[6] == 0x58) {
