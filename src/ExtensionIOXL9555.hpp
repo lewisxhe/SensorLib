@@ -31,11 +31,14 @@
 
 #include "REG/XL9555Constants.h"
 #include "SensorCommon.tpp"
+#include "ExtensionSPI.tpp"
 
 class ExtensionIOXL9555 :
-    public SensorCommon<ExtensionIOXL9555>
+    public SensorCommon<ExtensionIOXL9555>,
+    public ExtensionSPI<ExtensionIOXL9555>
 {
     friend class SensorCommon<ExtensionIOXL9555>;
+    friend class ExtensionSPI<ExtensionIOXL9555>;
 public:
 
     enum {
@@ -43,7 +46,7 @@ public:
         PORT1,
     };
 
-    enum {
+    enum ExtensionGPIO {
         IO0,
         IO1,
         IO2,
