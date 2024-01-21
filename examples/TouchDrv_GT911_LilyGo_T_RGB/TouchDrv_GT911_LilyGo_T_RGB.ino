@@ -114,9 +114,8 @@ void setup()
 
 
     touch.setPins(SENSOR_RST, SENSOR_IRQ);
-    touch.setDigitalWriteCallback(digitalWrite_CB);
-    touch.setPinModeCallback(pinMode_CB);
-    touch.setRsetUseCallback(true);
+    touch.setGpioWriteCallback(digitalWrite_CB);
+    touch.setGpioModeCallback(pinMode_CB);
 
     if (!touch.begin(Wire, GT911_SLAVE_ADDRESS_L, SENSOR_SDA, SENSOR_SCL )) {
         scanDevices();
