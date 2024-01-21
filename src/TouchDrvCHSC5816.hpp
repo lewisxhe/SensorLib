@@ -130,9 +130,9 @@ public:
     void reset()
     {
         if (__rst != SENSOR_PIN_NONE) {
-            digitalWrite(__rst, LOW);
+            this->setGpioLevel(__rst, LOW);
             delay(3);
-            digitalWrite(__rst, HIGH);
+            this->setGpioLevel(__rst, HIGH);
             delay(5);
         }
     }
@@ -162,7 +162,7 @@ public:
     bool isPressed()
     {
         if (__irq != SENSOR_PIN_NONE) {
-            return digitalRead(__irq) == LOW;
+            return this->getGpioLevel(__irq) == LOW;
         }
         return getPoint(NULL, NULL);
     }
@@ -223,6 +223,14 @@ public:
         return false;
     }
 
+    void  setGpioCallback(gpio_mode_fprt_t mode_cb,
+                          gpio_write_fprt_t write_cb,
+                          gpio_read_fprt_t read_cb)
+    {
+        SensorCommon::setGpioModeCallback(mode_cb);
+        SensorCommon::setGpioWriteCallback(write_cb);
+        SensorCommon::setGpioReadCallback(read_cb);
+    }
 
 private:
     bool checkOnline()
@@ -273,11 +281,11 @@ private:
     {
 
         if (__irq != SENSOR_PIN_NONE) {
-            pinMode(__irq, INPUT);
+            this->setGpioMode(__irq, INPUT);
         }
 
         if (__rst != SENSOR_PIN_NONE) {
-            pinMode(__rst, OUTPUT);
+            this->setGpioMode(__rst, OUTPUT);
         }
 
         reset();

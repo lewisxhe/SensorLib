@@ -73,6 +73,9 @@ public:
 
     void setHomeButtonCallback(home_button_callback_t cb, void *user_data);
 
+    void setGpioCallback(gpio_mode_fprt_t mode_cb,
+                         gpio_write_fprt_t write_cb,
+                         gpio_read_fprt_t read_cb);
 
 private:
     bool initImpl();

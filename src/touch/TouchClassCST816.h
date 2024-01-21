@@ -79,6 +79,10 @@ public:
 
     void enableAutoSleep();
 
+    void setGpioCallback(gpio_mode_fprt_t mode_cb,
+                         gpio_write_fprt_t write_cb,
+                         gpio_read_fprt_t read_cb);
+
 private:
     bool initImpl();
     int getReadMaskImpl();

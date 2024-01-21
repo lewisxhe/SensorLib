@@ -33,7 +33,7 @@
 #include "touch/TouchClassCST816.h"
 #include "SensorCommon.tpp"
 
-class TouchDrvCSTXXX
+class TouchDrvCSTXXX : public TouchDrvInterface
 {
 public:
     TouchDrvCSTXXX(): drv(NULL)
@@ -48,12 +48,6 @@ public:
         }
     }
 
-    void setPins(int rst, int irq)
-    {
-        _rst = rst;
-        _irq = irq;
-    }
-
 #if defined(ARDUINO)
     bool begin(PLATFORM_WIRE_TYPE &wire,
                uint8_t address,
@@ -63,7 +57,8 @@ public:
     {
         if (!drv) {
             drv = new TouchClassCST816();
-            drv->setPins(_rst, _irq);
+            drv->setGpioCallback(__set_gpio_mode, __set_gpio_level, __get_gpio_level);
+            drv->setPins(__rst, __irq);
             if (!drv->begin(wire, address, sda, scl)) {
                 delete drv;
                 drv = NULL;
@@ -72,7 +67,8 @@ public:
 
         if (!drv) {
             drv = new TouchClassCST226();
-            drv->setPins(_rst, _irq);
+            drv->setGpioCallback(__set_gpio_mode, __set_gpio_level, __get_gpio_level);
+            drv->setPins(__rst, __irq);
             if (!drv->begin(wire, address, sda, scl)) {
                 delete drv;
                 drv = NULL;
@@ -87,7 +83,8 @@ public:
     {
         if (!drv) {
             drv = new TouchClassCST816();
-            drv->setPins(_rst, _irq);
+            drv->setGpioCallback(__set_gpio_mode, __set_gpio_level, __get_gpio_level);
+            drv->setPins(__rst, __irq);
             if (!drv->begin(i2c_dev_bus_handle, addr)) {
                 delete drv;
                 drv = NULL;
@@ -96,7 +93,8 @@ public:
 
         if (!drv) {
             drv = new TouchClassCST226();
-            drv->setPins(_rst, _irq);
+            drv->setGpioCallback(__set_gpio_mode, __set_gpio_level, __get_gpio_level);
+            drv->setPins(__rst, __irq);
             if (!drv->begin(i2c_dev_bus_handle, addr)) {
                 delete drv;
                 drv = NULL;
@@ -109,7 +107,8 @@ public:
     {
         if (!drv) {
             drv = new TouchClassCST816();
-            drv->setPins(_rst, _irq);
+            drv->setGpioCallback(__set_gpio_mode, __set_gpio_level, __get_gpio_level);
+            drv->setPins(__rst, __irq);
             if (!drv->begin(port_num, addr, sda, scl)) {
                 delete drv;
                 drv = NULL;
@@ -118,7 +117,8 @@ public:
 
         if (!drv) {
             drv = new TouchClassCST226();
-            drv->setPins(_rst, _irq);
+            drv->setGpioCallback(__set_gpio_mode, __set_gpio_level, __get_gpio_level);
+            drv->setPins(__rst, __irq);
             if (!drv->begin(port_num, addr, sda, scl)) {
                 delete drv;
                 drv = NULL;
@@ -130,11 +130,21 @@ public:
 #endif//ARDUINO
 
 
+    void setGpioCallback(gpio_mode_fprt_t mode_cb,
+                         gpio_write_fprt_t write_cb,
+                         gpio_read_fprt_t read_cb)
+    {
+        __set_gpio_level = write_cb;
+        __get_gpio_level = read_cb;
+        __set_gpio_mode = mode_cb;
+    }
+
     bool begin(uint8_t address, iic_fptr_t readRegCallback, iic_fptr_t writeRegCallback)
     {
         if (!drv) {
             drv = new TouchClassCST816();
-            drv->setPins(_rst, _irq);
+            drv->setGpioCallback(__set_gpio_mode, __set_gpio_level, __get_gpio_level);
+            drv->setPins(__rst, __irq);
             if (!drv->begin(address, readRegCallback, writeRegCallback)) {
                 delete drv;
                 drv = NULL;
@@ -143,7 +153,8 @@ public:
 
         if (!drv) {
             drv = new TouchClassCST226();
-            drv->setPins(_rst, _irq);
+            drv->setGpioCallback(__set_gpio_mode, __set_gpio_level, __get_gpio_level);
+            drv->setPins(__rst, __irq);
             if (!drv->begin(address, readRegCallback, writeRegCallback)) {
                 delete drv;
                 drv = NULL;
@@ -272,9 +283,10 @@ public:
     }
 
 private:
+    gpio_write_fprt_t   __set_gpio_level        = NULL;
+    gpio_read_fprt_t    __get_gpio_level        = NULL;
+    gpio_mode_fprt_t    __set_gpio_mode         = NULL;
     TouchDrvInterface *drv = NULL;
-    int _irq;
-    int _rst;
 };
 
 

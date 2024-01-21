@@ -67,10 +67,10 @@ bool TouchClassCST226::begin(uint8_t addr, iic_fptr_t readRegCallback, iic_fptr_
 void TouchClassCST226::reset()
 {
     if (__rst != SENSOR_PIN_NONE) {
-        pinMode(__rst, OUTPUT);
-        digitalWrite(__rst, LOW);
+        this->setGpioMode(__rst, OUTPUT);
+        this->setGpioLevel(__rst, LOW);
         delay(100);
-        digitalWrite(__rst, HIGH);
+        this->setGpioLevel(__rst, HIGH);
         delay(100);
     } else {
         writeRegister(0xD1, 0x0E);
@@ -144,7 +144,7 @@ bool TouchClassCST226::isPressed()
 {
     static uint32_t lastPulse = 0;
     if (__irq != SENSOR_PIN_NONE) {
-        int val = digitalRead(__irq) == LOW;
+        int val = this->getGpioLevel(__irq) == LOW;
         if (val) {
             //Filter low levels with intervals greater than 1000ms
             val = (millis() - lastPulse > 1000) ?  false : true;
@@ -167,10 +167,10 @@ void TouchClassCST226::sleep()
     writeRegister(0xD1, 0x05);
 #ifdef ESP32
     if (__irq != SENSOR_PIN_NONE) {
-        pinMode(__irq, OPEN_DRAIN);
+        this->setGpioMode(__irq, OPEN_DRAIN);
     }
     if (__rst != SENSOR_PIN_NONE) {
-        pinMode(__rst, OPEN_DRAIN);
+        this->setGpioMode(__rst, OPEN_DRAIN);
     }
 #endif
 }
@@ -201,15 +201,24 @@ void TouchClassCST226::setHomeButtonCallback(home_button_callback_t cb, void *us
     __userData = user_data;
 }
 
+void TouchClassCST226::setGpioCallback(gpio_mode_fprt_t mode_cb,
+                                       gpio_write_fprt_t write_cb,
+                                       gpio_read_fprt_t read_cb)
+{
+    SensorCommon::setGpioModeCallback(mode_cb);
+    SensorCommon::setGpioWriteCallback(write_cb);
+    SensorCommon::setGpioReadCallback(read_cb);
+}
+
 bool TouchClassCST226::initImpl()
 {
 
     if (__rst != SENSOR_PIN_NONE) {
-        pinMode(__rst, OUTPUT);
+        this->setGpioMode(__rst, OUTPUT);
     }
 
     if (__irq != SENSOR_PIN_NONE) {
-        pinMode(__irq, INPUT);
+        this->setGpioMode(__irq, INPUT);
     }
 
     reset();

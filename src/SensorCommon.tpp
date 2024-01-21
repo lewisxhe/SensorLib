@@ -41,16 +41,15 @@ typedef union  {
     uint16_t full;
 } RegData_t;
 
-typedef int (*iic_fptr_t)(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t len);
-
+typedef int     (*iic_fptr_t)(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t len);
+typedef void    (*gpio_write_fprt_t)(uint32_t gpio, uint8_t value);
+typedef int     (*gpio_read_fprt_t)(uint32_t gpio);
+typedef void    (*gpio_mode_fprt_t)(uint32_t gpio, uint8_t mode);
+typedef void    (*delay_ms_fprt_t)(uint32_t ms);
 
 template <class chipType>
 class SensorCommon
 {
-    typedef int (*digitalReadCb_t)(uint32_t pinNumber);
-    typedef void (*digitalWirteCb_t)(uint32_t pinNumber, uint8_t value);
-    typedef void (*pinModeCb_t)(uint32_t pinNumber, uint8_t mode);
-
 public:
     ~SensorCommon()
     {
@@ -88,8 +87,8 @@ public:
 #endif
         __addr = addr;
         __spi = NULL;
-        thisReadRegCallback = NULL;
-        thisWriteRegCallback = NULL;
+        __i2c_master_read = NULL;
+        __i2c_master_write = NULL;
         __has_init = thisChip().initImpl();
         return __has_init;
     }
@@ -140,8 +139,8 @@ public:
         if (i2c_dev_bus_handle == NULL) return false;
         if (__has_init)return thisChip().initImpl();
 
-        thisReadRegCallback = NULL;
-        thisWriteRegCallback = NULL;
+        __i2c_master_read = NULL;
+        __i2c_master_write = NULL;
 
         /*
         i2c_master_bus_config_t i2c_bus_config;
@@ -181,8 +180,8 @@ public:
         __sda = sda;
         __scl = scl;
         __addr = addr;
-        thisReadRegCallback = NULL;
-        thisWriteRegCallback = NULL;
+        __i2c_master_read = NULL;
+        __i2c_master_write = NULL;
 
         i2c_config_t i2c_conf;
         memset(&i2c_conf, 0, sizeof(i2c_conf));
@@ -215,8 +214,8 @@ public:
     {
         log_i("Using Custom interface.\n");
         if (__has_init)return thisChip().initImpl();
-        thisReadRegCallback = readRegCallback;
-        thisWriteRegCallback = writeRegCallback;
+        __i2c_master_read = readRegCallback;
+        __i2c_master_write = writeRegCallback;
         __addr = addr;
 #if defined(ARDUINO)
         __spi = NULL;
@@ -225,23 +224,58 @@ public:
         return __has_init;
     }
 
-    void setDigitalWriteCallback(digitalWirteCb_t cb)
+    void setGpioWriteCallback(gpio_write_fprt_t cb)
     {
-        thisDigitalWriteCallback = cb;
+        __set_gpio_level = cb;
     }
 
-    void setDigitalReadCallback(digitalReadCb_t cb)
+    void setGpioReadCallback(gpio_read_fprt_t cb)
     {
-        thisDigitalReadCallback = cb;
+        __get_gpio_level = cb;
     }
 
-    void setPinModeCallback(pinModeCb_t cb)
+    void setGpioModeCallback(gpio_mode_fprt_t cb)
     {
-        thisPinModeCallback = cb;
+        __set_gpio_mode = cb;
     }
 
+    void setDelayCallback(delay_ms_fprt_t cb)
+    {
+        __delay_ms = cb;
+    }
 
 protected:
+
+    inline void setGpioMode(uint32_t gpio, uint8_t mode)
+    {
+        if (__set_gpio_mode) {
+            return  __set_gpio_mode(gpio, mode);
+        }
+#if defined(ARDUINO) || defined(ESP_PLATFORM)
+        return pinMode(gpio, mode);
+#endif
+    }
+
+    inline void setGpioLevel(uint32_t gpio, uint8_t level)
+    {
+        if (__set_gpio_level) {
+            return  __set_gpio_level(gpio, level);
+        }
+#if defined(ARDUINO) || defined(ESP_PLATFORM)
+        return digitalWrite(gpio, level);
+#endif
+    }
+
+    inline int getGpioLevel(uint32_t gpio)
+    {
+        if (__get_gpio_level) {
+            return  __get_gpio_level(gpio);
+        }
+#if defined(ARDUINO) || defined(ESP_PLATFORM)
+        return digitalRead(gpio);
+#endif
+    }
+
 
 
     bool probe()
@@ -361,8 +395,8 @@ protected:
 
     int writeRegister(int reg, uint8_t *buf, uint8_t length)
     {
-        if (thisWriteRegCallback) {
-            return thisWriteRegCallback(__addr, reg, buf, length);
+        if (__i2c_master_write) {
+            return __i2c_master_write(__addr, reg, buf, length);
         }
 #if defined(ARDUINO)
         if (__wire) {
@@ -422,8 +456,8 @@ protected:
 
     int readRegister(int reg, uint8_t *buf, uint8_t length)
     {
-        if (thisReadRegCallback) {
-            return thisReadRegCallback(__addr, reg, buf, length);
+        if (__i2c_master_read) {
+            return __i2c_master_read(__addr, reg, buf, length);
         }
 #if defined(ARDUINO)
         if (__wire) {
@@ -646,9 +680,11 @@ protected:
     bool                __sendStop              = true;
     uint8_t             __addr                  = 0xFF;
     uint8_t             __reg_addr_len          = 1;
-    iic_fptr_t          thisReadRegCallback     = NULL;
-    iic_fptr_t          thisWriteRegCallback    = NULL;
-    digitalWirteCb_t    thisDigitalWriteCallback = NULL;
-    digitalReadCb_t     thisDigitalReadCallback  = NULL;
-    pinModeCb_t         thisPinModeCallback = NULL;
+    iic_fptr_t          __i2c_master_read       = NULL;
+    iic_fptr_t          __i2c_master_write      = NULL;
+    gpio_write_fprt_t   __set_gpio_level        = NULL;
+    gpio_read_fprt_t    __get_gpio_level        = NULL;
+    gpio_mode_fprt_t    __set_gpio_mode         = NULL;
+    delay_ms_fprt_t     __delay_ms              = NULL;
+
 };

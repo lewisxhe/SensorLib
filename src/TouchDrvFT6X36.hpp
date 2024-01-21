@@ -247,8 +247,8 @@ public:
         LOG_PORT.println("----------------------------------------------------------------------------");
         LOG_PORT.println("Touched Gesture EvenFlag    [0]PosX    [0]PosY  [1]PosX    [1]PosY");
         LOG_PORT.print(point); LOG_PORT.print("\t");
-        LOG_PORT.print(gestrue); LOG_PORT.print("\t");
-        LOG_PORT.print(eventFlag); LOG_PORT.print("\t");
+        // LOG_PORT.print(gestrue); LOG_PORT.print("\t");
+        // LOG_PORT.print(eventFlag); LOG_PORT.print("\t");
         LOG_PORT.print(posX); LOG_PORT.print("\t");
         LOG_PORT.print(posY); LOG_PORT.print("\t");
 #endif
@@ -280,7 +280,7 @@ public:
     bool isPressed()
     {
         if (__irq != SENSOR_PIN_NONE) {
-            return digitalRead(__irq) == LOW;
+            return this->getGpioLevel(__irq) == LOW;
         }
         return readRegister(FT6X36_REG_STATUS) & 0x0F;
     }
@@ -345,13 +345,24 @@ public:
     void reset()
     {
         if (__rst != SENSOR_PIN_NONE) {
-            digitalWrite(__rst, HIGH);
+
+            this->setGpioLevel(__rst, HIGH);
             delay(10);
-            digitalWrite(__rst, LOW);
+            this->setGpioLevel(__rst, LOW);
             delay(30);
-            digitalWrite(__rst, HIGH);
+            this->setGpioLevel(__rst, HIGH);
             delay(5);
         }
+    }
+
+
+    void  setGpioCallback(gpio_mode_fprt_t mode_cb,
+                          gpio_write_fprt_t write_cb,
+                          gpio_read_fprt_t read_cb)
+    {
+        SensorCommon::setGpioModeCallback(mode_cb);
+        SensorCommon::setGpioWriteCallback(write_cb);
+        SensorCommon::setGpioReadCallback(read_cb);
     }
 
 private:

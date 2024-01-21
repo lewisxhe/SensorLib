@@ -132,12 +132,12 @@ public:
     void reset()
     {
         if (__rst != SENSOR_PIN_NONE) {
-            setRstPinMode(OUTPUT);
-            setRstValue(HIGH);
+            this->setGpioMode(__rst, OUTPUT);
+            this->setGpioLevel(__rst, HIGH);
             delay(10);
         }
         if (__irq != SENSOR_PIN_NONE) {
-            pinMode(__irq, INPUT);
+            this->setGpioMode(__irq, INPUT);
         }
         // writeRegister(GT911_COMMAND, 0x02);
         writeCommand(0x02);
@@ -223,9 +223,9 @@ public:
     {
         if (__irq != SENSOR_PIN_NONE) {
             if (__irq_mode == FALLING) {
-                return digitalRead(__irq) == LOW;
+                return this->getGpioLevel(__irq) == LOW;
             } else if (__irq_mode == RISING ) {
-                return digitalRead(__irq) == HIGH;
+                return this->getGpioLevel(__irq) == HIGH;
             }
         } else {
             return getPoint();
@@ -299,14 +299,19 @@ public:
         return readGT911(GT911_VENDOR_ID);
     }
 
-    void setRsetUseCallback(bool enable)
-    {
-        __rst_use_cb = enable;
-    }
 
     const char *getModelName()
     {
         return "GT911";
+    }
+
+    void  setGpioCallback(gpio_mode_fprt_t mode_cb,
+                          gpio_write_fprt_t write_cb,
+                          gpio_read_fprt_t read_cb)
+    {
+        SensorCommon::setGpioModeCallback(mode_cb);
+        SensorCommon::setGpioWriteCallback(write_cb);
+        SensorCommon::setGpioReadCallback(read_cb);
     }
 
 private:
@@ -339,24 +344,6 @@ private:
         writeGT911(GT911_POINT_INFO, 0x00);
     }
 
-    void setRstValue(uint8_t value)
-    {
-        if (__rst_use_cb) {
-            thisDigitalWriteCallback(__rst, value);
-        } else {
-            digitalWrite(__rst, value);
-        }
-    }
-
-    void setRstPinMode(uint8_t mode)
-    {
-        if (__rst_use_cb) {
-            thisPinModeCallback(__rst, mode);
-        } else {
-            pinMode(__rst, mode);
-        }
-    }
-
     bool initImpl()
     {
         int16_t x, y;
@@ -366,17 +353,16 @@ private:
                 __irq != SENSOR_PIN_NONE) {
 
             log_i("GT911 using 0x28 address!\n");
-            // pinMode(__rst, OUTPUT);
-            setRstPinMode(OUTPUT);
-            pinMode(__irq, OUTPUT);
-            // digitalWrite(__rst, LOW);
-            setRstValue(LOW);
-            digitalWrite(__irq, HIGH);
+
+            this->setGpioMode(__rst, OUTPUT);
+            this->setGpioMode(__irq, OUTPUT);
+
+            this->setGpioLevel(__rst, LOW);
+            this->setGpioLevel(__irq, HIGH);
             delayMicroseconds(120);
-            setRstValue(HIGH);
-            // digitalWrite(__rst, HIGH);
+            this->setGpioLevel(__rst, HIGH);
             delay(8);
-            pinMode(__irq, INPUT);
+            this->setGpioMode(__irq, INPUT);
 
         } else if (__addr == GT911_SLAVE_ADDRESS_L &&
                    __rst != SENSOR_PIN_NONE &&
@@ -384,17 +370,15 @@ private:
 
             log_i("GT911 using 0xBA address!\n");
 
-            // pinMode(__rst, OUTPUT);
-            setRstPinMode(OUTPUT);
-            pinMode(__irq, OUTPUT);
-            digitalWrite(__irq, LOW);
-            // digitalWrite(__rst, LOW);
-            setRstValue(LOW);
+            this->setGpioMode(__rst, OUTPUT);
+            this->setGpioMode(__irq, OUTPUT);
+
+            this->setGpioLevel(__rst, LOW);
+            this->setGpioLevel(__irq, LOW);
             delayMicroseconds(120);
-            // digitalWrite(__rst, HIGH);
-            setRstValue(HIGH);
+            this->setGpioLevel(__rst, HIGH);
             delay(8);
-            pinMode(__irq, INPUT);
+            this->setGpioMode(__irq, INPUT);
 
         } else {
             reset();
@@ -422,7 +406,6 @@ private:
 
 protected:
     int __irq_mode;
-    bool __rst_use_cb = false;
 };
 
 
