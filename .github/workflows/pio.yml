@@ -58,6 +58,7 @@ jobs:
             examples/BHI260AP_DebugInfo/BHI260AP_DebugInfo.ino,
             examples/BHI260AP_StepCounter/BHI260AP_StepCounter.ino,
             examples/BMM150_GetDataExample/BMM150_GetDataExample.ino,
+            examples/TouchDrv_Interface_T_RGB/TouchDrv_Interface_T_RGB.ino,
           ]
 
     steps:
