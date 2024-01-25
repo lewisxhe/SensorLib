@@ -394,12 +394,10 @@ private:
             return false;
         }
 
-        uint16_t version = getLibraryVersion();
-        log_i("Chip library version : 0x%x\n", version);
+        log_i("Chip library version : 0x%x\n", getLibraryVersion());
 
         // This register describes period of monitor status, it should not less than 30.
-        uint8_t val = readRegister(FT6X36_REG_PERIODMONITOR);
-        log_i("Chip period of monitor status : 0x%x\n", val);
+        log_i("Chip period of monitor status : 0x%x\n", readRegister(FT6X36_REG_PERIODMONITOR));
 
         // This register describes the period of active status, it should not less than 12
 
