@@ -384,8 +384,8 @@ private:
             reset();
         }
 
-
-        log_i("Product id:%d\n", getChipID());
+        __chipID = getChipID();
+        log_i("Product id:%ld\n", __chipID);
 
         if (getChipID() != 911) {
             log_i("Not find device GT911\n");
