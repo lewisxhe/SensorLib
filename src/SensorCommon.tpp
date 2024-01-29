@@ -42,9 +42,9 @@ typedef union  {
 } RegData_t;
 
 typedef int     (*iic_fptr_t)(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t len);
-typedef void    (*gpio_write_fprt_t)(uint32_t gpio, uint8_t value);
-typedef int     (*gpio_read_fprt_t)(uint32_t gpio);
-typedef void    (*gpio_mode_fprt_t)(uint32_t gpio, uint8_t mode);
+typedef void    (*gpio_write_fptr_t)(uint32_t gpio, uint8_t value);
+typedef int     (*gpio_read_fptr_t)(uint32_t gpio);
+typedef void    (*gpio_mode_fptr_t)(uint32_t gpio, uint8_t mode);
 typedef void    (*delay_ms_fprt_t)(uint32_t ms);
 
 template <class chipType>
@@ -232,17 +232,17 @@ public:
         return __has_init;
     }
 
-    void setGpioWriteCallback(gpio_write_fprt_t cb)
+    void setGpioWriteCallback(gpio_write_fptr_t cb)
     {
         __set_gpio_level = cb;
     }
 
-    void setGpioReadCallback(gpio_read_fprt_t cb)
+    void setGpioReadCallback(gpio_read_fptr_t cb)
     {
         __get_gpio_level = cb;
     }
 
-    void setGpioModeCallback(gpio_mode_fprt_t cb)
+    void setGpioModeCallback(gpio_mode_fptr_t cb)
     {
         __set_gpio_mode = cb;
     }
@@ -589,7 +589,7 @@ protected:
         return ((h5 & 0x1F) << 8) | l8;
     }
 
-    void setRegAddressLenght(uint8_t len)
+    void setRegAddressLength(uint8_t len)
     {
         __reg_addr_len = len;
     }
@@ -691,9 +691,9 @@ protected:
     uint8_t             __reg_addr_len          = 1;
     iic_fptr_t          __i2c_master_read       = NULL;
     iic_fptr_t          __i2c_master_write      = NULL;
-    gpio_write_fprt_t   __set_gpio_level        = NULL;
-    gpio_read_fprt_t    __get_gpio_level        = NULL;
-    gpio_mode_fprt_t    __set_gpio_mode         = NULL;
+    gpio_write_fptr_t   __set_gpio_level        = NULL;
+    gpio_read_fptr_t    __get_gpio_level        = NULL;
+    gpio_mode_fptr_t    __set_gpio_mode         = NULL;
     delay_ms_fprt_t     __delay_ms              = NULL;
 
 };

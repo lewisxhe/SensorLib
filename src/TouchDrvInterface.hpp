@@ -110,9 +110,9 @@ public:
 
     virtual bool getResolution(int16_t *x, int16_t *y) = 0;
 
-    virtual void setGpioCallback(gpio_mode_fprt_t mode_cb,
-                                 gpio_write_fprt_t write_cb,
-                                 gpio_read_fprt_t read_cb) = 0;
+    virtual void setGpioCallback(gpio_mode_fptr_t mode_cb,
+                                 gpio_write_fptr_t write_cb,
+                                 gpio_read_fptr_t read_cb) = 0;
 
     uint32_t getChipID();
 
