@@ -6,3 +6,6 @@ test
 assets
 *.bk
 *.test
+build
+*.old
+sdkconfig
