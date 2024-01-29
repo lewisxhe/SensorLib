@@ -327,7 +327,7 @@ public:
 
     const char *getModelName()
     {
-        switch (chipID) {
+        switch (__chipID) {
         case FT6206_CHIPID: return "FT6206";
         case FT6236_CHIPID: return "FT6236";
         case FT6236U_CHIPID: return "FT6236U";
@@ -345,7 +345,7 @@ public:
     void reset()
     {
         if (__rst != SENSOR_PIN_NONE) {
-
+            this->setGpioMode(__rst, OUTPUT);
             this->setGpioLevel(__rst, HIGH);
             delay(10);
             this->setGpioLevel(__rst, LOW);
@@ -368,31 +368,40 @@ public:
 private:
     bool initImpl()
     {
-        uint8_t vendId = readRegister(FT6X36_REG_VENDOR1_ID);
-        chipID = readRegister(FT6X36_REG_CHIPID);
+        if (__irq != SENSOR_PIN_NONE) {
+            this->setGpioMode(__irq, INPUT);
+        }
 
-        log_i("Vend ID: 0x%X", vendId);
-        log_i("Chip ID: 0x%X", chipID);
-        log_i("Firm Version: 0x%X", readRegister(FT6X36_REG_FIRMVERS));
-        log_i("Point Rate Hz: %u", readRegister(FT6X36_REG_PERIODACTIVE));
-        log_i("Thresh : %u", readRegister(FT6X36_REG_THRESHHOLD));
+        reset();
+
+        uint8_t vendId = readRegister(FT6X36_REG_VENDOR1_ID);
+
+
+        if (vendId != FT6X36_VENDID) {
+            log_e("Vendor id is 0x%X not match!\n", vendId);
+            return false;
+        }
+
+        __chipID = readRegister(FT6X36_REG_CHIPID);
+
+        if ((__chipID != FT6206_CHIPID) &&
+                (__chipID != FT6236_CHIPID) &&
+                (__chipID != FT6236U_CHIPID)  &&
+                (__chipID != FT3267_CHIPID)
+           ) {
+            log_e("Vendor id is not match!\n");
+            log_e("ChipID:0x%lx should be 0x06 or 0x36 or 0x64\n", __chipID);
+            return false;
+        }
+
+        log_i("Vend ID: 0x%X\n", vendId);
+        log_i("Chip ID: 0x%lx\n", __chipID);
+        log_i("Firm Version: 0x%X\n", readRegister(FT6X36_REG_FIRMVERS));
+        log_i("Point Rate Hz: %u\n", readRegister(FT6X36_REG_PERIODACTIVE));
+        log_i("Thresh : %u\n", readRegister(FT6X36_REG_THRESHHOLD));
 
         // change threshhold to be higher/lower
         writeRegister(FT6X36_REG_THRESHHOLD, 60);
-
-        if (vendId != FT6X36_VENDID) {
-            log_e("Vendor id is not match!");
-            return false;
-        }
-        if ((chipID != FT6206_CHIPID) &&
-                (chipID != FT6236_CHIPID) &&
-                (chipID != FT6236U_CHIPID)  &&
-                (chipID != FT3267_CHIPID)
-           ) {
-            log_e("Vendor id is not match!");
-            log_e("ChipID:0x%x should be 0x06 or 0x36 or 0x64\n", chipID);
-            return false;
-        }
 
         log_i("Chip library version : 0x%x\n", getLibraryVersion());
 
@@ -410,8 +419,6 @@ private:
         return -1;
     }
 
-protected:
-    uint8_t chipID;
 };
 
 
