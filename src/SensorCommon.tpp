@@ -141,6 +141,7 @@ public:
 
         __i2c_master_read = NULL;
         __i2c_master_write = NULL;
+        __addr = addr;
 
         /*
         i2c_master_bus_config_t i2c_bus_config;
@@ -155,18 +156,25 @@ public:
         */
         bus_handle = i2c_dev_bus_handle;
 
-        i2c_device_config_t i2c_dev_conf = {
-            .dev_addr_length = I2C_ADDR_BIT_LEN_7,
-            .device_address = addr,
-            .scl_speed_hz = SENSORLIB_I2C_MASTER_SEEED,
-        };
+        __i2c_dev_conf.dev_addr_length = I2C_ADDR_BIT_LEN_7;
+        __i2c_dev_conf.device_address = __addr;
+        __i2c_dev_conf.scl_speed_hz = SENSORLIB_I2C_MASTER_SEEED;
 
         if (ESP_OK != i2c_master_bus_add_device(bus_handle,
-                                                &i2c_dev_conf,
+                                                &__i2c_dev_conf,
                                                 &__i2c_device)) {
+            log_i("i2c_master_bus_add_device failed !\n");
             return false;
         }
+        log_i("Added Device Address : 0x%X  New Dev Address: %p Speed :%lu \n", __addr, __i2c_device, __i2c_dev_conf.scl_speed_hz);
         __has_init = thisChip().initImpl();
+
+        if (!__has_init) {
+            // Initialization failed, delete device
+            log_i("i2c_master_bus_rm_device  !\n");
+            i2c_master_bus_rm_device(__i2c_device);
+        }
+
         return __has_init;
     }
 
@@ -504,7 +512,7 @@ protected:
                     buf,
                     length,
                     -1)) {
-            return 0;
+            return DEV_WIRE_NONE;
         }
 #else //ESP_IDF_VERSION
         if (ESP_OK == i2c_master_write_read_device(__i2c_num,
@@ -666,6 +674,7 @@ protected:
 #if ((ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,0,0)) && defined(CONFIG_SENSORLIB_ESP_IDF_NEW_API))
     i2c_master_bus_handle_t  bus_handle;
     i2c_master_dev_handle_t  __i2c_device;
+    i2c_device_config_t     __i2c_dev_conf;
 #endif //ESP_IDF_VERSION
 
 #endif //ESP_PLATFORM
