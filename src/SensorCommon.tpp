@@ -45,7 +45,7 @@ typedef int     (*iic_fptr_t)(uint8_t devAddr, uint8_t regAddr, uint8_t *data, u
 typedef void    (*gpio_write_fptr_t)(uint32_t gpio, uint8_t value);
 typedef int     (*gpio_read_fptr_t)(uint32_t gpio);
 typedef void    (*gpio_mode_fptr_t)(uint32_t gpio, uint8_t mode);
-typedef void    (*delay_ms_fprt_t)(uint32_t ms);
+typedef void    (*delay_ms_fptr_t)(uint32_t ms);
 
 template <class chipType>
 class SensorCommon
@@ -247,7 +247,7 @@ public:
         __set_gpio_mode = cb;
     }
 
-    void setDelayCallback(delay_ms_fprt_t cb)
+    void setDelayCallback(delay_ms_fptr_t cb)
     {
         __delay_ms = cb;
     }
@@ -694,6 +694,6 @@ protected:
     gpio_write_fptr_t   __set_gpio_level        = NULL;
     gpio_read_fptr_t    __get_gpio_level        = NULL;
     gpio_mode_fptr_t    __set_gpio_mode         = NULL;
-    delay_ms_fprt_t     __delay_ms              = NULL;
+    delay_ms_fptr_t     __delay_ms              = NULL;
 
 };
