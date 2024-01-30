@@ -119,16 +119,6 @@ public:
     }
 
 
-    void setIrqPin(int irq)
-    {
-        __irq = irq;
-    }
-
-    void setRstPin(int rst)
-    {
-        __rst = rst;
-    }
-
     void reset()
     {
         if (__rst != SENSOR_PIN_NONE) {
@@ -346,7 +336,7 @@ private:
 
     bool initImpl()
     {
-        int16_t x, y;
+        int16_t x = 0, y = 0;
 
         if (__addr == GT911_SLAVE_ADDRESS_H  &&
                 __rst != SENSOR_PIN_NONE &&
@@ -361,7 +351,7 @@ private:
             this->setGpioLevel(__irq, HIGH);
             delayMicroseconds(120);
             this->setGpioLevel(__rst, HIGH);
-            delay(8);
+            delay(18);
             this->setGpioMode(__irq, INPUT);
 
         } else if (__addr == GT911_SLAVE_ADDRESS_L &&
@@ -377,17 +367,20 @@ private:
             this->setGpioLevel(__irq, LOW);
             delayMicroseconds(120);
             this->setGpioLevel(__rst, HIGH);
-            delay(8);
+            delay(18);
             this->setGpioMode(__irq, INPUT);
 
         } else {
             reset();
         }
 
+        // For variants where the GPIO is controlled by I2C, a delay is required here
+        delay(20);
+
         __chipID = getChipID();
         log_i("Product id:%ld\n", __chipID);
 
-        if (getChipID() != 911) {
+        if (__chipID != 911) {
             log_i("Not find device GT911\n");
             return false;
         }
