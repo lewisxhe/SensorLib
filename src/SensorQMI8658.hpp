@@ -210,7 +210,7 @@ public:
 
     bool reset(bool waitResult = true, uint32_t timeout = 500)
     {
-        int val;
+        int val = 0;  // initialize with some value to avoid compilation errors
         writeRegister(QMI8658_REG_RESET, QMI8658_REG_RESET_DEFAULT);
         // Maximum 15ms for the Reset process to be finished
         if (waitResult) {

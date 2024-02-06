@@ -11,6 +11,8 @@
 #include "driver/gpio.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
+#include <rom/ets_sys.h>
+
 
 void pinMode(uint32_t gpio, uint8_t mode)
 {
@@ -43,32 +45,22 @@ int digitalRead(uint32_t gpio)
 
 void delay(uint32_t ms)
 {
-    vTaskDelay(ms / portTICK_PERIOD_MS);
+    vTaskDelay(pdMS_TO_TICKS(ms));
+    ets_delay_us((ms % portTICK_PERIOD_MS) * 1000UL);
 }
 
 uint32_t millis()
 {
-    return esp_timer_get_time();
+    return (uint32_t) (esp_timer_get_time() / 1000LL);
 }
 
 uint32_t micros()
 {
-    return (esp_timer_get_time() / 1000ULL);
+    return (uint32_t) esp_timer_get_time();
 }
 
 void delayMicroseconds(uint32_t us)
 {
-    uint64_t m = (uint64_t)esp_timer_get_time();
-    if (us) {
-        uint64_t e = (m + us);
-        if (m > e) {
-            while ((uint64_t)esp_timer_get_time() > e) {
-                asm volatile ("nop");
-            }
-        }
-        while ((uint64_t)esp_timer_get_time() < e) {
-            asm volatile ("nop");
-        }
-    }
+    ets_delay_us(us);
 }
 #endif

@@ -142,8 +142,8 @@ typedef struct __SensorLibPins {
 #define LOG(fmt, ...) LOG_PORT.printf("[%s] " fmt "\n", __func__, ##__VA_ARGS__)
 #define LOG_BIN(x)    LOG_PORT.println(x,BIN);
 #else
-#define LOG(fmt, ...)
-#define LOG_BIN(x)
+#define LOG(fmt, ...) printf("[%s] " fmt "\n", __func__, ##__VA_ARGS__)
+#define LOG_BIN(x)    printf("[%s] 0x%X\n", __func__, x)
 #endif
 
 #ifndef lowByte
