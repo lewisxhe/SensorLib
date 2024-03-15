@@ -65,6 +65,8 @@
 #define DEFAULT_SCL     (0xFF)
 #define DEFAULT_SPISETTING  SPISettings()
 #elif defined(NRF52840_XXAA) || defined(NRF52832_XXAA)
+#define PLATFORM_SPI_TYPE               SPIClass
+#define PLATFORM_WIRE_TYPE              TwoWire
 #define SPI_DATA_ORDER  MSBFIRST
 #define DEFAULT_SDA     (0xFF)
 #define DEFAULT_SCL     (0xFF)
