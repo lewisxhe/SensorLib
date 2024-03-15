@@ -32,7 +32,7 @@
 #if defined(ARDUINO_ARCH_RP2040)
 SPISettings  SensorInterfaces::__spiSetting = SPISettings();
 #else
-SPISettings  SensorInterfaces::__spiSetting = SPISettings(4000000, SPI_MSBFIRST, SPI_MODE0);
+SPISettings  SensorInterfaces::__spiSetting = SPISettings(4000000, SPI_DATA_ORDER, SPI_MODE0);
 #endif
 
 void SensorInterfaces::close_interfaces(SensorLibConfigure config)
