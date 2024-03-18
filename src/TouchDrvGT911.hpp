@@ -135,15 +135,28 @@ public:
 
     void sleep()
     {
+        if (__irq != SENSOR_PIN_NONE) {
+            this->setGpioMode(__irq, OUTPUT);
+            this->setGpioLevel(__irq, LOW);
+        }
         // writeRegister(GT911_COMMAND, 0x05);
         writeCommand(0x05);
+        if (__irq != SENSOR_PIN_NONE) {
+            this->setGpioLevel(__irq, INPUT);
+        }
     }
 
 
 
     void wakeup()
     {
-        reset();
+        if (__irq != SENSOR_PIN_NONE) {
+            this->setGpioMode(__irq, OUTPUT);
+            this->setGpioLevel(__irq, HIGH);
+            delay(8);
+        } else {
+            reset();
+        }
     }
 
     void idle()
