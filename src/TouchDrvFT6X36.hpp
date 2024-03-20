@@ -350,13 +350,9 @@ public:
             this->setGpioLevel(__rst, LOW);
             delay(30);
             this->setGpioLevel(__rst, HIGH);
-#if defined(ARDUINO)
-            delay(10);
-#elif defined(ESP_PLATFORM)
             // For the variant of GPIO extended RST,
             // communication and delay are carried out simultaneously, and 160ms is measured in T-RGB esp-idf new api
             delay(160);
-#endif
         }
     }
 
