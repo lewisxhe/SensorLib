@@ -228,6 +228,9 @@ public:
         // uint8_t gesture = buffer[1];
         //REG 0x02
         uint8_t point = buffer[2] & 0x0F;
+        if (point == 0 || point == 0x0F) {
+            return 0;
+        }
 
         //REG 0x03 ~ 0x04
         // uint8_t eventFlag = (buffer[3] & 0xC0) >> 6;
@@ -235,10 +238,6 @@ public:
         //REG 0x05 ~ 0x06
         uint16_t posY = ((buffer[5] & 0x0F) << 8) | buffer[6] ;
 
-
-        if (point == 0) {
-            return 0;
-        }
 
         x_array[0] = posX;
         y_array[0] = posY;
