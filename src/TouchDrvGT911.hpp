@@ -141,9 +141,15 @@ public:
         }
         // writeRegister(GT911_COMMAND, 0x05);
         writeCommand(0x05);
-        if (__irq != SENSOR_PIN_NONE) {
-            this->setGpioLevel(__irq, INPUT);
-        }
+
+        /*
+        * Depending on the chip and platform, setting it to input after removing sleep will affect power consumption. 
+        * The chip platform determines whether
+        * 
+        * * */
+        // if (__irq != SENSOR_PIN_NONE) {
+        //     this->setGpioLevel(__irq, INPUT);
+        // }
     }
 
 
