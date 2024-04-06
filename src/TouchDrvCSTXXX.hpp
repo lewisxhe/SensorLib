@@ -28,6 +28,8 @@
  * @date      last 2023-10-05
  *
  */
+#pragma once
+
 #include "REG/CSTxxxConstants.h"
 #include "touch/TouchClassCST226.h"
 #include "touch/TouchClassCST816.h"

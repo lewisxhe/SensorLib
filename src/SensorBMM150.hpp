@@ -28,6 +28,7 @@
  * @note      Most source code references come from the https://github.com/boschsensortec/BMM150-Sensor-API
  *            Simplification for Arduino
  */
+#pragma once
 
 #include "bosch/common/bosch_interfaces.h"
 #include "bosch/BMM150/bmm150.h"

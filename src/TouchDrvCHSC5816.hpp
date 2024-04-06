@@ -27,7 +27,7 @@
  * @date      2023-04-12
  *
  */
-
+#pragma once
 
 #include "REG/CHSC5816Constants.h"
 #include "TouchDrvInterface.hpp"

@@ -27,7 +27,7 @@
  * @date      2023-04-01
  *
  */
-
+#pragma once
 
 #include "REG/FT6X36Constants.h"
 #include "TouchDrvInterface.hpp"

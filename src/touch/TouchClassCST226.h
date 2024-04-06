@@ -26,6 +26,7 @@
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2023-10-06
  */
+#pragma once
 
 #include "../TouchDrvInterface.hpp"
 #include "../SensorCommon.tpp"

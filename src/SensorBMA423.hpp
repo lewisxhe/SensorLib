@@ -28,7 +28,7 @@
  * @note      Most source code references come from the https://github.com/boschsensortec/BMA423-Sensor-API
  *            Simplification for Arduino
  */
-
+#pragma once
 
 #include "REG/BMA423Constants.h"
 #include "SensorCommon.tpp"

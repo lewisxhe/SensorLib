@@ -27,7 +27,7 @@
  * @date      2022-12-27
  *
  */
-
+#pragma once
 
 #include "REG/XL9555Constants.h"
 #include "SensorCommon.tpp"

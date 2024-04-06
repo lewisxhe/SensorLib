@@ -27,7 +27,7 @@
  * @date      2023-04-14
  *
  */
-
+#pragma once
 
 #include "REG/CM32181Constants.h"
 #include "SensorCommon.tpp"

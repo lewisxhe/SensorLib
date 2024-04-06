@@ -1,5 +1,5 @@
-#ifndef __BAM423_CONSTANT_H_
-#define  __BAM423_CONSTANT_H_
+#pragma once
+
 
 #define BMA423_SLAVE_ADDRESS             (0x19)
 
@@ -724,5 +724,3 @@ static const unsigned char bma423_config_file[] = {
 #define BMA423_WAKEUP_INT               (0x20)
 #define BMA423_ANY_NO_MOTION_INT        (0x40)
 #define BMA423_ERROR_INT                (0x80)
-
-#endif

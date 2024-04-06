@@ -27,7 +27,7 @@
  * @date      2022-10-16
  *
  */
-
+#pragma once
 
 #include "REG/QMC6310Constants.h"
 #include "SensorCommon.tpp"

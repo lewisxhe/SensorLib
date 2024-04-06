@@ -27,7 +27,7 @@
  * @date      2023-04-12
  *
  */
-
+#pragma once
 
 #include "REG/GT911Constants.h"
 #include "TouchDrvInterface.hpp"

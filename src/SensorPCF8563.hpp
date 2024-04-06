@@ -27,7 +27,7 @@
  * @date      2022-12-09
  *
  */
-
+#pragma once
 
 #include "REG/PCF8563Constants.h"
 #include "SensorCommon.tpp"

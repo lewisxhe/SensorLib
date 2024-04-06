@@ -27,6 +27,8 @@
  * @date      2023-09-09
  *
  */
+#pragma once
+
 #include "REG/LTR533Constants.h"
 #include "SensorCommon.tpp"
 

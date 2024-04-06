@@ -27,6 +27,7 @@
  * @date      2023-04-03
  * @note      Source code from https://github.com/adafruit/Adafruit_DRV2605_Library
  */
+#pragma once
 
 #include "REG/DRV2605Constants.h"
 #include "SensorCommon.tpp"
