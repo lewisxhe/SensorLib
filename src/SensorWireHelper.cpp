@@ -88,29 +88,29 @@ void SensorWireHelper::dumpDevices(TwoWire &w, Stream &serial, int first, int la
 void SensorWireHelper::hexdump(uint8_t *data, size_t len, Stream &serial)
 {
     size_t rem_len = len;
-    for (int i = 0; i < len; i += 16) {
+    for (size_t i = 0; i < len; i += 16) {
         char str[80];
         snprintf(str, 80, "%07x  ", i);
         size_t line_len = 16;
         if (rem_len < line_len) {
             line_len = rem_len;
         }
-        for (int j = 0; j < line_len; j++) {
+        for (size_t j = 0; j < line_len; j++) {
             snprintf(&str[8 + j * 3], 80, "%02x ", data[i + j]);
         }
-        for (int j = line_len; j < 16; j++) {
+        for (size_t j = line_len; j < 16; j++) {
             snprintf(&str[8 + j * 3], 80, "   ");
         }
         str[56] = '|';
         str[57] = ' ';
-        for (int j = 0; j < line_len; j++) {
+        for (size_t j = 0; j < line_len; j++) {
             char c = data[i + j];
             if ((c < ' ') || (c > '~')) {
                 c = '.';
             }
             snprintf(&str[58 + j], 80, "%c", c);
         }
-        for (int j = line_len; j < 16; j++) {
+        for (size_t j = line_len; j < 16; j++) {
             snprintf(&str[58 + j], 80, "   ");
         }
         serial.println(str);
