@@ -523,7 +523,7 @@ public:
     }
 
 private:
-    static void IRAM_ATTR handleISR()
+    static void handleISR()
     {
         *(bool *)(__data_available) = true;
     }
