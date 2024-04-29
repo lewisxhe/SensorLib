@@ -114,6 +114,12 @@ uint8_t TouchClassCST816::getPoint(int16_t *x_array, int16_t *y_array, uint8_t g
     // }
 
     uint8_t point = buffer[2] & 0x0F;
+
+    // CST816 only supports single touch
+    if (point > 1) {
+        return 0;
+    }
+
 #ifdef LOG_PORT
     LOG_PORT.print("RAW:");
     for (int i = 0; i < 13; ++i) {
