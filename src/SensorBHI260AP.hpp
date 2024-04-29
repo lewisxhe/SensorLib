@@ -525,7 +525,7 @@ public:
 private:
     static void handleISR()
     {
-        *(bool *)(__data_available) = true;
+        __data_available = true;
     }
 
 
