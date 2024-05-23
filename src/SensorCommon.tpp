@@ -159,7 +159,13 @@ public:
         __i2c_dev_conf.dev_addr_length = I2C_ADDR_BIT_LEN_7;
         __i2c_dev_conf.device_address = __addr;
         __i2c_dev_conf.scl_speed_hz = SENSORLIB_I2C_MASTER_SEEED;
-
+#if (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,3,0))
+#if (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,4,0))
+            // New fields since esp-idf-v5.3-beta1
+        __i2c_dev_conf.scl_wait_us = 0;
+#endif
+        __i2c_dev_conf.flags.disable_ack_check = 0;
+#endif
         if (ESP_OK != i2c_master_bus_add_device(bus_handle,
                                                 &__i2c_dev_conf,
                                                 &__i2c_device)) {
