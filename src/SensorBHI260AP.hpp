@@ -681,7 +681,6 @@ protected:
     uint16_t        __max_rw_length;
 };
 
-volatile bool SensorBHI260AP::__data_available;
 
 #endif /*defined(ARDUINO)*/
 
