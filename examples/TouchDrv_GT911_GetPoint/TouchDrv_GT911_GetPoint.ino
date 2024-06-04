@@ -58,12 +58,11 @@ void setup()
     Serial.begin(115200);
     while (!Serial);
 
-    Wire.begin(SENSOR_SDA, SENSOR_SCL);
     /*
-    * The touch reset pin uses hardware pull-up,
-    * and the function of setting the I2C device address cannot be used.
-    * Use scanning to obtain the touch device address.
-    * * */
+
+    If the touch reset pin and interrupt pin cannot be controlled by GPIO, the device address cannot be controlled and can only be obtained by scanning.
+
+    Wire.begin(SENSOR_SDA, SENSOR_SCL);
     uint8_t touchAddress = 0;
     Wire.beginTransmission(0x14);
     if (Wire.endTransmission() == 0) {
@@ -79,10 +78,19 @@ void setup()
             delay(1000);
         }
     }
-
     touch.setPins(SENSOR_RST, SENSOR_IRQ);
-
     if (!touch.begin(Wire,  touchAddress, SENSOR_SDA, SENSOR_SCL )) {
+        while (1) {
+            Serial.println("Failed to find GT911 - check your wiring!");
+            delay(1000);
+        }
+    }
+    * 
+    * * */
+
+    // If the reset pin and interrupt pin can be controlled by GPIO, the device address can be set arbitrarily
+    touch.setPins(SENSOR_RST, SENSOR_IRQ);
+    if (!touch.begin(Wire,  GT911_SLAVE_ADDRESS_H, SENSOR_SDA, SENSOR_SCL )) {
         while (1) {
             Serial.println("Failed to find GT911 - check your wiring!");
             delay(1000);
@@ -94,25 +102,32 @@ void setup()
 
     Serial.println("Init GT911 Sensor success!");
 
+    // Set the center button to trigger the callback , Only for specific devices, e.g LilyGo-EPD47 S3 GT911
+    touch.setHomeButtonCallback([](void *user_data) {
+        Serial.println("Home button pressed!");
+    }, NULL);
+
 }
 
 void loop()
 {
     if (touch.isPressed()) {
         uint8_t touched = touch.getPoint(x, y, touch.getSupportTouchPoint());
-        for (int i = 0; i < touched; ++i) {
-            Serial.print("X[");
-            Serial.print(i);
-            Serial.print("]:");
-            Serial.print(x[i]);
-            Serial.print(" ");
-            Serial.print(" Y[");
-            Serial.print(i);
-            Serial.print("]:");
-            Serial.print(y[i]);
-            Serial.print(" ");
+        if (touched > 0) {
+            for (int i = 0; i < touched; ++i) {
+                Serial.print("X[");
+                Serial.print(i);
+                Serial.print("]:");
+                Serial.print(x[i]);
+                Serial.print(" ");
+                Serial.print(" Y[");
+                Serial.print(i);
+                Serial.print("]:");
+                Serial.print(y[i]);
+                Serial.print(" ");
+            }
+            Serial.println();
         }
-        Serial.println();
     }
     delay(5);
 }
