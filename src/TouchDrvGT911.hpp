@@ -143,9 +143,9 @@ public:
         writeCommand(0x05);
 
         /*
-        * Depending on the chip and platform, setting it to input after removing sleep will affect power consumption. 
+        * Depending on the chip and platform, setting it to input after removing sleep will affect power consumption.
         * The chip platform determines whether
-        * 
+        *
         * * */
         // if (__irq != SENSOR_PIN_NONE) {
         //     this->setGpioLevel(__irq, INPUT);
@@ -184,7 +184,19 @@ public:
         if (!x_array || !y_array || size == 0)
             return 0;
 
-        touchPoint = getPoint();
+        uint8_t val = readGT911(GT911_POINT_INFO);
+
+        bool haveKey = GT911_GET_HAVE_KEY(val);
+        // bool bufferStatus = GT911_GET_BUFFER_STATUS(val);
+        // log_i("REG:0x%X S:0X%d K:%d\n", val,bufferStatus,haveKey);
+
+        if (__homeButtonCb && haveKey) {
+            __homeButtonCb(__userData);
+        }
+
+        clearBuffer();
+
+        touchPoint = GT911_GET_POINT(val);
         if (touchPoint == 0) {
             return 0;
         }
@@ -261,9 +273,9 @@ public:
     uint8_t getPoint()
     {
         // GT911_POINT_INFO 0X814E
-        uint8_t val = readGT911(GT911_POINT_INFO) & 0x0F;
+        uint8_t val = readGT911(GT911_POINT_INFO);
         clearBuffer();
-        return val & 0x0F;
+        return GT911_GET_POINT(val);
     }
 
 
@@ -321,6 +333,12 @@ public:
         SensorCommon::setGpioModeCallback(mode_cb);
         SensorCommon::setGpioWriteCallback(write_cb);
         SensorCommon::setGpioReadCallback(read_cb);
+    }
+
+    void setHomeButtonCallback(home_button_callback_t cb, void *user_data)
+    {
+        __homeButtonCb = cb;
+        __userData = user_data;
     }
 
 private:

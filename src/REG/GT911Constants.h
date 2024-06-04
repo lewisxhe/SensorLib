@@ -154,3 +154,10 @@
 #define GT911_POINT_3                 (0X815F)
 #define GT911_POINT_4                 (0X8167)
 #define GT911_POINT_5                 (0X816F)
+
+
+#define GT911_GET_POINT(x)                  (x & 0x0F)
+#define GT911_GET_BUFFER_STATUS(x)          (x & 0x80)
+#define GT911_GET_HAVE_KEY(x)               (x & 0x10)
+
+
