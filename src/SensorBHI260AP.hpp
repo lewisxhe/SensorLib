@@ -30,13 +30,14 @@
  */
 #pragma once
 
+#if defined(ARDUINO)
+
 #include "bosch/BoschParse.h"
 #include "bosch/SensorBhy2Define.h"
 #include "bosch/firmware/BHI260AP.fw.h"
 
 
 
-#if defined(ARDUINO)
 
 class SensorBHI260AP
 {

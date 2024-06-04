@@ -29,4 +29,8 @@
  */
 #include "SensorBHI260AP.hpp"
 
+#if defined(ARDUINO)
 volatile bool SensorBHI260AP::__data_available;
+#endif
+
+
