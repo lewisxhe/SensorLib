@@ -4,6 +4,6 @@ cmake_minimum_required(VERSION 3.5)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 
-set(EXTRA_COMPONENT_DIRS ../../../SensorsLib)
+set(EXTRA_COMPONENT_DIRS ../../../SensorLib)
 
 project(ESP_IDF_TouchDrv_Example)
