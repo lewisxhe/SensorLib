@@ -22,11 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      TouchClassCST92xx.cpp
+ * @file      TouchDrvCST92xx.cpp
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2024-07-07
  */
-#include "TouchClassCST92xx.h"
+#include "TouchDrvCST92xx.h"
 
 #if defined(ARDUINO)
 TouchClassCST92xx::TouchClassCST92xx():

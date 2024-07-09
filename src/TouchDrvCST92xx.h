@@ -28,9 +28,9 @@
  */
 #pragma once
 
-#include "../TouchDrvInterface.hpp"
-#include "../SensorCommon.tpp"
-#include "../SensorLib.h"
+#include "TouchDrvInterface.hpp"
+#include "SensorCommon.tpp"
+#include "SensorLib.h"
 #include "REG/CST9xxConstants.h"
 
 
