@@ -23,7 +23,7 @@
 [![STAR](https://img.shields.io/github/stars/lewisxhe/SensorsLib)](https://github.com/lewisxhe/SensorsLib/stargazers)
 [![releases](https://img.shields.io/github/release/lewisxhe/SensorsLib)](https://github.com/lewisxhe/SensorLib/releases)
 
-![PCF8563](https://img.shields.io/badge/PCB8563-GREEN)
+![PCF8563](https://img.shields.io/badge/PCF8563-GREEN)
 ![PCF85063](https://img.shields.io/badge/PCF85063-GREEN)
 ![HYM8563](https://img.shields.io/badge/HYM8563-GREEN)
 ![QMI8658](https://img.shields.io/badge/QMI8658-blue)
@@ -46,6 +46,8 @@
 ![CST226SE](https://img.shields.io/badge/CST226SE-red)
 ![CHSC5816](https://img.shields.io/badge/CHSC5816-red)
 ![GT911](https://img.shields.io/badge/GT911-red)
+![CST9217](https://img.shields.io/badge/CST9217-red)
+![CST9220](https://img.shields.io/badge/CST9220-red)
 
 Support list:
 
@@ -71,3 +73,6 @@ Support list:
 | CST226SE        | Capacitive touch         | ✔️   | ❌   |
 | CHSC5816        | Capacitive touch         | ✔️   | ❌   |
 | GT911           | Capacitive touch         | ✔️   | ❌   |
+| CST9217         | Capacitive touch         | ✔️   | ❌   |
+| CST9220         | Capacitive touch         | ✔️   | ❌   |
+
