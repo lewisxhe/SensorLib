@@ -92,11 +92,12 @@ uint8_t TouchClassCST92xx::getPoint(int16_t *x_array, int16_t *y_array, uint8_t 
     uint8_t point = 0;
     uint8_t read_buffer[CST92XX_MAX_FINGER_NUM * 5 + 5] = {0};
     uint8_t write_buffer[4] = {0};
-    cst9xx_point_t point_info[CST92XX_MAX_FINGER_NUM] = {0};
+    cst9xx_point_t point_info[CST92XX_MAX_FINGER_NUM];
 
     if (!x_array || !y_array || !get_point) {
         return 0;
     }
+    memset(&point_info, 0, sizeof(point_info));
 
     //Write read command
     write_buffer[0] = highByte(CST92XX_READ_COMMAND);
@@ -313,10 +314,10 @@ uint32_t TouchClassCST92xx::getChipType()
         }
         delay(10);
     }
-    log_d("Chip Type: 0x%04x", chip_type);
+    log_d("Chip Type: 0x%04lx", chip_type);
     // log_d("Module_id: 0x%04x", chip_id);
     if ((chip_type != CST9220_CHIP_ID) && (chip_type != CST9217_CHIP_ID)) {
-        log_e("Chip type error 0x%04x", chip_type);
+        log_e("Chip type error 0x%04lx", chip_type);
         return 0;
     }
     return chip_type;
@@ -327,102 +328,6 @@ uint32_t TouchClassCST92xx::get_u32_from_ptr(const void *ptr)
     return *reinterpret_cast<const uint32_t *>(ptr);
 }
 
-bool TouchClassCST92xx::getFirmwareInfo(void)
-{
-    uint8_t read_buffer[4] = {0};
-    uint8_t write_buffer[6] = {0};
-    uint32_t version = 0;
-    int16_t res = -1;
-    int32_t info_checksum = 0;
-
-    setMode(CST92_MODE_DEBUG_INFO);
-
-    delay(1);
-    write_buffer[0] = 0xD1;
-    write_buffer[1] = 0x01;
-    res = writeBuffer(write_buffer, 2);
-    res |= writeBuffer(write_buffer, 2);
-    if (res != DEV_WIRE_NONE) {
-        log_e("write 0xD101 error");
-        return false;
-    }
-
-    // BOOT TIME + CBCB
-    write_buffer[0] = 0xD1;
-    write_buffer[1] = 0xFC;
-    res = writeThenRead(write_buffer, 2, read_buffer, 4);
-    if (res != DEV_WIRE_NONE) {
-        log_e("read 0xD1FC error");
-        return false;
-    }
-    info_checksum += get_u32_from_ptr(read_buffer);
-    // d200: 0x55AA55AA
-    info_checksum += 0x55AA55AA;
-    // firmware_project_id   firmware_ic_type
-    write_buffer[0] = 0xD2;
-    write_buffer[1] = 0x04;
-    res = writeThenRead(write_buffer, 2, read_buffer, 4);
-    if (res != DEV_WIRE_NONE) {
-        log_e("read 0xD204 error");
-        return false;
-    }
-    info_checksum += get_u32_from_ptr(read_buffer);
-    uint16_t firmware_project_id = ((uint16_t)write_buffer[1] << 8) + write_buffer[0];
-    uint16_t firmware_ic_type = ((uint16_t)write_buffer[3] << 8) + write_buffer[2];
-    // firmware_version
-    write_buffer[0] = 0xD2;
-    write_buffer[1] = 0x08;
-    res = writeThenRead(write_buffer, 2, read_buffer, 4);
-    if (res != DEV_WIRE_NONE) {
-        log_e("read 0xD208 error");
-        return false;
-    }
-    version = get_u32_from_ptr(read_buffer);
-    info_checksum += version;
-    uint32_t firmware_version = version;
-    // firmware_info_checksum
-    write_buffer[0] = 0xD2;
-    write_buffer[1] = 0x1c;
-    res = writeThenRead(write_buffer, 2, read_buffer, 4);
-    if (res != DEV_WIRE_NONE) {
-        log_e("read 0xD21c error");
-        return false;
-    }
-    if (get_u32_from_ptr(read_buffer) != info_checksum) {
-        log_e("info_checksum error");
-        return false;
-    }
-    // firmware_checksum
-    write_buffer[0] = 0xD2;
-    write_buffer[1] = 0x0C;
-    res = writeThenRead(write_buffer, 2, read_buffer, 4);
-    if (res != DEV_WIRE_NONE) {
-        log_e("read 0xD20c error");
-        return false;
-    }
-    uint32_t firmware_checksum = ((uint32_t)write_buffer[3] << 24) + ((uint32_t)write_buffer[2] << 16) + ((uint32_t)write_buffer[1] << 8) + write_buffer[0];
-    // tx_num   rx_num   key_num
-    write_buffer[0] = 0xD1;
-    write_buffer[1] = 0xF4;
-    res = writeThenRead(write_buffer, 2, read_buffer, 4);
-    if (res != DEV_WIRE_NONE) {
-        log_e("read 0xD1F4 error");
-        return false;
-    }
-    uint32_t tx_num = ((uint16_t)write_buffer[1] << 8) + write_buffer[0];
-    uint32_t rx_num = write_buffer[2];
-    uint32_t key_num = write_buffer[3];
-    // Go back normal mode
-    setMode(CST92_MODE_NORMAL);
-    log_d("Chip firmware ic type: 0x%04x", firmware_ic_type);
-    log_d("Chip firmware version: 0x%04x", firmware_version);
-    log_d("Chip firmware project id: 0x%04x", firmware_project_id);
-    log_d("Chip checksum: 0x%04x", firmware_checksum);
-    log_d("Chip tx_num: %d", tx_num);
-    log_d("Chip rx_num: %d", rx_num);
-    log_d("Chip key_num: %d", key_num);
-    return 0;
-}
 
 bool TouchClassCST92xx::enterBootloader(void)
 {
@@ -620,6 +525,106 @@ bool TouchClassCST92xx::setMode(uint8_t mode)
 }
 
 #if 0  /*DISABLE UPDATE FIRMWARE*/
+
+
+
+bool TouchClassCST92xx::getFirmwareInfo(void)
+{
+    uint8_t read_buffer[4] = {0};
+    uint8_t write_buffer[6] = {0};
+    uint32_t version = 0;
+    int16_t res = -1;
+    int32_t info_checksum = 0;
+
+    setMode(CST92_MODE_DEBUG_INFO);
+
+    delay(1);
+    write_buffer[0] = 0xD1;
+    write_buffer[1] = 0x01;
+    res = writeBuffer(write_buffer, 2);
+    res |= writeBuffer(write_buffer, 2);
+    if (res != DEV_WIRE_NONE) {
+        log_e("write 0xD101 error");
+        return false;
+    }
+
+    // BOOT TIME + CBCB
+    write_buffer[0] = 0xD1;
+    write_buffer[1] = 0xFC;
+    res = writeThenRead(write_buffer, 2, read_buffer, 4);
+    if (res != DEV_WIRE_NONE) {
+        log_e("read 0xD1FC error");
+        return false;
+    }
+    info_checksum += get_u32_from_ptr(read_buffer);
+    // d200: 0x55AA55AA
+    info_checksum += 0x55AA55AA;
+    // firmware_project_id   firmware_ic_type
+    write_buffer[0] = 0xD2;
+    write_buffer[1] = 0x04;
+    res = writeThenRead(write_buffer, 2, read_buffer, 4);
+    if (res != DEV_WIRE_NONE) {
+        log_e("read 0xD204 error");
+        return false;
+    }
+    info_checksum += get_u32_from_ptr(read_buffer);
+    uint16_t firmware_project_id = ((uint16_t)write_buffer[1] << 8) + write_buffer[0];
+    uint16_t firmware_ic_type = ((uint16_t)write_buffer[3] << 8) + write_buffer[2];
+    // firmware_version
+    write_buffer[0] = 0xD2;
+    write_buffer[1] = 0x08;
+    res = writeThenRead(write_buffer, 2, read_buffer, 4);
+    if (res != DEV_WIRE_NONE) {
+        log_e("read 0xD208 error");
+        return false;
+    }
+    version = get_u32_from_ptr(read_buffer);
+    info_checksum += version;
+    uint32_t firmware_version = version;
+    // firmware_info_checksum
+    write_buffer[0] = 0xD2;
+    write_buffer[1] = 0x1c;
+    res = writeThenRead(write_buffer, 2, read_buffer, 4);
+    if (res != DEV_WIRE_NONE) {
+        log_e("read 0xD21c error");
+        return false;
+    }
+    if (get_u32_from_ptr(read_buffer) != info_checksum) {
+        log_e("info_checksum error");
+        return false;
+    }
+    // firmware_checksum
+    write_buffer[0] = 0xD2;
+    write_buffer[1] = 0x0C;
+    res = writeThenRead(write_buffer, 2, read_buffer, 4);
+    if (res != DEV_WIRE_NONE) {
+        log_e("read 0xD20c error");
+        return false;
+    }
+    uint32_t firmware_checksum = ((uint32_t)write_buffer[3] << 24) + ((uint32_t)write_buffer[2] << 16) + ((uint32_t)write_buffer[1] << 8) + write_buffer[0];
+    // tx_num   rx_num   key_num
+    write_buffer[0] = 0xD1;
+    write_buffer[1] = 0xF4;
+    res = writeThenRead(write_buffer, 2, read_buffer, 4);
+    if (res != DEV_WIRE_NONE) {
+        log_e("read 0xD1F4 error");
+        return false;
+    }
+    uint32_t tx_num = ((uint16_t)write_buffer[1] << 8) + write_buffer[0];
+    uint32_t rx_num = write_buffer[2];
+    uint32_t key_num = write_buffer[3];
+    // Go back normal mode
+    setMode(CST92_MODE_NORMAL);
+    log_d("Chip firmware ic type: 0x%04lx", firmware_ic_type);
+    log_d("Chip firmware version: 0x%04lx", firmware_version);
+    log_d("Chip firmware project id: 0x%04lx", firmware_project_id);
+    log_d("Chip checksum: 0x%04lx", firmware_checksum);
+    log_d("Chip tx_num: %ld", tx_num);
+    log_d("Chip rx_num: %ld", rx_num);
+    log_d("Chip key_num: %ld", key_num);
+    return 0;
+}
+
 int16_t TouchClassCST92xx::eraseMem(void)
 {
     int16_t res = 0;
@@ -1047,10 +1052,6 @@ void TouchClassCST92xx::setGpioCallback(gpio_mode_fptr_t mode_cb,
 
 bool TouchClassCST92xx::initImpl()
 {
-    reset();
-
-    getFirmwareInfo();
-
     int retry = 5;
 
     while (retry > 0) {
