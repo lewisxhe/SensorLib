@@ -50,7 +50,7 @@
 #define SENSOR_RST  -1
 #endif
 
-TouchClassCST92xx touch;
+TouchDrvCST92xx touch;
 int16_t x[5], y[5];
 bool  isPressed = false;
 

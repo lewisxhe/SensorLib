@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      TouchClassCST92xx.h
+ * @file      TouchDrvCST92xx.h
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2024-07-07
  */
@@ -51,15 +51,15 @@ enum CST92_RunMode {
 };
 
 
-class TouchClassCST92xx : public TouchDrvInterface,
-    public SensorCommon<TouchClassCST92xx>
+class TouchDrvCST92xx : public TouchDrvInterface,
+    public SensorCommon<TouchDrvCST92xx>
 {
-    friend class SensorCommon<TouchClassCST92xx>;
+    friend class SensorCommon<TouchDrvCST92xx>;
 
 public:
 
 #if defined(ARDUINO)
-    TouchClassCST92xx();
+    TouchDrvCST92xx();
 
     bool begin(PLATFORM_WIRE_TYPE &wire, uint8_t address, int sda, int scl);
 

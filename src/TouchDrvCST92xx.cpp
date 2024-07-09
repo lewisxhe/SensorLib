@@ -29,13 +29,13 @@
 #include "TouchDrvCST92xx.h"
 
 #if defined(ARDUINO)
-TouchClassCST92xx::TouchClassCST92xx():
+TouchDrvCST92xx::TouchDrvCST92xx():
     __center_btn_x(0),
     __center_btn_y(0)
 {
 }
 
-bool TouchClassCST92xx::begin(PLATFORM_WIRE_TYPE &wire, uint8_t address, int sda, int scl)
+bool TouchDrvCST92xx::begin(PLATFORM_WIRE_TYPE &wire, uint8_t address, int sda, int scl)
 {
     return SensorCommon::begin(wire, address, sda, scl);
 }
@@ -43,12 +43,12 @@ bool TouchClassCST92xx::begin(PLATFORM_WIRE_TYPE &wire, uint8_t address, int sda
 #elif defined(ESP_PLATFORM)
 
 #if ((ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,0,0)) && defined(CONFIG_SENSORLIB_ESP_IDF_NEW_API))
-bool TouchClassCST92xx::begin(i2c_master_bus_handle_t i2c_dev_bus_handle, uint8_t addr)
+bool TouchDrvCST92xx::begin(i2c_master_bus_handle_t i2c_dev_bus_handle, uint8_t addr)
 {
     return SensorCommon::begin(i2c_dev_bus_handle, addr);
 }
 #else
-bool TouchClassCST92xx::begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
+bool TouchDrvCST92xx::begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
 {
     return SensorCommon::begin(port_num, addr, sda, scl);
 }
@@ -56,12 +56,12 @@ bool TouchClassCST92xx::begin(i2c_port_t port_num, uint8_t addr, int sda, int sc
 #endif //ESP_IDF_VERSION
 #endif //ARDUINO
 
-bool TouchClassCST92xx::begin(uint8_t addr, iic_fptr_t readRegCallback, iic_fptr_t writeRegCallback)
+bool TouchDrvCST92xx::begin(uint8_t addr, iic_fptr_t readRegCallback, iic_fptr_t writeRegCallback)
 {
     return SensorCommon::begin(addr, readRegCallback, writeRegCallback);
 }
 
-void TouchClassCST92xx::reset()
+void TouchDrvCST92xx::reset()
 {
     if (__rst != SENSOR_PIN_NONE) {
         this->setGpioMode(__rst, OUTPUT);
@@ -71,7 +71,7 @@ void TouchClassCST92xx::reset()
     }
 }
 
-void TouchClassCST92xx::parseFingerData(uint8_t *data,  cst9xx_point_t *point)
+void TouchDrvCST92xx::parseFingerData(uint8_t *data,  cst9xx_point_t *point)
 {
     const uint8_t id = (data[0] >> 4);
     const uint8_t pressed = (data[0] & 0x0F);
@@ -86,7 +86,7 @@ void TouchClassCST92xx::parseFingerData(uint8_t *data,  cst9xx_point_t *point)
     }
 }
 
-uint8_t TouchClassCST92xx::getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point)
+uint8_t TouchDrvCST92xx::getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point)
 {
     int16_t res = 0;
     uint8_t point = 0;
@@ -167,7 +167,7 @@ uint8_t TouchClassCST92xx::getPoint(int16_t *x_array, int16_t *y_array, uint8_t 
 }
 
 // CST9217/CST9217 touch level is once per second, not continuous low level
-bool TouchClassCST92xx::isPressed()
+bool TouchDrvCST92xx::isPressed()
 {
     if (__irq != SENSOR_PIN_NONE) {
         return this->getGpioLevel(__irq) == LOW;
@@ -176,7 +176,7 @@ bool TouchClassCST92xx::isPressed()
 }
 
 
-const char *TouchClassCST92xx::getModelName()
+const char *TouchDrvCST92xx::getModelName()
 {
     switch (__chipID) {
     case CST9220_CHIP_ID:
@@ -189,7 +189,7 @@ const char *TouchClassCST92xx::getModelName()
     return "UNKNOW";
 }
 
-void TouchClassCST92xx::sleep()
+void TouchDrvCST92xx::sleep()
 {
 
     uint8_t write_buffer[2] = {0};
@@ -209,32 +209,32 @@ void TouchClassCST92xx::sleep()
 #endif
 }
 
-void TouchClassCST92xx::wakeup()
+void TouchDrvCST92xx::wakeup()
 {
     reset();
 }
 
-void TouchClassCST92xx::idle()
+void TouchDrvCST92xx::idle()
 {
 }
 
-uint8_t TouchClassCST92xx::getSupportTouchPoint()
+uint8_t TouchDrvCST92xx::getSupportTouchPoint()
 {
     return CST92XX_MAX_FINGER_NUM;
 }
 
-bool TouchClassCST92xx::getResolution(int16_t *x, int16_t *y)
+bool TouchDrvCST92xx::getResolution(int16_t *x, int16_t *y)
 {
     return false;
 }
 
-void TouchClassCST92xx::setCoverScreenCallback(home_button_callback_t cb, void *user_data)
+void TouchDrvCST92xx::setCoverScreenCallback(home_button_callback_t cb, void *user_data)
 {
     __homeButtonCb = cb;
     __userData = user_data;
 }
 
-uint32_t TouchClassCST92xx::readWordFromMem(uint8_t type, uint16_t mem_addr)
+uint32_t TouchDrvCST92xx::readWordFromMem(uint8_t type, uint16_t mem_addr)
 {
     int res = 0;
     uint8_t write_buffer[4] = {0};
@@ -301,7 +301,7 @@ uint32_t TouchClassCST92xx::readWordFromMem(uint8_t type, uint16_t mem_addr)
 
 }
 
-uint32_t TouchClassCST92xx::getChipType()
+uint32_t TouchDrvCST92xx::getChipType()
 {
     // uint32_t chip_id = 0;
     uint32_t chip_type = 0;
@@ -323,13 +323,13 @@ uint32_t TouchClassCST92xx::getChipType()
     return chip_type;
 }
 
-uint32_t TouchClassCST92xx::get_u32_from_ptr(const void *ptr)
+uint32_t TouchDrvCST92xx::get_u32_from_ptr(const void *ptr)
 {
     return *reinterpret_cast<const uint32_t *>(ptr);
 }
 
 
-bool TouchClassCST92xx::enterBootloader(void)
+bool TouchDrvCST92xx::enterBootloader(void)
 {
     int16_t res = 0;
     uint8_t check_cnt = 0;
@@ -386,7 +386,7 @@ bool TouchClassCST92xx::enterBootloader(void)
 }
 
 
-bool TouchClassCST92xx::setMode(uint8_t mode)
+bool TouchDrvCST92xx::setMode(uint8_t mode)
 {
     uint8_t read_buffer[4] = {0};
     uint8_t write_buffer[4] = {0};
@@ -528,7 +528,7 @@ bool TouchClassCST92xx::setMode(uint8_t mode)
 
 
 
-bool TouchClassCST92xx::getFirmwareInfo(void)
+bool TouchDrvCST92xx::getFirmwareInfo(void)
 {
     uint8_t read_buffer[4] = {0};
     uint8_t write_buffer[6] = {0};
@@ -625,7 +625,7 @@ bool TouchClassCST92xx::getFirmwareInfo(void)
     return 0;
 }
 
-int16_t TouchClassCST92xx::eraseMem(void)
+int16_t TouchDrvCST92xx::eraseMem(void)
 {
     int16_t res = 0;
     uint8_t write_buffer[4] = {0};
@@ -673,7 +673,7 @@ int16_t TouchClassCST92xx::eraseMem(void)
     return 0;
 }
 
-int16_t TouchClassCST92xx::writeSRAM(uint8_t *buf, uint16_t len)
+int16_t TouchDrvCST92xx::writeSRAM(uint8_t *buf, uint16_t len)
 {
 
     uint8_t write_buffer[CST92XX_PROGRAM_PAGE_SIZE + 2] = {0};
@@ -701,7 +701,7 @@ int16_t TouchClassCST92xx::writeSRAM(uint8_t *buf, uint16_t len)
     return 0;
 }
 
-int16_t TouchClassCST92xx::writeMemPage(uint16_t addr, uint8_t *buf, uint16_t len)
+int16_t TouchDrvCST92xx::writeMemPage(uint16_t addr, uint8_t *buf, uint16_t len)
 {
     int16_t res = 0;
     uint8_t write_buffer[4] = {0};
@@ -753,7 +753,7 @@ int16_t TouchClassCST92xx::writeMemPage(uint16_t addr, uint8_t *buf, uint16_t le
 }
 
 
-int16_t TouchClassCST92xx::getFirmwareAddress(uint8_t data_seq, uint16_t data_len)
+int16_t TouchDrvCST92xx::getFirmwareAddress(uint8_t data_seq, uint16_t data_len)
 {
     if (bin_data.head_data == NULL) {
         // GET firmware bin data point
@@ -769,7 +769,7 @@ int16_t TouchClassCST92xx::getFirmwareAddress(uint8_t data_seq, uint16_t data_le
     return 0;
 }
 
-int16_t TouchClassCST92xx::writeMemAll(void)
+int16_t TouchDrvCST92xx::writeMemAll(void)
 {
     uint8_t *data;
     uint16_t addr = 0;
@@ -796,7 +796,7 @@ int16_t TouchClassCST92xx::writeMemAll(void)
     return 0;
 }
 
-int16_t TouchClassCST92xx::calculateVerifyChecksum(void)
+int16_t TouchDrvCST92xx::calculateVerifyChecksum(void)
 {
     int16_t res = 0;
     uint8_t write_buffer[4] = {0};
@@ -847,7 +847,7 @@ int16_t TouchClassCST92xx::calculateVerifyChecksum(void)
     return 0;
 }
 
-int16_t TouchClassCST92xx::upgradeFirmware(void)
+int16_t TouchDrvCST92xx::upgradeFirmware(void)
 {
     int16_t res = 0;
     uint8_t retry = 3;
@@ -893,7 +893,7 @@ int16_t TouchClassCST92xx::upgradeFirmware(void)
     return 0;
 }
 
-uint32_t TouchClassCST92xx::verifyFirmware(uint8_t *pdat, uint16_t order)
+uint32_t TouchDrvCST92xx::verifyFirmware(uint8_t *pdat, uint16_t order)
 {
     uint32_t sum = 0;
     uint16_t data_len = 0;
@@ -912,7 +912,7 @@ uint32_t TouchClassCST92xx::verifyFirmware(uint8_t *pdat, uint16_t order)
     return sum;
 }
 
-int16_t TouchClassCST92xx::parseFirmware(void)
+int16_t TouchDrvCST92xx::parseFirmware(void)
 {
     uint16_t i;
     // int16_t res;
@@ -963,7 +963,7 @@ int16_t TouchClassCST92xx::parseFirmware(void)
     return 0;
 }
 
-int16_t TouchClassCST92xx::upgradeFirmwareJudge(void)
+int16_t TouchDrvCST92xx::upgradeFirmwareJudge(void)
 {
 
     if (!bin_data.ok) {
@@ -998,7 +998,7 @@ int16_t TouchClassCST92xx::upgradeFirmwareJudge(void)
 }
 
 
-int16_t TouchClassCST92xx::updateFirmware(void)
+int16_t TouchDrvCST92xx::updateFirmware(void)
 {
     uint8_t need_upgrade = 0;
     int16_t res = -1;
@@ -1041,7 +1041,7 @@ END_UPGRADE:
 #endif /*DISABLE UPDATE FIRMWARE*/
 
 
-void TouchClassCST92xx::setGpioCallback(gpio_mode_fptr_t mode_cb,
+void TouchDrvCST92xx::setGpioCallback(gpio_mode_fptr_t mode_cb,
                                         gpio_write_fptr_t write_cb,
                                         gpio_read_fptr_t read_cb)
 {
@@ -1050,7 +1050,7 @@ void TouchClassCST92xx::setGpioCallback(gpio_mode_fptr_t mode_cb,
     SensorCommon::setGpioReadCallback(read_cb);
 }
 
-bool TouchClassCST92xx::initImpl()
+bool TouchDrvCST92xx::initImpl()
 {
     int retry = 5;
 
@@ -1083,7 +1083,7 @@ bool TouchClassCST92xx::initImpl()
     return true;
 }
 
-int TouchClassCST92xx::getReadMaskImpl()
+int TouchDrvCST92xx::getReadMaskImpl()
 {
     return -1;
 }
