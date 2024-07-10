@@ -81,6 +81,8 @@ void setup()
 
 
     touch.setPins(SENSOR_RST, SENSOR_IRQ);
+    // The device address is determined according to the actual situation. Not all device addresses are 0X5A. There can also be other customized device addresses.
+    // CST92XX_SLAVE_ADDRESS = 0x5A
     bool result = touch.begin(Wire, CST92XX_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL);
     if (result == false) {
         Serial.println("touch is not online..."); while (1)delay(1000);

@@ -143,6 +143,7 @@ private:
         uint32_t chip_type;
     } bin_data;
 
+    bool getFirmwareInfo(void);
     int16_t eraseMem(void);
     int16_t writeSRAM(uint8_t *buf, uint16_t len);
     int16_t writeMemPage(uint16_t addr, uint8_t *buf, uint16_t len) ;
@@ -158,7 +159,6 @@ private:
 
 
     uint32_t getChipType();
-    bool getFirmwareInfo(void);
     bool initImpl();
     int getReadMaskImpl();
 

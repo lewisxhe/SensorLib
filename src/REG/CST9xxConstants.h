@@ -30,6 +30,7 @@
 #pragma once
 
 #define CST92XX_SLAVE_ADDRESS       (0x5A)
+#define CST92XX_BOOT_ADDRESS        (0x5A)      //Fixed, immutable
 
 #define CST9220_CHIP_ID             (0x9220)
 #define CST9217_CHIP_ID             (0x9217)
