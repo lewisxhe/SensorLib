@@ -181,7 +181,7 @@ typedef struct __SensorLibPins {
 #define SENSORLIB_COUNT(x)      (sizeof(x)/sizeof(*x))
 
 #ifdef ARDUINO
-#ifndef ESP32
+#if !defined(ESP32) || !defined(ARDUINO_ARCH_ESP32)
 #ifndef log_e
 #define log_e(...)          Serial.printf(__VA_ARGS__)
 #endif

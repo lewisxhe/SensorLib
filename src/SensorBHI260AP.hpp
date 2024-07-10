@@ -234,19 +234,19 @@ public:
         __error_code = (bhy2_get_feature_status(&feat_status, bhy2));
         BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_get_feature_status failed!", false);
 
-        stream.printf("Product ID     : %02x\r\n", product_id);
-        stream.printf("Kernel version : %04u\r\n", kernel_version);
-        stream.printf("User version   : %04u\r\n", user_version);
-        stream.printf("ROM version    : %04u\r\n", rom_version);
-        stream.printf("Power state    : %s\r\n", (host_status & BHY2_HST_POWER_STATE) ? "sleeping" : "active");
-        stream.printf("Host interface : %s\r\n", (host_status & BHY2_HST_HOST_PROTOCOL) ? "SPI" : "I2C");
-        stream.printf("Feature status : 0x%02x\r\n", feat_status);
+        stream.printf("Product ID     : %02x", product_id);
+        stream.printf("Kernel version : %04u", kernel_version);
+        stream.printf("User version   : %04u", user_version);
+        stream.printf("ROM version    : %04u", rom_version);
+        stream.printf("Power state    : %s", (host_status & BHY2_HST_POWER_STATE) ? "sleeping" : "active");
+        stream.printf("Host interface : %s", (host_status & BHY2_HST_HOST_PROTOCOL) ? "SPI" : "I2C");
+        stream.printf("Feature status : 0x%02x", feat_status);
 
         /* Read boot status */
         __error_code = (bhy2_get_boot_status(&boot_status, bhy2));
         BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_get_boot_status failed!", false);
 
-        stream.printf("Boot Status : 0x%02x: \r\n", boot_status);
+        stream.printf("Boot Status : 0x%02x: ", boot_status);
 
         if (boot_status & BHY2_BST_FLASH_DETECTED) {
             stream.println("\tFlash detected. ");
@@ -284,7 +284,7 @@ public:
         __error_code = (bhy2_get_error_value(&sensor_error, bhy2));
         BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_get_error_value failed!", false);
         if (sensor_error) {
-            log_e("%s\r\n", get_sensor_error_text(sensor_error));
+            log_e("%s", get_sensor_error_text(sensor_error));
         }
 
 
@@ -295,9 +295,9 @@ public:
             /* Get present virtual sensor */
             bhy2_get_virt_sensor_list(bhy2);
 
-            stream.printf("Virtual sensor list.\r\n");
-            stream.printf("Sensor ID |                          Sensor Name |  ID | Ver |  Min rate |  Max rate |\r\n");
-            stream.printf("----------+--------------------------------------+-----+-----+-----------+-----------|\r\n");
+            stream.printf("Virtual sensor list.");
+            stream.printf("Sensor ID |                          Sensor Name |  ID | Ver |  Min rate |  Max rate |");
+            stream.printf("----------+--------------------------------------+-----+-----+-----------+-----------|");
             for (uint8_t i = 0; i < BHY2_SENSOR_ID_MAX; i++) {
                 if (bhy2_is_sensor_available(i, bhy2)) {
                     if (i < BHY2_SENSOR_ID_CUSTOM_START) {
@@ -305,7 +305,7 @@ public:
                     }
                     __error_code = (bhy2_get_sensor_info(i, &info, bhy2));
                     BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_get_sensor_info failed!", false);
-                    stream.printf("| %3u | %3u | %9.4f | %9.4f |\r\n",
+                    stream.printf("| %3u | %3u | %9.4f | %9.4f |",
                                   info.driver_id,
                                   info.driver_version,
                                   info.min_rate.f_val,
@@ -341,15 +341,15 @@ public:
         if (__error_code != BHY2_OK) {
             return ;
         }
-        stream.printf("Host interrupt control\r\n");
-        stream.printf("-- Wake up FIFO %s.\r\n", (data & BHY2_ICTL_DISABLE_FIFO_W) ? "disabled" : "enabled");
-        stream.printf("-- Non wake up FIFO %s.\r\n", (data & BHY2_ICTL_DISABLE_FIFO_NW) ? "disabled" : "enabled");
-        stream.printf("-- Status FIFO %s.\r\n", (data & BHY2_ICTL_DISABLE_STATUS_FIFO) ? "disabled" : "enabled");
-        stream.printf("-- Debugging %s.\r\n", (data & BHY2_ICTL_DISABLE_DEBUG) ? "disabled" : "enabled");
-        stream.printf("-- Fault %s.\r\n", (data & BHY2_ICTL_DISABLE_FAULT) ? "disabled" : "enabled");
-        stream.printf("-- Interrupt is %s.\r\n", (data & BHY2_ICTL_ACTIVE_LOW) ? "active low" : "active high");
-        stream.printf("-- Interrupt is %s triggered.\r\n", (data & BHY2_ICTL_EDGE) ? "pulse" : "level");
-        stream.printf("-- Interrupt pin drive is %s.\r\n", (data & BHY2_ICTL_OPEN_DRAIN) ? "open drain" : "push-pull");
+        stream.printf("Host interrupt control");
+        stream.printf("-- Wake up FIFO %s.", (data & BHY2_ICTL_DISABLE_FIFO_W) ? "disabled" : "enabled");
+        stream.printf("-- Non wake up FIFO %s.", (data & BHY2_ICTL_DISABLE_FIFO_NW) ? "disabled" : "enabled");
+        stream.printf("-- Status FIFO %s.", (data & BHY2_ICTL_DISABLE_STATUS_FIFO) ? "disabled" : "enabled");
+        stream.printf("-- Debugging %s.", (data & BHY2_ICTL_DISABLE_DEBUG) ? "disabled" : "enabled");
+        stream.printf("-- Fault %s.", (data & BHY2_ICTL_DISABLE_FAULT) ? "disabled" : "enabled");
+        stream.printf("-- Interrupt is %s.", (data & BHY2_ICTL_ACTIVE_LOW) ? "active low" : "active high");
+        stream.printf("-- Interrupt is %s triggered.", (data & BHY2_ICTL_EDGE) ? "pulse" : "level");
+        stream.printf("-- Interrupt pin drive is %s.", (data & BHY2_ICTL_OPEN_DRAIN) ? "open drain" : "push-pull");
     }
 
     bool isReady()
@@ -370,7 +370,7 @@ public:
         if ((__error_code != BHY2_OK) && (version == 0)) {
             return 0;
         }
-        log_i("Boot successful. Kernel version %u.\r\n", version);
+        log_i("Boot successful. Kernel version %u.", version);
         return version;
     }
 
@@ -439,45 +439,45 @@ public:
             if (boot_status & BHY2_BST_FLASH_DETECTED) {
                 uint32_t start_addr = BHY2_FLASH_SECTOR_START_ADDR;
                 uint32_t end_addr = start_addr + length;
-                log_i("Flash detected. Erasing flash to upload firmware\r\n");
+                log_i("Flash detected. Erasing flash to upload firmware");
                 __error_code = bhy2_erase_flash(start_addr, end_addr, bhy2);
                 BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_erase_flash failed!", false);
             } else {
-                log_e("Flash not detected\r\n");
+                log_e("Flash not detected");
                 return false;
             }
-            printf("Loading firmware into FLASH.\r\n");
+            printf("Loading firmware into FLASH.");
             __error_code = bhy2_upload_firmware_to_flash(firmware, length, bhy2);
             BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_upload_firmware_to_flash failed!", false);
         } else {
-            log_i("Loading firmware into RAM.\r\n");
+            log_i("Loading firmware into RAM.");
             log_i("upload size = %lu", length);
             __error_code = bhy2_upload_firmware_to_ram(firmware, length, bhy2);
             BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_upload_firmware_to_ram failed!", false);
         }
 
-        log_i("Loading firmware into RAM Done\r\n");
+        log_i("Loading firmware into RAM Done");
         __error_code = bhy2_get_error_value(&sensor_error, bhy2);
         BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_get_error_value failed!", false);
         if (sensor_error != BHY2_OK) {
             __error_code = bhy2_get_error_value(&sensor_error, bhy2);
-            log_e("%s\r\n", get_sensor_error_text(sensor_error));
+            log_e("%s", get_sensor_error_text(sensor_error));
             return false;
         }
 
 
         if (write2Flash) {
-            log_i("Booting from FLASH.\r\n");
+            log_i("Booting from FLASH.");
             __error_code = bhy2_boot_from_flash(bhy2);
         } else {
-            log_i("Booting from RAM.\r\n");
+            log_i("Booting from RAM.");
             __error_code = bhy2_boot_from_ram(bhy2);
         }
         BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2 boot failed!", false);
 
         __error_code = bhy2_get_error_value(&sensor_error, bhy2);
         if (sensor_error) {
-            log_e("%s\r\n", get_sensor_error_text(sensor_error));
+            log_e("%s", get_sensor_error_text(sensor_error));
             return false;
         }
         return sensor_error == BHY2_OK;
@@ -494,7 +494,7 @@ public:
     {
         __error_code = bhy2_set_virt_sensor_cfg(sensor_id, sample_rate, report_latency_ms, bhy2);
         BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_set_virt_sensor_cfg failed!", false);
-        log_i("Enable %s at %.2fHz.\r\n", get_sensor_name(sensor_id), sample_rate);
+        log_i("Enable %s at %.2fHz.", get_sensor_name(sensor_id), sample_rate);
         return true;
     }
 
@@ -596,10 +596,10 @@ private:
 
         /* Check for a valid product ID */
         if (product_id != BHY2_PRODUCT_ID) {
-            log_e("Product ID read %X. Expected %X\r\n", product_id, BHY2_PRODUCT_ID);
+            log_e("Product ID read %X. Expected %X", product_id, BHY2_PRODUCT_ID);
             return false;
         } else {
-            log_i("BHI260/BHA260 found. Product ID read %X\r\n", product_id);
+            log_i("BHI260/BHA260 found. Product ID read %X", product_id);
         }
 
         if (!__firmware) {
@@ -616,7 +616,7 @@ private:
 
         uint16_t version = getKernelVersion();
         BHY2_RLST_CHECK(!version, "getKernelVersion failed!", false);
-        log_i("Boot successful. Kernel version %u.\r\n", version);
+        log_i("Boot successful. Kernel version %u.", version);
 
         //Set event callback
         __error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT, BoschParse::parseMetaEvent, NULL, bhy2);
@@ -629,7 +629,7 @@ private:
         // BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_register_fifo_parse_callback parseDebugMessage failed!", false);
 
         //Set process buffer
-#if     defined(ESP32) && defined(BOARD_HAS_PSRAM)
+#if     (defined(ESP32) || defined(ARDUINO_ARCH_ESP32)) && defined(BOARD_HAS_PSRAM)
         processBuffer = (uint8_t *)ps_malloc(processBufferSize);
 #else
         processBuffer = (uint8_t *)malloc(processBufferSize);
@@ -659,10 +659,10 @@ private:
         if (__handler.irq != SENSOR_PIN_NONE) {
 #if defined(ARDUINO_ARCH_RP2040)
             attachInterrupt((pin_size_t)(__handler.irq), handleISR, (PinStatus )RISING);
-#elif defined(NRF52840_XXAA) || defined(NRF52832_XXAA) || defined(ESP32)
+#elif defined(NRF52840_XXAA) || defined(NRF52832_XXAA) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)
             attachInterrupt(__handler.irq, handleISR, RISING);
 #else
-#error "No support ."
+#error "Interrupt registration not implemented"
 #endif
         }
 
