@@ -182,14 +182,15 @@ typedef struct __SensorLibPins {
 
 #ifdef ARDUINO
 #if !defined(ESP32) || !defined(ARDUINO_ARCH_ESP32)
+#define LOG_FILE_LINE_INFO __FILE__, __LINE__
 #ifndef log_e
-#define log_e(...)          Serial.printf(__VA_ARGS__)
+#define log_e(fmt, ...)     Serial.printf("[E][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
 #endif
 #ifndef log_i
-#define log_i(...)          Serial.printf(__VA_ARGS__)
+#define log_i(fmt, ...)     Serial.printf("[I][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
 #endif
 #ifndef log_d
-#define log_d(...)          Serial.printf(__VA_ARGS__)
+#define log_d(fmt, ...)     Serial.printf("[D][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
 #endif
 #endif
 #elif defined(ESP_PLATFORM)

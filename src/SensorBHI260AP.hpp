@@ -234,13 +234,13 @@ public:
         __error_code = (bhy2_get_feature_status(&feat_status, bhy2));
         BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_get_feature_status failed!", false);
 
-        stream.printf("Product ID     : %02x", product_id);
-        stream.printf("Kernel version : %04u", kernel_version);
-        stream.printf("User version   : %04u", user_version);
-        stream.printf("ROM version    : %04u", rom_version);
-        stream.printf("Power state    : %s", (host_status & BHY2_HST_POWER_STATE) ? "sleeping" : "active");
-        stream.printf("Host interface : %s", (host_status & BHY2_HST_HOST_PROTOCOL) ? "SPI" : "I2C");
-        stream.printf("Feature status : 0x%02x", feat_status);
+        stream.printf("Product ID     : %02x\n", product_id);
+        stream.printf("Kernel version : %04u\n", kernel_version);
+        stream.printf("User version   : %04u\n", user_version);
+        stream.printf("ROM version    : %04u\n", rom_version);
+        stream.printf("Power state    : %s\n", (host_status & BHY2_HST_POWER_STATE) ? "sleeping" : "active");
+        stream.printf("Host interface : %s\n", (host_status & BHY2_HST_HOST_PROTOCOL) ? "SPI" : "I2C");
+        stream.printf("Feature status : 0x%02x\n", feat_status);
 
         /* Read boot status */
         __error_code = (bhy2_get_boot_status(&boot_status, bhy2));
@@ -295,9 +295,9 @@ public:
             /* Get present virtual sensor */
             bhy2_get_virt_sensor_list(bhy2);
 
-            stream.printf("Virtual sensor list.");
-            stream.printf("Sensor ID |                          Sensor Name |  ID | Ver |  Min rate |  Max rate |");
-            stream.printf("----------+--------------------------------------+-----+-----+-----------+-----------|");
+            stream.printf("Virtual sensor list.\r\n");
+            stream.printf("Sensor ID |                          Sensor Name |  ID | Ver |  Min rate |  Max rate |\r\n");
+            stream.printf("----------+--------------------------------------+-----+-----+-----------+-----------|\r\n");
             for (uint8_t i = 0; i < BHY2_SENSOR_ID_MAX; i++) {
                 if (bhy2_is_sensor_available(i, bhy2)) {
                     if (i < BHY2_SENSOR_ID_CUSTOM_START) {
@@ -305,7 +305,7 @@ public:
                     }
                     __error_code = (bhy2_get_sensor_info(i, &info, bhy2));
                     BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_get_sensor_info failed!", false);
-                    stream.printf("| %3u | %3u | %9.4f | %9.4f |",
+                    stream.printf("| %3u | %3u | %9.4f | %9.4f |\r\n",
                                   info.driver_id,
                                   info.driver_version,
                                   info.min_rate.f_val,
@@ -341,15 +341,15 @@ public:
         if (__error_code != BHY2_OK) {
             return ;
         }
-        stream.printf("Host interrupt control");
-        stream.printf("-- Wake up FIFO %s.", (data & BHY2_ICTL_DISABLE_FIFO_W) ? "disabled" : "enabled");
-        stream.printf("-- Non wake up FIFO %s.", (data & BHY2_ICTL_DISABLE_FIFO_NW) ? "disabled" : "enabled");
-        stream.printf("-- Status FIFO %s.", (data & BHY2_ICTL_DISABLE_STATUS_FIFO) ? "disabled" : "enabled");
-        stream.printf("-- Debugging %s.", (data & BHY2_ICTL_DISABLE_DEBUG) ? "disabled" : "enabled");
-        stream.printf("-- Fault %s.", (data & BHY2_ICTL_DISABLE_FAULT) ? "disabled" : "enabled");
-        stream.printf("-- Interrupt is %s.", (data & BHY2_ICTL_ACTIVE_LOW) ? "active low" : "active high");
-        stream.printf("-- Interrupt is %s triggered.", (data & BHY2_ICTL_EDGE) ? "pulse" : "level");
-        stream.printf("-- Interrupt pin drive is %s.", (data & BHY2_ICTL_OPEN_DRAIN) ? "open drain" : "push-pull");
+        stream.printf("Host interrupt control\r\n");
+        stream.printf("-- Wake up FIFO %s.\r\n", (data & BHY2_ICTL_DISABLE_FIFO_W) ? "disabled" : "enabled");
+        stream.printf("-- Non wake up FIFO %s.\r\n", (data & BHY2_ICTL_DISABLE_FIFO_NW) ? "disabled" : "enabled");
+        stream.printf("-- Status FIFO %s.\r\n", (data & BHY2_ICTL_DISABLE_STATUS_FIFO) ? "disabled" : "enabled");
+        stream.printf("-- Debugging %s.\r\n", (data & BHY2_ICTL_DISABLE_DEBUG) ? "disabled" : "enabled");
+        stream.printf("-- Fault %s.\r\n", (data & BHY2_ICTL_DISABLE_FAULT) ? "disabled" : "enabled");
+        stream.printf("-- Interrupt is %s.\r\n", (data & BHY2_ICTL_ACTIVE_LOW) ? "active low" : "active high");
+        stream.printf("-- Interrupt is %s triggered.\r\n", (data & BHY2_ICTL_EDGE) ? "pulse" : "level");
+        stream.printf("-- Interrupt pin drive is %s.\r\n", (data & BHY2_ICTL_OPEN_DRAIN) ? "open drain" : "push-pull");
     }
 
     bool isReady()

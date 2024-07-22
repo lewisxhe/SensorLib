@@ -70,20 +70,27 @@ public:
 
     bool begin(PLATFORM_WIRE_TYPE &w, uint8_t addr, int sda, int scl)
     {
-        log_i("Using Arduino Wire interface.\n");
+        log_i("Using Arduino Wire interface.");
         if (__has_init)return thisChip().initImpl();
         __wire = &w;
         __sda = sda;
         __scl = scl;
 #if defined(NRF52840_XXAA) || defined(NRF52832_XXAA)
+        if (__sda != 0xFF && __scl != 0xFF) {
+            __wire->setPins(__sda, __scl);
+        }
         __wire->begin();
-#elif defined(ARDUINO_ARCH_RP2040)
-        __wire->end();
-        __wire->setSDA(__sda);
-        __wire->setSCL(__scl);
+#elif defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_STM32)
+        if (__sda != 0xFF && __scl != 0xFF) {
+            __wire->end();
+            __wire->setSDA(__sda);
+            __wire->setSCL(__scl);
+        }
         __wire->begin();
-#else
+#elif defined(ARDUINO_ARCH_ESP32)
         __wire->begin(__sda, __scl);
+#else
+        __wire->begin();
 #endif
         __addr = addr;
         __spi = NULL;
@@ -97,7 +104,7 @@ public:
                PLATFORM_SPI_TYPE &spi = SPI
               )
     {
-        log_i("Using Arduino SPI interface.\n");
+        log_i("Using Arduino SPI interface.");
         if (__has_init)return thisChip().initImpl();
         __cs  = cs;
         __spi = &spi;
@@ -135,7 +142,7 @@ public:
 
     bool begin(i2c_master_bus_handle_t i2c_dev_bus_handle, uint8_t addr)
     {
-        log_i("Using ESP-IDF Driver interface.\n");
+        log_i("Using ESP-IDF Driver interface.");
         if (i2c_dev_bus_handle == NULL) return false;
         if (__has_init)return thisChip().initImpl();
 
@@ -169,15 +176,15 @@ public:
         if (ESP_OK != i2c_master_bus_add_device(bus_handle,
                                                 &__i2c_dev_conf,
                                                 &__i2c_device)) {
-            log_i("i2c_master_bus_add_device failed !\n");
+            log_i("i2c_master_bus_add_device failed !");
             return false;
         }
-        log_i("Added Device Address : 0x%X  New Dev Address: %p Speed :%lu \n", __addr, __i2c_device, __i2c_dev_conf.scl_speed_hz);
+        log_i("Added Device Address : 0x%X  New Dev Address: %p Speed :%lu ", __addr, __i2c_device, __i2c_dev_conf.scl_speed_hz);
         __has_init = thisChip().initImpl();
 
         if (!__has_init) {
             // Initialization failed, delete device
-            log_i("i2c_master_bus_rm_device  !\n");
+            log_i("i2c_master_bus_rm_device  !");
             i2c_master_bus_rm_device(__i2c_device);
         }
 
@@ -189,7 +196,7 @@ public:
     bool begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
     {
         __i2c_num = port_num;
-        log_i("Using ESP-IDF Driver interface.\n");
+        log_i("Using ESP-IDF Driver interface.");
         if (__has_init)return thisChip().initImpl();
         __sda = sda;
         __scl = scl;
@@ -226,7 +233,7 @@ public:
 
     bool begin(uint8_t addr, iic_fptr_t readRegCallback, iic_fptr_t writeRegCallback)
     {
-        log_i("Using Custom interface.\n");
+        log_i("Using Custom interface.");
         if (__has_init)return thisChip().initImpl();
         __i2c_master_read = readRegCallback;
         __i2c_master_write = writeRegCallback;
