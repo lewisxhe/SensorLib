@@ -25,7 +25,7 @@
  * @file      BHI260AP_StepCounter.ino
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2023-10-08
- *
+ * @note      Changed from Boschsensortec API https://github.com/boschsensortec/BHY2_SensorAPI
  */
 #include <Wire.h>
 #include <SPI.h>
@@ -49,13 +49,13 @@
 SensorBHI260AP bhy;
 
 
-void step_detector_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_t len)
+void step_detector_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp)
 {
     Serial.print(bhy.getSensorName(sensor_id));
     Serial.println(" detected.");
 }
 
-void step_counter_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_t len)
+void step_counter_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp)
 {
     Serial.print(bhy.getSensorName(sensor_id));
     Serial.print(":");

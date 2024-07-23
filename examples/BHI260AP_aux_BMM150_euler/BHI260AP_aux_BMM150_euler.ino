@@ -22,9 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      BHI260AP_aux_BMM150.ino
+ * @file      BHI260AP_aux_BMM150_euler.ino
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2024-07-22
+ * @date      2024-07-23
  * @note      Changed from Boschsensortec API https://github.com/boschsensortec/BHY2_SensorAPI
  */
 #include <Wire.h>
@@ -71,18 +71,37 @@ const size_t fw_size = sizeof(bhi26ap_aux_bmm150_fw);
 SensorBHI260AP bhy;
 
 
-void bhy_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp)
+void parse_euler(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp)
 {
-    struct bhy2_data_xyz data;
-    float scaling_factor = get_sensor_default_scaling(sensor_id);
-    bhy2_parse_xyz(data_ptr, &data);
-    Serial.print(bhy.getSensorName(sensor_id));
-    Serial.print(":");
-    Serial.printf("x: %f, y: %f, z: %f;\r\n",
-                  data.x * scaling_factor,
-                  data.y * scaling_factor,
-                  data.z * scaling_factor
-                 );
+    struct bhy2_data_orientation data;
+    uint32_t s, ns;
+    uint64_t tns;
+
+    // Function to parse FIFO frame data into orientation
+    bhy2_parse_orientation(data_ptr, &data);
+
+    uint64_t _timestamp =  *timestamp;
+    time_to_s_ns(_timestamp, &s, &ns, &tns);
+
+    uint8_t accuracy =  bhy.getAccuracy();
+    if (accuracy) {
+        Serial.printf("SID: %u; T: %u.%09u; h: %f, p: %f, r: %f; acc: %u\r\n",
+                      sensor_id,
+                      s,
+                      ns,
+                      data.heading * 360.0f / 32768.0f,
+                      data.pitch * 360.0f / 32768.0f,
+                      data.roll * 360.0f / 32768.0f,
+                      accuracy);
+    } else {
+        Serial.printf("SID: %u; T: %u.%09u; h: %f, p: %f, r: %f\r\n",
+                      sensor_id,
+                      s,
+                      ns,
+                      data.heading * 360.0f / 32768.0f,
+                      data.pitch * 360.0f / 32768.0f,
+                      data.roll * 360.0f / 32768.0f);
+    }
 }
 
 
@@ -125,28 +144,18 @@ void setup()
     bhy.printSensors(Serial);
 
     float sample_rate = 100.0;      /* Read out hintr_ctrl measured at 100Hz */
-    uint32_t report_latency_ms = 0; /* 0 = report immediately */
+    uint32_t report_latency_ms = 0; /* Report immediately */
 
-    // Enable acceleration
-    report_latency_ms = 1000;   // Report once per second
-    bhy.configure(SENSOR_ID_ACC_PASS, sample_rate, report_latency_ms);
+    /*
+    * Enable Euler function
+    * The Euler function depends on BMM150.
+    * If the hardware is not connected to BMM150, the Euler function cannot be used.
+    * * */
+    bhy.configure(SENSOR_EULER_ID, sample_rate, report_latency_ms);
 
-    // Enable gyroscope
-    report_latency_ms = 1000;   //Report once per second
-    bhy.configure(SENSOR_ID_GYRO_PASS, sample_rate, report_latency_ms);
+    // Register event callback function
+    bhy.onResultEvent(SENSOR_EULER_ID, parse_euler);
 
-    // Enable magnetometer
-    report_latency_ms = 500;    //Report every 500 milliseconds
-    bhy.configure(SENSOR_ID_MAG_PASS, sample_rate, report_latency_ms);
-
-    // Set the acceleration sensor result callback function
-    bhy.onResultEvent(SENSOR_ID_ACC_PASS, bhy_process_callback);
-
-    // Set the gyroscope sensor result callback function
-    bhy.onResultEvent(SENSOR_ID_GYRO_PASS, bhy_process_callback);
-
-    // Set the magnetometer sensor result callback function
-    bhy.onResultEvent(SENSOR_ID_MAG_PASS, bhy_process_callback);
 
 }
 

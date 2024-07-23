@@ -25,7 +25,7 @@
  * @file      BHI260AP_DebugInfo.ino
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2023-10-08
- *
+ * @note      Changed from Boschsensortec API https://github.com/boschsensortec/BHY2_SensorAPI
  */
 #include <Wire.h>
 #include <SPI.h>
@@ -49,7 +49,7 @@
 SensorBHI260AP bhy;
 
 
-void quaternion_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len)
+void quaternion_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp)
 {
     Serial.println(bhy.getSensorName(sensor_id));
 }
