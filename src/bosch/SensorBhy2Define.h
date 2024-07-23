@@ -34,7 +34,7 @@
 
 #define BHI260AP_SLAVE_ADDRESS_L          0x28
 #define BHI260AP_SLAVE_ADDRESS_H          0x29
-#define BHY_PROCESS_BUFFER_SZIE         512
+#define BHY_PROCESS_BUFFER_SIZE           512
 
 #define BHY2_RLST_CHECK(ret, str, val) \
     do                                 \
@@ -47,7 +47,7 @@
     } while (0)
 
 typedef void (*BhyEventCb)(uint8_t event, uint8_t *data, uint32_t size);
-typedef void (*BhyParseDataCallback)(uint8_t sensor_id, uint8_t *data, uint32_t size);
+typedef void (*BhyParseDataCallback)(uint8_t sensor_id, uint8_t *data, uint32_t size,uint64_t *timestamp);
 
 
 
@@ -178,7 +178,8 @@ enum BhySensorID {
 };
 
 
-
+#define SENSOR_EULER_ID                 SENSOR_ID_ORI_WU
+#define QUAT_SENSOR_ID                  SENSOR_ID_RV
 
 
 

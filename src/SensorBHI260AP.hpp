@@ -523,6 +523,12 @@ public:
         return get_sensor_name(sensor_id);
     }
 
+    // Get an accuracy report
+    uint8_t getAccuracy()
+    {
+        return __accuracy;
+    }
+
 private:
     static void handleISR()
     {
@@ -619,10 +625,10 @@ private:
         log_i("Boot successful. Kernel version %u.", version);
 
         //Set event callback
-        __error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT, BoschParse::parseMetaEvent, NULL, bhy2);
+        __error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT, BoschParse::parseMetaEvent, (void *)&__accuracy, bhy2);
         BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_register_fifo_parse_callback failed!", false);
 
-        __error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT_WU, BoschParse::parseMetaEvent, NULL, bhy2);
+        __error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT_WU, BoschParse::parseMetaEvent, (void *)&__accuracy, bhy2);
         BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_register_fifo_parse_callback failed!", false);
 
         // __error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_DEBUG_MSG, BoschParse::parseDebugMessage, NULL, bhy2);
@@ -675,11 +681,12 @@ protected:
     int8_t           __error_code;
     static volatile bool __data_available;
     uint8_t          *processBuffer = NULL;
-    size_t           processBufferSize = BHY_PROCESS_BUFFER_SZIE;
+    size_t           processBufferSize = BHY_PROCESS_BUFFER_SIZE;
     const uint8_t    *__firmware;
     size_t          __firmware_size;
     bool            __write_flash;
     uint16_t        __max_rw_length;
+    uint8_t         __accuracy;      /* Accuracy is reported as a meta event. */
 };
 
 

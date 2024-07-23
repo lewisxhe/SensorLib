@@ -56,7 +56,7 @@ void BoschParse::parseData(const struct bhy2_fifo_parse_data_info *fifo, void *u
         if (entry.cb ) {
             if (entry.id == fifo->sensor_id) {
                 if (entry.cb) {
-                    entry.cb(fifo->sensor_id, fifo->data_ptr, size);
+                    entry.cb(fifo->sensor_id, fifo->data_ptr, size, fifo->time_stamp);
                 }
             }
         }
@@ -75,6 +75,7 @@ void BoschParse::parseMetaEvent(const struct bhy2_fifo_parse_data_info *callback
     (void)byte1;
     (void)byte2;
     (void)event_text;
+    uint8_t *accuracy = (uint8_t *)user_data;
 
     if (callback_info->sensor_id == BHY2_SYS_ID_META_EVENT) {
         event_text = "[META EVENT]";
@@ -99,6 +100,9 @@ void BoschParse::parseMetaEvent(const struct bhy2_fifo_parse_data_info *callback
         break;
     case BHY2_META_EVENT_SENSOR_STATUS:
         log_i("%s Accuracy for sensor id %u changed to %u", event_text, byte1, byte2);
+        if (accuracy) {
+            *accuracy = byte2;
+        }
         break;
     case BHY2_META_EVENT_BSX_DO_STEPS_MAIN:
         log_i("%s BSX event (do steps main)", event_text);
