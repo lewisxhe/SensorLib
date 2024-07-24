@@ -239,9 +239,10 @@ public:
 
 private:
 
-    static void IRAM_ATTR handleISR(void *available)
+    static void IRAM_ATTR handleISR(/*void *available*/)
     {
-        *(bool *)(available) = true;
+        // *(bool *)(available) = true;
+          __data_available = true;
     }
 
     bool initImpl()
@@ -306,10 +307,19 @@ private:
         bmm150_get_sensor_settings(&settings, dev);
 
         if (__handler.irq != SENSOR_PIN_NONE) {
+/*
 #if defined(ARDUINO_ARCH_RP2040)
             attachInterruptParam((pin_size_t)(__handler.irq), handleISR, (PinStatus )RISING, (void *)&__data_available);
 #else
             attachInterruptArg(__handler.irq, handleISR, (void *)&__data_available, RISING);
+#endif
+*/
+#if defined(ARDUINO_ARCH_RP2040)
+            attachInterrupt((pin_size_t)(__handler.irq), handleISR, (PinStatus )RISING);
+#elif defined(NRF52840_XXAA) || defined(NRF52832_XXAA) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)
+            attachInterrupt(__handler.irq, handleISR, RISING);
+#else
+#error "Interrupt registration not implemented"
 #endif
         }
 
@@ -321,7 +331,7 @@ protected:
     struct bmm150_dev *dev = NULL;
     SensorLibConfigure __handler;
     int8_t           __error_code;
-    volatile bool    __data_available;
+    static volatile bool    __data_available;
 };
 
 
