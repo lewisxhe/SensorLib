@@ -239,7 +239,7 @@ public:
 
 private:
 
-    static void IRAM_ATTR handleISR(/*void *available*/)
+    static void  handleISR(/*void *available*/)
     {
         // *(bool *)(available) = true;
           __data_available = true;
