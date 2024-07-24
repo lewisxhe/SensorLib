@@ -105,7 +105,7 @@ public:
         return initImpl();
     }
 
-    bool init( PLATFORM_SPI_TYPE &spi, int cs, int mosi = MOSI, int miso = MISO, int sck = SCK)
+    bool init( PLATFORM_SPI_TYPE &spi, int cs, int mosi = -1, int miso = -1, int sck = -1)
     {
         __handler.u.spi_dev.cs = cs;
         __handler.u.spi_dev.miso = miso;
@@ -220,7 +220,7 @@ public:
 
     struct bmm150_mag_data getMag()
     {
-        struct bmm150_mag_data data = {0};
+        struct bmm150_mag_data data = {0, 0, 0};
         bmm150_read_mag_data(&data, dev);
         return data;
     }
@@ -242,7 +242,7 @@ private:
     static void  handleISR(/*void *available*/)
     {
         // *(bool *)(available) = true;
-          __data_available = true;
+        __data_available = true;
     }
 
     bool initImpl()
@@ -307,13 +307,13 @@ private:
         bmm150_get_sensor_settings(&settings, dev);
 
         if (__handler.irq != SENSOR_PIN_NONE) {
-/*
-#if defined(ARDUINO_ARCH_RP2040)
-            attachInterruptParam((pin_size_t)(__handler.irq), handleISR, (PinStatus )RISING, (void *)&__data_available);
-#else
-            attachInterruptArg(__handler.irq, handleISR, (void *)&__data_available, RISING);
-#endif
-*/
+            /*
+            #if defined(ARDUINO_ARCH_RP2040)
+                        attachInterruptParam((pin_size_t)(__handler.irq), handleISR, (PinStatus )RISING, (void *)&__data_available);
+            #else
+                        attachInterruptArg(__handler.irq, handleISR, (void *)&__data_available, RISING);
+            #endif
+            */
 #if defined(ARDUINO_ARCH_RP2040)
             attachInterrupt((pin_size_t)(__handler.irq), handleISR, (PinStatus )RISING);
 #elif defined(NRF52840_XXAA) || defined(NRF52832_XXAA) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)

@@ -162,7 +162,7 @@ public:
     };
 
 #if defined(ARDUINO)
-    SensorQMI8658(PLATFORM_WIRE_TYPE &w, int sda = SDA, int scl = SCL, uint8_t addr = QMI8658_L_SLAVE_ADDRESS)
+    SensorQMI8658(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = QMI8658_L_SLAVE_ADDRESS)
     {
         __wire = &w;
         __sda = sda;
@@ -185,8 +185,8 @@ public:
     {
 #if defined(ARDUINO)
         __wire = &Wire;
-        __sda = SDA;
-        __scl = SCL;
+        __sda = DEFAULT_SDA;
+        __scl = DEFAULT_SCL;
 #endif
         __addr = QMI8658_L_SLAVE_ADDRESS;
     }
