@@ -87,6 +87,6 @@ jobs:
         run: pio pkg install --library "thingpulse/ESP8266 and ESP32 OLED driver for SSD1306 displays @ ^4.4.0" -g
 
       - name: Run PlatformIO
-        run: pio ci --lib="." --board=esp32dev --board=esp32-c3-devkitm-1 --board=nrf52840_dk_adafruit
+        run: pio ci --lib="." --board=esp32dev --board=esp32-c3-devkitm-1 --board=esp32-s3-devkitm-1 --board=nrf52840_dk_adafruit 
         env:
           PLATFORMIO_CI_SRC: ${{ matrix.example }}
