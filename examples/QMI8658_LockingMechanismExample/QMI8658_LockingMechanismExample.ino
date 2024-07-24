@@ -105,7 +105,7 @@ void setup()
 #else
 
 #ifndef CONFIG_IDF_TARGET_ESP32
-//Use tbeams3 defalut spi pin
+//Use tbeams3 default spi pin
 #define SPI_MOSI                    (35)
 #define SPI_SCK                     (36)
 #define SPI_MISO                    (37)
