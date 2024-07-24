@@ -80,7 +80,11 @@ void lockingMechanismHandler()
         Serial.print(gyr.z);
         Serial.println("}");
     }
-    Serial.printf("\t\t\t\t > %lu  %.2f *C\n", qmi.getTimestamp(), qmi.getTemperature_C());
+    Serial.print("\t\t\t\t > ");
+    Serial.print(qmi.getTimestamp());
+    Serial.print("  ");
+    Serial.print(qmi.getTemperature_C());
+    Serial.println("*C");
 }
 
 void setup()

@@ -84,15 +84,26 @@ void parse_quaternion(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64
     time_to_s_ns(_timestamp, &s, &ns, &tns);
 
 
+    Serial.print("SID:"); Serial.print(sensor_id);
+    Serial.print(" T:"); Serial.print(s);
+    Serial.print("."); Serial.print(ns);
+    Serial.print(" x:"); Serial.print(data.x / 16384.0f);
+    Serial.print(" y:"); Serial.print(data.y / 16384.0f);
+    Serial.print(" x:"); Serial.print(data.z / 16384.0f);
+    Serial.print(" w:"); Serial.print(data.w / 16384.0f);
+    Serial.print(" acc:"); Serial.print(((data.accuracy * 180.0f) / 16384.0f) / 3.141592653589793f);
+
+    /*
     Serial.printf("SID: %u; T: %u.%09u; x: %f, y: %f, z: %f, w: %f; acc: %.2f\r\n",
-           sensor_id,
-           s,
-           ns,
-           data.x / 16384.0f,
-           data.y / 16384.0f,
-           data.z / 16384.0f,
-           data.w / 16384.0f,
-           ((data.accuracy * 180.0f) / 16384.0f) / 3.141592653589793f);
+                  sensor_id,
+                  s,
+                  ns,
+                  data.x / 16384.0f,
+                  data.y / 16384.0f,
+                  data.z / 16384.0f,
+                  data.w / 16384.0f,
+                  ((data.accuracy * 180.0f) / 16384.0f) / 3.141592653589793f);
+    */
 }
 
 

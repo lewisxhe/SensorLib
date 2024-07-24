@@ -85,6 +85,15 @@ void parse_euler(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *t
 
     uint8_t accuracy =  bhy.getAccuracy();
     if (accuracy) {
+
+        Serial.print("SID:"); Serial.print(sensor_id);
+        Serial.print(" T:"); Serial.print(s);
+        Serial.print("."); Serial.print(ns);
+        Serial.print(" x:"); Serial.print(data.heading * 360.0f / 32768.0f);
+        Serial.print(" y:"); Serial.print(data.pitch * 360.0f / 32768.0f);
+        Serial.print(" x:"); Serial.print(data.roll * 360.0f / 32768.0f);
+        Serial.print(" acc:"); Serial.print(accuracy);
+        /*
         Serial.printf("SID: %u; T: %u.%09u; h: %f, p: %f, r: %f; acc: %u\r\n",
                       sensor_id,
                       s,
@@ -93,7 +102,16 @@ void parse_euler(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *t
                       data.pitch * 360.0f / 32768.0f,
                       data.roll * 360.0f / 32768.0f,
                       accuracy);
+        */
     } else {
+
+        Serial.print("SID:"); Serial.print(sensor_id);
+        Serial.print(" T:"); Serial.print(s);
+        Serial.print("."); Serial.print(ns);
+        Serial.print(" x:"); Serial.print(data.heading * 360.0f / 32768.0f);
+        Serial.print(" y:"); Serial.print(data.pitch * 360.0f / 32768.0f);
+        Serial.print(" x:"); Serial.print(data.roll * 360.0f / 32768.0f);
+        /*
         Serial.printf("SID: %u; T: %u.%09u; h: %f, p: %f, r: %f\r\n",
                       sensor_id,
                       s,
@@ -101,6 +119,7 @@ void parse_euler(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *t
                       data.heading * 360.0f / 32768.0f,
                       data.pitch * 360.0f / 32768.0f,
                       data.roll * 360.0f / 32768.0f);
+        */
     }
 }
 

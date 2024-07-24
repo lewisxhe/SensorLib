@@ -109,7 +109,6 @@ void setup()
 
 void loop()
 {
-    int16_t x, y, z;
     if (sensorIRQ) {
         sensorIRQ = false;
         // The interrupt status must be read after an interrupt is detected
@@ -118,7 +117,8 @@ void loop()
 
         if (accel.isPedometer()) {
             uint32_t stepCounter = accel.getPedometerCounter();
-            Serial.printf("Step count interrupt,step Counter:%u\n", stepCounter);
+            Serial.print("Step count interrupt,step Counter:");
+            Serial.println(stepCounter);
         }
         if (accel.isActivity()) {
             Serial.println("Activity interrupt");

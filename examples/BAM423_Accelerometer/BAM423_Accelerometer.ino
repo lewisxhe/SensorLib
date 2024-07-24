@@ -71,7 +71,7 @@ void setup()
 
 void loop()
 {
-    int16_t x, y, z;
+    int16_t x = 0, y = 0, z = 0;
     accel.getAccelerometer(x, y, z);
     Serial.print("X:");
     Serial.print(x); Serial.print(" ");
