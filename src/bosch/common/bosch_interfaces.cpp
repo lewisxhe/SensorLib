@@ -29,6 +29,8 @@
  */
 #include "bosch_interfaces.h"
 
+#if defined(ARDUINO)
+
 #if defined(ARDUINO_ARCH_RP2040)
 SPISettings  SensorInterfaces::__spiSetting = SPISettings();
 #else
@@ -155,3 +157,5 @@ void SensorInterfaces::bhy2_delay_us(uint32_t us, void *private_data)
     (void)private_data;
     delayMicroseconds(us);
 }
+
+#endif /*Arduino */

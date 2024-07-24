@@ -31,6 +31,7 @@
 
 #include "SensorLib.h"
 
+#if defined(ARDUINO)
 class SensorInterfaces
 {
 public:
@@ -46,7 +47,7 @@ private:
     static SPISettings  __spiSetting;
 };
 
-
+#endif
 
 
 
