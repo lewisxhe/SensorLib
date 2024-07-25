@@ -42,7 +42,7 @@ How to build custom firmware see : https://www.bosch-sensortec.com/media/boschse
 */
 #define WRITE_TO_FLASH          1           //Set 1 write fw to flash ,set 0 write fw to ram
 
-#ifdef WRITE_TO_FLASH
+#if WRITE_TO_FLASH
 #include "BHI260_aux_BMM150_BME280-flash.fw.h"
 const uint8_t *firmware = bhi26ap_aux_bmm150_bme280_flash_fw;
 const size_t fw_size = sizeof(bhi26ap_aux_bmm150_bme280_flash_fw);
@@ -105,6 +105,11 @@ void setup()
     // Set the firmware array address and firmware size
     bhy.setFirmware(firmware, fw_size, WRITE_TO_FLASH);
 
+#if WRITE_TO_FLASH
+    // Set to load firmware from flash
+    bhy.setBootFormFlash(true);
+#endif
+
 #ifdef BHY2_USE_I2C
     // Using I2C interface
     // BHI260AP_SLAVE_ADDRESS_L = 0x28
@@ -132,7 +137,7 @@ void setup()
     // Output all available sensors to Serial
     bhy.printSensors(Serial);
 
-    float sample_rate = 100.0;      /* Read out hintr_ctrl measured at 100Hz */
+    float sample_rate = 0.0;      /* Read out hintr_ctrl measured at 100Hz */
     uint32_t report_latency_ms = 0; /* Report immediately */
 
     /*

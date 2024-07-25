@@ -42,7 +42,7 @@ How to build custom firmware see : https://www.bosch-sensortec.com/media/boschse
 */
 #define WRITE_TO_FLASH          1           //Set 1 write fw to flash ,set 0 write fw to ram
 
-#ifdef WRITE_TO_FLASH
+#if   WRITE_TO_FLASH
 #include "BHI260AP_aux_BMM150-flash.fw.h"
 const uint8_t *firmware = bhi26ap_aux_bmm150_flash_fw;
 const size_t fw_size = sizeof(bhi26ap_aux_bmm150_flash_fw);
@@ -96,6 +96,11 @@ void setup()
 
     // Set the firmware array address and firmware size
     bhy.setFirmware(firmware, fw_size, WRITE_TO_FLASH);
+
+#if WRITE_TO_FLASH
+    // Set to load firmware from flash
+    bhy.setBootFormFlash(true);
+#endif
 
 #ifdef BHY2_USE_I2C
     // Using I2C interface
