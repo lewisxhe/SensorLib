@@ -84,10 +84,16 @@ void setup()
     SensorWireHelper::dumpDevices(Wire);
 
 
+    // uint8_t touchAddress = 0x1A;        // Other device addresses are determined by the touch firmware and are generally 0X5A by default.
+    uint8_t touchAddress = 0x5A;     // The device address is determined according to the actual situation. Not all device addresses are 0X5A. There can also be other customized device addresses.
+    
+
+    // Set to skip register check, used when the touch device address conflicts with other I2C device addresses [0x5A]
+    touch.jumpCheck();
+    
+
     touch.setPins(SENSOR_RST, SENSOR_IRQ);
-    // The device address is determined according to the actual situation. Not all device addresses are 0X5A. There can also be other customized device addresses.
-    // CST92XX_SLAVE_ADDRESS = 0x5A
-    bool result = touch.begin(Wire, CST92XX_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL);
+    bool result = touch.begin(Wire, touchAddress, SENSOR_SDA, SENSOR_SCL);
     if (result == false) {
         Serial.println("touch is not online..."); while (1)delay(1000);
     }
@@ -98,6 +104,8 @@ void setup()
         Serial.println(" : The screen is covered");
     }, NULL);
 
+
+    Serial.println("Enter touch sleep mode.");
     // Unable to obtain coordinates after turning on sleep
     // CST9217 Work current ~= 1.3mA
     // CST9217 sleep current = 3.4 uA

@@ -31,7 +31,8 @@
 #if defined(ARDUINO)
 TouchDrvCST92xx::TouchDrvCST92xx():
     __center_btn_x(0),
-    __center_btn_y(0)
+    __center_btn_y(0),
+    __jump_check(false)
 {
 }
 
@@ -1105,6 +1106,10 @@ END_UPGRADE:
 
 #endif /*DISABLE UPDATE FIRMWARE*/
 
+void TouchDrvCST92xx::jumpCheck()
+{
+    __jump_check = true;
+}
 
 void TouchDrvCST92xx::setGpioCallback(gpio_mode_fptr_t mode_cb,
                                       gpio_write_fptr_t write_cb,
@@ -1119,23 +1124,41 @@ bool TouchDrvCST92xx::initImpl()
 {
     int retry = 5;
 
-    while (retry > 0) {
-        if (enterBootloader()) {
-            break;
+    if (!__jump_check) {
+        while (retry > 0) {
+            if (enterBootloader()) {
+                break;
+            }
+            retry--;
+            delay(1000);
         }
-        retry--;
-        delay(1000);
-    }
-    if (0 == retry) {
-        log_e("Enter boot loader mode failed!");
-        return false;
-    }
+        if (0 == retry) {
+            log_e("Enter boot loader mode failed!");
+            return false;
+        }
 
-    chipType = getChipType();
+        chipType = getChipType();
 
-    log_d("Chip ID:0x%x", chipType);
+        log_d("Chip ID:0x%x", chipType);
+
+    } else {
+
+        log_d("Jump check setting default IC type : CST9217");
+        // Jump check setting default IC type
+        chipType = CST9217_CHIP_ID;
+
+    }
 
     reset();
+
+    if(__jump_check && __addr != CST92XX_BOOT_ADDRESS){
+        delay(55);
+    }
+
+    if (!this->probe()) {
+        log_e("device is not online");
+        return false;
+    }
 
     if (chipType != CST9220_CHIP_ID && chipType != CST9217_CHIP_ID) {
         return false;

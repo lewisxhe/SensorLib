@@ -61,6 +61,9 @@ public:
 #if defined(ARDUINO)
     TouchDrvCST92xx();
 
+
+    void jumpCheck();
+
     bool begin(PLATFORM_WIRE_TYPE &wire, uint8_t address, int sda, int scl);
 
 #elif defined(ESP_PLATFORM)
@@ -167,6 +170,7 @@ private:
 protected:
     int16_t __center_btn_x;
     int16_t __center_btn_y;
+    bool    __jump_check;
 };
 
 
