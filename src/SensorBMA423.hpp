@@ -351,7 +351,7 @@ public:
         return 0;
     }
 
-    bool setReampAxes(SensorRemap remap)
+    bool setRemapAxes(SensorRemap remap)
     {
         //Top
         // No.1 REG: 0x3e -> 0x88   REG: 0x3f -> 0x0
@@ -515,7 +515,7 @@ public:
         return  writeRegister(interrupt_address_array[int_line],  &data, 1) != DEV_WIRE_ERR;
     }
 
-    bool configreFeatureInterrupt(uint16_t  feature_interrupt_mask, bool enable)
+    bool configFeatureInterrupt(uint16_t  feature_interrupt_mask, bool enable)
     {
         return  interruptMap(int_line,  feature_interrupt_mask, enable);
     }
@@ -776,7 +776,7 @@ private:
         uint8_t val;
         val = readRegister(BMA4_INTERNAL_STAT);
         if (val == BMA4_ASIC_INITIALIZED) {
-            LOG("%s No need configure!\n", __func__);
+            log_d("No need configure!");
             readIrqStatus();    //clear irq status
             return true;
         }
@@ -800,9 +800,9 @@ private:
         delay(150);
         val = readRegister(BMA4_INTERNAL_STAT);
         if (val == BMA4_ASIC_INITIALIZED) {
-            LOG("%s SUCCESS!\n", __func__);
+            log_d("BMA configure SUCCESS!");
         } else {
-            LOG("%s FAILED!\n", __func__);
+            log_d("BMA configure FAILED!");
         }
         return val == BMA4_ASIC_INITIALIZED;
     }
@@ -823,7 +823,7 @@ private:
             return configure();
         }
 
-        LOG("ChipID:0x%x should be 0x%x\n", id, BMA423_CHIP_ID);
+        log_d("ChipID:0x%x should be 0x%x", id, BMA423_CHIP_ID);
         return false;
 
     }
