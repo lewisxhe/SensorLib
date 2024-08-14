@@ -61,9 +61,6 @@ public:
 #if defined(ARDUINO)
     TouchDrvCST92xx();
 
-
-    void jumpCheck();
-
     bool begin(PLATFORM_WIRE_TYPE &wire, uint8_t address, int sda, int scl);
 
 #elif defined(ESP_PLATFORM)
@@ -73,6 +70,9 @@ public:
     bool begin(i2c_port_t port_num, uint8_t addr, int sda, int scl);
 #endif //ESP_IDF_VERSION
 #endif
+
+    void jumpCheck();
+
 
     bool begin(uint8_t addr, iic_fptr_t readRegCallback, iic_fptr_t writeRegCallback);
 
