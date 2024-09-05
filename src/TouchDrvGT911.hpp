@@ -41,6 +41,10 @@ typedef struct GT911_Struct {
     int16_t size;
 } GT911Point_t;
 
+
+#define LOW_LEVEL_QUERY         0x03
+#define HIGH_LEVEL_QUERY        0x04
+
 class TouchDrvGT911 :
     public TouchDrvInterface,
     public SensorCommon<TouchDrvGT911>
@@ -247,6 +251,9 @@ public:
                 return this->getGpioLevel(__irq) == LOW;
             } else if (__irq_mode == RISING ) {
                 return this->getGpioLevel(__irq) == HIGH;
+            } else {
+                // TODO:
+                return getPoint();
             }
         } else {
             return getPoint();
@@ -255,18 +262,36 @@ public:
     }
 
     //In the tested GT911 only the falling edge is valid to use, the rest are incorrect
+    // TODO: 20240905 : The interrupt setting method is invalid, which may be limited by the firmware of the touch chip driver.
     bool setInterruptMode(uint8_t mode)
     {
         // GT911_MODULE_SWITCH_1 0x804D
         uint8_t val = readGT911(GT911_MODULE_SWITCH_1);
         val &= 0XFC;
         if (mode == FALLING) {
-            val |= 0x03;
+            val |= 0x01;
         } else if (mode == RISING ) {
+            val |= 0x00;
+        } else if (mode == LOW_LEVEL_QUERY ) {
             val |= 0x02;
+        } else if (mode == HIGH_LEVEL_QUERY ) {
+            val |= 0x03;
         }
         __irq_mode = mode;
         return writeGT911(GT911_MODULE_SWITCH_1, val) != DEV_WIRE_ERR;
+    }
+
+    /**
+     * @retval
+     *  * 0x0: Rising edge trigger
+     *  * 0x1: Falling edge trigger
+     *  * 0x2: Low level query
+     *  * 0x3: High level query
+     */
+    uint8_t getInterruptMode()
+    {
+        uint8_t val = readGT911(GT911_MODULE_SWITCH_1);
+        return val & 0x03;
     }
 
 
@@ -314,6 +339,26 @@ public:
         *y = y_resolution[0] | (y_resolution[1] << 8);
         return true;
     }
+
+    //Range : 5 ~ 15 ms
+    void updateRefreshRate(uint8_t rate_ms)
+    {
+        if ((rate_ms - 5) < 5) {
+            rate_ms = 5;
+        }
+        if (rate_ms > 15) {
+            rate_ms = 15;
+        }
+        rate_ms -= 5;
+        writeGT911(GT911_REFRESH_RATE, rate_ms);
+    }
+
+    uint8_t getRefreshRate()
+    {
+        uint8_t rate_ms  = readGT911(GT911_REFRESH_RATE);
+        return rate_ms + GT911_BASE_REF_RATE ;
+    }
+
 
     int getVendorID()
     {
@@ -371,15 +416,41 @@ private:
         writeGT911(GT911_POINT_INFO, 0x00);
     }
 
+    bool probeAddress()
+    {
+        const uint8_t device_address[2]  = {GT911_SLAVE_ADDRESS_L, GT911_SLAVE_ADDRESS_H};
+        for (int i = 0; i < SENSORLIB_COUNT(device_address); ++i) {
+            __addr = device_address[i];
+            for (int retry = 0; retry < 3; ++retry) {
+                if (getChipID() == GT911_DEV_ID) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
     bool initImpl()
     {
         int16_t x = 0, y = 0;
 
-        if (__addr == GT911_SLAVE_ADDRESS_H  &&
-                __rst != SENSOR_PIN_NONE &&
-                __irq != SENSOR_PIN_NONE) {
+        if (__rst == SENSOR_PIN_NONE) {
+            // Automatically determine the current device
+            // address when using the reset pin without connection
+            if (!probeAddress()) {
+                return false;
+            }
+            log_i("Probe address is : 0x%X", __addr);
 
-            log_i("GT911 using 0x28 address!\n");
+            // Reset Config
+            reset();
+
+        } else if (__addr == GT911_SLAVE_ADDRESS_H  &&
+                   __rst != SENSOR_PIN_NONE &&
+                   __irq != SENSOR_PIN_NONE) {
+
+            log_i("GT911 using 0x28 address!");
 
             this->setGpioMode(__rst, OUTPUT);
             this->setGpioMode(__irq, OUTPUT);
@@ -395,7 +466,7 @@ private:
                    __rst != SENSOR_PIN_NONE &&
                    __irq != SENSOR_PIN_NONE) {
 
-            log_i("GT911 using 0xBA address!\n");
+            log_i("GT911 using 0xBA address!");
 
             this->setGpioMode(__rst, OUTPUT);
             this->setGpioMode(__irq, OUTPUT);
@@ -407,24 +478,24 @@ private:
             delay(18);
             this->setGpioMode(__irq, INPUT);
 
-        } else {
-            reset();
-        }
+        } 
 
         // For variants where the GPIO is controlled by I2C, a delay is required here
         delay(20);
 
         __chipID = getChipID();
-        log_i("Product id:%ld\n", __chipID);
+        log_i("Product id:%ld", __chipID);
 
-        if (__chipID != 911) {
-            log_i("Not find device GT911\n");
+        if (__chipID != GT911_DEV_ID) {
+            log_i("Not find device GT911");
             return false;
         }
-        log_i("Firmware version: 0x%x\n", getFwVersion());
+        log_i("Firmware version: 0x%x", getFwVersion());
         getResolution(&x, &y);
-        log_i("Resolution : X = %d Y = %d\n", x, y);
-        log_i("Vendor id:%d\n", getVendorID());
+        log_i("Resolution : X = %d Y = %d", x, y);
+        log_i("Vendor id:%d", getVendorID());
+        log_i("Refresh Rate:%d ms", getRefreshRate());
+        
         return true;
     }
 

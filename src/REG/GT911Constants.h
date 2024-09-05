@@ -32,6 +32,8 @@
 
 #define GT911_SLAVE_ADDRESS_H         (0x14)
 #define GT911_SLAVE_ADDRESS_L         (0x5D)
+#define GT911_DEV_ID                  (911)
+#define GT911_BASE_REF_RATE           (5)
 
 // Real-time command (Write only)
 #define GT911_COMMAND                 (0x8040)
