@@ -324,6 +324,12 @@ public:
         return fw_ver[0] | (fw_ver[1] << 8);
     }
 
+    uint8_t getConfigVersion()
+    {
+        return readGT911(GT911_CONFIG_VERSION);
+    }
+
+
     bool getResolution(int16_t *x, int16_t *y)
     {
         uint8_t x_resolution[2] = {0}, y_resolution[2] = {0};
@@ -385,6 +391,7 @@ public:
         __homeButtonCb = cb;
         __userData = user_data;
     }
+
 
 private:
 
@@ -478,7 +485,7 @@ private:
             delay(18);
             this->setGpioMode(__irq, INPUT);
 
-        } 
+        }
 
         // For variants where the GPIO is controlled by I2C, a delay is required here
         delay(20);
@@ -495,7 +502,7 @@ private:
         log_i("Resolution : X = %d Y = %d", x, y);
         log_i("Vendor id:%d", getVendorID());
         log_i("Refresh Rate:%d ms", getRefreshRate());
-        
+
         return true;
     }
 
