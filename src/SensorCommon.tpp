@@ -168,7 +168,7 @@ public:
         __i2c_dev_conf.scl_speed_hz = SENSORLIB_I2C_MASTER_SEEED;
 #if (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,3,0))
 #if (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,4,0))
-            // New fields since esp-idf-v5.3-beta1
+        // New fields since esp-idf-v5.3-beta1
         __i2c_dev_conf.scl_wait_us = 0;
 #endif
         __i2c_dev_conf.flags.disable_ack_check = 0;
@@ -340,7 +340,7 @@ protected:
         return writeRegister(reg, (uint8_t *)&data.full, 2);
     }
 
-    int writeThenRead(uint8_t *write_buffer, uint8_t write_len, uint8_t *read_buffer, uint8_t read_len)
+    int writeThenRead(uint8_t *write_buffer, size_t write_len, uint8_t *read_buffer, size_t read_len)
     {
 #if defined(ARDUINO)
         if (__wire) {
@@ -414,7 +414,7 @@ protected:
         return  DEV_WIRE_ERR;
     }
 
-    int writeRegister(int reg, uint8_t *buf, uint8_t length)
+    int writeRegister(int reg, uint8_t *buf, size_t length)
     {
         if (__i2c_master_write) {
             return __i2c_master_write(__addr, reg, buf, length);
@@ -614,6 +614,29 @@ protected:
     }
 
 
+    bool reallocBuffer(size_t realloc_size)
+    {
+#if defined(ARDUINO)
+
+#ifdef ARDUINO_ARCH_ESP32
+        // ESP32  I2C BUFFER : 128 Bytes
+        if (__wire) {
+            if (__wire->setBufferSize(realloc_size) != realloc_size) {
+                log_e("realloc I2C buffer failed!");
+                return false;
+            }
+        }
+#elif defined(ARDUINO_ARCH_RP2040)
+        // RP2040 I2C BUFFER : 256 Bytes
+
+#elif defined(ARDUINO_ARCH_NRF52)
+        // NRF52840 I2C BUFFER : 64 Bytes
+// #warning "NRF Platform I2C Buffer expansion is not implemented"
+    //TODO:"NRF Platform I2C Buffer expansion is not implemented"
+#endif
+#endif
+        return true;
+    }
 
     /*
      * CRTP Helper
