@@ -35,7 +35,7 @@
 
 
 #if defined(ARDUINO_ARCH_NRF52)
-// NRF52840 I2C BUFFER : 64 Bytes , 
+// NRF52840 I2C BUFFER : 64 Bytes ,
 #warning "NRF Platform I2C Buffer expansion is not implemented , GT911 requires at least 188 bytes to read all configurations"
 #endif
 
@@ -138,8 +138,14 @@ public:
         if (__irq != SENSOR_PIN_NONE) {
             this->setGpioMode(__irq, INPUT);
         }
+        /*
+        * If you perform a software reset on a board without a reset pin connected,
+        * subsequent interrupt settings or re-writing of configurations will be invalid.
+        * For example, when debugging a LilyGo T-Deck, resetting the interrupt mode will
+        * be invalid after a software reset.
+        * */
         // writeRegister(GT911_COMMAND, 0x02);
-        writeCommand(0x02);
+        // writeCommand(0x02);
     }
 
     void sleep()
@@ -464,7 +470,7 @@ public:
     void dumpRegister()
     {
         size_t output_size = 0;
-        uint8_t *buffer = loadConfig(&output_size);
+        uint8_t *buffer = loadConfig(&output_size, true);
         if (output_size == 0) {
             return;
         }
@@ -484,6 +490,12 @@ public:
         if (num > 5) num = 5;
         writeGT911(GT911_TOUCH_NUMBER, num);
         reloadConfig();
+    }
+
+    uint8_t getMaxTouchPoint()
+    {
+        uint8_t num = readGT911(GT911_TOUCH_NUMBER);
+        return num & 0x0F;
     }
 
 private:
@@ -546,6 +558,8 @@ private:
             // Reset Config
             reset();
 
+            this->setGpioMode(__irq, INPUT);
+
         } else if (__addr == GT911_SLAVE_ADDRESS_H  &&
                    __rst != SENSOR_PIN_NONE &&
                    __irq != SENSOR_PIN_NONE) {
@@ -595,6 +609,7 @@ private:
         log_i("Resolution : X = %d Y = %d", x, y);
         log_i("Vendor id:%d", getVendorID());
         log_i("Refresh Rate:%d ms", getRefreshRate());
+        log_i("MaxTouchPoint:%d", getMaxTouchPoint());
 
         /*
         * For the ESP32 platform, the default buffer is 128.
