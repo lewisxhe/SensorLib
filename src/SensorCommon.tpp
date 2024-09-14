@@ -75,7 +75,7 @@ public:
         __wire = &w;
         __sda = sda;
         __scl = scl;
-#if defined(NRF52840_XXAA) || defined(NRF52832_XXAA)
+#if defined(ARDUINO_ARCH_NRF52)
         if (__sda != 0xFF && __scl != 0xFF) {
             __wire->setPins(__sda, __scl);
         }
@@ -115,12 +115,17 @@ public:
             return false;
         }
         if (mosi != -1 && miso != -1 && sck != -1) {
-#if defined(NRF52840_XXAA) || defined(NRF52832_XXAA)
+#if defined(ARDUINO_ARCH_NRF52)
             __spi->begin();
 #elif defined(ARDUINO_ARCH_RP2040)
             __spi->setSCK(sck);
             __spi->setRX(miso);
             __spi->setTX(mosi);
+            __spi->begin();
+#elif defined(ARDUINO_ARCH_STM32)
+            __spi->setSCLK(sck);
+            __spi->setMISO(miso);
+            __spi->setMOSI(mosi);
             __spi->begin();
 #else
             __spi->begin(sck, miso, mosi);
@@ -659,34 +664,6 @@ protected:
      * CRTP Helper
      */
 protected:
-
-//     bool begin()
-//     {
-// #if defined(ARDUINO)
-//         if (__has_init) return thisChip().initImpl();
-//         __has_init = true;
-
-//         if (__wire) {
-//             log_i("SDA:%d SCL:%d", __sda, __scl);
-// #if defined(NRF52840_XXAA) || defined(NRF52832_XXAA)
-//             __wire->begin();
-// #elif defined(ARDUINO_ARCH_RP2040)
-//             __wire->end();
-//             __wire->setSDA(__sda);
-//             __wire->setSCL(__scl);
-//             __wire->begin();
-// #else
-//             __wire->begin(__sda, __scl);
-// #endif
-//         }
-//         if (__spi) {
-//             // int cs, int mosi = -1, int miso = -1, int sck = -1, SPIClass &spi = SPI
-//             begin(__cs, __mosi, __miso, __sck, *__spi);
-//         }
-
-// #endif  /*ARDUINO*/
-//         return thisChip().initImpl();
-//     }
 
     void end()
     {

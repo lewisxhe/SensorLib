@@ -787,7 +787,7 @@ private:
         if (__handler.irq != SENSOR_PIN_NONE) {
 #if defined(ARDUINO_ARCH_RP2040)
             attachInterrupt((pin_size_t)(__handler.irq), handleISR, (PinStatus )RISING);
-#elif defined(NRF52840_XXAA) || defined(NRF52832_XXAA) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)
+#elif defined(ARDUINO_ARCH_NRF52) || defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_STM32) 
             attachInterrupt(__handler.irq, handleISR, RISING);
 #else
 #error "Interrupt registration not implemented"

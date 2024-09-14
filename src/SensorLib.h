@@ -60,24 +60,31 @@
 #if defined(ARDUINO_ARCH_RP2040)
 #define PLATFORM_SPI_TYPE               SPIClassRP2040
 #define PLATFORM_WIRE_TYPE              TwoWire
-#define SPI_DATA_ORDER  SPI_MSB_FIRST
-#define DEFAULT_SDA     (0xFF)
-#define DEFAULT_SCL     (0xFF)
-#define DEFAULT_SPISETTING  SPISettings()
-#elif defined(NRF52840_XXAA) || defined(NRF52832_XXAA)
+#define SPI_DATA_ORDER                  SPI_MSB_FIRST
+#define DEFAULT_SDA                     (0xFF)
+#define DEFAULT_SCL                     (0xFF)
+#define DEFAULT_SPISETTING              SPISettings()
+#elif defined(ARDUINO_ARCH_STM32)
 #define PLATFORM_SPI_TYPE               SPIClass
 #define PLATFORM_WIRE_TYPE              TwoWire
-#define SPI_DATA_ORDER  MSBFIRST
-#define DEFAULT_SDA     (0xFF)
-#define DEFAULT_SCL     (0xFF)
-#define DEFAULT_SPISETTING  SPISettings()
+#define SPI_DATA_ORDER                  MSBFIRST
+#define DEFAULT_SDA                     (0xFF)
+#define DEFAULT_SCL                     (0xFF)
+#define DEFAULT_SPISETTING              SPISettings()
+#elif defined(ARDUINO_ARCH_NRF52)
+#define PLATFORM_SPI_TYPE               SPIClass
+#define PLATFORM_WIRE_TYPE              TwoWire
+#define SPI_DATA_ORDER                  MSBFIRST
+#define DEFAULT_SDA                     (0xFF)
+#define DEFAULT_SCL                     (0xFF)
+#define DEFAULT_SPISETTING              SPISettings()
 #else
 #define PLATFORM_SPI_TYPE               SPIClass
 #define PLATFORM_WIRE_TYPE              TwoWire
-#define SPI_DATA_ORDER  SPI_MSBFIRST
-#define DEFAULT_SDA     (SDA)
-#define DEFAULT_SCL     (SCL)
-#define DEFAULT_SPISETTING  SPISettings(__freq, __dataOrder, __dataMode);
+#define SPI_DATA_ORDER                  SPI_MSBFIRST
+#define DEFAULT_SDA                     (SDA)
+#define DEFAULT_SCL                     (SCL)
+#define DEFAULT_SPISETTING              SPISettings(__freq, __dataOrder, __dataMode);
 #endif
 
 #elif defined(ESP_PLATFORM)
@@ -87,6 +94,10 @@
 #define SENSORLIB_I2C_MASTER_TIMEOUT_MS       1000
 #define SENSORLIB_I2C_MASTER_SEEED            400000
 
+#endif
+
+#ifndef I2C_BUFFER_LENGTH
+#define I2C_BUFFER_LENGTH               (32)
 #endif
 
 enum SensorLibInterface {

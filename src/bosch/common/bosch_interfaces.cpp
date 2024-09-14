@@ -56,7 +56,7 @@ bool SensorInterfaces::setup_interfaces(SensorLibConfigure config)
         config.u.i2c_dev.wire->begin();
 #elif defined(NRF52840_XXAA) || defined(NRF52832_XXAA)
         config.u.i2c_dev.wire->end();
-        config.u.i2c_dev.wire->setPins(config.u.i2c_dev.sda,config.u.i2c_dev.scl);
+        config.u.i2c_dev.wire->setPins(config.u.i2c_dev.sda, config.u.i2c_dev.scl);
         config.u.i2c_dev.wire->begin();
 #else
         config.u.i2c_dev.wire->begin(config.u.i2c_dev.sda, config.u.i2c_dev.scl);
@@ -74,11 +74,16 @@ bool SensorInterfaces::setup_interfaces(SensorLibConfigure config)
         config.u.spi_dev.spi->setRX(config.u.spi_dev.miso);
         config.u.spi_dev.spi->setTX(config.u.spi_dev.mosi);
         config.u.spi_dev.spi->begin();
-#elif defined(NRF52840_XXAA) || defined(NRF52832_XXAA)
-        config.u.spi_dev.spi->setPins(config.u.spi_dev.miso,config.u.spi_dev.sck, config.u.spi_dev.mosi);
+#elif defined(ARDUINO_ARCH_NRF52)
+        config.u.spi_dev.spi->setPins(config.u.spi_dev.miso, config.u.spi_dev.sck, config.u.spi_dev.mosi);
+        config.u.spi_dev.spi->begin();
+#elif defined(ARDUINO_ARCH_STM32)
+        config.u.spi_dev.spi->setSCLK(config.u.spi_dev.sck);
+        config.u.spi_dev.spi->setMISO(config.u.spi_dev.miso);
+        config.u.spi_dev.spi->setMOSI(config.u.spi_dev.mosi);
         config.u.spi_dev.spi->begin();
 #else
-        config.u.spi_dev.spi->begin(config.u.spi_dev.sck, config.u.spi_dev.miso, config.u.spi_dev.mosi);
+config.u.spi_dev.spi->begin(config.u.spi_dev.sck, config.u.spi_dev.miso, config.u.spi_dev.mosi);
 #endif
         break;
     default:
