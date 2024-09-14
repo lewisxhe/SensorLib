@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      XL9555_ExtensionIOInterrupt.ino
+ * @file      XL9555_ioEvent.ino
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2024-09-14
  *
@@ -44,32 +44,17 @@
 
 ExtensionIOXL9555 io;
 
-void printBinary(uint8_t port, uint32_t num, int bits, bool new_line = false)
+
+void gpio5_event_cb(void *user_data)
 {
-
-    Serial.print("Port");
-    Serial.print(port);
-    Serial.print(":");
-
-    char binary[17];
-    int i = bits - 1;
-    binary[bits] = '\0';
-    for (int j = 0; j < bits; j++) {
-        binary[j] = '0';
-    }
-    for (; i >= 0; i--) {
-        binary[i] = (num & 1) + '0';
-        num >>= 1;
-    }
-
-    Serial.print(binary);
-    if (new_line) {
-        Serial.println();
-    } else {
-        Serial.print("\t");
-    }
+    Serial.println((const char *)user_data);
 }
 
+
+void gpio7_event_cb(void *user_data)
+{
+    Serial.println((const char *)user_data);
+}
 
 void setup()
 {
@@ -119,33 +104,26 @@ void setup()
     io.configPort(ExtensionIOXL9555::PORT1, 0xFF);
 
 
+    // Passing in user parameters
+    static const char *gpio5_data = "GPIO 5 SET HIGH TRIGGER";
+    static const char *gpio7_data = "GPIO 7 SET LOW  TRIGGER";
+
+    // Set GPIO5 high level to trigger callback event
+    io.setPinEvent(5, HIGH, gpio7_event_cb, (void *)gpio5_data);
+
+    // Set GPIO7 low level to trigger callback event
+    io.setPinEvent(7, LOW, gpio7_event_cb, (void *)gpio7_data);
+
+
+    // Remove gpio 5 callback event
+    // io.removePinEvent(5);
 }
 
 void loop()
 {
-    // When the interrupt occurs, we read the mask value of PORT
+    // Refresh registers when an interrupt comes
     if (digitalRead(SENSOR_IRQ) == LOW) {
-
-        // Read 8-bit port 0 input status
-        int val = io.readPort(0);
-
-        // Read 8-bit port 1 input status
-        int val1 = io.readPort(1);
-
-        printBinary(1, val1, 8);
-        printBinary(0, val, 8);
-
-        // Read 16-bit gpio input status
-        uint16_t all_val = io.read();
-        printBinary(3, all_val, 16, true);
-
-        int i = 15;
-        for (; i >= 0; i--) {
-            if (!(all_val & 1)) {
-                Serial.printf("GPIO %d is low\n", 15 - i);
-            }
-            all_val >>= 1;
-        }
+        io.update();
     }
 }
 

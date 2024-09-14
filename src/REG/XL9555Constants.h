@@ -1,6 +1,7 @@
 #pragma once
 
 // A0, A1, A2 connect to GND
+#define XL9555_UNKOWN_ADDRESS        (0xFF)
 #define XL9555_SLAVE_ADDRESS0        (0x20)
 #define XL9555_SLAVE_ADDRESS1        (0x21)
 #define XL9555_SLAVE_ADDRESS2        (0x22)

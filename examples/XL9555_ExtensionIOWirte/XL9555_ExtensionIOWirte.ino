@@ -2,7 +2,7 @@
  *
  * @license MIT License
  *
- * Copyright (c) 2022 lewis he
+ * Copyright (c) 2024 lewis he
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,13 +24,10 @@
  *
  * @file      XL9555_ExtensionIOWirte.ino
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2023-01-03
+ * @date      2024-09-14
  *
  */
-#include <Wire.h>
-#include <SPI.h>
 #include <Arduino.h>
-#include <time.h>
 #include "ExtensionIOXL9555.hpp"
 
 #ifndef SENSOR_SDA
@@ -45,46 +42,67 @@
 #define SENSOR_IRQ  -1
 #endif
 
-ExtensionIOXL9555 extIO;
+ExtensionIOXL9555 io;
 
 void setup()
 {
     Serial.begin(115200);
-    while (!Serial);
 
+    // Set the interrupt input to input pull-up
+    if (SENSOR_IRQ > 0) {
+        pinMode(SENSOR_IRQ, INPUT_PULLUP);
+    }
 
+    /*
+    *
+    *    If the device address is not known, the 0xFF parameter can be passed in.
+    *
+    *    XL9555_UNKOWN_ADDRESS  = 0xFF
+    *
+    *    If the device address is known, the device address is given
+    *
+    *    XL9555_SLAVE_ADDRESS0  = 0x20
+    *    XL9555_SLAVE_ADDRESS1  = 0x21
+    *    XL9555_SLAVE_ADDRESS2  = 0x22
+    *    XL9555_SLAVE_ADDRESS3  = 0x23
+    *    XL9555_SLAVE_ADDRESS4  = 0x24
+    *    XL9555_SLAVE_ADDRESS5  = 0x25
+    *    XL9555_SLAVE_ADDRESS6  = 0x26
+    *    XL9555_SLAVE_ADDRESS7  = 0x27
+    */
+    const uint8_t chip_address = XL9555_UNKOWN_ADDRESS;
 
-    // Device address 0x20~0x27
-    if (!extIO.begin(Wire, XL9555_SLAVE_ADDRESS4, SENSOR_SDA, SENSOR_SCL)) {
-        Serial.println("Failed to find XL9555 - check your wiring!");
+    if (!io.init(Wire, SENSOR_SDA, SENSOR_SCL, chip_address)) {
         while (1) {
+            Serial.println("Failed to find XL9555 - check your wiring!");
             delay(1000);
         }
     }
+
     // Set PORT0 as output ,mask = 0x00 = all pin output
-    extIO.configPort(ExtensionIOXL9555::PORT0, 0x00);
+    io.configPort(ExtensionIOXL9555::PORT0, 0x00);
     // Set PORT1 as output ,mask = 0x00 = all pin output
-    extIO.configPort(ExtensionIOXL9555::PORT1, 0x00);
+    io.configPort(ExtensionIOXL9555::PORT1, 0x00);
 }
 
 void loop()
 {
     // Set all PORTs to 1, and the parameters here are mask values, corresponding to the 0~7 bits
     Serial.println("Set port HIGH");
-    extIO.writePort(ExtensionIOXL9555::PORT0, 0xFF);
+    io.writePort(ExtensionIOXL9555::PORT0, 0xFF);
     delay(1000);
 
     Serial.println("Set port LOW");
     // Set all PORTs to 0, and the parameters here are mask values, corresponding to the 0~7 bits
-    extIO.writePort(ExtensionIOXL9555::PORT1, 0x00);
+    io.writePort(ExtensionIOXL9555::PORT1, 0x00);
     delay(1000);
 
     Serial.println("digitalWrite");
-    extIO.digitalWrite(ExtensionIOXL9555::IO0, HIGH);
+    io.digitalWrite(ExtensionIOXL9555::IO0, HIGH);
     delay(1000);
 
     Serial.println("digitalToggle");
-    extIO.digitalToggle(ExtensionIOXL9555::IO0);
+    io.digitalToggle(ExtensionIOXL9555::IO0);
     delay(1000);
 
 

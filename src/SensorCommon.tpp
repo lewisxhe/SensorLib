@@ -297,7 +297,24 @@ protected:
 #endif
     }
 
-
+    bool probe(uint8_t address)
+    {
+#if defined(ARDUINO)
+        if (__wire) {
+            __wire->beginTransmission(address);
+            return __wire->endTransmission() == 0;
+        }
+        return false;
+#elif defined(ESP_PLATFORM)
+#if ((ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,0,0)) && defined(CONFIG_SENSORLIB_ESP_IDF_NEW_API))
+        return i2c_master_probe(bus_handle, address, 1000);
+#else
+        return true;
+#endif
+#else
+        return true;
+#endif
+    }
 
     bool probe()
     {
@@ -632,7 +649,7 @@ protected:
 #elif defined(ARDUINO_ARCH_NRF52)
         // NRF52840 I2C BUFFER : 64 Bytes
 // #warning "NRF Platform I2C Buffer expansion is not implemented"
-    //TODO:"NRF Platform I2C Buffer expansion is not implemented"
+        //TODO:"NRF Platform I2C Buffer expansion is not implemented"
 #endif
 #endif
         return true;
