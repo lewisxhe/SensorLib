@@ -623,6 +623,19 @@ private:
         // Get the default interrupt trigger mode of the current screen
         getInterruptMode();
 
+        if ( __irq_mode == RISING) {
+            log_i("Interrupt Mode:  RISING");
+        } else if (__irq_mode == FALLING) {
+            log_i("Interrupt Mode:  FALLING");
+        } else if (__irq_mode == LOW_LEVEL_QUERY) {
+            log_i("Interrupt Mode:  LOW_LEVEL_QUERY");
+        } else if (__irq_mode == HIGH_LEVEL_QUERY) {
+            log_i("Interrupt Mode:  HIGH_LEVEL_QUERY");
+        } else {
+            log_e("UNKOWN");
+        }
+
+
         return true;
     }
 
