@@ -33,14 +33,6 @@
 
 #include "SensorLib.h"
 
-typedef union  {
-    struct {
-        uint8_t low;
-        uint8_t high;
-    } bits;
-    uint16_t full;
-} RegData_t;
-
 typedef int     (*iic_fptr_t)(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t len);
 typedef void    (*gpio_write_fptr_t)(uint32_t gpio, uint8_t value);
 typedef int     (*gpio_read_fptr_t)(uint32_t gpio);
@@ -357,11 +349,6 @@ protected:
         return writeRegister(reg, &val, 1);
     }
 
-    int writeRegister(int reg, RegData_t data)
-    {
-        return writeRegister(reg, (uint8_t *)&data.full, 2);
-    }
-
     int writeThenRead(uint8_t *write_buffer, size_t write_len, uint8_t *read_buffer, size_t read_len)
     {
 #if defined(ARDUINO)
@@ -490,11 +477,6 @@ protected:
     {
         uint8_t val = 0;
         return readRegister(reg, &val, 1) == -1 ? -1 : val;
-    }
-
-    int readRegister(int reg, RegData_t *data)
-    {
-        return readRegister(reg, (uint8_t *)data, 2);
     }
 
     int readRegister(int reg, uint8_t *buf, uint8_t length)
