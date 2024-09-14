@@ -232,3 +232,6 @@ typedef struct __SensorLibPins {
 #include "platform/esp_arduino.h"
 
 #endif
+
+
+#include "DevicesPins.h"
