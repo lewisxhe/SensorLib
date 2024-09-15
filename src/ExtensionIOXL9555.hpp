@@ -213,6 +213,10 @@ public:
 
     void setPinEvent(uint8_t pin, uint8_t mode, gpio_event_t event, void *user_data)
     {
+        if (pin > XL9555_MAX_PIN) {
+            log_e("XL9555 Max use io pin is 0 ~ 15 .");
+            return;
+        }
         this->event[pin].cb = event;
         this->event[pin].mode = mode;
         this->event[pin].user_data = user_data;
@@ -220,6 +224,10 @@ public:
 
     void removePinEvent(uint8_t pin)
     {
+        if (pin > XL9555_MAX_PIN) {
+            log_e("XL9555 Max use io pin is 0 ~ 15 .");
+            return;
+        }
         this->event[pin].cb = NULL;
     }
 
@@ -227,11 +235,11 @@ public:
     {
         uint16_t val = this->read();
 
-        int i = 15;
+        int i = XL9555_MAX_PIN;
 
         for (; i >= 0; i--) {
 
-            uint8_t _index = 15 - i;
+            uint8_t _index = XL9555_MAX_PIN - i;
 
             if (this->event[_index].cb != NULL) {
 

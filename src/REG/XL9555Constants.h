@@ -28,6 +28,6 @@
 // Configuration Port 1 /RW
 #define XL9555_CTRL_CFG1            (0x07)
 
-
+#define XL9555_MAX_PIN              (15)
 
 
