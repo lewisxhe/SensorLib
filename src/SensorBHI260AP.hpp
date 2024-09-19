@@ -158,24 +158,6 @@ public:
         __boot_from_flash = boot_from_flash;
     }
 
-    bool enablePowerSave()
-    {
-        return true;
-    }
-
-    bool disablePowerSave()
-    {
-
-        return true;
-    }
-
-    void disableInterruptCtrl()
-    {
-    }
-
-    void enableInterruptCtrl()
-    {
-    }
 
     bhy2_dev *getHandler()
     {
