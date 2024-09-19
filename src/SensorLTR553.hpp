@@ -288,7 +288,7 @@ public:
         writeRegister(LTR553_REG_PS_LED, 0xE7, duty);
     }
 
-    void setPsLedCurrnet(PsLedCurrent cur)
+    void setPsLedCurrent(PsLedCurrent cur)
     {
         writeRegister(LTR553_REG_PS_LED, 0xF8, cur);
     }
