@@ -19,7 +19,7 @@
 
 [![LICENSE](https://img.shields.io/github/license/lewisxhe/SensorLib)](https://github.com/lewisxhe/SensorLib/blob/master/LICENSE)
 [![ISSUES](https://img.shields.io/github/issues/lewisxhe/SensorsLib)](https://github.com/lewisxhe/SensorsLib/issues)
-[![FROK](https://img.shields.io/github/forks/lewisxhe/SensorsLib)](https://github.com/lewisxhe/SensorsLib/graphs/contributors)
+[![FORK](https://img.shields.io/github/forks/lewisxhe/SensorsLib)](https://github.com/lewisxhe/SensorsLib/graphs/contributors)
 [![STAR](https://img.shields.io/github/stars/lewisxhe/SensorsLib)](https://github.com/lewisxhe/SensorsLib/stargazers)
 [![releases](https://img.shields.io/github/release/lewisxhe/SensorsLib)](https://github.com/lewisxhe/SensorLib/releases)
 
