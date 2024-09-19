@@ -180,13 +180,13 @@ public:
         return bmm150_set_sensor_settings(BMM150_SEL_INT_PIN_EN, &settings, dev) == BMM150_OK;
     }
 
-    bool enabledDtatReady()
+    bool enabledDataReady()
     {
         settings.int_settings.drdy_pin_en = BMM150_INT_ENABLE;
         return bmm150_set_sensor_settings(BMM150_SEL_DRDY_PIN_EN, &settings, dev) == BMM150_OK;
     }
 
-    bool disabledDtatReady()
+    bool disabledDataReady()
     {
         settings.int_settings.drdy_pin_en = BMM150_INT_DISABLE;
         return bmm150_set_sensor_settings(BMM150_SEL_DRDY_PIN_EN, &settings, dev) == BMM150_OK;
@@ -197,7 +197,7 @@ public:
         return dev->chip_id;
     }
 
-    uint8_t getInterruptStatus()
+    uint8_t getIrqStatus()
     {
         bmm150_get_interrupt_status(dev);
         return dev->int_status;
