@@ -27,6 +27,6 @@
     ]
   },
   "frameworks": ["arduino", "espidf"],
-  "platforms": "esp32,raspberrypi,ststm32,espressif32",
+  "platforms": "ststm32,espressif32,nordicnrf52",
   "license": "MIT"
 }
