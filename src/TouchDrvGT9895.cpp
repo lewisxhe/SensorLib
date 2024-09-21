@@ -391,7 +391,6 @@ int TouchDrvGT9895::convertChipInfo(struct goodix_ic_info *info, const uint8_t *
 
 void TouchDrvGT9895::printChipInfo(struct goodix_ic_info *ic_info)
 {
-#if !defined(ARDUINO_ARCH_RP2040)
     struct goodix_ic_info_version *version = &ic_info->version;
     struct goodix_ic_info_feature *feature = &ic_info->feature;
     struct goodix_ic_info_param *parm = &ic_info->parm;
@@ -402,7 +401,7 @@ void TouchDrvGT9895::printChipInfo(struct goodix_ic_info *ic_info)
     log_d("info_version_id:               0x%01X", version->info_version_id);
     log_d("ic_die_id:                     0x%01X", version->ic_die_id);
     log_d("ic_version_id:                 0x%01X", version->ic_version_id);
-    log_d("config_id:                     0x%4X", version->config_id);
+    log_d("config_id:                     0x%4lX", version->config_id);
     log_d("config_version:                0x%01X", version->config_version);
     log_d("frame_data_customer_id:        0x%01X", version->frame_data_customer_id);
     log_d("frame_data_version_id:         0x%01X", version->frame_data_version_id);
@@ -413,20 +412,19 @@ void TouchDrvGT9895::printChipInfo(struct goodix_ic_info *ic_info)
     log_d("gesture_feature:               0x%04X", feature->gesture_feature);
     log_d("side_touch_feature:            0x%04X", feature->side_touch_feature);
     log_d("stylus_feature:                0x%04X", feature->stylus_feature);
-    log_d("Drv*Sen,Button,Force num:      %d x %d, %d, %d", parm->drv_num, parm->sen_num, parm->button_num, parm->force_num);
-    log_d("Cmd:                           0x%04X, %d", misc->cmd_addr, misc->cmd_max_len);
-    log_d("Cmd-Reply:                     0x%04X, %d", misc->cmd_reply_addr, misc->cmd_reply_len);
-    log_d("FW-State:                      0x%04X, %d", misc->fw_state_addr, misc->fw_state_len);
-    log_d("FW-Buffer:                     0x%04X, %d", misc->fw_buffer_addr, misc->fw_buffer_max_len);
-    log_d("Touch-Data:                    0x%04X, %d", misc->touch_data_addr, misc->touch_data_head_len);
-    log_d("point_struct_len:              %d", misc->point_struct_len);
-    log_d("mutual_raw_data_addr:          0x%04X", misc->mutual_rawdata_addr);
-    log_d("mutual_diff_data_addr:         0x%04X", misc->mutual_diffdata_addr);
-    log_d("self_raw_data_addr:            0x%04X", misc->self_rawdata_addr);
-    log_d("self_diff_data_addr:           0x%04X", misc->self_diffdata_addr);
-    log_d("stylus_raw_data_addr:          0x%04X, %d", misc->stylus_rawdata_addr, misc->stylus_rawdata_len);
-    log_d("esd_addr:                      0x%04X", misc->esd_addr);
-#endif
+    log_d("Drv*Sen,Button,Force num:      %u x %u, %u, %u", parm->drv_num, parm->sen_num, parm->button_num, parm->force_num);
+    log_d("Cmd:                           0x%04lX, %u", misc->cmd_addr, misc->cmd_max_len);
+    log_d("Cmd-Reply:                     0x%04lX, %u", misc->cmd_reply_addr, misc->cmd_reply_len);
+    log_d("FW-State:                      0x%04lX, %u", misc->fw_state_addr, misc->fw_state_len);
+    log_d("FW-Buffer:                     0x%04lX, %u", misc->fw_buffer_addr, misc->fw_buffer_max_len);
+    log_d("Touch-Data:                    0x%04lX, %u", misc->touch_data_addr, misc->touch_data_head_len);
+    log_d("point_struct_len:              %u", misc->point_struct_len);
+    log_d("mutual_raw_data_addr:          0x%04lX", misc->mutual_rawdata_addr);
+    log_d("mutual_diff_data_addr:         0x%04lX", misc->mutual_diffdata_addr);
+    log_d("self_raw_data_addr:            0x%04lX", misc->self_rawdata_addr);
+    log_d("self_diff_data_addr:           0x%04lX", misc->self_diffdata_addr);
+    log_d("stylus_raw_data_addr:          0x%04lX, %u", misc->stylus_rawdata_addr, misc->stylus_rawdata_len);
+    log_d("esd_addr:                      0x%04lX", misc->esd_addr);
 }
 
 int TouchDrvGT9895::readChipInfo(struct goodix_ic_info *ic_info)
