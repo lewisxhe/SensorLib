@@ -28,7 +28,6 @@
  */
 #include "TouchDrvCST92xx.h"
 
-#if defined(ARDUINO)
 TouchDrvCST92xx::TouchDrvCST92xx():
     __center_btn_x(0),
     __center_btn_y(0),
@@ -36,6 +35,8 @@ TouchDrvCST92xx::TouchDrvCST92xx():
 {
 }
 
+
+#if defined(ARDUINO)
 bool TouchDrvCST92xx::begin(PLATFORM_WIRE_TYPE &wire, uint8_t address, int sda, int scl)
 {
     return SensorCommon::begin(wire, address, sda, scl);

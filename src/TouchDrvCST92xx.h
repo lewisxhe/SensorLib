@@ -58,11 +58,11 @@ class TouchDrvCST92xx : public TouchDrvInterface,
 
 public:
 
-#if defined(ARDUINO)
     TouchDrvCST92xx();
 
-    bool begin(PLATFORM_WIRE_TYPE &wire, uint8_t address, int sda, int scl);
 
+#if defined(ARDUINO)
+    bool begin(PLATFORM_WIRE_TYPE &wire, uint8_t address, int sda, int scl);
 #elif defined(ESP_PLATFORM)
 #if ((ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,0,0)) && defined(CONFIG_SENSORLIB_ESP_IDF_NEW_API))
     bool begin(i2c_master_bus_handle_t i2c_dev_bus_handle, uint8_t addr);
@@ -90,7 +90,6 @@ public:
     void wakeup();
 
     void idle();
-
 
     uint8_t getSupportTouchPoint();
 
