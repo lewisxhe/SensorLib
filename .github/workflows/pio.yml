@@ -61,9 +61,11 @@ jobs:
           - examples/TouchDrv_GT911_GetPoint
           - examples/TouchDrv_GT911_LilyGo_T_RGB
           - examples/TouchDrv_Interface_T_RGB
+          - examples/TouchDrv_GT9895_GetPoint
           - examples/XL9555_ExtensionIOInterrupt
           - examples/XL9555_ExtensionIORead
           - examples/XL9555_ExtensionIOWirte
+          - examples/XL9555_ioEvent
 
     steps:
       - uses: actions/checkout@v3
