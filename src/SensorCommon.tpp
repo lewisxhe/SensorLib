@@ -349,6 +349,21 @@ protected:
         return writeRegister(reg, &val, 1);
     }
 
+
+    template<typename T>
+    int writeThenRead(T write_register, uint8_t *read_buffer, size_t read_len)
+    {
+        constexpr size_t write_len = sizeof(T);
+        uint8_t write_buffer[write_len] = {0};
+        for (size_t i = 0; i < write_len; ++i) {
+            // Big Endian
+            // write_buffer[i] = reinterpret_cast<uint8_t *>(&write_register)[i];
+            // Little Endian
+            write_buffer[i] = reinterpret_cast<uint8_t *>(&write_register)[write_len - 1 - i];
+        }
+        return writeThenRead(write_buffer, write_len, read_buffer, read_len);
+    }
+
     int writeThenRead(uint8_t *write_buffer, size_t write_len, uint8_t *read_buffer, size_t read_len)
     {
 #if defined(ARDUINO)
@@ -574,49 +589,15 @@ protected:
         return val & _BV(bit);
     }
 
-    uint16_t inline readRegisterH8L4(uint8_t highReg, uint8_t lowReg)
-    {
-        int h8 = readRegister(highReg);
-        int l4 = readRegister(lowReg);
-        if (h8 == DEV_WIRE_ERR || l4 == DEV_WIRE_ERR)return 0;
-        return (h8 << 4) | (l4 & 0x0F);
-    }
-
-    uint16_t inline readRegisterH8L5(uint8_t highReg, uint8_t lowReg)
-    {
-        int h8 = readRegister(highReg);
-        int l5 = readRegister(lowReg);
-        if (h8 == DEV_WIRE_ERR || l5 == DEV_WIRE_ERR)return 0;
-        return (h8 << 5) | (l5 & 0x1F);
-    }
-
-    uint16_t inline readRegisterH6L8(uint8_t highReg, uint8_t lowReg)
-    {
-        int h6 = readRegister(highReg);
-        int l8 = readRegister(lowReg);
-        if (h6 == DEV_WIRE_ERR || l8 == DEV_WIRE_ERR)return 0;
-        return ((h6 & 0x3F) << 8) | l8;
-    }
-
-    uint16_t inline readRegisterH5L8(uint8_t highReg, uint8_t lowReg)
-    {
-        int h5 = readRegister(highReg);
-        int l8 = readRegister(lowReg);
-        if (h5 == DEV_WIRE_ERR || l8 == DEV_WIRE_ERR)return 0;
-        return ((h5 & 0x1F) << 8) | l8;
-    }
-
     void setRegAddressLength(uint8_t len)
     {
         __reg_addr_len = len;
     }
 
-
     void setReadRegisterSendStop(bool sendStop)
     {
         __sendStop = sendStop;
     }
-
 
     bool reallocBuffer(size_t realloc_size)
     {
