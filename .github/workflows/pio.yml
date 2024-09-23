@@ -44,6 +44,7 @@ jobs:
           - examples/QMC6310_GetDataExample
           - examples/QMC6310_GetPolarExample
           - examples/QMI8658_BlockExample
+          - examples/QMI8658_CalibrationExample
           - examples/QMI8658_GetDataExample
           - examples/QMI8658_InterruptBlockExample
           - examples/QMI8658_InterruptExample

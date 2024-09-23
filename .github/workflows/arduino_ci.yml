@@ -35,6 +35,7 @@ jobs:
           - examples/QMC6310_GetDataExample/QMC6310_GetDataExample.ino
           - examples/QMC6310_GetPolarExample/QMC6310_GetPolarExample.ino
           - examples/QMI8658_BlockExample/QMI8658_BlockExample.ino
+          - examples/QMI8658_CalibrationExample/QMI8658_CalibrationExample.ino
           - examples/QMI8658_GetDataExample/QMI8658_GetDataExample.ino
           - examples/QMI8658_InterruptBlockExample/QMI8658_InterruptBlockExample.ino
           - examples/QMI8658_InterruptExample/QMI8658_InterruptExample.ino
