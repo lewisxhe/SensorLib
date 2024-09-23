@@ -75,10 +75,10 @@ public:
         ACC_ODR_125Hz,
         ACC_ODR_62_5Hz,
         ACC_ODR_31_25Hz,
-        ACC_ODR_LOWPOWER_128Hz  = 12,
-        ACC_ODR_LOWPOWER_21Hz,
-        ACC_ODR_LOWPOWER_11Hz,
-        ACC_ODR_LOWPOWER_3Hz
+        ACC_ODR_LOWPOWER_128Hz  = 12,   //The accelerometer low power mode is only available when the gyroscope is disabled
+        ACC_ODR_LOWPOWER_21Hz,          //The accelerometer low power mode is only available when the gyroscope is disabled
+        ACC_ODR_LOWPOWER_11Hz,          //The accelerometer low power mode is only available when the gyroscope is disabled
+        ACC_ODR_LOWPOWER_3Hz            //The accelerometer low power mode is only available when the gyroscope is disabled
     };
 
     enum GyroODR {
@@ -173,6 +173,15 @@ public:
         STATUS1_PEDOMETER_MOTION = _BV(8),
         STATUS1_WOM_MOTION = _BV(9),
         STATUS1_TAP_MOTION = _BV(10),
+    };
+
+    enum TagPriority {
+        PRIORITY0,      // (X > Y> Z)
+        PRIORITY1,      // (X > Z > Y)
+        PRIORITY2,      // (Y > X > Z)
+        PRIORITY3,      // (Y > Z > X)
+        PRIORITY4,      // (Z > X > Y)
+        PRIORITY5,      // (Z > Y > X)
     };
 
 #if defined(ARDUINO)
@@ -324,7 +333,7 @@ public:
      * @retval
      */
     int configAccelerometer(AccelRange range, AccelODR odr, LpfMode lpfOdr = LPF_MODE_0,
-                            bool lpf = true, bool selfTest = true)
+                            bool lpf = true)
     {
         bool en = isEnableAccelerometer();
 
@@ -362,7 +371,7 @@ public:
         }
 
         // setAccelSelfTest
-        selfTest ? setRegisterBit(QMI8658_REG_CTRL2, 7) : clrRegisterBit(QMI8658_REG_CTRL2, 7);
+        // selfTest ? setRegisterBit(QMI8658_REG_CTRL2, 7) : clrRegisterBit(QMI8658_REG_CTRL2, 7);
 
         if (en) {
             enableAccelerometer();
@@ -378,11 +387,10 @@ public:
      * @param  odr(Output data rate): see GyroODR
      * @param  lpfOdr(Low-Pass Filter Output data rate):
      * @param  lpf (Low-Pass Filter Mode): see LpfMode
-     * @param  selfTest:
      * @retval
      */
     int configGyroscope(GyroRange range, GyroODR odr, LpfMode lpfOdr = LPF_MODE_0,
-                        bool lpf = true, bool selfTest = true)
+                        bool lpf = true)
     {
         bool en = isEnableGyroscope();
 
@@ -424,8 +432,7 @@ public:
         }
 
         // setGyroSelfTest
-        selfTest ? setRegisterBit(QMI8658_REG_CTRL3, 7) : clrRegisterBit(QMI8658_REG_CTRL3, 7);
-
+        // selfTest ? setRegisterBit(QMI8658_REG_CTRL3, 7) : clrRegisterBit(QMI8658_REG_CTRL3, 7);
 
         if (en) {
             enableGyroscope();
@@ -642,6 +649,7 @@ public:
 
     bool getAccelRaw(int16_t *rawBuffer)
     {
+        if (!accelEn)return false;
         uint8_t buffer[6] = {0};
         if (readRegister(QMI8658_REG_AX_L, buffer, 6) != DEV_WIRE_ERR) {
             rawBuffer[0] = (int16_t)(buffer[1] << 8) | (buffer[0]);
@@ -655,6 +663,7 @@ public:
 
     bool getAccelerometer(float &x, float &y, float &z)
     {
+        if (!accelEn)return false;
         int16_t raw[3];
         if (getAccelRaw(raw)) {
             x = raw[0] * accelScales;
@@ -677,6 +686,7 @@ public:
 
     bool getGyroRaw(int16_t *rawBuffer)
     {
+        if (!gyroEn)return false;
         uint8_t buffer[6] = {0};
         if (readRegister(QMI8658_REG_GX_L, buffer, 6) != DEV_WIRE_ERR) {
             rawBuffer[0] = (int16_t)(buffer[1] << 8) | (buffer[0]);
@@ -690,6 +700,7 @@ public:
 
     int getGyroscope(float &x, float &y, float &z)
     {
+        if (!gyroEn)return false;
         int16_t raw[3];
         if (getGyroRaw(raw)) {
             x = raw[0] * gyroScales;
@@ -900,14 +911,7 @@ public:
         return clrRegisterBit(QMI8658_REG_CTRL8, 4);
     }
 
-    enum TagPriority {
-        PRIORITY0,      // (X > Y> Z)
-        PRIORITY1,      // (X > Z > Y)
-        PRIORITY2,      // (Y > X > Z)
-        PRIORITY3,      // (Y > Z > X)
-        PRIORITY4,      // (Z > X > Y)
-        PRIORITY5,      // (Z > Y > X)
-    };
+
 
     /**
      * @brief   configTap
