@@ -16,9 +16,10 @@ jobs:
     strategy:
       matrix:
         example:
-          - examples/BAM423_Accelerometer
-          - examples/BAM423_Orientation
-          - examples/BAM423_Temperature
+          - examples/BMA423_Accelerometer
+          - examples/BMA423_Orientation
+          - examples/BMA423_Temperature
+          - examples/BMA423_Feature
           - examples/BHI260AP_6DoF
           - examples/BHI260AP_aux_BMM150
           - examples/BHI260AP_aux_BMM150_euler
@@ -27,7 +28,6 @@ jobs:
           - examples/BHI260AP_DebugInfo
           - examples/BHI260AP_Orientation
           - examples/BHI260AP_StepCounter
-          - examples/BMA423_Feature
           - examples/BMM150_GetDataExample
           - examples/CM32181_LightSensor
           - examples/CM32181_LightSensorInterrupt
