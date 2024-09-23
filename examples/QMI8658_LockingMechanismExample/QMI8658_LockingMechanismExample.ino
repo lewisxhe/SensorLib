@@ -209,7 +209,7 @@ void setup()
     qmi.enableLockingMechanism();
 
     // Set locking data event callback
-    qmi.setDataLockingEvevntCallBack(lockingMechanismHandler);
+    qmi.setDataLockingEventCallBack(lockingMechanismHandler);
 
 
     // Use interrupt .

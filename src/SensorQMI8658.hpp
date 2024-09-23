@@ -161,6 +161,20 @@ public:
         EVENT_TAP_MOTION = 2,
     };
 
+    enum SensorStatus {
+        STATUS_INT_CTRL9_CMD_DONE = _BV(0),
+        STATUS_INT_LOCKED = _BV(1),
+        STATUS_INT_AVAIL = _BV(2),
+        STATUS0_GYRO_DATA_READY = _BV(3),
+        STATUS0_ACCEL_DATA_READY = _BV(4),
+        STATUS1_SIGNIFICANT_MOTION = _BV(5),
+        STATUS1_NO_MOTION = _BV(6),
+        STATUS1_ANY_MOTION = _BV(7),
+        STATUS1_PEDOMETER_MOTION = _BV(8),
+        STATUS1_WOM_MOTION = _BV(9),
+        STATUS1_TAP_MOTION = _BV(10),
+    };
+
 #if defined(ARDUINO)
     SensorQMI8658(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = QMI8658_L_SLAVE_ADDRESS)
     {
@@ -227,7 +241,7 @@ public:
                 }
                 delay(10);
             }
-            LOG("Reset chip failed, respone val = %d - 0x%X\n", val, val);
+            log_e("Reset chip failed, Response val = %d - 0x%X", val, val);
             return false;
         }
 
@@ -267,7 +281,7 @@ public:
     float getTemperature_C()
     {
         uint8_t buffer[2];
-        if (readRegister(QMI8658_REG_TEMPEARTURE_L, buffer, 2) !=  DEV_WIRE_ERR) {
+        if (readRegister(QMI8658_REG_TEMPERATURE_L, buffer, 2) !=  DEV_WIRE_ERR) {
             return (float)buffer[1] + ((float)buffer[0] / 256.0);
         }
         return NAN;
@@ -289,7 +303,7 @@ public:
 
     uint8_t getIrqStatus()
     {
-        return readRegister(QMI8658_REG_STATUSINT);
+        return readRegister(QMI8658_REG_STATUS_INT);
     }
 
 
@@ -326,7 +340,7 @@ public:
         switch (range) {
         // Possible accelerometer scales (and their register bit settings) are:
         // 2 Gs (00), 4 Gs (01), 8 Gs (10), and 16 Gs  (11).
-        // Here's a bit of an algorith to calculate DPS/(ADC tick) based on that
+        // Here's a bit of an algorithm to calculate DPS/(ADC tick) based on that
         // 2-bit value:
         case ACC_RANGE_2G:  accelScales = 2.0 / 32768.0; break;
         case ACC_RANGE_4G:  accelScales = 4.0 / 32768.0; break;
@@ -360,10 +374,10 @@ public:
     /**
      * @brief
      * @note
-     * @param  range:
-     * @param  odr:
-     * @param  lpfOdr:
-     * @param  lpf:
+     * @param  range:   Gyro see GyroRange
+     * @param  odr(Output data rate): see GyroODR
+     * @param  lpfOdr(Low-Pass Filter Output data rate):
+     * @param  lpf (Low-Pass Filter Mode): see LpfMode
      * @param  selfTest:
      * @retval
      */
@@ -384,7 +398,7 @@ public:
         switch (range) {
         // Possible gyro scales (and their register bit settings) are:
         // 250 DPS (00), 500 DPS (01), 1000 DPS (10), and 2000 DPS  (11).
-        // Here's a bit of an algorith to calculate DPS/(ADC tick) based on that
+        // Here's a bit of an algorithm to calculate DPS/(ADC tick) based on that
         // 2-bit value:
         case GYR_RANGE_16DPS: gyroScales = 16.0 / 32768.0; break;
         case GYR_RANGE_32DPS: gyroScales = 32.0 / 32768.0; break;
@@ -449,12 +463,12 @@ public:
 
         // set fifo mode and samples len
         fifoMode = (samples << 2) | mode;
-        if (writeRegister(QMI8658_REG_FIFOCTRL, fifoMode) == DEV_WIRE_ERR) {
+        if (writeRegister(QMI8658_REG_FIFO_CTRL, fifoMode) == DEV_WIRE_ERR) {
             return DEV_WIRE_ERR;
         }
 
         // set watermark
-        if (writeRegister(QMI8658_REG_FIFOWMKTH, watermark) == DEV_WIRE_ERR) {
+        if (writeRegister(QMI8658_REG_FIFO_WTM_TH, watermark) == DEV_WIRE_ERR) {
             return DEV_WIRE_ERR;
         }
 
@@ -486,12 +500,12 @@ public:
         return sam[samples] * 6 * sensors;
     }
 
-    bool readFromFifo(IMUdata *acc, uint16_t accLenght, IMUdata *gyr, uint16_t gyrLenght)
+    bool readFromFifo(IMUdata *acc, uint16_t accLength, IMUdata *gyr, uint16_t gyrLength)
     {
         uint16_t bytes = getFifoNeedBytes();
         uint8_t *buffer = new uint8_t [bytes];
         if (!buffer) {
-            LOG("No memory!");
+            log_e("No memory!");
             return false;
         }
         if (!readFromFifo(buffer, bytes)) {
@@ -502,7 +516,7 @@ public:
         int counter = 0;
         for (int i = 0; i < bytes; ) {
             if (accelEn) {
-                if (counter < accLenght) {
+                if (counter < accLength) {
                     acc[counter].x = (float)((int16_t)buffer[i]     | (buffer[i + 1] << 8)) * accelScales;
                     acc[counter].y = (float)((int16_t)buffer[i + 2] | (buffer[i + 3] << 8)) * accelScales;
                     acc[counter].z = (float)((int16_t)buffer[i + 4] | (buffer[i + 5] << 8)) * accelScales;
@@ -511,7 +525,7 @@ public:
             }
 
             if (gyroEn) {
-                if (counter < gyrLenght) {
+                if (counter < gyrLength) {
                     gyr[counter].x = (float)((int16_t)buffer[i]     | (buffer[i + 1] << 8)) * gyroScales;
                     gyr[counter].y = (float)((int16_t)buffer[i + 2] | (buffer[i + 3] << 8)) * gyroScales;
                     gyr[counter].z = (float)((int16_t)buffer[i + 4] | (buffer[i + 5] << 8)) * gyroScales;
@@ -524,7 +538,7 @@ public:
         return true;
     }
 
-    bool readFromFifo(uint8_t *data, size_t lenght)
+    bool readFromFifo(uint8_t *data, size_t length)
     {
         uint8_t  status[2];
         uint8_t  fifo_sensors = 1;
@@ -532,23 +546,23 @@ public:
         uint16_t fifo_level   = 0;
 
         // get fifo status
-        int val = readRegister(QMI8658_REG_FIFOSTATUS);
+        int val = readRegister(QMI8658_REG_FIFO_STATUS);
         if (val == DEV_WIRE_ERR) {
             return false;
         }
-        LOG("fifo status:0x%x ", val);
+        log_d("fifo status:0x%x", val);
 
         if (val & (1 << 5)) {
-            LOG("\t\tFIFO Overflow condition has happened (data dropping happened)\n");
+            log_e("\t\tFIFO Overflow condition has happened (data dropping happened)");
         }
         if (val & (1 << 6)) {
-            LOG("\t\tFIFO Water Mark Level Hit\n");
+            log_e("\t\tFIFO Water Mark Level Hit");
         }
         if (val & (1 << 7)) {
-            LOG("\t\tFIFO is Full\n");
+            log_e("\t\tFIFO is Full");
         }
 
-        val = readRegister(QMI8658_REG_FIFOCOUNT, status, 2);
+        val = readRegister(QMI8658_REG_FIFO_COUNT, status, 2);
         if (val == DEV_WIRE_ERR) {
             return false;
         }
@@ -564,8 +578,8 @@ public:
         fifo_level = fifo_bytes / (3 * fifo_sensors);
         fifo_bytes = fifo_level * (6 * fifo_sensors);
 
-        LOG("fifo-level : %d fifo_bytes : %d fifo_sensors : %d\n", fifo_level, fifo_bytes, fifo_sensors);
-        if (lenght < fifo_bytes) {
+        log_d("fifo-level : %d fifo_bytes : %d fifo_sensors : %d", fifo_level, fifo_bytes, fifo_sensors);
+        if (length < fifo_bytes) {
             writeCommand(CTRL_CMD_RST_FIFO);
             return false;
         }
@@ -573,13 +587,13 @@ public:
         if (fifo_level) {
             writeCommand(CTRL_CMD_REQ_FIFO);
 
-            if (readRegister(QMI8658_REG_FIFODATA, data, fifo_bytes) ==
+            if (readRegister(QMI8658_REG_FIFO_DATA, data, fifo_bytes) ==
                     DEV_WIRE_ERR) {
-                LOG("get fifo error !");
+                log_e("get fifo error !");
                 return false;
             }
 
-            val = writeRegister(QMI8658_REG_FIFOCTRL, fifoMode);
+            val = writeRegister(QMI8658_REG_FIFO_CTRL, fifoMode);
             if (val == DEV_WIRE_ERR) {
                 return false;
             }
@@ -690,7 +704,7 @@ public:
     {
         switch (sampleMode) {
         case SYNC_MODE:
-            return  getRegisterBit(QMI8658_REG_STATUSINT, 1);
+            return  getRegisterBit(QMI8658_REG_STATUS_INT, 1);
         case ASYNC_MODE:
             //TODO: When Accel and Gyro are configured with different rates, this will always be false
             if (gyroEn && accelEn) {
@@ -745,30 +759,17 @@ public:
         readRegister(QMI8658_REG_CTRL1, buffer, 9);
         for (int i = 0; i < 9; ++i) {
 #if defined(ARDUINO)
-            Serial.printf("CTRL%d: REG:0x%02X HEX:0x%02X ", i + 1, QMI8658_REG_CTRL1 + i, buffer[i]);
+            Serial.printf("CTRL%d: REG:0x%02X HEX:0x%02X\n", i + 1, QMI8658_REG_CTRL1 + i, buffer[i]);
 #else
-            printf("CTRL%d: 0x%02x", i + 1, buffer[i]);
-#endif
-#if defined(ARDUINO)
-            Serial.print(" BIN:0b");
-            Serial.println(buffer[i], BIN);
-#else
-            LOG("\n");
+            printf("CTRL%d: 0x%02x\n", i + 1, buffer[i]);
 #endif
         }
-#if defined(ARDUINO)
-        Serial.println();
-#else
-        printf("\n");
-#endif
 
-        buffer[0] =  readRegister(QMI8658_REG_FIFOCTRL);
+        buffer[0] =  readRegister(QMI8658_REG_FIFO_CTRL);
 #if defined(ARDUINO)
-        Serial.printf("FIFOCTRL: REG:0x%02X HEX:0x%02X ",  QMI8658_REG_FIFOCTRL, buffer[0]);
-        Serial.print(" BIN:0b");
-        Serial.println(buffer[0], BIN);
+        Serial.printf("FIFO_CTRL: REG:0x%02X HEX:0x%02X\n",  QMI8658_REG_FIFO_CTRL, buffer[0]);
 #else
-        printf("FIFOCTRL: REG:0x%02X HEX:0x%02X \n",  QMI8658_REG_FIFOCTRL, buffer[0]);
+        printf("FIFO_CTRL: REG:0x%02X HEX:0x%02X\n",  QMI8658_REG_FIFO_CTRL, buffer[0]);
 #endif
 
     }
@@ -877,7 +878,7 @@ public:
     uint32_t getPedometerCounter()
     {
         uint8_t buffer[3];
-        if (readRegister(QMI8658_REG_PEDO_L, buffer, 3) != DEV_WIRE_ERR) {
+        if (readRegister(QMI8658_REG_STEP_CNT_LOW, buffer, 3) != DEV_WIRE_ERR) {
             return (uint32_t)(((uint32_t)buffer[2] << 16) | ((uint32_t)buffer[1] << 8) | buffer[0]);
         }
         return 0;
@@ -1007,23 +1008,23 @@ public:
     {
         int val = readRegister(QMI8658_REG_TAP_STATUS);
         if (val & _BV(7)) {
-            LOG("Tap was detected on the negative direction of the Tap axis\n");
+            log_i("Tap was detected on the negative direction of the Tap axis");
         } else {
-            LOG("Tap was detected on the positive direction of the Tap axis\n");
+            log_i("Tap was detected on the positive direction of the Tap axis");
         }
         uint8_t t = (val >> 4) & 0x03;
         switch (t) {
         case 0:
-            LOG("No Tap was detected\n");
+            log_i("No Tap was detected");
             break;
         case 1:
-            LOG("Tap was detected on X axis\n");
+            log_i("Tap was detected on X axis");
             break;
         case 2:
-            LOG("Tap was detected on Y axis\n");
+            log_i("Tap was detected on Y axis");
             break;
         case 3:
-            LOG("Tap was detected on Z axis\n");
+            log_i("Tap was detected on Z axis");
             break;
 
         default:
@@ -1032,18 +1033,17 @@ public:
         t = val & 0x03;
         switch (t) {
         case 0:
-            LOG("No Tap was detected\n");
+            log_i("No Tap was detected");
             break;
         case 1:
-            LOG("Single-Tap was detected\n");
+            log_i("Single-Tap was detected");
             break;
         case 2:
-            LOG("Double-Tap was detected\n");
+            log_i("Double-Tap was detected");
             break;
         default:
             break;
         }
-        LOG("\n\n\n");
     }
 
 
@@ -1127,8 +1127,8 @@ public:
      * @brief  configWakeOnMotion
      * @note   Configuring Wom will reset the sensor, set the function to Wom, and there will be no data output
      * @param  WoMThreshold: Resolution = 1mg ,default 200g
-     * @param  odr: Accelerometer output data rate  ,defalut low power 128Hz
-     * @param  pin: Interrupt Pin( 1 or 2 ) ,defalut use pin2
+     * @param  odr: Accelerometer output data rate  ,default low power 128Hz
+     * @param  pin: Interrupt Pin( 1 or 2 ) ,default use pin2
      * @param  defaultPinValue: WoM Interrupt Initial Value select: ,default pin high
      *  01 – INT2 (with initial value 0)
      *  11 – INT2 (with initial value 1)
@@ -1198,12 +1198,12 @@ public:
 
 
 
-    void getChipUsid(uint8_t *buffer, uint8_t lenght)
+    void getChipUsid(uint8_t *buffer, uint8_t length)
     {
-        if (lenght > 6) {
-            lenght = 6;
+        if (length > 6) {
+            length = 6;
         }
-        memcpy(buffer, usid, lenght);
+        memcpy(buffer, usid, length);
     }
 
 
@@ -1211,20 +1211,6 @@ public:
     {
         return revisionID;
     }
-
-    enum SensorStatus {
-        STATUS_INT_CTRL9_CMD_DONE = _BV(0),
-        STATUS_INT_LOCKED = _BV(1),
-        STATUS_INT_AVAIL = _BV(2),
-        STATUS0_GDATA_REDAY = _BV(3),
-        STATUS0_ADATA_REDAY = _BV(4),
-        STATUS1_SIGNI_MOTION = _BV(5),
-        STATUS1_NO_MOTION = _BV(6),
-        STATUS1_ANY_MOTION = _BV(7),
-        STATUS1_PEDOME_MOTION = _BV(8),
-        STATUS1_WOM_MOTION = _BV(9),
-        STATUS1_TAP_MOTION = _BV(10),
-    };
 
     /**
      * @brief readSensorStatus
@@ -1238,17 +1224,14 @@ public:
         // STATUS0 0x2E
         // STATUS1 0x2F
         uint8_t status[3];
-        if (readRegister(QMI8658_REG_STATUSINT, status, 3) != DEV_WIRE_NONE) {
+        if (readRegister(QMI8658_REG_STATUS_INT, status, 3) != DEV_WIRE_NONE) {
             return 0;
         }
 
-        // LOG("STATUSINT:0x%X BIN:", status[0]);
-        // LOG_BIN(status[0]);
-        // LOG("STATUS0:0x%X BIN:", status[1]);
-        // LOG_BIN(status[1]);
-        // LOG("STATUS1:0x%X BIN:", status[2]);
-        // LOG_BIN(status[2]);
-        // LOG("------------------\n");
+        // log_i("STATUSINT:0x%X BIN:", status[0]);
+        // log_i("STATUS0:0x%X BIN:", status[1]);
+        // log_i("STATUS1:0x%X BIN:", status[2]);
+        // log_i("------------------\n");
 
         // Ctrl9 CmdDone
         // Indicates CTRL9 Command was done, as part of CTRL9 protocol
@@ -1257,17 +1240,17 @@ public:
         if (status[0] & 0x80) {
             result |= STATUS_INT_CTRL9_CMD_DONE;
         }
-        // If syncSmpl (CTRL7.bit7) = 1:
+        // If syncSample (CTRL7.bit7) = 1:
         //      0: Sensor Data is not locked.
         //      1: Sensor Data is locked.
-        // If syncSmpl = 0, this bit shows the same value of INT1 level
+        // If syncSample = 0, this bit shows the same value of INT1 level
         if (status[0] & 0x02) {
             result |= STATUS_INT_LOCKED;
         }
-        // If syncSmpl (CTRL7.bit7) = 1:
+        // If syncSample (CTRL7.bit7) = 1:
         //      0: Sensor Data is not available
         //      1: Sensor Data is available for reading
-        // If syncSmpl = 0, this bit shows the same value of INT2 level
+        // If syncSample = 0, this bit shows the same value of INT2 level
         if (status[0] & 0x01) {
             result |= STATUS_INT_AVAIL;
             // if (eventGyroDataReady)eventGyroDataReady();
@@ -1286,7 +1269,7 @@ public:
             // 0: No updates since last read.
             // 1: New data available
             if (status[1] & 0x02) {
-                result |= STATUS0_GDATA_REDAY;
+                result |= STATUS0_GYRO_DATA_READY;
                 if (eventGyroDataReady)eventGyroDataReady();
                 __gDataReady = true;
             }
@@ -1294,7 +1277,7 @@ public:
             // 0: No updates since last read.
             // 1: New data available.
             if (status[1] & 0x01) {
-                result |= STATUS0_ADATA_REDAY;
+                result |= STATUS0_ACCEL_DATA_READY;
                 if (eventAccelDataReady)eventAccelDataReady();
                 __aDataReady = true;
             }
@@ -1305,7 +1288,7 @@ public:
         // 0: No Significant-Motion was detected
         // 1: Significant-Motion was detected
         if (status[2] & 0x80) {
-            result |= STATUS1_SIGNI_MOTION;
+            result |= STATUS1_SIGNIFICANT_MOTION;
             if (eventSignificantMotion)eventSignificantMotion();
         }
         // No Motion
@@ -1326,7 +1309,7 @@ public:
         // 0: No step was detected
         // 1: step was detected
         if (status[2] & 0x10) {
-            result |= STATUS1_PEDOME_MOTION;
+            result |= STATUS1_PEDOMETER_MOTION;
             if (eventPedometerEvent)eventPedometerEvent();
         }
         // WoM
@@ -1386,7 +1369,7 @@ public:
         eventAccelDataReady = cb;
     }
 
-    void setDataLockingEvevntCallBack(EventCallBack_t cb)
+    void setDataLockingEventCallBack(EventCallBack_t cb)
     {
         eventDataLocking = cb;
     }
@@ -1422,10 +1405,10 @@ private:
         }
         startMillis = millis();
         do {
-            val = readRegister(QMI8658_REG_STATUSINT);
+            val = readRegister(QMI8658_REG_STATUS_INT);
             delay(1);
             if (millis() - startMillis > 1000) {
-                LOG("wait for ctrl9 command done time out : %d val:%d \n", cmd, val);
+                log_e("wait for ctrl9 command done time out : %d val:%d", cmd, val);
                 return DEV_WIRE_TIMEOUT;
             }
         } while (val != DEV_WIRE_ERR && !(val & 0x80));
@@ -1436,10 +1419,10 @@ private:
 
         startMillis = millis();
         do {
-            val = readRegister(QMI8658_REG_STATUSINT);
+            val = readRegister(QMI8658_REG_STATUS_INT);
             delay(1);
             if (millis() - startMillis > 1000) {
-                LOG("Clear ctrl9 command done flag timeout : %d val:%d \n", cmd, val);
+                log_e("Clear ctrl9 command done flag timeout : %d val:%d", cmd, val);
                 return DEV_WIRE_TIMEOUT;
             }
         } while (val != DEV_WIRE_ERR && (val & 0x80));
@@ -1459,10 +1442,10 @@ protected:
 
         uint8_t id = whoAmI();
         if (id != QMI8658_REG_WHOAMI_DEFAULT) {
-            LOG("ERROR! ID NOT MATCH QMI8658 , Respone id is 0x%x\n", id);
+            log_e("ERROR! ID NOT MATCH QMI8658 , Response id is 0x%x", id);
             return false;
         }
-        // Eanble address auto increment, Big-Endian format
+        // Enable address auto increment, Big-Endian format
         // writeRegister(QMI8658_REG_CTRL1, 0x60);
 
         // Little-Endian / address auto increment
@@ -1472,23 +1455,21 @@ protected:
         //EN.ADDR_AI
         // setRegisterBit(QMI8658_REG_CTRL1, 6);
 
-
-        // Use STATUSINT.bit7 as CTRL9 handshake
+        // Use STATUS_INT.bit7 as CTRL9 handshake
         writeRegister(QMI8658_REG_CTRL8, 0x80);
 
         // Get firmware version and usid
         writeCommand(CTRL_CMD_COPY_USID);
 
         if (readRegister(QMI8658_REG_DQW_L, buffer, 3) != DEV_WIRE_ERR) {
-            revisionID = buffer[0] | (uint32_t)(buffer[1] << 8) |
-                         (uint32_t)(buffer[2] << 16);
-            LOG("FW Version :0x%02X%02X%02X\n", buffer[0], buffer[1], buffer[2]);
+            revisionID = buffer[0] | (uint32_t)(buffer[1] << 8) | (uint32_t)(buffer[2] << 16);
+            log_d("FW Version :0x%02X%02X%02X", buffer[0], buffer[1], buffer[2]);
         }
 
         if (readRegister(QMI8658_REG_DVX_L, usid, 6) != DEV_WIRE_ERR) {
-            LOG("USID :%02X%02X%02X%02X%02X%02X\n",
-                usid[0], usid[1], usid[2],
-                usid[3], usid[4], usid[5]);
+            log_d("USID :%02X%02X%02X%02X%02X%02X",
+                  usid[0], usid[1], usid[2],
+                  usid[3], usid[4], usid[5]);
         }
 
         return true;

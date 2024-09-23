@@ -200,7 +200,7 @@ setAnyMotionEventCallBack	KEYWORD2
 setSignificantMotionEventCallBack	KEYWORD2
 setGyroDataReadyCallBack	KEYWORD2
 setAccelDataReadyEventCallBack	KEYWORD2
-setDataLockingEvevntCallBack	KEYWORD2
+setDataLockingEventCallBack	KEYWORD2
 
 ### SensorBMM150 Coloring Map ###
 sleep   KEYWORD2
