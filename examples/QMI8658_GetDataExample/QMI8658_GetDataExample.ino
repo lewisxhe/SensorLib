@@ -32,8 +32,10 @@
 #include <SPI.h>
 #include "SensorQMI8658.hpp"
 
-#define USE_WIRE
 
+// #define USE_WIRE
+
+#if defined(USE_WIRE)
 #ifndef SENSOR_SDA
 #define SENSOR_SDA  17
 #endif
@@ -46,8 +48,31 @@
 #define SENSOR_IRQ  -1
 #endif
 
+#else
 
-#define IMU_CS                      5
+//USE SPI
+#ifndef SPI_MOSI
+#define SPI_MOSI                    (35)
+#endif
+
+#ifndef SPI_SCK
+#define SPI_SCK                     (36)
+#endif
+
+#ifndef SPI_MISO
+#define SPI_MISO                    (37)
+#endif
+
+#ifndef IMU_CS
+#define IMU_CS                      (34)
+#endif
+
+#ifndef IMU_INT
+#define IMU_INT                     (33)
+#endif
+
+#endif
+
 
 SensorQMI8658 qmi;
 
@@ -72,7 +97,7 @@ void setup()
         }
     }
 #else
-    if (!qmi.begin(IMU_CS)) {
+    if (!qmi.begin(IMU_CS, SPI_MOSI, SPI_MISO, SPI_SCK)) {
         Serial.println("Failed to find QMI8658 - check your wiring!");
         while (1) {
             delay(1000);
@@ -111,9 +136,9 @@ void setup()
         *  LPF_MODE_2     //5.39% of ODR
         *  LPF_MODE_3     //13.37% of ODR
         * */
-        SensorQMI8658::LPF_MODE_0,
-        // selfTest enable
-        true);
+        SensorQMI8658::LPF_MODE_0);
+
+
 
 
     qmi.configGyroscope(
@@ -145,9 +170,9 @@ void setup()
         *  LPF_MODE_2     //5.39% of ODR
         *  LPF_MODE_3     //13.37% of ODR
         * */
-        SensorQMI8658::LPF_MODE_3,
-        // selfTest enable
-        true);
+        SensorQMI8658::LPF_MODE_3);
+
+
 
 
     // In 6DOF mode (accelerometer and gyroscope are both enabled),
@@ -168,23 +193,23 @@ void loop()
     if (qmi.getDataReady()) {
 
         if (qmi.getAccelerometer(acc.x, acc.y, acc.z)) {
-            Serial.print("{ACCEL: ");
+            Serial.print("ACCEL.x:");
             Serial.print(acc.x);
-            Serial.print(",");
+            Serial.print(",ACCEL.y:");
             Serial.print(acc.y);
-            Serial.print(",");
+            Serial.print(",ACCEL.z:");
             Serial.print(acc.z);
-            Serial.println("}");
+            Serial.println("");
         }
 
         if (qmi.getGyroscope(gyr.x, gyr.y, gyr.z)) {
-            Serial.print("{GYRO: ");
+            Serial.print("GYRO.x:");
             Serial.print(gyr.x);
-            Serial.print(",");
-            Serial.print(gyr.y );
-            Serial.print(",");
+            Serial.print(",GYRO.y:");
+            Serial.print(gyr.y);
+            Serial.print(",GYRO.z:");
             Serial.print(gyr.z);
-            Serial.println("}");
+            Serial.println("");
         }
         Serial.print("\t\t\t\t > ");
         Serial.print(qmi.getTimestamp());

@@ -79,7 +79,7 @@ void setup()
 #else
 
 #ifndef CONFIG_IDF_TARGET_ESP32
-    //Use tbeams3 defalut spi pinz
+    //Use LilyGo-T-Beam-S3 default spi pinz
 #define SPI_MOSI                    (35)
 #define SPI_SCK                     (36)
 #define SPI_MISO                    (37)
@@ -92,7 +92,7 @@ void setup()
     if (!qmi.begin(IMU_CS, SPI_MOSI, SPI_MISO, SPI_SCK)) {
 
 #else
-//Use esp32dev module defalut spi pin
+//Use esp32dev module default spi pin
 #define IMU_CS                      (5)
 #define IMU_INT1                    (15)
 #define IMU_INT2                    (22)
