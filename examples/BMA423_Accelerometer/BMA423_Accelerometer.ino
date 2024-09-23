@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      BAM423_Temperature.ino
+ * @file      BMA423_Accelerometer.ino
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2023-04-01
  *
@@ -45,6 +45,7 @@
 #endif
 
 SensorBMA423 accel;
+uint32_t lastMillis;
 
 void setup()
 {
@@ -60,17 +61,27 @@ void setup()
         }
     }
     Serial.println("Init BAM423 Sensor success!");
+
+    //Default 4G ,200HZ
+    accel.configAccelerometer();
+
+    accel.enableAccelerometer();
 }
 
 
 void loop()
 {
-    Serial.print("getTemperature:");
-    Serial.print(accel.getTemperature(SensorBMA423::TEMP_DEG));
-    Serial.print("*C ");
-    Serial.print(accel.getTemperature(SensorBMA423::TEMP_FAHREN));
-    Serial.print("*F");
-    delay(1000);
+    int16_t x = 0, y = 0, z = 0;
+    accel.getAccelerometer(x, y, z);
+    Serial.print("X:");
+    Serial.print(x); Serial.print(" ");
+    Serial.print("Y:");
+    Serial.print(y); Serial.print(" ");
+    Serial.print("Z:");
+    Serial.print(z);
+    Serial.println();
+
+    delay(50);
 }
 
 

@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      BAM423_Orientation.ino
+ * @file      BMA423_Orientation.ino
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2023-04-03
  *
