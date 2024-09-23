@@ -1378,6 +1378,108 @@ public:
         eventDataLocking = cb;
     }
 
+
+    bool calibration(uint16_t *gX_gain = NULL, uint16_t *gY_gain = NULL, uint16_t *gZ_gain = NULL)
+    {
+        // 1.Set CTRL7.aEN = 0 and CTRL7.gEN = 0, to disable the accelerometer and gyroscope.
+        if (writeRegister(QMI8658_REG_CTRL7, 0x00) != DEV_WIRE_NONE) {
+            return false;
+        }
+
+        // 2.Issue the CTRL_CMD_ON_DEMAND_CALIBRATION (0xA2) by CTRL9 command.
+        if (writeCommand(CTRL_CMD_ON_DEMAND_CALIBRATION, 3000) != DEV_WIRE_NONE) {
+            return false;
+        }
+
+        // 3.And wait about 1.5 seconds for QMI8658A to finish the CTRL9 command.
+        delay(1600);
+
+        // 4.Read the COD_STATUS register (0x46) to check the result/status of the COD implementation.
+        int result =  readRegister(QMI8658_REG_COD_STATUS);
+
+        if (result == DEV_WIRE_ERR)return false;
+
+        // During the process, it is recommended to place the device in quiet, otherwise, the COD might fail and report error.
+
+        if (result & _BV(7)) {
+            log_e("COD failed for checking low sensitivity limit of X axis of gyroscope");
+            return false;
+        }
+        if (result & _BV(6)) {
+            log_e("COD failed for checking high sensitivity limit of X axis of gyroscope");
+            return false;
+        }
+        if (result & _BV(5)) {
+            log_e("COD failed for checking low sensitivity limit of Y axis of gyroscope");
+            return false;
+        }
+        if (result & _BV(4)) {
+            log_e("COD failed for checking high sensitivity limit of Y axis of gyroscope");
+            return false;
+        }
+        if (result & _BV(3)) {
+            log_e("Accelerometer checked failed (significant vibration happened during COD)");
+            return false;
+        }
+        if (result & _BV(2)) {
+            log_e("Gyroscope startup failure happened when COD was called");
+            return false;
+        }
+        if (result & _BV(1)) {
+            log_e("COD was called while gyroscope was enabled, COD return failure");
+            return false;
+        }
+        if (result & _BV(0)) {
+            log_e("COD failed; no COD correction applied");
+            return false;
+        }
+        log_d("All calibrations are completed");
+
+        if (gX_gain && gY_gain && gZ_gain) {
+            uint8_t rawBuffer[6] = {0};
+            if (readRegister(QMI8658_REG_DVX_L, rawBuffer, 6) != DEV_WIRE_NONE) {
+                return false;
+            }
+            *gX_gain = ((uint16_t)rawBuffer[0]) | (uint16_t)(rawBuffer[1] << 8);
+            *gY_gain = ((uint16_t)rawBuffer[2]) | (uint16_t)(rawBuffer[3] << 8);
+            *gZ_gain = ((uint16_t)rawBuffer[4]) | (uint16_t)(rawBuffer[5] << 8);
+        }
+
+        return true;
+    }
+
+
+    bool writeCalibration(uint16_t gX_gain, uint16_t gY_gain, uint16_t gZ_gain)
+    {
+        // 1. Disable Accelerometer and Gyroscope by setting CTRL7.aEN = 0 and CTRL7.gEN = 0
+        if (writeRegister(QMI8658_REG_CTRL7, 0x00) != DEV_WIRE_NONE) {
+            return false;
+        }
+
+        uint8_t buffer[] = {
+
+            // 2. write Gyro-X gain (16 bits) to registers CAL1_L and CAL1_H registers (0x0B, 0x0C)
+            lowByte(gX_gain),
+            highByte(gX_gain),
+            // 3. write Gyro-Y gain (16 bits) to registers CAL2_L and CAL2_H registers (0x0D, 0x0E)
+            lowByte(gY_gain),
+            highByte(gY_gain),
+            // 4. write Gyro-Z gain (16 bits) to registers CAL3_L and CAL3_H registers (0x0F, 0x10)
+            lowByte(gZ_gain),
+            highByte(gZ_gain),
+        };
+
+        writeRegister(QMI8658_REG_CAL1_L, buffer, sizeof(buffer));
+
+        // 5. Write 0xAA to CTRL9 and follow CTRL9 protocol
+        if (writeCommand(CTRL_CMD_APPLY_GYRO_GAINS, 3000) != DEV_WIRE_NONE) {
+            return false;
+        }
+
+        return true;
+    }
+
+
 private:
     float accelScales, gyroScales;
     uint32_t lastTimestamp = 0;
@@ -1400,7 +1502,7 @@ private:
     EventCallBack_t eventDataLocking = NULL;
 
 
-    int writeCommand(CommandTable cmd)
+    int writeCommand(CommandTable cmd, uint32_t wait_ms = 1000)
     {
         int      val;
         uint32_t startMillis;
@@ -1411,7 +1513,7 @@ private:
         do {
             val = readRegister(QMI8658_REG_STATUS_INT);
             delay(1);
-            if (millis() - startMillis > 1000) {
+            if (millis() - startMillis > wait_ms) {
                 log_e("wait for ctrl9 command done time out : %d val:%d", cmd, val);
                 return DEV_WIRE_TIMEOUT;
             }
@@ -1425,7 +1527,7 @@ private:
         do {
             val = readRegister(QMI8658_REG_STATUS_INT);
             delay(1);
-            if (millis() - startMillis > 1000) {
+            if (millis() - startMillis > wait_ms) {
                 log_e("Clear ctrl9 command done flag timeout : %d val:%d", cmd, val);
                 return DEV_WIRE_TIMEOUT;
             }
