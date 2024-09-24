@@ -86,7 +86,9 @@ void setup()
     Serial.begin(115200);
     while (!Serial);
 
-
+#if IMU_INT > 0
+    qmi.setPins(IMU_INT);
+#endif
 
 #ifdef USE_WIRE
     //Using WIRE !!
@@ -108,6 +110,20 @@ void setup()
     /* Get chip id*/
     Serial.print("Device ID:");
     Serial.println(qmi.getChipID(), HEX);
+
+
+    if (qmi.selfTestAccel()) {
+        Serial.println("Accelerometer self-test successful");
+    } else {
+        Serial.println("Accelerometer self-test failed!");
+    }
+
+    if (qmi.selfTestGyro()) {
+        Serial.println("Gyroscope self-test successful");
+    } else {
+        Serial.println("Gyroscope self-test failed!");
+    }
+
 
     qmi.configAccelerometer(
         /*
@@ -179,46 +195,52 @@ void setup()
 
     // In 6DOF mode (accelerometer and gyroscope are both enabled),
     // the output data rate is derived from the nature frequency of gyroscope
-    // qmi.enableGyroscope();
-    qmi.disableGyroscope();
+    qmi.enableGyroscope();
     qmi.enableAccelerometer();
 
     // Print register configuration information
     qmi.dumpCtrlRegister();
 
+
+
+#if IMU_INT > 0
+    // If you want to enable interrupts, then turn on the interrupt enable
+    qmi.enableINT(SensorQMI8658::IntPin1, false);
+    qmi.enableINT(SensorQMI8658::IntPin2, false);
+#endif
+
     Serial.println("Read data now...");
+
 }
 
 
 void loop()
 {
-
+    // When the interrupt pin is passed in through setPin,
+    // the GPIO will be read to see if the data is ready.
     if (qmi.getDataReady()) {
 
+        // Serial.print("Timestamp:");
+        // Serial.print(qmi.getTimestamp());
+
         if (qmi.getAccelerometer(acc.x, acc.y, acc.z)) {
-            Serial.print("ACCEL.x:");
-            Serial.print(acc.x);
-            Serial.print(",ACCEL.y:");
-            Serial.print(acc.y);
-            Serial.print(",ACCEL.z:");
-            Serial.print(acc.z);
-            Serial.println("");
+
+            Serial.print(" ACCEL.x:"); Serial.print(acc.x * 1000); Serial.println(" mg");
+            Serial.print(",ACCEL.y:"); Serial.print(acc.y * 1000); Serial.println(" mg");
+            Serial.print(",ACCEL.z:"); Serial.print(acc.z * 1000); Serial.println(" mg");
+
         }
 
         if (qmi.getGyroscope(gyr.x, gyr.y, gyr.z)) {
-            Serial.print("GYRO.x:");
-            Serial.print(gyr.x);
-            Serial.print(",GYRO.y:");
-            Serial.print(gyr.y);
-            Serial.print(",GYRO.z:");
-            Serial.print(gyr.z);
-            Serial.println("");
+
+            Serial.print(" GYRO.x:"); Serial.print(gyr.x); Serial.println(" degrees/sec");
+            Serial.print(",GYRO.y:"); Serial.print(gyr.y); Serial.println(" degrees/sec");
+            Serial.print(",GYRO.z:"); Serial.print(gyr.z); Serial.println(" degrees/sec");
+
         }
-        Serial.print("\t\t\t\t > ");
-        Serial.print(qmi.getTimestamp());
-        Serial.print("  ");
+        Serial.print("Temperature:");
         Serial.print(qmi.getTemperature_C());
-        Serial.println("*C");
+        Serial.println(" degrees C");
     }
     delay(100);
 }
