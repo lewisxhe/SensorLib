@@ -302,9 +302,11 @@ public:
         switch (pin) {
         case IntPin1:
             enable ? setRegisterBit(QMI8658_REG_CTRL1, 3) : clrRegisterBit(QMI8658_REG_CTRL1, 3);
+            __irq_enable_mask = enable ? __irq_enable_mask | 0x01 : __irq_enable_mask & 0xFE;
             break;
         case IntPin2:
             enable ? setRegisterBit(QMI8658_REG_CTRL1, 4) : clrRegisterBit(QMI8658_REG_CTRL1, 4);
+            __irq_enable_mask = enable ? __irq_enable_mask | 0x02 : __irq_enable_mask & 0xFD;
             break;
         default:
             break;
@@ -719,6 +721,12 @@ public:
 
     bool getDataReady()
     {
+        if ((__irq_enable_mask & 0x03) && (__irq != -1)) {
+            if (this->getGpioLevel(__irq)) {
+                return false;
+            }
+        }
+
         switch (sampleMode) {
         case SYNC_MODE:
             return  getRegisterBit(QMI8658_REG_STATUS_INT, 1);
@@ -1486,6 +1494,170 @@ public:
     }
 
 
+    bool selfTestAccel()
+    {
+        // 1- Disable the sensors (CTRL7 = 0x00).
+        if (writeRegister(QMI8658_REG_CTRL7, 0x00) != DEV_WIRE_NONE) {
+            return false;
+        }
+
+        // 2- Set proper accelerometer ODR (CTRL2.aODR) and bit CTRL2.aST (bit7) to 1 to trigger the Self-Test.
+        if (writeRegister(QMI8658_REG_CTRL2, 0xF0, ACC_ODR_1000Hz | 0x80) != DEV_WIRE_NONE) {
+            return false;
+        }
+
+        // 3- Wait for QMI8658A to drive INT2 to High, if INT2 is enabled (CTRL1.bit4 = 1), or STATUSINT.bit0 is set to 1.
+        int retry = 50;
+        int dataReady = 0x00;
+        while (dataReady != 0x01) {
+            uint8_t reg_var = readRegister(QMI8658_REG_STATUS_INT);
+            log_d("reg_var : %x", reg_var);
+            dataReady = reg_var & 0x01;
+            // dataReady = readRegister(QMI8658_REG_STATUS_INT) & 0x01;
+            delay(20);
+            if (--retry <= 0) {
+                log_e("No response.");
+                return false;
+            }
+        }
+
+        log_i("Data is ready for reading....");
+
+        //4- Set CTRL2.aST(bit7) to 0, to clear STATUSINT1.bit0 and/or INT2.
+        clrRegisterBit(QMI8658_REG_CTRL2, 7);
+
+        // 5- Check for QMI8658A drives INT2 back to Low, and sets STATUSINT1.bit0 to 0.
+        retry = 50;
+        while (dataReady == 0x01) {
+            uint8_t reg_var = readRegister(QMI8658_REG_STATUS_INT);
+            log_d("reg_var : %x", reg_var);
+            dataReady = (reg_var & 0x01);
+            // dataReady = !(readRegister(QMI8658_REG_STATUS_INT) & 0x01);
+            delay(20);
+            if (--retry <= 0) {
+                log_e("No response.");
+                return false;
+            }
+        }
+
+        /*
+            6- Read the Accel Self-Test result:
+                X channel: dVX_L and dVX_H (registers 0x51 and 0x52)
+                Y channel: dVY_L and dVY_H (registers 0x53 and 0x54)
+                Z channel: dVZ_L and dVZ_H (registers 0x55 and 0x56)
+                The results are 16-bits in format signed U5.11, resolution 0.5mg (1 / 2^11 g).
+        */
+        uint8_t rawBuffer[6];
+
+        if (readRegister(QMI8658_REG_DVX_L, rawBuffer, 6) != DEV_WIRE_NONE) {
+            return false;
+        }
+
+        int16_t dVX = (int16_t)(rawBuffer[0]) | (int16_t)(((int16_t)rawBuffer[1]) << 8);
+        int16_t dVY = (int16_t)(rawBuffer[2]) | (int16_t)(((int16_t)rawBuffer[3]) << 8);
+        int16_t dVZ = (int16_t)(rawBuffer[4]) | (int16_t)(((int16_t)rawBuffer[5]) << 8);
+
+        // To convert to mg, considering the U5.11 format, we need to divide by (2^11) to get the actual mg value
+        float dVX_mg = dVX * 0.5;   // 0.5mg is the smallest unit of this format
+        float dVY_mg = dVY * 0.5;
+        float dVZ_mg = dVZ * 0.5;
+
+        log_d("\n\tdVX_mg:%05.11f \n\tdVY_mg:%05.11f \n\tdVZ_mg:%05.11f", dVX_mg, dVY_mg, dVZ_mg);
+        // If the absolute results of all three axes are higher than 200mg, the accelerometer can be considered functional.
+        // Otherwise, the accelerometer cannot be considered functional.
+        if (abs(dVX_mg) > 200 && abs(dVY_mg) > 200 && abs(dVZ_mg) > 200) {
+            Serial.println("Accelerometer is working properly.");
+        } else {
+            Serial.println("Accelerometer is not working properly.");
+            return false;
+        }
+        return true;
+    }
+
+
+    bool selfTestGyro()
+    {
+        // 1- Disable the sensors (CTRL7 = 0x00).
+        if (writeRegister(QMI8658_REG_CTRL7, 0x00) != DEV_WIRE_NONE) {
+            return false;
+        }
+
+        // 2- Set the bit gST to 1. (CTRL3.bit7 = 1’b1).
+        setRegisterBit(QMI8658_REG_CTRL3, 7);
+
+        // 3- Wait for QMI8658A to drive INT2 to High, if INT2 is enabled, or STATUS_INT.bit0 is set to 1.
+        int retry = 50;
+        int dataReady = 0x00;
+        while (dataReady != 0x01) {
+            dataReady = readRegister(QMI8658_REG_STATUS_INT) & 0x01;
+            delay(20);
+            if (--retry <= 0) {
+                log_e("No response.");
+                return false;
+            }
+        }
+
+        log_i("Data is ready for reading....");
+
+        //4- Set CTRL3.aST(bit7) to 0, to clear STATUS_INT1.bit0 and/or INT2.
+        clrRegisterBit(QMI8658_REG_CTRL3, 7);
+
+        // 5- Check for QMI8658A drives INT2 back to Low, or sets STATUSINT1.bit0 to 0.
+        retry = 50;
+        while (dataReady != 0x00) {
+            dataReady = !(readRegister(QMI8658_REG_STATUS_INT) & 0x01);
+            delay(20);
+            if (--retry <= 0) {
+                log_e("No response.");
+                return false;
+            }
+        }
+
+        /*
+            6- Read the Gyro Self-Test result:
+                X channel: dVX_L and dVX_H (registers 0x51 and 0x52)
+                Y channel: dVY_L and dVY_H (registers 0x53 and 0x54)
+                Z channel: dVZ_L and dVZ_H (registers 0x55 and 0x56)
+                Read the 16 bits result in format signed U12.4, resolution is 62.5mdps (1 / 2^4 dps).
+        */
+        uint8_t rawBuffer[6];
+        if (readRegister(QMI8658_REG_DVX_L, rawBuffer, 6) != DEV_WIRE_NONE) {
+            return false;
+        }
+
+        // int16_t x = (int16_t)(rawBuffer[0]) | ((int16_t)(rawBuffer[1] << 8));
+        // int16_t y = (int16_t)(rawBuffer[2]) | ((int16_t)(rawBuffer[3] << 8));
+        // int16_t z = (int16_t)(rawBuffer[4]) | ((int16_t)(rawBuffer[5] << 8));
+
+        float dVX = (((int16_t)rawBuffer[0]) << 12) | ((int16_t)(rawBuffer[1]) >> 4);
+        float dVY = (((int16_t)rawBuffer[2]) << 12) | ((int16_t)(rawBuffer[3]) >> 4);
+        float dVZ = (((int16_t)rawBuffer[4]) << 12) | ((int16_t)(rawBuffer[5]) >> 4);
+
+        dVX *= (1.0 / (1 << 4)); // 62.5 mdps
+        dVY *= (1.0 / (1 << 4)); // 62.5 mdps
+        dVZ *= (1.0 / (1 << 4)); // 62.5 mdps
+
+        log_d("\n\tdVX:%12.4f \n\tdVY:%12.4f \n\tdVZ:%12.4f", dVX, dVY, dVZ);
+
+        //  If the absolute results of all three axes are higher than 300dps, the gyroscope can be considered functional.
+        // Otherwise, the gyroscope cannot be considered functional.
+        if (abs(dVX) > 300 && abs(dVY) > 300 && abs(dVZ) > 300) {
+            Serial.println("Gyro is working properly.");
+        } else {
+            Serial.println("Gyro is not working properly.");
+            return false;
+        }
+
+        return true;
+    }
+
+
+
+    void setPins(int irq)
+    {
+        __irq = irq;
+    }
+
 private:
     float accelScales, gyroScales;
     uint32_t lastTimestamp = 0;
@@ -1496,6 +1668,8 @@ private:
     uint8_t  usid[6];
     bool __gDataReady = false;
     bool __aDataReady = false;
+    int __irq = -1;
+    uint8_t __irq_enable_mask = false;
 
     EventCallBack_t eventWomEvent = NULL;
     EventCallBack_t eventTagEvent = NULL;
@@ -1547,6 +1721,11 @@ protected:
     bool initImpl()
     {
         uint8_t buffer[6] = {0};
+
+
+        if (__irq != -1) {
+            this->setGpioMode(__irq, INPUT);
+        }
 
         if (!reset()) {
             return false;
