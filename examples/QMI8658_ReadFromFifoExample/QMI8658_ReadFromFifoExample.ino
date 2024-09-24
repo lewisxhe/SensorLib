@@ -112,6 +112,7 @@ void setup()
         *  LPF_MODE_1     //3.63% of ODR
         *  LPF_MODE_2     //5.39% of ODR
         *  LPF_MODE_3     //13.37% of ODR
+        *  LPF_OFF        // OFF Low-Pass Fitter
         * */
         SensorQMI8658::LPF_MODE_0);
 
@@ -137,13 +138,14 @@ void setup()
          * GYR_ODR_112_1Hz
          * GYR_ODR_56_05Hz
          * GYR_ODR_28_025H
-        * */
+         * */
         SensorQMI8658::GYR_ODR_896_8Hz,
         /*
         *  LPF_MODE_0     //2.66% of ODR
         *  LPF_MODE_1     //3.63% of ODR
         *  LPF_MODE_2     //5.39% of ODR
         *  LPF_MODE_3     //13.37% of ODR
+        *  LPF_OFF        // OFF Low-Pass Fitter
         * */
         SensorQMI8658::LPF_MODE_3);
 

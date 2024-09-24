@@ -99,6 +99,7 @@ public:
         LPF_MODE_1,     //3.63% of ODR
         LPF_MODE_2,     //5.39% of ODR
         LPF_MODE_3,     //13.37% of ODR
+        LPF_OFF,        //OFF Low-Pass Filter
     };
 
     enum MotionEvent {
@@ -332,8 +333,7 @@ public:
      * @param  selfTest:
      * @retval
      */
-    int configAccelerometer(AccelRange range, AccelODR odr, LpfMode lpfOdr = LPF_MODE_0,
-                            bool lpf = true)
+    int configAccelerometer(AccelRange range, AccelODR odr, LpfMode lpfOdr = LPF_MODE_0)
     {
         bool en = isEnableAccelerometer();
 
@@ -362,12 +362,16 @@ public:
             return DEV_WIRE_ERR;
         }
 
-        // setAccelLowPassFitter
-        lpf ? setRegisterBit(QMI8658_REG_CTRL5, 0) : clrRegisterBit(QMI8658_REG_CTRL5, 0);
-
-        // setAccelLowPassFitterOdr
-        if (writeRegister(QMI8658_REG_CTRL5, QMI8658_ACCEL_LPF_MASK,  (lpfOdr << 1)) != DEV_WIRE_NONE) {
-            return DEV_WIRE_ERR;
+        if (lpfOdr != LPF_OFF) {
+            // setAccelLowPassFitterOdr
+            if (writeRegister(QMI8658_REG_CTRL5, QMI8658_ACCEL_LPF_MASK,  (lpfOdr << 1)) != DEV_WIRE_NONE) {
+                return DEV_WIRE_ERR;
+            }
+            // Enable Low-Pass Fitter
+            setRegisterBit(QMI8658_REG_CTRL5, 0);
+        } else {
+            // Disable Low-Pass Fitter
+            clrRegisterBit(QMI8658_REG_CTRL5, 0);
         }
 
         // setAccelSelfTest
@@ -389,8 +393,7 @@ public:
      * @param  lpf (Low-Pass Filter Mode): see LpfMode
      * @retval
      */
-    int configGyroscope(GyroRange range, GyroODR odr, LpfMode lpfOdr = LPF_MODE_0,
-                        bool lpf = true)
+    int configGyroscope(GyroRange range, GyroODR odr, LpfMode lpfOdr = LPF_MODE_0)
     {
         bool en = isEnableGyroscope();
 
@@ -422,13 +425,16 @@ public:
             return DEV_WIRE_ERR;
         }
 
-        // setGyroLowPassFitter
-        lpf ? setRegisterBit(QMI8658_REG_CTRL5, 4) : clrRegisterBit(QMI8658_REG_CTRL5, 4);
-
-
         // setGyroLowPassFitterOdr
-        if (writeRegister(QMI8658_REG_CTRL5, QMI8658_GYRO_LPF_MASK,  (lpfOdr << 5)) != DEV_WIRE_NONE) {
-            return DEV_WIRE_ERR;
+        if (lpfOdr != LPF_OFF) {
+            if (writeRegister(QMI8658_REG_CTRL5, QMI8658_GYRO_LPF_MASK,  (lpfOdr << 5)) != DEV_WIRE_NONE) {
+                return DEV_WIRE_ERR;
+            }
+            // Enable Low-Pass Fitter
+            setRegisterBit(QMI8658_REG_CTRL5, 4);
+        } else {
+            // Disable Low-Pass Fitter
+            clrRegisterBit(QMI8658_REG_CTRL5, 4);
         }
 
         // setGyroSelfTest

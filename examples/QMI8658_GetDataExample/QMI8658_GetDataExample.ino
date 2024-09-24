@@ -135,6 +135,7 @@ void setup()
         *  LPF_MODE_1     //3.63% of ODR
         *  LPF_MODE_2     //5.39% of ODR
         *  LPF_MODE_3     //13.37% of ODR
+        *  LPF_OFF        // OFF Low-Pass Fitter
         * */
         SensorQMI8658::LPF_MODE_0);
 
@@ -169,6 +170,7 @@ void setup()
         *  LPF_MODE_1     //3.63% of ODR
         *  LPF_MODE_2     //5.39% of ODR
         *  LPF_MODE_3     //13.37% of ODR
+        *  LPF_OFF        // OFF Low-Pass Fitter
         * */
         SensorQMI8658::LPF_MODE_3);
 
@@ -177,7 +179,8 @@ void setup()
 
     // In 6DOF mode (accelerometer and gyroscope are both enabled),
     // the output data rate is derived from the nature frequency of gyroscope
-    qmi.enableGyroscope();
+    // qmi.enableGyroscope();
+    qmi.disableGyroscope();
     qmi.enableAccelerometer();
 
     // Print register configuration information

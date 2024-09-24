@@ -145,10 +145,9 @@ void setup()
         *  LPF_MODE_1     //3.63% of ODR
         *  LPF_MODE_2     //5.39% of ODR
         *  LPF_MODE_3     //13.37% of ODR
+        *  LPF_OFF        // OFF Low-Pass Fitter
         * */
-        SensorQMI8658::LPF_MODE_0,
-        // selfTest enable
-        true);
+        SensorQMI8658::LPF_MODE_0);
 
 
     qmi.configGyroscope(
@@ -161,7 +160,7 @@ void setup()
         * GYR_RANGE_512DPS
         * GYR_RANGE_1024DPS
         * */
-        SensorQMI8658::GYR_RANGE_256DPS,
+        SensorQMI8658::GYR_RANGE_64DPS,
         /*
          * GYR_ODR_7174_4Hz
          * GYR_ODR_3587_2Hz
@@ -179,10 +178,9 @@ void setup()
         *  LPF_MODE_1     //3.63% of ODR
         *  LPF_MODE_2     //5.39% of ODR
         *  LPF_MODE_3     //13.37% of ODR
+        *  LPF_OFF        // OFF Low-Pass Fitter
         * */
-        SensorQMI8658::LPF_MODE_3,
-        // selfTest enable
-        true);
+        SensorQMI8658::LPF_MODE_3);
 
 
     // In 6DOF mode (accelerometer and gyroscope are both enabled),

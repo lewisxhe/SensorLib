@@ -105,19 +105,22 @@ void setup()
         *  LPF_MODE_1     //3.63% of ODR
         *  LPF_MODE_2     //5.39% of ODR
         *  LPF_MODE_3     //13.37% of ODR
+        *  LPF_OFF        // OFF Low-Pass Fitter
         * */
         SensorQMI8658::LPF_MODE_0);
 
 
+
+
     qmi.configGyroscope(
         /*
-         * GYR_RANGE_16DPS
-         * GYR_RANGE_32DPS
-         * GYR_RANGE_64DPS
-         * GYR_RANGE_128DPS
-         * GYR_RANGE_256DPS
-         * GYR_RANGE_512DPS
-         * GYR_RANGE_1024DPS
+        * GYR_RANGE_16DPS
+        * GYR_RANGE_32DPS
+        * GYR_RANGE_64DPS
+        * GYR_RANGE_128DPS
+        * GYR_RANGE_256DPS
+        * GYR_RANGE_512DPS
+        * GYR_RANGE_1024DPS
         * */
         SensorQMI8658::GYR_RANGE_64DPS,
         /*
@@ -130,13 +133,14 @@ void setup()
          * GYR_ODR_112_1Hz
          * GYR_ODR_56_05Hz
          * GYR_ODR_28_025H
-        * */
+         * */
         SensorQMI8658::GYR_ODR_112_1Hz,
         /*
         *  LPF_MODE_0     //2.66% of ODR
         *  LPF_MODE_1     //3.63% of ODR
         *  LPF_MODE_2     //5.39% of ODR
         *  LPF_MODE_3     //13.37% of ODR
+        *  LPF_OFF        // OFF Low-Pass Fitter
         * */
         SensorQMI8658::LPF_MODE_3);
 
