@@ -145,8 +145,12 @@ void setup()
         SensorQMI8658::LPF_MODE_3);
 
 
-    // In 6DOF mode (accelerometer and gyroscope are both enabled),
-    // the output data rate is derived from the nature frequency of gyroscope
+    /*
+    * If both the accelerometer and gyroscope sensors are turned on at the same time,
+    * the output frequency will be based on the gyroscope output frequency.
+    * The example configuration is 896.8HZ output frequency,
+    * so the acceleration output frequency is also limited to 112.1HZ
+    * */
     qmi.enableGyroscope();
     qmi.enableAccelerometer();
 

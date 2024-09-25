@@ -200,8 +200,12 @@ void setup()
         * */
         SensorQMI8658::LPF_MODE_3);
 
-    // In 6DOF mode (accelerometer and gyroscope are both enabled),
-    // the output data rate is derived from the nature frequency of gyroscope
+    /*
+    * If both the accelerometer and gyroscope sensors are turned on at the same time,
+    * the output frequency will be based on the gyroscope output frequency.
+    * The example configuration is 896.8HZ output frequency,
+    * so the acceleration output frequency is also limited to 896.8HZ
+    * */
     qmi.enableGyroscope();
     qmi.enableAccelerometer();
 
@@ -223,9 +227,9 @@ void setup()
     attachInterrupt(IMU_INT1, setFlag, RISING);
 #endif
 
-    // qmi.enableINT(SensorQMI8658::IntPin1); //no use
+    // qmi.enableINT(SensorQMI8658::INTERRUPT_PIN_1); //no use
     // Enable data ready to interrupt pin2
-    qmi.enableINT(SensorQMI8658::IntPin2);
+    qmi.enableINT(SensorQMI8658::INTERRUPT_PIN_2);
 
 
     // Print register configuration information
