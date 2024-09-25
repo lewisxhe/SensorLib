@@ -111,23 +111,28 @@ public:
     };
 
     enum IntPin {
-        IntPin1,
-        IntPin2,
+        INTERRUPT_PIN_1,
+        INTERRUPT_PIN_2,
+        INTERRUPT_PIN_DISABLE
     };
 
-    enum Fifo_Samples {
+    enum FIFO_Samples {
         FIFO_SAMPLES_16,
         FIFO_SAMPLES_32,
         FIFO_SAMPLES_64,
         FIFO_SAMPLES_128,
-        FIFO_SAMPLES_MAX,
     } ;
 
     enum FIFO_Mode {
+        // Configure the FIFO_MODE to ‘Bypass’ (0) mode, will disable the FIFO functionality.
         FIFO_MODE_BYPASS,
+        // In ‘FIFO’ mode, once FIFO is full,
+        // the data filling will stop and new data will be discarded until host reads out the FIFO data and release the space for new data to be written to.
         FIFO_MODE_FIFO,
+        // In ‘Stream’ mode, once FIFO is full,
+        // the data filling will continue and the oldest data will be discarded,
+        // until host reads out the FIFO data and release the space for new data to be written to
         FIFO_MODE_STREAM,
-        FIFO_MODE_MAX,
     };
 
     enum SampleMode {
@@ -218,6 +223,10 @@ public:
     ~SensorQMI8658()
     {
         log_i("~SensorQMI8658");
+        if (__fifo_buffer) {
+            free(__fifo_buffer);
+            __fifo_buffer = NULL;
+        }
         deinit();
     }
 
@@ -300,11 +309,11 @@ public:
     void enableINT(IntPin pin, bool enable = true)
     {
         switch (pin) {
-        case IntPin1:
+        case INTERRUPT_PIN_1:
             enable ? setRegisterBit(QMI8658_REG_CTRL1, 3) : clrRegisterBit(QMI8658_REG_CTRL1, 3);
             __irq_enable_mask = enable ? __irq_enable_mask | 0x01 : __irq_enable_mask & 0xFE;
             break;
-        case IntPin2:
+        case INTERRUPT_PIN_2:
             enable ? setRegisterBit(QMI8658_REG_CTRL1, 4) : clrRegisterBit(QMI8658_REG_CTRL1, 4);
             __irq_enable_mask = enable ? __irq_enable_mask | 0x02 : __irq_enable_mask & 0xFD;
             break;
@@ -325,16 +334,7 @@ public:
         setRegisterBit(QMI8658_REG_CTRL7, 5);
     }
 
-    /**
-     * @brief
-     * @note
-     * @param  range:
-     * @param  odr:
-     * @param  lpfOdr:
-     * @param  lpf:
-     * @param  selfTest:
-     * @retval
-     */
+
     int configAccelerometer(AccelRange range, AccelODR odr, LpfMode lpfOdr = LPF_MODE_0)
     {
         bool en = isEnableAccelerometer();
@@ -386,15 +386,7 @@ public:
         return DEV_WIRE_NONE;
     }
 
-    /**
-     * @brief
-     * @note
-     * @param  range:   Gyro see GyroRange
-     * @param  odr(Output data rate): see GyroODR
-     * @param  lpfOdr(Low-Pass Filter Output data rate):
-     * @param  lpf (Low-Pass Filter Mode): see LpfMode
-     * @retval
-     */
+
     int configGyroscope(GyroRange range, GyroODR odr, LpfMode lpfOdr = LPF_MODE_0)
     {
         bool en = isEnableGyroscope();
@@ -449,18 +441,11 @@ public:
         return DEV_WIRE_NONE;
     }
 
-    /**
-     * @brief
-     * @note
-     * @param  mode:
-     * @param  samples:
-     * @param  pin:
-     * @param  watermark:
-     * @retval
-     */
+
     int configFIFO(FIFO_Mode    mode,
-                   Fifo_Samples samples = FIFO_SAMPLES_16, IntPin pin = IntPin2,
-                   uint8_t watermark = 8)
+                   FIFO_Samples samples = FIFO_SAMPLES_16,
+                   IntPin pin = INTERRUPT_PIN_DISABLE,  //Disable interrupt mode
+                   uint8_t trigger_samples = 16)
     {
         bool enGyro = isEnableGyroscope();
         bool enAccel = isEnableAccelerometer();
@@ -473,23 +458,42 @@ public:
             disableAccelerometer();
         }
 
-        /////////////////
-        pin == IntPin2 ? clrRegisterBit(QMI8658_REG_CTRL1, 2) : setRegisterBit(QMI8658_REG_CTRL1, 2);
-
-        // set fifo mode and samples len
-        fifoMode = (samples << 2) | mode;
-        if (writeRegister(QMI8658_REG_FIFO_CTRL, fifoMode) == DEV_WIRE_ERR) {
+        // Reset FIFO configure
+        if (writeCommand(CTRL_CMD_RST_FIFO) != DEV_WIRE_NONE) {
+            log_e("Reset fifo failed!");
             return DEV_WIRE_ERR;
         }
 
-        // set watermark
-        if (writeRegister(QMI8658_REG_FIFO_WTM_TH, watermark) == DEV_WIRE_ERR) {
+        __fifo_interrupt = true;
+
+        switch (pin) {
+        case INTERRUPT_PIN_1:
+            setRegisterBit(QMI8658_REG_CTRL1, 2);
+            break;
+        case INTERRUPT_PIN_2:
+            clrRegisterBit(QMI8658_REG_CTRL1, 2);
+            break;
+        case INTERRUPT_PIN_DISABLE:
+            // Saves whether the fifo interrupt pin is enabled
+            __fifo_interrupt  = false;
+            break;
+        default:
+            break;
+        }
+
+        // Set fifo mode and samples len
+        __fifo_mode = (samples << 2) | mode;
+        if (writeRegister(QMI8658_REG_FIFO_CTRL, __fifo_mode) == DEV_WIRE_ERR) {
             return DEV_WIRE_ERR;
         }
 
-        //reset fifo
-        writeCommand(CTRL_CMD_RST_FIFO);
-        /////////////////
+        /*
+        * The FIFO_WTM register(0x13) indicates the expected level of FIFO data that host wants to get the FIFO Watermark interrupt. 
+        * The unit is sample, which means 6 bytes if one of accelerometer and gyroscope is enabled, and 12 bytes if both are enabled.
+        * */
+        if (writeRegister(QMI8658_REG_FIFO_WTM_TH, trigger_samples ) == DEV_WIRE_ERR) {
+            return DEV_WIRE_ERR;
+        }
 
         if (enGyro) {
             enableGyroscope();
@@ -499,165 +503,270 @@ public:
             enableAccelerometer();
         }
 
+        int res =  readRegister(QMI8658_REG_FIFO_CTRL);
+        log_d("QMI8658_REG_FIFO_CTRL : 0x%X", res);
+        if ((res & 0x02) == 0x02) {
+            log_d("Enabled Stream mode.");
+        } else if ((res & 0x01) == 0x01) {
+            log_d("Enabled FIFO mode.");
+        } else if ((res & 0x03) == 0x00) {
+            log_d("Disabled FIFO.");
+        }
+        res >>= 2;
+        if ((res & 0x03) == 0x03) {
+            log_d("128 samples.");
+        } else if ((res & 0x02) == 0x02) {
+            log_d("64 samples.");
+        } else if ((res & 0x01) == 0x01) {
+            log_d("32 samples.");
+        } else if ((res & 0x03) == 0x00) {
+            log_d("16 samples.");
+        }
+
         return DEV_WIRE_NONE;
     }
+
+    uint16_t readFromFifo(IMUdata *acc, uint16_t accLength, IMUdata *gyro, uint16_t gyrLength)
+    {
+        if (__fifo_mode == FIFO_MODE_BYPASS) {
+            log_e("FIFO is not configured.");
+            return 0;
+        }
+
+        if (!__gyro_enabled && !__accel_enabled) {
+            log_e("Sensor not enabled.");
+            return 0;
+        }
+
+        uint16_t data_bytes = readFromFifo();
+        if (data_bytes == 0) {
+            return 0;
+        }
+
+        if (!__fifo_buffer) {
+            log_e("FIFO buffer is NULL");
+            return 0;
+        }
+
+        uint8_t enabled_sensor_count = (__accel_enabled && __gyro_enabled) ? 2 : 1;
+        uint16_t samples_per_sensor = data_bytes / (6 * enabled_sensor_count);
+        uint16_t total_samples = samples_per_sensor * enabled_sensor_count;
+
+        log_d("Total samples: %u", total_samples);
+
+        uint16_t accel_index = 0;
+        uint16_t gyro_index = 0;
+
+        for (uint16_t i = 0; i < total_samples; ++i) {
+            auto data = reinterpret_cast<int16_t *>(&__fifo_buffer[i * 6]);
+            int16_t x = data[0];
+            int16_t y = data[1];
+            int16_t z = data[2];
+
+            if (__accel_enabled && __gyro_enabled) {
+                if (i % 2 == 0) {
+                    // Accel
+                    if (accel_index < accLength) {
+                        acc[accel_index].x = x * accelScales;
+                        acc[accel_index].y = y * accelScales;
+                        acc[accel_index].z = z * accelScales;
+                        accel_index++;
+                    }
+                } else {
+                    // Gyro
+                    if (gyro_index < gyrLength) {
+                        gyro[gyro_index].x = x * gyroScales;
+                        gyro[gyro_index].y = y * gyroScales;
+                        gyro[gyro_index].z = z * gyroScales;
+                        gyro_index++;
+                    }
+                }
+            } else if (__accel_enabled) {
+                if (accel_index < accLength) {
+                    acc[accel_index].x = x * accelScales;
+                    acc[accel_index].y = y * accelScales;
+                    acc[accel_index].z = z * accelScales;
+                    accel_index++;
+                }
+            } else if (__gyro_enabled) {
+                if (gyro_index < gyrLength) {
+                    gyro[gyro_index].x = x * gyroScales;
+                    gyro[gyro_index].y = y * gyroScales;
+                    gyro[gyro_index].z = z * gyroScales;
+                    gyro_index++;
+                }
+            }
+        }
+        return samples_per_sensor;
+    }
+
+
+private:
 
     uint16_t getFifoNeedBytes()
     {
         uint8_t sam[] = {16, 32, 64, 128};
         uint8_t sensors  = 0;
-        if (gyroEn && accelEn) {
+        if (__gyro_enabled && __accel_enabled) {
             sensors = 2;
-        } else if (gyroEn || accelEn) {
+        } else if (__gyro_enabled || __accel_enabled) {
             sensors = 1;
         }
-        uint8_t samples =  ((fifoMode >> 2) & 0x03) ;
+        uint8_t samples =  ((__fifo_mode >> 2) & 0x03) ;
         return sam[samples] * 6 * sensors;
     }
 
-    bool readFromFifo(IMUdata *acc, uint16_t accLength, IMUdata *gyr, uint16_t gyrLength)
-    {
-        uint16_t bytes = getFifoNeedBytes();
-        uint8_t *buffer = new uint8_t [bytes];
-        if (!buffer) {
-            log_e("No memory!");
-            return false;
-        }
-        if (!readFromFifo(buffer, bytes)) {
-            delete buffer;
-            return false;
-        }
-
-        int counter = 0;
-        for (int i = 0; i < bytes; ) {
-            if (accelEn) {
-                if (counter < accLength) {
-                    acc[counter].x = (float)((int16_t)buffer[i]     | (buffer[i + 1] << 8)) * accelScales;
-                    acc[counter].y = (float)((int16_t)buffer[i + 2] | (buffer[i + 3] << 8)) * accelScales;
-                    acc[counter].z = (float)((int16_t)buffer[i + 4] | (buffer[i + 5] << 8)) * accelScales;
-                }
-                i += 6;
-            }
-
-            if (gyroEn) {
-                if (counter < gyrLength) {
-                    gyr[counter].x = (float)((int16_t)buffer[i]     | (buffer[i + 1] << 8)) * gyroScales;
-                    gyr[counter].y = (float)((int16_t)buffer[i + 2] | (buffer[i + 3] << 8)) * gyroScales;
-                    gyr[counter].z = (float)((int16_t)buffer[i + 4] | (buffer[i + 5] << 8)) * gyroScales;
-                }
-                i += 6;
-            }
-            counter++;
-        }
-        delete buffer;
-        return true;
-    }
-
-    bool readFromFifo(uint8_t *data, size_t length)
+    /**
+     * @brief  readFromFifo
+     * @note   Read the data in the FIFO buffer. configFIFO should be called before use.
+     * @retval Returns the size of the element read
+     */
+    uint16_t readFromFifo()
     {
         uint8_t  status[2];
         uint8_t  fifo_sensors = 1;
         uint16_t fifo_bytes   = 0;
-        uint16_t fifo_level   = 0;
 
-        // get fifo status
+        if ((__irq != -1) && __fifo_interrupt) {
+            /*
+             * Once the corresponds INT pin is configured to the push-pull mode, the FIFO watermark interrupt can be seen on the
+             * corresponds INT pin. It will keep high level as long as the FIFO filled level is equal to or higher than the watermark, will
+             * drop to low level as long as the FIFO filled level is lower than the configured FIFO watermark after reading out by host
+             * and FIFO_RD_MODE is cleared.
+            */
+            if (this->getGpioLevel(__irq) == LOW) {
+                return false;
+            }
+        }
+
+        size_t alloc_size = getFifoNeedBytes();
+        if (!__fifo_buffer) {
+            __fifo_buffer = (uint8_t *)calloc(alloc_size, sizeof(uint8_t));
+            if (!__fifo_buffer) {
+                log_e("Calloc buffer size %lu bytes failed!", alloc_size);
+                return 0;
+            }
+            __fifo_size = alloc_size;
+
+        } else if (alloc_size > __fifo_size) {
+            __fifo_buffer = (uint8_t *)realloc(__fifo_buffer, alloc_size);
+            if (!__fifo_buffer) {
+                log_e("Realloc buffer size %lu bytes failed!", alloc_size);
+                return 0;
+            }
+        }
+
+        // 1.Got FIFO watermark interrupt by INT pin or polling the FIFO_STATUS register (FIFO_WTM and/or FIFO_FULL).
         int val = readRegister(QMI8658_REG_FIFO_STATUS);
         if (val == DEV_WIRE_ERR) {
-            return false;
+            return 0;
         }
-        log_d("fifo status:0x%x", val);
+        log_d("FIFO status:0x%x", val);
 
-        if (val & (1 << 5)) {
-            log_e("\t\tFIFO Overflow condition has happened (data dropping happened)");
+        if (!(val & _BV(4))) {
+            log_d("FIFO is Empty");
+            return 0;
         }
-        if (val & (1 << 6)) {
-            log_e("\t\tFIFO Water Mark Level Hit");
+        if (val & _BV(5)) {
+            log_d("FIFO Overflow condition has happened (data dropping happened)");
+            // return 0;
         }
-        if (val & (1 << 7)) {
-            log_e("\t\tFIFO is Full");
+        if (val & _BV(6)) {
+            log_d("FIFO Water Mark Level Hit");
         }
-
-        val = readRegister(QMI8658_REG_FIFO_COUNT, status, 2);
-        if (val == DEV_WIRE_ERR) {
-            return false;
-        }
-
-        fifo_bytes = ((status[1] & 0x03)) << 8 | status[0];
-
-        if (accelEn && gyroEn) {
-            fifo_sensors = 2;
-        } else if (accelEn || gyroEn) {
-            fifo_sensors = 1;
+        if (val & _BV(7)) {
+            log_d("FIFO is Full");
         }
 
-        fifo_level = fifo_bytes / (3 * fifo_sensors);
-        fifo_bytes = fifo_level * (6 * fifo_sensors);
-
-        log_d("fifo-level : %d fifo_bytes : %d fifo_sensors : %d", fifo_level, fifo_bytes, fifo_sensors);
-        if (length < fifo_bytes) {
-            writeCommand(CTRL_CMD_RST_FIFO);
-            return false;
+        // 2.Read the FIFO_SMPL_CNT and FIFO_STATUS registers, to calculate the level of FIFO content data, refer to 8.4 FIFO Sample Count.
+        if (readRegister(QMI8658_REG_FIFO_COUNT, status, 2) == DEV_WIRE_ERR) {
+            log_e("Bus communication failed!");
+            return 0;
         }
 
-        if (fifo_level) {
-            writeCommand(CTRL_CMD_REQ_FIFO);
+        // FIFO_Sample_Count (in byte) = 2 * (fifo_smpl_cnt_msb[1:0] * 256 + fifo_smpl_cnt_lsb[7:0])
+        fifo_bytes = 2 * (((status[1] & 0x03)) << 8 | status[0]);
 
-            if (readRegister(QMI8658_REG_FIFO_DATA, data, fifo_bytes) ==
-                    DEV_WIRE_ERR) {
-                log_e("get fifo error !");
-                return false;
-            }
+        log_d("reg fifo_bytes:%d ", fifo_bytes);
 
-            val = writeRegister(QMI8658_REG_FIFO_CTRL, fifoMode);
-            if (val == DEV_WIRE_ERR) {
-                return false;
-            }
+        //Samples 16  * 6 * 2  = 192
+        //Samples 32  * 6 * 2  = 384
+        //Samples 64  * 6 * 2  = 768
+        //Samples 128 * 6 * 2  = 1536
+
+        log_d("read_bytes : %d fifo_sensors : %d", fifo_bytes, fifo_sensors);
+        // 3.Send CTRL_CMD_REQ_FIFO (0x05) by CTRL9 command, to enable FIFO read mode. Refer to CTRL_CMD_REQ_FIFO for details.
+        if (writeCommand(CTRL_CMD_REQ_FIFO) != DEV_WIRE_NONE) {
+            log_e("Request FIFO failed!");
+            return 0;
+        }
+        // 4.Read from the FIFO_DATA register per FIFO_Sample_Count.
+        if (readRegister(QMI8658_REG_FIFO_DATA, __fifo_buffer, fifo_bytes) == DEV_WIRE_ERR) {
+            log_e("Request FIFO data failed !");
+            return 0;
         }
 
-        writeCommand(CTRL_CMD_RST_FIFO);
+        // 5.Disable the FIFO Read Mode by setting FIFO_CTRL.FIFO_rd_mode to 0. New data will be filled into FIFO afterwards.
+        if (writeRegister(QMI8658_REG_FIFO_CTRL, __fifo_mode) == DEV_WIRE_ERR) {
+            log_e("Clear FIFO flag failed!");
+            return 0;
+        }
 
-        return fifo_level;
+        return fifo_bytes;
     }
+
+public:
+
 
     bool enableAccelerometer()
     {
-        accelEn = true;
-        return setRegisterBit(QMI8658_REG_CTRL7, 0) == DEV_WIRE_NONE;
+        if (setRegisterBit(QMI8658_REG_CTRL7, 0)) {
+            __accel_enabled = true;
+        }
+        return __accel_enabled;
     }
 
     bool disableAccelerometer()
     {
-        accelEn = false;
-        return clrRegisterBit(QMI8658_REG_CTRL7, 0) == DEV_WIRE_NONE;
+        if (clrRegisterBit(QMI8658_REG_CTRL7, 0)) {
+            __accel_enabled = false;
+            return true;
+        }
+        return false;
     }
 
     bool isEnableAccelerometer()
     {
-        accelEn = getRegisterBit(QMI8658_REG_CTRL7, 0);
-        return accelEn;
+        return __accel_enabled;
     }
 
     bool isEnableGyroscope()
     {
-        gyroEn = getRegisterBit(QMI8658_REG_CTRL7, 1);
-        return gyroEn;
+        return __gyro_enabled;
     }
 
     bool enableGyroscope()
     {
-        gyroEn = true;
-        return setRegisterBit(QMI8658_REG_CTRL7, 1) == DEV_WIRE_NONE;
+        if (setRegisterBit(QMI8658_REG_CTRL7, 1)) {
+            __gyro_enabled = true;
+        }
+        return __gyro_enabled;
     }
 
     bool disableGyroscope()
     {
-        gyroEn = false;
-        return clrRegisterBit(QMI8658_REG_CTRL7, 1) == DEV_WIRE_NONE;
+        if (clrRegisterBit(QMI8658_REG_CTRL7, 1)) {
+            __gyro_enabled = false;
+            return true;
+        }
+        return false;
     }
 
     bool getAccelRaw(int16_t *rawBuffer)
     {
-        if (!accelEn)return false;
+        if (!__accel_enabled) {
+            return false;
+        }
         uint8_t buffer[6] = {0};
         if (readRegister(QMI8658_REG_AX_L, buffer, 6) != DEV_WIRE_ERR) {
             rawBuffer[0] = (int16_t)(buffer[1] << 8) | (buffer[0]);
@@ -671,7 +780,9 @@ public:
 
     bool getAccelerometer(float &x, float &y, float &z)
     {
-        if (!accelEn)return false;
+        if (!__accel_enabled) {
+            return false;
+        }
         int16_t raw[3];
         if (getAccelRaw(raw)) {
             x = raw[0] * accelScales;
@@ -694,7 +805,9 @@ public:
 
     bool getGyroRaw(int16_t *rawBuffer)
     {
-        if (!gyroEn)return false;
+        if (!__gyro_enabled) {
+            return false;
+        }
         uint8_t buffer[6] = {0};
         if (readRegister(QMI8658_REG_GX_L, buffer, 6) != DEV_WIRE_ERR) {
             rawBuffer[0] = (int16_t)(buffer[1] << 8) | (buffer[0]);
@@ -708,7 +821,9 @@ public:
 
     int getGyroscope(float &x, float &y, float &z)
     {
-        if (!gyroEn)return false;
+        if (!__gyro_enabled) {
+            return false;
+        }
         int16_t raw[3];
         if (getGyroRaw(raw)) {
             x = raw[0] * gyroScales;
@@ -732,11 +847,11 @@ public:
             return  getRegisterBit(QMI8658_REG_STATUS_INT, 1);
         case ASYNC_MODE:
             //TODO: When Accel and Gyro are configured with different rates, this will always be false
-            if (gyroEn && accelEn) {
+            if (__accel_enabled & __gyro_enabled) {
                 return readRegister(QMI8658_REG_STATUS0) & 0x03;
-            } else if (gyroEn) {
+            } else if (__gyro_enabled) {
                 return readRegister(QMI8658_REG_STATUS0) & 0x02;
-            } else if (accelEn) {
+            } else if (__accel_enabled) {
                 return readRegister(QMI8658_REG_STATUS0) & 0x01;
             }
             break;
@@ -776,7 +891,6 @@ public:
         }
         return writeCommand(CTRL_CMD_AHB_CLOCK_GATING);
     }
-
 
     void dumpCtrlRegister()
     {
@@ -818,7 +932,7 @@ public:
 
     int configActivityInterruptMap(IntPin pin)
     {
-        return pin == IntPin1 ? setRegisterBit(QMI8658_REG_CTRL8, 6)
+        return pin == INTERRUPT_PIN_1 ? setRegisterBit(QMI8658_REG_CTRL8, 6)
                : clrRegisterBit(QMI8658_REG_CTRL8, 6);
     }
 
@@ -1160,7 +1274,7 @@ public:
      */
     int configWakeOnMotion(uint8_t WoMThreshold = 200,
                            AccelODR odr = ACC_ODR_LOWPOWER_128Hz,
-                           IntPin pin = IntPin2,
+                           IntPin pin = INTERRUPT_PIN_2,
                            uint8_t defaultPinValue = 1,
                            uint8_t blankingTime = 0x20
                           )
@@ -1191,9 +1305,9 @@ public:
             return DEV_WIRE_ERR;
         }
 
-        if ( pin == IntPin1) {
+        if ( pin == INTERRUPT_PIN_1) {
             val = defaultPinValue ? 0x02 : 0x00;
-        } else if (pin == IntPin2) {
+        } else if (pin == INTERRUPT_PIN_2) {
             val = defaultPinValue ? 0x03 : 0x01;
         }
 
@@ -1662,14 +1776,18 @@ private:
     float accelScales, gyroScales;
     uint32_t lastTimestamp = 0;
     uint8_t sampleMode = ASYNC_MODE;
-    bool accelEn, gyroEn;
-    uint8_t fifoMode;
+    bool __accel_enabled = false;
+    bool __gyro_enabled = false;
     uint32_t revisionID;
     uint8_t  usid[6];
     bool __gDataReady = false;
     bool __aDataReady = false;
     int __irq = -1;
     uint8_t __irq_enable_mask = false;
+    uint8_t __fifo_mode;
+    bool __fifo_interrupt = false;;
+    uint8_t *__fifo_buffer = NULL;
+    uint16_t __fifo_size = 0;
 
     EventCallBack_t eventWomEvent = NULL;
     EventCallBack_t eventTagEvent = NULL;

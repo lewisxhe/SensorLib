@@ -494,7 +494,7 @@ protected:
         return readRegister(reg, &val, 1) == -1 ? -1 : val;
     }
 
-    int readRegister(int reg, uint8_t *buf, uint8_t length)
+    int readRegister(int reg, uint8_t *buf, size_t length)
     {
         if (__i2c_master_read) {
             return __i2c_master_read(__addr, reg, buf, length);
@@ -527,15 +527,21 @@ protected:
                     __spi->transfer(reg >> (8 * ((__reg_addr_len - 1) - i)));
                 }
             }
+
+#if defined(ARDUINO_ARCH_ESP32)
+            __spi->transferBytes(NULL, buf, length);
+#else
             for (size_t i = 0; i < length; i++) {
                 buf[i] = __spi->transfer(0x00);
             }
+#endif
+
             digitalWrite(__cs, HIGH);
             __spi->endTransaction();
             return DEV_WIRE_NONE;
         }
 #elif defined(ESP_PLATFORM)
-
+        //TODO:SPI INTERFACE
 #if ((ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,0,0)) && defined(CONFIG_SENSORLIB_ESP_IDF_NEW_API))
         if (ESP_OK == i2c_master_transmit_receive(
                     __i2c_device,
@@ -568,7 +574,7 @@ protected:
         if (val == DEV_WIRE_ERR) {
             return false;
         }
-        return  writeRegister(registers, (val & (~_BV(bit)))) == 0;
+        return  writeRegister(registers, (val & (~_BV(bit)))) == DEV_WIRE_NONE;
     }
 
     bool inline setRegisterBit(int registers, uint8_t bit)
@@ -577,7 +583,7 @@ protected:
         if (val == DEV_WIRE_ERR) {
             return false;
         }
-        return  writeRegister(registers, (val | (_BV(bit)))) == 0;
+        return  writeRegister(registers, (val | (_BV(bit)))) == DEV_WIRE_NONE;
     }
 
     bool inline getRegisterBit(int registers, uint8_t bit)

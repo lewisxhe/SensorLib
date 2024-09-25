@@ -187,6 +187,10 @@ typedef struct __SensorLibPins {
 #define bitWrite(value, bit, bitvalue) ((bitvalue) ? bitSet(value, bit) : bitClear(value, bit))
 #endif
 
+#ifndef isBitSet
+#define isBitSet(value, bit)    (((value) & (1UL << (bit))) == (1UL << (bit)))
+#endif
+
 #define SENSORLIB_ATTR_NOT_IMPLEMENTED    __attribute__((error("Not implemented")))
 
 #define SENSORLIB_COUNT(x)      (sizeof(x)/sizeof(*x))
