@@ -1763,7 +1763,46 @@ public:
         return true;
     }
 
+    // This offset change is lost when the sensor is power cycled, or the system is reset
+    // Each delta offset value should contain 16 bits and the format is signed 11.5 (5 fraction bits, unit is 1 / 2^5).
+    void setAccelOffset(int16_t offset_x, int16_t offset_y, int16_t offset_z)
+    {
 
+        uint8_t data[6];
+        data[0] = lowByte(offset_x);
+        data[1] = highByte(offset_x);
+        data[2] = lowByte(offset_y);
+        data[3] = highByte(offset_y);
+        data[4] = lowByte(offset_z);
+        data[5] = highByte(offset_z);
+
+        writeRegister(QMI8658_REG_CAL1_L, data, 2);
+        writeRegister(QMI8658_REG_CAL2_L, data + 2, 2);
+        writeRegister(QMI8658_REG_CAL3_L, data + 4, 2);
+
+        writeCommand(CTRL_CMD_ACCEL_HOST_DELTA_OFFSET);
+    }
+
+    // This offset change is lost when the sensor is power cycled, or the system is reset
+    // Each delta offset value should contain 16 bits and the format is signed 11.5 (5 fraction bits, unit is 1 / 2^5).
+    void setGyroOffset(int16_t offset_x, int16_t offset_y, int16_t offset_z)
+    {
+
+        uint8_t data[6];
+        data[0] = lowByte(offset_x);
+        data[1] = highByte(offset_x);
+        data[2] = lowByte(offset_y);
+        data[3] = highByte(offset_y);
+        data[4] = lowByte(offset_z);
+        data[5] = highByte(offset_z);
+
+        writeRegister(QMI8658_REG_CAL1_L, data, 2);
+        writeRegister(QMI8658_REG_CAL2_L, data + 2, 2);
+        writeRegister(QMI8658_REG_CAL3_L, data + 4, 2);
+
+        writeCommand(CTRL_CMD_GYRO_HOST_DELTA_OFFSET);
+
+    }
 
     void setPins(int irq)
     {
