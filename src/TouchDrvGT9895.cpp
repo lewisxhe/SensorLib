@@ -396,6 +396,11 @@ void TouchDrvGT9895::printChipInfo(struct goodix_ic_info *ic_info)
     struct goodix_ic_info_param *parm = &ic_info->parm;
     struct goodix_ic_info_misc *misc = &ic_info->misc;
 
+    (void)version;
+    (void)feature;
+    (void)parm;
+    (void)misc;
+
     log_d("ic_info_length:                %d", ic_info->length);
     log_d("info_customer_id:              0x%01X", version->info_customer_id);
     log_d("info_version_id:               0x%01X", version->info_version_id);

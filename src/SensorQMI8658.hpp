@@ -488,7 +488,7 @@ public:
         }
 
         /*
-        * The FIFO_WTM register(0x13) indicates the expected level of FIFO data that host wants to get the FIFO Watermark interrupt. 
+        * The FIFO_WTM register(0x13) indicates the expected level of FIFO data that host wants to get the FIFO Watermark interrupt.
         * The unit is sample, which means 6 bytes if one of accelerometer and gyroscope is enabled, and 12 bytes if both are enabled.
         * */
         if (writeRegister(QMI8658_REG_FIFO_WTM_TH, trigger_samples ) == DEV_WIRE_ERR) {
@@ -624,7 +624,6 @@ private:
     uint16_t readFromFifo()
     {
         uint8_t  status[2];
-        uint8_t  fifo_sensors = 1;
         uint16_t fifo_bytes   = 0;
 
         if ((__irq != -1) && __fifo_interrupt) {
@@ -694,7 +693,6 @@ private:
         //Samples 64  * 6 * 2  = 768
         //Samples 128 * 6 * 2  = 1536
 
-        log_d("read_bytes : %d fifo_sensors : %d", fifo_bytes, fifo_sensors);
         // 3.Send CTRL_CMD_REQ_FIFO (0x05) by CTRL9 command, to enable FIFO read mode. Refer to CTRL_CMD_REQ_FIFO for details.
         if (writeCommand(CTRL_CMD_REQ_FIFO) != DEV_WIRE_NONE) {
             log_e("Request FIFO failed!");
