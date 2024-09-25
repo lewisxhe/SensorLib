@@ -643,7 +643,7 @@ private:
         if (!__fifo_buffer) {
             __fifo_buffer = (uint8_t *)calloc(alloc_size, sizeof(uint8_t));
             if (!__fifo_buffer) {
-                log_e("Calloc buffer size %lu bytes failed!", alloc_size);
+                log_e("Calloc buffer size %u bytes failed!", alloc_size);
                 return 0;
             }
             __fifo_size = alloc_size;
@@ -651,7 +651,7 @@ private:
         } else if (alloc_size > __fifo_size) {
             __fifo_buffer = (uint8_t *)realloc(__fifo_buffer, alloc_size);
             if (!__fifo_buffer) {
-                log_e("Realloc buffer size %lu bytes failed!", alloc_size);
+                log_e("Realloc buffer size %u bytes failed!", alloc_size);
                 return 0;
             }
         }
