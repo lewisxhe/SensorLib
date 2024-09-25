@@ -228,25 +228,42 @@ void loop()
         // Serial.print(qmi.getTimestamp());
 
         if (qmi.getAccelerometer(acc.x, acc.y, acc.z)) {
-            
+
+            // Print to serial plotter
+            Serial.print("ACCEL.x:"); Serial.print(acc.x); Serial.print(",");
+            Serial.print("ACCEL.y:"); Serial.print(acc.y); Serial.print(",");
+            Serial.print("ACCEL.z:"); Serial.print(acc.z); Serial.println();
+
+            /*
+            m2/s to mg
             Serial.print(" ACCEL.x:"); Serial.print(acc.x * 1000); Serial.println(" mg");
             Serial.print(",ACCEL.y:"); Serial.print(acc.y * 1000); Serial.println(" mg");
             Serial.print(",ACCEL.z:"); Serial.print(acc.z * 1000); Serial.println(" mg");
+            */
 
         }
 
         if (qmi.getGyroscope(gyr.x, gyr.y, gyr.z)) {
 
-            Serial.print(" GYRO.x:"); Serial.print(gyr.x); Serial.println(" degrees/sec");
-            Serial.print(",GYRO.y:"); Serial.print(gyr.y); Serial.println(" degrees/sec");
-            Serial.print(",GYRO.z:"); Serial.print(gyr.z); Serial.println(" degrees/sec");
+
+            // Print to serial plotter
+            Serial.print("GYRO.x:"); Serial.print(gyr.x); Serial.print(",");
+            Serial.print("GYRO.y:"); Serial.print(gyr.y); Serial.print(",");
+            Serial.print("GYRO.z:"); Serial.print(gyr.z); Serial.println();
+
+
+            // Serial.print(" GYRO.x:"); Serial.print(gyr.x); Serial.println(" degrees/sec");
+            // Serial.print(",GYRO.y:"); Serial.print(gyr.y); Serial.println(" degrees/sec");
+            // Serial.print(",GYRO.z:"); Serial.print(gyr.z); Serial.println(" degrees/sec");
 
         }
-        Serial.print("Temperature:");
-        Serial.print(qmi.getTemperature_C());
-        Serial.println(" degrees C");
+
+        // Serial.print("Temperature:");
+        // Serial.print(qmi.getTemperature_C());
+        // Serial.println(" degrees C");
+
     }
-    delay(100);
+    // delay(100);
 }
 
 
