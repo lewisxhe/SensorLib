@@ -144,7 +144,7 @@ void loop()
 
     if (interruptFlag) {
         interruptFlag = false;
-        qmi.readSensorStatus();
+        qmi.update();
     }
 }
 
