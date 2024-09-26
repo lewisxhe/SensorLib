@@ -55,6 +55,7 @@ jobs:
           - examples/QMI8658_WakeOnMotion
           - examples/QMI8658_WakeOnMotionCallBackExample
           - examples/QMI8658_TapDetectionExample
+          - examples/QMI8658_MotionDetectionExample
           - examples/TouchDrv_CHSC5816_GetPoint
           - examples/TouchDrv_CST9217_GetPoint
           - examples/TouchDrv_CSTxxx_GetPoint

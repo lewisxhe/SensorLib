@@ -46,6 +46,7 @@ jobs:
           - examples/QMI8658_WakeOnMotion/QMI8658_WakeOnMotion.ino
           - examples/QMI8658_WakeOnMotionCallBackExample/QMI8658_WakeOnMotionCallBackExample.ino
           - examples/QMI8658_TapDetectionExample/QMI8658_TapDetectionExample.ino
+          - examples/QMI8658_MotionDetectionExample/QMI8658_MotionDetectionExample.ino
           - examples/TouchDrv_CHSC5816_GetPoint/TouchDrv_CHSC5816_GetPoint.ino
           - examples/TouchDrv_CSTxxx_GetPoint/TouchDrv_CSTxxx_GetPoint.ino
           - examples/TouchDrv_FT3267_LilyGo_T_RGB/TouchDrv_FT3267_LilyGo_T_RGB.ino
