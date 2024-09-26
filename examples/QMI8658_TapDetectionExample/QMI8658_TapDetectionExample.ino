@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      QMI8658_PedometerExample.ino
+ * @file      QMI8658_TapDetectionExample.ino
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2024-09-26
  *
@@ -75,6 +75,7 @@
 
 SensorQMI8658 qmi;
 
+
 bool interruptFlag = false;
 
 void setFlag(void)
@@ -83,11 +84,19 @@ void setFlag(void)
 }
 
 
-void pedometerEvent()
+void tapEventCallback()
 {
-    uint32_t val = qmi.getPedometerCounter();
-    Serial.print("Detected Pedometer event : ");
-    Serial.println(val);
+    SensorQMI8658::TapEvent event = qmi.getTapStatus();
+    switch (event) {
+    case SensorQMI8658::SINGLE_TAP:
+        Serial.println("Single-TAP");
+        break;
+    case SensorQMI8658::DOUBLE_TAP:
+        Serial.println("Double-TAP");
+        break;
+    default:
+        break;
+    }
 }
 
 void setup()
@@ -120,52 +129,65 @@ void setup()
     Serial.print("Device ID:");
     Serial.println(qmi.getChipID(), HEX);
 
-    // Equipped with acceleration sensor, 2G, ORR62.5HZ
-    qmi.configAccelerometer(SensorQMI8658::ACC_RANGE_2G, SensorQMI8658::ACC_ODR_62_5Hz);
+    //** The recommended output data rate for detection is higher than 500HZ
+    qmi.configAccelerometer(
+        /*
+         * ACC_RANGE_2G
+         * ACC_RANGE_4G
+         * ACC_RANGE_8G
+         * ACC_RANGE_16G
+         * */
+        SensorQMI8658::ACC_RANGE_4G,
+        /*
+         * ACC_ODR_1000H
+         * ACC_ODR_500Hz
+         * ACC_ODR_250Hz
+         * ACC_ODR_125Hz
+         * ACC_ODR_62_5Hz
+         * ACC_ODR_31_25Hz
+         * ACC_ODR_LOWPOWER_128Hz
+         * ACC_ODR_LOWPOWER_21Hz
+         * ACC_ODR_LOWPOWER_11Hz
+         * ACC_ODR_LOWPOWER_3H
+        * */
+        SensorQMI8658::ACC_ODR_500Hz);
 
     // Enable the accelerometer
     qmi.enableAccelerometer();
 
-    //* Indicates the count of sample batch/window for calculation
-    uint16_t ped_sample_cnt = 50; //50 samples
-    //* Indicates the threshold of the valid peak-to-peak detection
-    uint16_t ped_fix_peak2peak = 200;   //200mg
-    //* Indicates the threshold of the peak detection comparing to average
-    uint16_t ped_fix_peak = 100;    //100mg
-    //* Indicates the maximum duration (timeout window) for a step.
-    //* Reset counting calculation if no peaks detected within this duration.
-    uint16_t ped_time_up = 200; // 200 samples 4s
-    //* Indicates the minimum duration for a step.
-    //* The peaks detected within this duration (quiet time) is ignored.
-    uint8_t ped_time_low = 20; //20 samples
-    //*   Indicates the minimum continuous steps to start the valid step counting.
-    //*   If the continuously detected steps is lower than this count and timeout,the steps will not be take into account;
-    //*   if yes, the detected steps will all be taken into account and counting is started to count every following step before timeout.
-    //*   This is useful to screen out the fake steps detected by non-step vibrations
-    //*   The timeout duration is defined by ped_time_up.
-    uint8_t ped_time_cnt_entry = 10; //10 steps entry count
-    //*   Recommended 0
-    uint8_t ped_fix_precision = 0;
-    //*   The amount of steps when to update the pedometer output registers.
-    uint8_t ped_sig_count = 4; //Every 4 valid steps is detected, update the registers once (added by 4).
+    //* Priority definition between the x, y, z axes of acceleration.
+    uint8_t priority = SensorQMI8658::PRIORITY0;   //(X > Y> Z)
+    //* Defines the maximum duration (in sample) for a valid peak.
+    //* In a valid peak, the linear acceleration should reach or be higher than the PeakMagThr
+    //* and should return to quiet (no significant movement) within UDMThr, at the end of PeakWindow.
+    uint8_t peakWindow = 20; //20 @500Hz ODR
+    //* Defines the minimum quiet time before the second Tap happen.
+    //* After the first Tap is detected, there should be no significant movement (defined by UDMThr) during the TapWindow.
+    //* The valid second tap should be detected after TapWindow and before DTapWindow.
+    uint16_t tapWindow = 50; //50 @500Hz ODR
+    //* Defines the maximum time for a valid second Tap for Double Tap,
+    //* count start from the first peak of the valid first Tap.
+    uint16_t dTapWindow = 250; //250 @500Hz ODR
+    //* Defines the ratio for calculating the average of the movement
+    //* magnitude. The bigger of Gamma, the bigger weight of the latest  data.
+    float alpha = 0.0625;
+    //* Defines the ratio for calculating the average of the movement
+    //* magnitude. The bigger of Gamma, the bigger weight of the latest data.
+    float gamma = 0.25;
+    //* Threshold for peak detection.
+    float peakMagThr = 0.8; //0.8g square
+    //* Undefined Motion threshold. This defines the threshold of the
+    //* Linear Acceleration for quiet status.
+    float UDMTh = 0.4; //0.4g square
 
-    qmi.configPedometer(ped_sample_cnt,
-                        ped_fix_peak2peak,
-                        ped_fix_peak,
-                        ped_time_up,
-                        ped_time_low,
-                        ped_time_cnt_entry,
-                        ped_fix_precision,
-                        ped_sig_count);
+    qmi.configTap(priority, peakWindow, tapWindow,
+                  dTapWindow, alpha, gamma, peakMagThr, UDMTh);
 
-    // Enable the step counter and enable the interrupt
-    if (!qmi.enablePedometer(SensorQMI8658::INTERRUPT_PIN_1)) {
-        Serial.println("Enable pedometer failed!");
-        while (1);
-    }
+    // Enable the Tap Detection and enable the interrupt
+    qmi.enableTap(SensorQMI8658::INTERRUPT_PIN_1);
 
-    // Set the step counter callback function
-    qmi.setPedometerEventCallBack(pedometerEvent);
+    // Set the Tap Detection callback function
+    qmi.setTapEventCallBack(tapEventCallback);
 
     /*
      * When the QMI8658 is configured as Wom, the interrupt level is arbitrary,
@@ -181,5 +203,5 @@ void loop()
         interruptFlag = false;
         qmi.update();
     }
-    delay(500);
+    delay(50);
 }
