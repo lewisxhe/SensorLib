@@ -187,7 +187,7 @@ public:
         STATUS1_TAP_MOTION = _BV(10),
     };
 
-    enum TagPriority {
+    enum TapDetectionPriority {
         PRIORITY0,      // (X > Y> Z)
         PRIORITY1,      // (X > Z > Y)
         PRIORITY2,      // (Y > X > Z)

@@ -49,7 +49,7 @@ FIFO_Mode	KEYWORD1
 SampleMode	KEYWORD1
 CommandTable	KEYWORD1
 StatusReg	KEYWORD1
-TagPriority	KEYWORD1
+TapDetectionPriority	KEYWORD1
 SensorStatus	KEYWORD1
 ioEvent_t	KEYWORD1
 
