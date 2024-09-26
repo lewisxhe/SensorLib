@@ -93,6 +93,12 @@ public:
         GYR_ODR_28_025Hz
     };
 
+    enum TapEvent {
+        INVALID_TAP,
+        SINGLE_TAP,
+        DOUBLE_TAP,
+    };
+
     //Low-Pass Filter.
     enum LpfMode {
         LPF_MODE_0,     //2.66% of ODR
@@ -1027,13 +1033,25 @@ public:
     }
 
     // The Pedometer can only work in Non-SyncSample mode
-    int enablePedometer()
+    bool enablePedometer(IntPin pin = INTERRUPT_PIN_DISABLE)
     {
+        if (!__accel_enabled)return false;
+
+        switch (pin) {
+        case INTERRUPT_PIN_1:
+        case INTERRUPT_PIN_2:
+            configActivityInterruptMap(pin);
+            enableINT(pin);
+            break;
+        default:
+            break;
+        }
         return setRegisterBit(QMI8658_REG_CTRL8, 4);
     }
 
-    int disablePedometer()
+    bool disablePedometer()
     {
+        if (!__accel_enabled)return false;
         return clrRegisterBit(QMI8658_REG_CTRL8, 4);
     }
 
@@ -1053,34 +1071,30 @@ public:
      * @param  peakWindow:Defines the maximum duration (in sample) for a valid peak. In a
                         valid peak, the linear acceleration should reach or be higher than
                         the PeakMagThr and should return to quiet (no significant
-                        movement) within UDMThr, at the end of PeakWindow.
-                        E.g., 20 @500Hz ODR
+                        movement) within UDMThr, at the end of PeakWindow. E.g., 20 @500Hz ODR
      * @param  tapWindow:Defines the minimum quiet time before the second Tap happen.
                         After the first Tap is detected, there should be no significant
                         movement (defined by UDMThr) during the TapWindow. The valid
                         second tap should be detected after TapWindow and before
-                        DTapWindow.
-                        E.g., 50 @500Hz ODR
+                        DTapWindow. E.g., 50 @500Hz ODR
      * @param  dTapWindow:Defines the maximum time for a valid second Tap for Double Tap,
-                        count start from the first peak of the valid first Tap.
-                        E.g., 250 @500Hz ODR
+                        count start from the first peak of the valid first Tap.  E.g., 250 @500Hz ODR
      * @param  alpha:Defines the ratio for calculation the average of the acceleration.
-                    The bigger of Alpha, the bigger weight of the latest data.
-                    E.g., 0.0625
+                    The bigger of Alpha, the bigger weight of the latest data.  E.g., 0.0625
      * @param  gamma:Defines the ratio for calculating the average of the movement
-                    magnitude. The bigger of Gamma, the bigger weight of the latest
-                    data.
-                    E.g., 0.25
-     * @param  peakMagThr:Threshold for peak detection.
-                        E.g, 0.8g2 (0x0320)
+                    magnitude. The bigger of Gamma, the bigger weight of the latest data. E.g., 0.25
+     * @param  peakMagThr:Threshold for peak detection.  E.g, 0.8g2 
      * @param  UDMThr:Undefined Motion threshold. This defines the threshold of the
-                    Linear Acceleration for quiet status.
-                    E.g., 0.4g2 (0x0190)
+                    Linear Acceleration for quiet status. E.g., 0.4g2
      * @retval
      */
     int configTap(uint8_t priority, uint8_t peakWindow, uint16_t tapWindow, uint16_t dTapWindow,
-                  uint8_t alpha, uint8_t gamma, uint16_t peakMagThr, uint16_t UDMThr)
+                  float alpha, float gamma, float peakMagThr, float UDMThr)
     {
+
+        // The Tap detection can only work in Non-SyncSample mode
+        disableSyncSampleMode();
+
         bool enGyro = isEnableGyroscope();
         bool enAccel = isEnableAccelerometer();
 
@@ -1102,12 +1116,28 @@ public:
 
         writeCommand(CTRL_CMD_CONFIGURE_TAP);
 
-        writeRegister(QMI8658_REG_CAL1_L, alpha);
-        writeRegister(QMI8658_REG_CAL1_H, gamma);
-        writeRegister(QMI8658_REG_CAL2_L, peakMagThr & 0xFF);
-        writeRegister(QMI8658_REG_CAL2_H, (peakMagThr >> 8) & 0xFF);
-        writeRegister(QMI8658_REG_CAL3_L, UDMThr & 0xFF);
-        writeRegister(QMI8658_REG_CAL3_H, (UDMThr >> 8) & 0xFF);
+        // 1-byte unsigned,7-bits fraction
+        uint8_t alphaHex = (uint8_t)(alpha * 128);
+        writeRegister(QMI8658_REG_CAL1_L, alphaHex);
+
+        // 1-byte unsigned,7-bits fraction
+        uint8_t gammaHex = (uint8_t)(gamma * 128);
+        writeRegister(QMI8658_REG_CAL1_H, gammaHex);
+
+        const double g = 9.81; // Earth's gravitational acceleration m/s^2
+        double resolution = 0.001 * g * g; // Calculation resolution  0.001g^2
+
+        double acceleration_square = peakMagThr * g * g;     // Calculate the square of the acceleration
+        uint16_t value = (uint16_t)(acceleration_square / resolution); // Calculates the value of a 2-byte unsigned integer
+
+        writeRegister(QMI8658_REG_CAL2_L, lowByte(value));
+        writeRegister(QMI8658_REG_CAL2_H, highByte(value));
+
+        acceleration_square = UDMThr * g * g;     // Calculate the square of the acceleration
+        value = (uint16_t)(acceleration_square / resolution); // Calculates the value of a 2-byte unsigned integer
+
+        writeRegister(QMI8658_REG_CAL3_L, lowByte(value));
+        writeRegister(QMI8658_REG_CAL3_H, highByte(value));
         // writeRegister(QMI8658_REG_CAL4_L, 0x02);
         writeRegister(QMI8658_REG_CAL4_H, 0x02);
 
@@ -1124,17 +1154,27 @@ public:
         return 0;
     }
 
-    int enableTap()
+    bool enableTap(IntPin pin = INTERRUPT_PIN_DISABLE)
     {
+        if (!__accel_enabled)return false;
+        switch (pin) {
+        case INTERRUPT_PIN_1:
+        case INTERRUPT_PIN_2:
+            configActivityInterruptMap(pin);
+            enableINT(pin);
+            break;
+        default:
+            break;
+        }
         return setRegisterBit(QMI8658_REG_CTRL8, 0);
     }
 
-    int disableTap()
+    bool disableTap()
     {
         return clrRegisterBit(QMI8658_REG_CTRL8, 0);
     }
 
-    void getTapStatus()
+    TapEvent getTapStatus()
     {
         int val = readRegister(QMI8658_REG_TAP_STATUS);
         if (val & _BV(7)) {
@@ -1156,7 +1196,6 @@ public:
         case 3:
             log_i("Tap was detected on Z axis");
             break;
-
         default:
             break;
         }
@@ -1164,35 +1203,21 @@ public:
         switch (t) {
         case 0:
             log_i("No Tap was detected");
-            break;
+            return INVALID_TAP;
         case 1:
             log_i("Single-Tap was detected");
-            break;
+            return SINGLE_TAP;
         case 2:
             log_i("Double-Tap was detected");
-            break;
+            return DOUBLE_TAP;
         default:
             break;
         }
+        return INVALID_TAP;
     }
 
 
-    /**
-     * @brief
-     * @note
-     * @param  AnyMotionXThr:
-     * @param  AnyMotionYThr:
-     * @param  AnyMotionZThr:
-     * @param  NoMotionXThr:
-     * @param  NoMotionYThr:
-     * @param  NoMotionZThr:
-     * @param  modeCtrl:
-     * @param  AnyMotionWindow:
-     * @param  NoMotionWindow:
-     * @param  SigMotionWaitWindow:
-     * @param  SigMotionConfirmWindow:
-     * @retval
-     */
+    //TODO:Need Test
     int configMotion(uint8_t AnyMotionXThr, uint8_t AnyMotionYThr, uint8_t AnyMotionZThr,
                      uint8_t NoMotionXThr, uint8_t NoMotionYThr, uint8_t NoMotionZThr, uint8_t modeCtrl,
                      uint8_t AnyMotionWindow, uint8_t NoMotionWindow,
@@ -1256,7 +1281,7 @@ public:
     /**
      * @brief  configWakeOnMotion
      * @note   Configuring Wom will reset the sensor, set the function to Wom, and there will be no data output
-     * @param  WoMThreshold: Resolution = 1mg ,default 200g
+     * @param  WoMThreshold: Resolution = 1mg ,default 200mg
      * @param  odr: Accelerometer output data rate  ,default low power 128Hz
      * @param  pin: Interrupt Pin( 1 or 2 ) ,default use pin2
      * @param  defaultPinValue: WoM Interrupt Initial Value select: ,default pin high
@@ -1343,11 +1368,11 @@ public:
     }
 
     /**
-     * @brief readSensorStatus
+     * @brief update
      * @note  Get the interrupt status and status 0, status 1 of the sensor
      * @retval  Return SensorStatus
      */
-    uint16_t readSensorStatus()
+    uint16_t update()
     {
         uint16_t result = 0;
         // STATUSINT 0x2D

@@ -191,7 +191,6 @@ disableMotionDetect	KEYWORD2
 configWakeOnMotion	KEYWORD2
 getChipUsid	KEYWORD2
 getChipFirmwareVersion	KEYWORD2
-readSensorStatus	KEYWORD2
 setWakeupMotionEventCallBack	KEYWORD2
 setTapEventCallBack	KEYWORD2
 setPedometerEventCallBack	KEYWORD2
