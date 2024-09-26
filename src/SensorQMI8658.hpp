@@ -196,6 +196,23 @@ public:
         PRIORITY5,      // (Z > Y > X)
     };
 
+    enum MotionCtrl {
+
+        ANY_MOTION_EN_X = _BV(0),
+        ANY_MOTION_EN_Y = _BV(1),
+        ANY_MOTION_EN_Z = _BV(2),
+
+        //Logic-AND between events of enabled axes for No-Motion detection, Otherwise, logical OR
+        ANY_MOTION_LOGIC_AND = _BV(3),
+
+        NO_MOTION_EN_X = _BV(4),
+        NO_MOTION_EN_Y = _BV(5),
+        NO_MOTION_EN_Z = _BV(6),
+
+        //Logic-AND between events of enabled axes for No-Motion detection , Otherwise, logical OR
+        NO_MOTION_LOGIC_OR = _BV(7),
+    };
+
 #if defined(ARDUINO)
     SensorQMI8658(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = QMI8658_L_SLAVE_ADDRESS)
     {
@@ -1083,7 +1100,7 @@ public:
                     The bigger of Alpha, the bigger weight of the latest data.  E.g., 0.0625
      * @param  gamma:Defines the ratio for calculating the average of the movement
                     magnitude. The bigger of Gamma, the bigger weight of the latest data. E.g., 0.25
-     * @param  peakMagThr:Threshold for peak detection.  E.g, 0.8g2 
+     * @param  peakMagThr:Threshold for peak detection.  E.g, 0.8g2
      * @param  UDMThr:Undefined Motion threshold. This defines the threshold of the
                     Linear Acceleration for quiet status. E.g., 0.4g2
      * @retval
@@ -1218,11 +1235,37 @@ public:
 
 
     //TODO:Need Test
-    int configMotion(uint8_t AnyMotionXThr, uint8_t AnyMotionYThr, uint8_t AnyMotionZThr,
-                     uint8_t NoMotionXThr, uint8_t NoMotionYThr, uint8_t NoMotionZThr, uint8_t modeCtrl,
-                     uint8_t AnyMotionWindow, uint8_t NoMotionWindow,
-                     uint16_t SigMotionWaitWindow, uint16_t SigMotionConfirmWindow)
+    int configMotion(
+        //* See enum MotionCtrl
+        uint8_t modeCtrl,
+        //* Define the slope threshold of the x-axis for arbitrary motion detection
+        float AnyMotionXThr,
+        //* Define the slope threshold of the y-axis for arbitrary motion detection
+        float AnyMotionYThr,
+        //* Define the slope threshold of the z-axis for arbitrary motion detection
+        float AnyMotionZThr,
+        //* Defines the minimum number of consecutive samples (duration) that the absolute
+        //* of the slope of the enabled axis/axes data should keep higher than the threshold
+        uint8_t AnyMotionWindow,
+        //* Defines the slope threshold of the x-axis for no motion detection
+        float NoMotionXThr,
+        //* Defines the slope threshold of the y-axis for no motion detection
+        float NoMotionYThr,
+        //* Defines the slope threshold of the z-axis for no motion detection
+        float NoMotionZThr,
+        //* Defines the minimum number of consecutive samples (duration) that the absolute
+        //* of the slope of the enabled axis/axes data should keep lower than the threshold
+        uint8_t NoMotionWindow,
+        //* Defines the wait window (idle time) starts from the first Any-Motion event until
+        //* starting to detecting another Any-Motion event form confirmation
+        uint16_t SigMotionWaitWindow,
+        //* Defines the maximum duration for detecting the other Any-Motion
+        //* event to confirm Significant-Motion, starts from the first Any -Motion event
+        uint16_t SigMotionConfirmWindow)
     {
+        // Only work in Non-SyncSample mode
+        disableSyncSampleMode();
+
         bool enGyro = isEnableGyroscope();
         bool enAccel = isEnableAccelerometer();
 
@@ -1233,12 +1276,13 @@ public:
         if (enAccel) {
             disableAccelerometer();
         }
-        writeRegister(QMI8658_REG_CAL1_L, AnyMotionXThr);
-        writeRegister(QMI8658_REG_CAL1_H, AnyMotionYThr);
-        writeRegister(QMI8658_REG_CAL2_L, AnyMotionZThr);
-        writeRegister(QMI8658_REG_CAL2_H, NoMotionXThr);
-        writeRegister(QMI8658_REG_CAL3_L, NoMotionYThr);
-        writeRegister(QMI8658_REG_CAL3_H, NoMotionZThr);
+
+        writeRegister(QMI8658_REG_CAL1_L, mgToBytes(AnyMotionXThr));
+        writeRegister(QMI8658_REG_CAL1_H, mgToBytes(AnyMotionYThr));
+        writeRegister(QMI8658_REG_CAL2_L, mgToBytes(AnyMotionZThr));
+        writeRegister(QMI8658_REG_CAL2_H, mgToBytes(NoMotionXThr));
+        writeRegister(QMI8658_REG_CAL3_L, mgToBytes(NoMotionYThr));
+        writeRegister(QMI8658_REG_CAL3_H, mgToBytes(NoMotionZThr));
         writeRegister(QMI8658_REG_CAL4_L, modeCtrl);
         writeRegister(QMI8658_REG_CAL4_H, 0x01);
 
@@ -1246,10 +1290,10 @@ public:
 
         writeRegister(QMI8658_REG_CAL1_L, AnyMotionWindow);
         writeRegister(QMI8658_REG_CAL1_H, NoMotionWindow);
-        writeRegister(QMI8658_REG_CAL2_L, SigMotionWaitWindow & 0xFF);
-        writeRegister(QMI8658_REG_CAL2_H, (SigMotionWaitWindow >> 8) & 0xFF);
-        writeRegister(QMI8658_REG_CAL3_L, SigMotionConfirmWindow & 0xFF);
-        writeRegister(QMI8658_REG_CAL3_H, (SigMotionConfirmWindow >> 8) & 0xFF);
+        writeRegister(QMI8658_REG_CAL2_L, lowByte(SigMotionWaitWindow));
+        writeRegister(QMI8658_REG_CAL2_H, highByte(SigMotionWaitWindow));
+        writeRegister(QMI8658_REG_CAL3_L, lowByte(SigMotionConfirmWindow));
+        writeRegister(QMI8658_REG_CAL3_H, highByte(SigMotionConfirmWindow));
         // writeRegister(QMI8658_REG_CAL4_L, 0x02);
         writeRegister(QMI8658_REG_CAL4_H, 0x02);
 
@@ -1265,16 +1309,30 @@ public:
         return 0;
     }
 
-    int enableMotionDetect()
+    bool enableMotionDetect(IntPin pin = INTERRUPT_PIN_DISABLE)
     {
+        if (!__accel_enabled)return false;
+        switch (pin) {
+        case INTERRUPT_PIN_1:
+        case INTERRUPT_PIN_2:
+            configActivityInterruptMap(pin);
+            enableINT(pin);
+            break;
+        default:
+            break;
+        }
         setRegisterBit(QMI8658_REG_CTRL8, 1);
+        setRegisterBit(QMI8658_REG_CTRL8, 2);
         setRegisterBit(QMI8658_REG_CTRL8, 3);
-        return setRegisterBit(QMI8658_REG_CTRL8, 2);
+        return true;
     }
 
-    int disableMotionDetect()
+    bool disableMotionDetect()
     {
-        return clrRegisterBit(QMI8658_REG_CTRL8, 2);
+        clrRegisterBit(QMI8658_REG_CTRL8, 1);
+        clrRegisterBit(QMI8658_REG_CTRL8, 2);
+        clrRegisterBit(QMI8658_REG_CTRL8, 3);
+        return false;
     }
 
 
@@ -1895,6 +1953,16 @@ private:
 
         return DEV_WIRE_NONE;
     }
+
+
+
+    uint8_t mgToBytes(float mg)
+    {
+        float g = mg / 1000.0;      // Convert to grams
+        int units = (int)round(g / 0.03125); //Convert grams to units of specified(1/32) resolution
+        return (units & 0x1F) << 3; // Shift the 5 decimal places to the left by 3 places, because there are only 3 integer places
+    }
+
 
 protected:
 
