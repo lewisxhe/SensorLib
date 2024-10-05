@@ -289,6 +289,10 @@ bool TouchClassCST816::initImpl()
         this->setGpioMode(__rst, OUTPUT);
     }
 
+    if (__irq != SENSOR_PIN_NONE) {
+        this->setGpioMode(__irq, INPUT);
+    }
+
     reset();
 
     int chip_id =   readRegister(CST8xx_REG_CHIP_ID);
