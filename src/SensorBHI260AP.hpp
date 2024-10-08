@@ -433,17 +433,18 @@ public:
                 log_e("Flash not detected");
                 return false;
             }
-            printf("Loading firmware into FLASH.");
+            log_i("Loading firmware into FLASH.");
             __error_code = bhy2_upload_firmware_to_flash(firmware, length, bhy2);
             BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_upload_firmware_to_flash failed!", false);
+            log_i("Loading firmware into FLASH Done");
         } else {
             log_i("Loading firmware into RAM.");
             log_i("upload size = %lu", length);
             __error_code = bhy2_upload_firmware_to_ram(firmware, length, bhy2);
             BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_upload_firmware_to_ram failed!", false);
+            log_i("Loading firmware into RAM Done");
         }
 
-        log_i("Loading firmware into RAM Done");
         __error_code = bhy2_get_error_value(&sensor_error, bhy2);
         BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_get_error_value failed!", false);
         if (sensor_error != BHY2_OK) {
@@ -451,7 +452,7 @@ public:
             log_e("%s", get_sensor_error_text(sensor_error));
             return false;
         }
-        
+
 
         if (write2Flash) {
             log_i("Booting from FLASH.");
@@ -501,11 +502,12 @@ public:
         return get_sensor_default_scaling(sensor_id);
     }
 
-    void setFirmware(const uint8_t *image, size_t image_len, bool write_flash)
+    void setFirmware(const uint8_t *image, size_t image_len, bool write_flash, bool force_update = false)
     {
         __firmware = image;
         __firmware_size = image_len;
         __write_flash = write_flash;
+        __force_update = force_update;
     }
 
     static const char *getSensorName(uint8_t sensor_id)
@@ -520,6 +522,92 @@ public:
     }
 
 private:
+
+
+#if 0
+    void get_phy_sensor_info(uint8_t sens_id)
+    {
+        Stream &stream = Serial;
+        int8_t assert_rslt = BHY2_OK;
+        uint16_t param_id = 0;
+        struct bhy2_phys_sensor_info psi = { 0 };
+
+
+        if (!bhy2)return;
+
+        // sens_id = (uint8_t)atoi((char *)&payload[0]);
+        param_id = (uint16_t)(0x0120 | sens_id);
+
+        if (param_id >= 0x0121 && param_id <= 0x0160) {
+            BHY2_ASSERT(bhy2_get_phys_sensor_info(sens_id, &psi, bhy2));
+            if (assert_rslt != BHY2_OK) {
+                return;
+            }
+
+            stream.printf("Field Name            hex                    | Value (dec)\r\n");
+            stream.printf("----------------------------------------------------------\r\n");
+            stream.printf("Physical Sensor ID    %02X                     | %d\r\n", psi.sensor_type, psi.sensor_type);
+            stream.printf("Driver ID             %02X                     | %d\r\n", psi.driver_id, psi.driver_id);
+            stream.printf("Driver Version        %02X                     | %d\r\n", psi.driver_version, psi.driver_version);
+            stream.printf("Current Consumption   %02X                     | %0.3fmA\r\n",
+                          psi.power_current,
+                          psi.power_current / 10.f);
+            stream.printf("Dynamic Range         %04X                   | %d\r\n", psi.curr_range.u16_val, psi.curr_range.u16_val);
+
+            const char *irq_status[2] = { "Disabled", "Enabled" };
+            const char *master_intf[5] = { "None", "SPI0", "I2C0", "SPI1", "I2C1" };
+            const char *power_mode[8] = {
+                "Sensor Not Present", "Power Down", "Suspend", "Self-Test", "Interrupt Motion", "One Shot",
+                "Low Power Active", "Active"
+            };
+
+            stream.printf("Flags                 %02X                     | IRQ status       : %s\r\n", psi.flags,
+                          irq_status[psi.flags & 0x01]);
+            stream.printf("                                             | Master interface : %s\r\n",
+                          master_intf[(psi.flags >> 1) & 0x0F]);
+            stream.printf("                                             | Power mode       : %s\r\n",
+                          power_mode[(psi.flags >> 5) & 0x07]);
+            stream.printf("Slave Address         %02X                     | %d\r\n", psi.slave_address, psi.slave_address);
+            stream.printf("GPIO Assignment       %02X                     | %d\r\n", psi.gpio_assignment, psi.gpio_assignment);
+            stream.printf("Current Rate          %08X               | %.3fHz\r\n", psi.curr_rate.u32_val, psi.curr_rate.f_val);
+            stream.printf("Number of axes        %02X                     | %d\r\n", psi.num_axis, psi.num_axis);
+
+#define INT4_TO_INT8(INT4)  ((int8_t)(((INT4) > 1) ? -1 : (INT4)))
+            struct bhy2_orient_matrix ort_mtx = { 0 };
+            ort_mtx.c[0] = INT4_TO_INT8(psi.orientation_matrix[0] & 0x0F);
+            ort_mtx.c[1] = INT4_TO_INT8(psi.orientation_matrix[0] >> 8);
+            ort_mtx.c[2] = INT4_TO_INT8(psi.orientation_matrix[1] & 0x0F);
+            ort_mtx.c[3] = INT4_TO_INT8(psi.orientation_matrix[1] >> 8);
+            ort_mtx.c[4] = INT4_TO_INT8(psi.orientation_matrix[2] & 0x0F);
+            ort_mtx.c[5] = INT4_TO_INT8(psi.orientation_matrix[2] >> 8);
+            ort_mtx.c[6] = INT4_TO_INT8(psi.orientation_matrix[3] & 0x0F);
+            ort_mtx.c[7] = INT4_TO_INT8(psi.orientation_matrix[3] >> 8);
+            ort_mtx.c[8] = INT4_TO_INT8(psi.orientation_matrix[4] & 0x0F);
+
+            stream.printf("Orientation Matrix    %02X%02X%02X%02X%02X             | %+02d %+02d %+02d |\r\n",
+                          psi.orientation_matrix[0],
+                          psi.orientation_matrix[1],
+                          psi.orientation_matrix[2],
+                          psi.orientation_matrix[3],
+                          psi.orientation_matrix[4],
+                          ort_mtx.c[0],
+                          ort_mtx.c[1],
+                          ort_mtx.c[2]);
+            stream.printf("                                             | %+02d %+02d %+02d |\r\n",
+                          ort_mtx.c[3],
+                          ort_mtx.c[4],
+                          ort_mtx.c[5]);
+            stream.printf("                                             | %+02d %+02d %+02d |\r\n",
+                          ort_mtx.c[6],
+                          ort_mtx.c[7],
+                          ort_mtx.c[8]);
+            stream.printf("Reserved              %02X                     | %d\r\n", psi.reserved, psi.reserved);
+            stream.printf("\r\n");
+
+        }
+    }
+#endif
+
 
     bool bootFromFlash()
     {
@@ -706,7 +794,10 @@ private:
         }
 
         if (__boot_from_flash) {
-            if (!bootFromFlash()) {
+            if (!bootFromFlash() || __force_update) {
+                if (__force_update) {
+                    log_i("Force update firmware.");
+                }
                 //** If the boot from flash fails, re-upload the firmware to flash
                 __error_code = bhy2_soft_reset(bhy2);
                 BHY2_RLST_CHECK(__error_code != BHY2_OK, "reset bhy2 failed!", false);
@@ -790,6 +881,7 @@ protected:
     size_t          __firmware_size;
     bool            __write_flash;
     bool            __boot_from_flash;
+    bool            __force_update;
     uint16_t        __max_rw_length;
     uint8_t         __accuracy;      /* Accuracy is reported as a meta event. */
 };
