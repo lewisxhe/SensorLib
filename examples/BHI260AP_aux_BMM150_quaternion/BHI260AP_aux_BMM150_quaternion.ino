@@ -115,8 +115,11 @@ void setup()
     // Set the reset pin and interrupt pin, if any
     bhy.setPins(BHI260AP_RST, BHI260AP_IRQ);
 
+    // Force update of the current firmware, regardless of whether it exists.
+    // After uploading the firmware once, you can change it to false to speed up the startup time.
+    bool force_update = true;
     // Set the firmware array address and firmware size
-    bhy.setFirmware(firmware, fw_size, WRITE_TO_FLASH);
+    bhy.setFirmware(firmware, fw_size, WRITE_TO_FLASH, force_update);
 
 #if WRITE_TO_FLASH
     // Set to load firmware from flash
