@@ -40,7 +40,10 @@ void BoschParse::parseData(const struct bhy2_fifo_parse_data_info *fifo, void *u
 
 #ifdef LOG_PORT
     LOG_PORT.print("\n");
-    LOG_PORT.print("Sensor: ");
+    LOG_PORT.print("[");
+    LOG_PORT.print(__func__);
+    LOG_PORT.print("]");
+    LOG_PORT.print(" Sensor: ");
     LOG_PORT.print(fifo->sensor_id);
     LOG_PORT.print(" name: ");
     LOG_PORT.print(get_sensor_name(fifo->sensor_id));
@@ -180,5 +183,6 @@ void BoschParse::parseDebugMessage(const struct bhy2_fifo_parse_data_info *callb
     memcpy(debug_msg, &callback_info->data_ptr[1], msg_length);
     debug_msg[msg_length] = '\0'; /* Terminate the string */
 
-    log_i("[DEBUG MSG]; T: %lu.%09lu; %s", s, ns, debug_msg);
+    // log_i("[DEBUG MSG]; T: %lu.%09lu; %s", s, ns, debug_msg);
+    log_i("[DEBUG MSG]: %s", debug_msg);
 }

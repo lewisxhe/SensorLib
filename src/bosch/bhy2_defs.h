@@ -459,6 +459,7 @@ extern "C" {
 #define BHY2_SENSOR_ID_PROX                       UINT8_C(147) /* Proximity */
 #define BHY2_SENSOR_ID_LIGHT_WU                   UINT8_C(148) /* Light wake up */
 #define BHY2_SENSOR_ID_PROX_WU                    UINT8_C(149) /* Proximity wake up */
+#define BHY2_SENSOR_ID_GPIO_EXP                   UINT8_C(151) /* Custom GPIO ID, only valid for custom firmware*/
 
 /*! Physical sensor IDs*/
 #define BHY2_PHYS_SENSOR_ID_ACCELEROMETER         UINT8_C(1)
@@ -533,6 +534,13 @@ extern "C" {
 #define BHY2_ON_BICYCLE_ACTIVITY_STARTED          (0x0800)
 #define BHY2_IN_VEHICLE_ACTIVITY_STARTED          (0x1000)
 #define BHY2_TILTING_ACTIVITY_STARTED             (0x2000)
+
+/*! Custom firmware gpio control command*/
+#define BHY2_INPUT                 (0x0)
+#define BHY2_OUTPUT                (0x1)
+#define BHY2_INPUT_PULLUP          (0x2)
+#define BHY2_OPEN_DRAIN            (0x3)
+#define BHY2_GPIO_SET              (0x80)
 
 /*! Feature status */
 #define BHY2_FEAT_STATUS_FLASH_DESC_MSK           UINT8_C(0x01)

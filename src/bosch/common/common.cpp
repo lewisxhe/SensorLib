@@ -594,6 +594,9 @@ const char *get_sensor_name(uint8_t sensor_id)
     case BHY2_SENSOR_ID_NDOF_HEAD_ORI_E:
         ret = "NDOF Head Orientation Euler";
         break;
+    case BHY2_SENSOR_ID_GPIO_EXP:
+        ret = "Expansion GPIO";
+        break;
     default:
         if ((sensor_id >= BHY2_SENSOR_ID_CUSTOM_START) && (sensor_id <= BHY2_SENSOR_ID_CUSTOM_END)) {
             ret = "Custom sensor ID ";

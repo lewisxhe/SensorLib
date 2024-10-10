@@ -303,6 +303,16 @@ public:
         return true;
     }
 
+    /*! Interrupt control bits
+    *   BHY2_ICTL_DISABLE_FIFO_W
+    *   BHY2_ICTL_DISABLE_FIFO_NW
+    *   BHY2_ICTL_DISABLE_STATUS_FIFO
+    *   BHY2_ICTL_DISABLE_DEBUG
+    *   BHY2_ICTL_DISABLE_FAULT
+    *   BHY2_ICTL_ACTIVE_LOW
+    *   BHY2_ICTL_EDGE
+    *   BHY2_ICTL_OPEN_DRAIN
+    * * * */
     bool setInterruptCtrl(uint8_t data)
     {
         __error_code = bhy2_set_host_interrupt_ctrl(data, bhy2);
@@ -521,8 +531,36 @@ public:
         return __accuracy;
     }
 
-private:
+    uint8_t digitalRead(uint8_t pin, bool pullup = false)
+    {
+        uint32_t pin_mask = pin   | BHY2_GPIO_SET;
+        if (pullup) {
+            pin_mask |= (BHY2_INPUT_PULLUP << 8);
+        } else {
+            pin_mask |= (BHY2_INPUT << 8);
+        }
+        bhy2_set_virt_sensor_cfg(SENSOR_ID_GPIO_EXP, (float)pin_mask, 0, bhy2);
+        pin_mask = pin /*GetCmd*/;
+        bhy2_set_virt_sensor_cfg(SENSOR_ID_GPIO_EXP, (float)pin_mask, 0, bhy2);
+        bhy2_virt_sensor_conf conf;
+        bhy2_get_virt_sensor_cfg(SENSOR_ID_GPIO_EXP, &conf, bhy2);
+        uint8_t level = conf.sample_rate;
+        return level;
+    }
 
+    void digitalWrite(uint8_t pin, uint8_t level)
+    {
+        uint32_t pin_mask = pin  | (BHY2_OUTPUT << 8) | (level << 6) | BHY2_GPIO_SET ;
+        bhy2_set_virt_sensor_cfg(SENSOR_ID_GPIO_EXP, (float)pin_mask, 0, bhy2);
+    }
+
+    void disableGpio(uint8_t pin)
+    {
+        uint32_t pin_mask = pin  | (BHY2_OPEN_DRAIN << 8) | BHY2_GPIO_SET;
+        bhy2_set_virt_sensor_cfg(SENSOR_ID_GPIO_EXP, (float)pin_mask, 0, bhy2);
+    }
+
+private:
 
 #if 0
     void get_phy_sensor_info(uint8_t sens_id)
@@ -530,8 +568,9 @@ private:
         Stream &stream = Serial;
         int8_t assert_rslt = BHY2_OK;
         uint16_t param_id = 0;
-        struct bhy2_phys_sensor_info psi = { 0 };
+        struct bhy2_phys_sensor_info psi;
 
+        memset(&psi, 0, sizeof(psi));
 
         if (!bhy2)return;
 
@@ -675,7 +714,6 @@ private:
     }
 
 
-
     void print_boot_status(uint8_t boot_status)
     {
         log_d("Boot Status : 0x%02x: ", boot_status);
@@ -716,7 +754,6 @@ private:
     {
         __data_available = true;
     }
-
 
     bool initImpl()
     {
@@ -765,9 +802,6 @@ private:
                                      __max_rw_length,
                                      &__handler,
                                      bhy2);
-            BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_init failed!", false);
-            // __error_code = bhy2_set_host_intf_ctrl(BHY2_SPI_INTERFACE, bhy2);
-            // BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_set_host_intf_ctrl failed!", false);
             break;
         default:
             return false;
@@ -786,6 +820,28 @@ private:
             return false;
         } else {
             log_i("BHI260/BHA260 found. Product ID read %X", product_id);
+        }
+
+        // Set default interrupt configure
+        uint8_t data = 0, data_exp;
+        bhy2_get_host_interrupt_ctrl(&data, bhy2);
+        data &= ~BHY2_ICTL_DISABLE_STATUS_FIFO;     /* Enable status interrupts */
+        // data &= ~BHY2_ICTL_DISABLE_DEBUG;           /* Enable debug interrupts */
+        data |= BHY2_ICTL_DISABLE_DEBUG;           /* Disable debug interrupts */
+        data &= ~BHY2_ICTL_EDGE;                    /* Level */
+        data &= ~BHY2_ICTL_ACTIVE_LOW;              /* Active high */
+        data &= ~BHY2_ICTL_OPEN_DRAIN;              /* Push-pull */
+        data_exp = data;
+        bhy2_set_host_interrupt_ctrl(data, bhy2);
+        bhy2_get_host_interrupt_ctrl(&data, bhy2);
+        if (data != data_exp) {
+            log_d("Expected Host Interrupt Control (0x07) to have value 0x%x but instead read 0x%x\r\n", data_exp, data);
+        }
+        /* Config status channel */
+        bhy2_set_host_intf_ctrl(BHY2_HIF_CTRL_ASYNC_STATUS_CHANNEL, bhy2);
+        bhy2_get_host_intf_ctrl(&data, bhy2);
+        if (!(data & BHY2_HIF_CTRL_ASYNC_STATUS_CHANNEL)) {
+            log_d("Expected Host Interface Control (0x06) to have bit 0x%x to be set\r\n", BHY2_HIF_CTRL_ASYNC_STATUS_CHANNEL);
         }
 
         if (!__firmware) {
@@ -860,7 +916,7 @@ private:
         if (__handler.irq != SENSOR_PIN_NONE) {
 #if defined(ARDUINO_ARCH_RP2040)
             attachInterrupt((pin_size_t)(__handler.irq), handleISR, (PinStatus )RISING);
-#elif defined(ARDUINO_ARCH_NRF52) || defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_STM32) 
+#elif defined(ARDUINO_ARCH_NRF52) || defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_STM32)
             attachInterrupt(__handler.irq, handleISR, RISING);
 #else
 #error "Interrupt registration not implemented"
@@ -873,17 +929,17 @@ private:
 protected:
     struct bhy2_dev  *bhy2 = NULL;
     SensorLibConfigure __handler;
-    int8_t           __error_code;
+    int8_t           __error_code = 0;
     static volatile bool __data_available;
     uint8_t          *__pro_buf = NULL;
     size_t           __pro_buf_size = BHY_PROCESS_BUFFER_SIZE;
-    const uint8_t    *__firmware;
-    size_t          __firmware_size;
-    bool            __write_flash;
-    bool            __boot_from_flash;
-    bool            __force_update;
-    uint16_t        __max_rw_length;
-    uint8_t         __accuracy;      /* Accuracy is reported as a meta event. */
+    const uint8_t    *__firmware = NULL;
+    size_t          __firmware_size = 0;
+    bool            __write_flash = false;
+    bool            __boot_from_flash = false;
+    bool            __force_update = false;
+    uint16_t        __max_rw_length = 32;
+    uint8_t         __accuracy = 0;      /* Accuracy is reported as a meta event. */
 };
 
 

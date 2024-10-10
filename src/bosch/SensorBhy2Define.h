@@ -166,6 +166,7 @@ enum BhySensorID {
     SENSOR_ID_PROX                     = 147, /* Proximity */
     SENSOR_ID_LIGHT_WU                 = 148, /* Light wake up */
     SENSOR_ID_PROX_WU                  = 149, /* Proximity wake up */
+    SENSOR_ID_GPIO_EXP                 = 151, /* Custom GPIO ID, only valid for custom firmware*/
     SENSOR_ID_BSEC_LEGACY              = 171, /* BSEC 1.x output (legacy, deprecated) */
     SENSOR_DEBUG_DATA_EVENT            = 250, /* Binary or string debug data */
     SENSOR_TIMESTAMP_SMALL_DELTA       = 251, /* Incremental time change from previous read */
