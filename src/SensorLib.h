@@ -195,28 +195,44 @@ typedef struct __SensorLibPins {
 
 #define SENSORLIB_COUNT(x)      (sizeof(x)/sizeof(*x))
 
-#ifdef ARDUINO
-#if !defined(ESP32) || !defined(ARDUINO_ARCH_ESP32)
+#if !defined(ARDUINO_ARCH_ESP32) && defined(LOG_PORT) && defined(ARDUINO)
+
 #define LOG_FILE_LINE_INFO __FILE__, __LINE__
+
 #ifndef log_e
-#define log_e(fmt, ...)     Serial.printf("[E][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
-#endif
+#define log_e(fmt, ...)     LOG_PORT.printf("[E][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
+#endif  /*log_e*/
+
 #ifndef log_i
-#define log_i(fmt, ...)     Serial.printf("[I][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
-#endif
+#define log_i(fmt, ...)     LOG_PORT.printf("[I][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
+#endif  /*log_i*/
+
 #ifndef log_d
-#define log_d(fmt, ...)     Serial.printf("[D][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
-#endif
-#endif
+#define log_d(fmt, ...)     LOG_PORT.printf("[D][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
+#endif  /*log_d*/
+
+
 #elif defined(ESP_PLATFORM)
+
 #define log_e(...)          printf(__VA_ARGS__)
 #define log_i(...)          printf(__VA_ARGS__)
 #define log_d(...)          printf(__VA_ARGS__)
+
 #else
+
+#ifndef log_e
 #define log_e(...)
+#endif
+
+#ifndef log_i
 #define log_i(...)
+#endif
+
+#ifndef log_d
 #define log_d(...)
 #endif
+
+#endif /*ARDUINO*/
 
 #if !defined(ARDUINO)  && defined(ESP_PLATFORM)
 
