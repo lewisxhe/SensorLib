@@ -214,10 +214,17 @@ typedef struct __SensorLibPins {
 
 #elif defined(ESP_PLATFORM)
 
+#ifndef log_e
 #define log_e(...)          printf(__VA_ARGS__)
-#define log_i(...)          printf(__VA_ARGS__)
-#define log_d(...)          printf(__VA_ARGS__)
+#endif
 
+#ifndef log_i
+#define log_i(...)          printf(__VA_ARGS__)
+#endif
+
+#ifndef log_d
+#define log_d(...)          printf(__VA_ARGS__)
+#endif
 #else
 
 #ifndef log_e
