@@ -127,6 +127,11 @@ public:
         // end();
     }
 
+    /**
+     * @brief  reset
+     * @note   Reset sensor
+     * @retval None
+     */
     void reset()
     {
         if (__handler.rst != SENSOR_PIN_NONE) {
@@ -139,6 +144,11 @@ public:
         }
     }
 
+    /**
+     * @brief  update
+     * @note   Update sensor fifo data
+     * @retval None
+     */
     void update()
     {
         if (!__pro_buf) {
@@ -153,17 +163,33 @@ public:
         }
     }
 
+    /**
+     * @brief  setBootFormFlash
+     * @note   Set whether to start from external flash
+     * @param  boot_from_flash: true boot form flash or boot form ram
+     * @retval None
+     */
     void setBootFormFlash(bool boot_from_flash)
     {
         __boot_from_flash = boot_from_flash;
     }
 
-
+    /**
+     * @brief  getHandler
+     * @note   Get the native BHI API handle
+     * @retval handle
+     */
     bhy2_dev *getHandler()
     {
         return bhy2;
     }
 
+    /**
+     * @brief  printSensors
+     * @note   Output available sensor IDs to serial
+     * @param  &port: Serial or other
+     * @retval None
+     */
     void printSensors(Stream &port)
     {
         uint8_t cnt = 0;
@@ -188,7 +214,12 @@ public:
         port.printf("Total %u Sensor online .\n", cnt);
     }
 
-
+    /**
+     * @brief  printInfo
+     * @note   Print sensor information
+     * @param  &stream: Serial or other
+     * @retval true is success , false is failed
+     */
     bool printInfo(Stream &stream)
     {
         uint16_t kernel_version = 0, user_version = 0;
@@ -303,16 +334,21 @@ public:
         return true;
     }
 
-    /*! Interrupt control bits
-    *   BHY2_ICTL_DISABLE_FIFO_W
-    *   BHY2_ICTL_DISABLE_FIFO_NW
-    *   BHY2_ICTL_DISABLE_STATUS_FIFO
-    *   BHY2_ICTL_DISABLE_DEBUG
-    *   BHY2_ICTL_DISABLE_FAULT
-    *   BHY2_ICTL_ACTIVE_LOW
-    *   BHY2_ICTL_EDGE
-    *   BHY2_ICTL_OPEN_DRAIN
-    * * * */
+   /**
+    * @brief  setInterruptCtrl
+    * @note   Set the interrupt control mask
+    * @param  data: 
+    *               BHY2_ICTL_DISABLE_FIFO_W
+    *               BHY2_ICTL_DISABLE_FIFO_NW
+    *               BHY2_ICTL_DISABLE_STATUS_FIFO
+    *               BHY2_ICTL_DISABLE_DEBUG
+    *               BHY2_ICTL_DISABLE_FAULT
+    *               BHY2_ICTL_ACTIVE_LOW
+    *               BHY2_ICTL_EDGE
+    *               BHY2_ICTL_OPEN_DRAIN
+    * 
+    * @retval true is success , false is failed 
+    */
     bool setInterruptCtrl(uint8_t data)
     {
         __error_code = bhy2_set_host_interrupt_ctrl(data, bhy2);
@@ -321,6 +357,11 @@ public:
         }
     }
 
+    /**
+     * @brief  getInterruptCtrl
+     * @note   Get interrupt control mask
+     * @retval interrupt mask
+     */
     uint8_t getInterruptCtrl()
     {
         uint8_t data;
@@ -331,6 +372,12 @@ public:
         return data;
     }
 
+    /**
+     * @brief  printInterruptCtrl
+     * @note   Print sensor interrupt control methods to a stream
+     * @param  &stream: Serial or other
+     * @retval None
+     */
     void printInterruptCtrl(Stream &stream)
     {
         uint8_t data;
@@ -349,6 +396,11 @@ public:
         stream.printf("-- Interrupt pin drive is %s.\r\n", (data & BHY2_ICTL_OPEN_DRAIN) ? "open drain" : "push-pull");
     }
 
+    /**
+     * @brief  isReady
+     * @note   Query whether the sensor is ready
+     * @retval 1 OK , 0 Not ready
+     */
     bool isReady()
     {
         uint8_t  boot_status = 0;
@@ -360,6 +412,11 @@ public:
         return (boot_status & BHY2_BST_HOST_INTERFACE_READY);
     }
 
+    /**
+     * @brief  getKernelVersion
+     * @note   Get the sensor firmware kernel version
+     * @retval 2 bytes
+     */
     uint16_t getKernelVersion()
     {
         uint16_t version = 0;
@@ -372,7 +429,13 @@ public:
     }
 
 
-
+    /**
+     * @brief  onEvent
+     * @note   Registered sensor event callback function
+     * @param  sensor_id: Sensor ID , see enum BhySensorID
+     * @param  callback: Callback Function
+     * @retval None
+     */
     void onEvent(BhySensorEvent event_id, BhyEventCb callback)
     {
         SensorEventCbList_t newEventHandler;
@@ -381,6 +444,13 @@ public:
         BoschParse::bhyEventVector.push_back(newEventHandler);
     }
 
+    /**
+     * @brief  removeEvent
+     * @note   Remove sensor event callback function
+     * @param  sensor_id: Sensor ID , see enum BhySensorID
+     * @param  callback: Callback Function
+     * @retval None
+     */
     void removeEvent(BhySensorEvent event_id, BhyEventCb callback)
     {
         if (!callback) {
@@ -394,7 +464,13 @@ public:
         }
     }
 
-
+    /**
+     * @brief  onResultEvent
+     * @note   Registered sensor result callback function
+     * @param  sensor_id: Sensor ID , see enum BhySensorID
+     * @param  callback: Callback Function
+     * @retval None
+     */
     void onResultEvent(BhySensorID sensor_id, BhyParseDataCallback callback)
     {
         ParseCallBackList_t newEventHandler;
@@ -403,6 +479,13 @@ public:
         BoschParse::bhyParseEventVector.push_back(newEventHandler);
     }
 
+    /**
+     * @brief  removeResultEvent
+     * @note   Remove the registered result callback function
+     * @param  sensor_id: Sensor ID , see enum BhySensorID
+     * @param  callback: Callback Function
+     * @retval None
+     */
     void removeResultEvent(BhySensorID sensor_id, BhyParseDataCallback callback)
     {
         if (!callback) {
@@ -416,12 +499,25 @@ public:
         }
     }
 
+    /**
+     * @brief  setProcessBufferSize
+     * @note   The default value is 512Bytes
+     * @param  size: The default value is 512Bytes
+     * @retval None
+     */
     void setProcessBufferSize(uint32_t size)
     {
         __pro_buf_size = size;
     }
 
-
+    /**
+     * @brief  uploadFirmware
+     * @note   Update BHI sensor firmware
+     * @param  *firmware: Firmware data address
+     * @param  length: Firmware data length
+     * @param  write2Flash: 1 is written to external flash, 0 is written to RAM
+     * @retval true success or failed
+     */
     bool uploadFirmware(const uint8_t *firmware, uint32_t length, bool write2Flash = false)
     {
         uint8_t sensor_error;
@@ -488,6 +584,14 @@ public:
         return err;
     }
 
+    /**
+     * @brief  configure
+     * @note   Sensor Configuration
+     * @param  sensor_id: Sensor ID , see enum BhySensorID
+     * @param  sample_rate: Data output rate, unit: HZ
+     * @param  report_latency_ms: Report interval in milliseconds
+     * @retval 
+     */
     bool configure(uint8_t sensor_id, float sample_rate, uint32_t report_latency_ms)
     {
         if (!bhy2_is_sensor_available(sensor_id, bhy2)) {
@@ -499,6 +603,12 @@ public:
         return true;
     }
 
+    /**
+     * @brief  getConfigure
+     * @note   Get sensor configuration
+     * @param  sensor_id: Sensor ID , see enum BhySensorID
+     * @retval  struct bhy2_virt_sensor_conf 
+     */
     struct bhy2_virt_sensor_conf getConfigure(uint8_t sensor_id)
     {
         bhy2_virt_sensor_conf conf;
@@ -507,11 +617,26 @@ public:
         return conf;
     }
 
+    /**
+     * @brief  getScaling
+     * @note   Get sensor scale factor
+     * @param  sensor_id: Sensor ID , see enum BhySensorID
+     * @retval scale factor
+     */
     float getScaling(uint8_t sensor_id)
     {
         return get_sensor_default_scaling(sensor_id);
     }
 
+    /**
+     * @brief  setFirmware
+     * @note   Set the firmware 
+     * @param  *image: firmware data address
+     * @param  image_len: firmware length
+     * @param  write_flash: true : write to flash otherwise ram
+     * @param  force_update: true, rewrite to flash or ram regardless of whether there is firmware, false, do not write if firmware is detected
+     * @retval None
+     */
     void setFirmware(const uint8_t *image, size_t image_len, bool write_flash, bool force_update = false)
     {
         __firmware = image;
@@ -520,6 +645,12 @@ public:
         __force_update = force_update;
     }
 
+    /**
+     * @brief  getSensorName
+     * @note   Get sensor name
+     * @param  sensor_id: Sensor ID , see enum BhySensorID
+     * @retval sensor name
+     */
     static const char *getSensorName(uint8_t sensor_id)
     {
         return get_sensor_name(sensor_id);
@@ -531,6 +662,13 @@ public:
         return __accuracy;
     }
 
+    /**
+     * @brief  digitalRead
+     * @note   Read GPIO level, only for custom firmware
+     * @param  pin: see BHI260AP_aux_BMM150_BME280_Expand_GPIO example
+     * @param  pullup: true is set pullup or input mode
+     * @retval 1 is high ,0 is low
+     */
     uint8_t digitalRead(uint8_t pin, bool pullup = false)
     {
         uint32_t pin_mask = pin   | BHY2_GPIO_SET;
@@ -548,12 +686,25 @@ public:
         return level;
     }
 
+    /**
+     * @brief  digitalWrite
+     * @note   Write GPIO level, only for custom firmware
+     * @param  pin: see BHI260AP_aux_BMM150_BME280_Expand_GPIO example
+     * @param  level: 1 is high ,0 is low
+     * @retval None
+     */
     void digitalWrite(uint8_t pin, uint8_t level)
     {
         uint32_t pin_mask = pin  | (BHY2_OUTPUT << 8) | (level << 6) | BHY2_GPIO_SET ;
         bhy2_set_virt_sensor_cfg(SENSOR_ID_GPIO_EXP, (float)pin_mask, 0, bhy2);
     }
 
+    /**
+     * @brief  disableGpio
+     * @note   Disable GPIO function
+     * @param  pin: ee BHI260AP_aux_BMM150_BME280_Expand_GPIO example
+     * @retval None
+     */
     void disableGpio(uint8_t pin)
     {
         uint32_t pin_mask = pin  | (BHY2_OPEN_DRAIN << 8) | BHY2_GPIO_SET;
