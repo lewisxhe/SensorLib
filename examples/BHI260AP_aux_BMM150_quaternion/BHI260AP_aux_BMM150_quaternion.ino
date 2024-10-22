@@ -91,7 +91,7 @@ void parse_quaternion(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64
     Serial.print(" y:"); Serial.print(data.y / 16384.0f);
     Serial.print(" x:"); Serial.print(data.z / 16384.0f);
     Serial.print(" w:"); Serial.print(data.w / 16384.0f);
-    Serial.print(" acc:"); Serial.print(((data.accuracy * 180.0f) / 16384.0f) / 3.141592653589793f);
+    Serial.print(" acc:"); Serial.println(((data.accuracy * 180.0f) / 16384.0f) / 3.141592653589793f);
 
     /*
     Serial.printf("SID: %u; T: %u.%09u; x: %f, y: %f, z: %f, w: %f; acc: %.2f\r\n",
@@ -126,13 +126,13 @@ void setup()
     bhy.setBootFormFlash(true);
 #endif
 
-
+    Serial.println("Initializing Sensors...");
 #ifdef BHY2_USE_I2C
     // Using I2C interface
     // BHI260AP_SLAVE_ADDRESS_L = 0x28
     // BHI260AP_SLAVE_ADDRESS_H = 0x29
     if (!bhy.init(Wire, BHI260AP_SDA, BHI260AP_SCL, BHI260AP_SLAVE_ADDRESS_L)) {
-        Serial.print("Failed to init BHI260AP - ");
+        Serial.print("Failed to initialize sensor - error code:");
         Serial.println(bhy.getError());
         while (1) {
             delay(1000);
@@ -141,7 +141,7 @@ void setup()
 #else
     // Using SPI interface
     if (!bhy.init(SPI, BHI260AP_CS, BHI260AP_MOSI, BHI260AP_MISO, BHI260AP_SCK)) {
-        Serial.print("Failed to init BHI260AP - ");
+        Serial.print("Failed to initialize sensor - error code:");
         Serial.println(bhy.getError());
         while (1) {
             delay(1000);
@@ -149,7 +149,7 @@ void setup()
     }
 #endif
 
-    Serial.println("Init BHI260AP Sensor success!");
+    Serial.println("Initializing the sensor successfully!");
 
     // Output all available sensors to Serial
     bhy.printSensors(Serial);

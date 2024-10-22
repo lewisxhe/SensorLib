@@ -103,7 +103,7 @@ void setup()
     // Set the reset pin and interrupt pin, if any
     bhy.setPins(BHI260AP_RST, BHI260AP_IRQ);
 
-    // Force update of the current firmware, regardless of whether it exists. 
+    // Force update of the current firmware, regardless of whether it exists.
     // After uploading the firmware once, you can change it to false to speed up the startup time.
     bool force_update = true;
     // Set the firmware array address and firmware size
@@ -112,12 +112,14 @@ void setup()
     // Set to load firmware from flash
     bhy.setBootFormFlash(WRITE_TO_FLASH);
 
+    Serial.println("Initializing Sensors...");
 #ifdef BHY2_USE_I2C
     // Using I2C interface
     // BHI260AP_SLAVE_ADDRESS_L = 0x28
     // BHI260AP_SLAVE_ADDRESS_H = 0x29
+    Serial.println("");
     if (!bhy.init(Wire, BHI260AP_SDA, BHI260AP_SCL, BHI260AP_SLAVE_ADDRESS_L)) {
-        Serial.print("Failed to init BHI260AP - ");
+        Serial.print("Failed to initialize sensor - error code:");
         Serial.println(bhy.getError());
         while (1) {
             delay(1000);
@@ -126,7 +128,7 @@ void setup()
 #else
     // Using SPI interface
     if (!bhy.init(SPI, BHI260AP_CS, BHI260AP_MOSI, BHI260AP_MISO, BHI260AP_SCK)) {
-        Serial.print("Failed to init BHI260AP - ");
+        Serial.print("Failed to initialize sensor - error code:");
         Serial.println(bhy.getError());
         while (1) {
             delay(1000);
@@ -134,14 +136,14 @@ void setup()
     }
 #endif
 
-    Serial.println("Init BHI260AP Sensor success!");
+    Serial.println("Initializing the sensor successfully!");
 
     // Output all available sensors to Serial
     bhy.printSensors(Serial);
 
     /*
-    * Enable monitoring. 
-    * sample_rate ​​can only control the rate of the pressure sensor. 
+    * Enable monitoring.
+    * sample_rate ​​can only control the rate of the pressure sensor.
     * Temperature and humidity will only be updated when there is a change.
     * * */
     float sample_rate = 1.0;      /* Set to 1Hz update frequency */
@@ -152,12 +154,17 @@ void setup()
     * Function depends on BME280.
     * If the hardware is not connected to BME280, the function cannot be used.
     * * */
-    bhy.configure(SENSOR_ID_TEMP, sample_rate, report_latency_ms);
-    bhy.configure(SENSOR_ID_BARO, sample_rate, report_latency_ms);
-    bhy.configure(SENSOR_ID_HUM, sample_rate, report_latency_ms);
+    bool rlst = false;
 
+    rlst = bhy.configure(SENSOR_ID_TEMP, sample_rate, report_latency_ms);
+    Serial.printf("Configure temperature sensor %.2f HZ %s\n", sample_rate, rlst ? "successfully" : "failed");
+    rlst = bhy.configure(SENSOR_ID_BARO, sample_rate, report_latency_ms);
+    Serial.printf("Configure pressure sensor %.2f HZ %s\n", sample_rate,  rlst ? "successfully" : "failed");
+    rlst = bhy.configure(SENSOR_ID_HUM, sample_rate, report_latency_ms);
+    Serial.printf("Configure humidity sensor %.2f HZ %s\n", sample_rate,  rlst ? "successfully" : "failed");
 
     // Register BME280 data parse callback function
+    Serial.println("Register sensor result callback function");
     bhy.onResultEvent(SENSOR_ID_TEMP, parse_bme280_sensor_data);
     bhy.onResultEvent(SENSOR_ID_HUM, parse_bme280_sensor_data);
     bhy.onResultEvent(SENSOR_ID_BARO, parse_bme280_sensor_data);
