@@ -157,6 +157,7 @@ public:
         if (__handler.irq != SENSOR_PIN_NONE) {
             if (__data_available) {
                 bhy2_get_and_process_fifo(__pro_buf, __pro_buf_size, bhy2);
+                __data_available = false;
             }
         } else {
             bhy2_get_and_process_fifo(__pro_buf, __pro_buf_size, bhy2);
