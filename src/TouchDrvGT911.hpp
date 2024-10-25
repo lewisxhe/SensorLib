@@ -417,8 +417,25 @@ public:
     bool writeConfig(const uint8_t *config_buffer, size_t buffer_size)
     {
         setRegAddressLength(2);
+        uint8_t check_sum = 0;
+        for (int i = 0; i < (GT911_REG_LENGTH - 2 ); i++) {
+            check_sum += config_buffer[i];
+        }
+        check_sum =  (~check_sum) + 1;
+        if (check_sum != config_buffer[GT911_REG_LENGTH - 2]) {
+            log_e("Config checksum error !");
+            return false;
+        }
+        log_d("Update touch config , write %lu Bytes check sum:0x%X", buffer_size, check_sum);
         int err =  writeRegister(GT911_CONFIG_VERSION, (uint8_t *)config_buffer, buffer_size);
         setRegAddressLength(1);
+
+#if 0
+        while (digitalRead(__irq)) {
+            log_i("Wait irq.."); delay(500);
+        }
+        int err =   writeBuffer((uint8_t *)config_buffer, buffer_size);
+#endif
         return err == DEV_WIRE_NONE;
     }
 
@@ -438,7 +455,7 @@ public:
                 if ( (i % 8) == 0) {
                     printf("\n");
                 }
-                printf("0x%02X", buffer[i]);
+                printf(" 0x%02X", buffer[i]);
                 if ((i + 1) < GT911_REG_LENGTH) {
                     printf(",");
                 }
@@ -498,6 +515,12 @@ public:
         return num & 0x0F;
     }
 
+    void setConfigData(uint8_t *data, uint16_t length)
+    {
+        __config = data;
+        __config_size = length;
+    }
+
 private:
 
     uint8_t readGT911(uint16_t cmd)
@@ -547,13 +570,21 @@ private:
     {
         int16_t x = 0, y = 0;
 
-        if (__rst == SENSOR_PIN_NONE) {
+        if (__rst == SENSOR_PIN_NONE || __irq == SENSOR_PIN_NONE) {
+
+            if (__rst != SENSOR_PIN_NONE) {
+                this->setGpioMode(__rst, OUTPUT);
+                this->setGpioLevel(__rst, HIGH);
+                delay(10);
+            }
+
             // Automatically determine the current device
             // address when using the reset pin without connection
+            log_d("Probe address ....");
             if (!probeAddress()) {
                 return false;
             }
-            log_i("Probe address is : 0x%X", __addr);
+            log_d("Probe address is : 0x%X", __addr);
 
             // Reset Config
             reset();
@@ -597,6 +628,17 @@ private:
         // For variants where the GPIO is controlled by I2C, a delay is required here
         delay(20);
 
+
+        /*
+        * For the ESP32 platform, the default buffer is 128.
+        * Need to re-apply for a larger buffer to fully read the configuration table.
+        * */
+        if (!this->reallocBuffer(GT911_REG_LENGTH + 2)) {
+            log_e("realloc i2c buffer failed !");
+            return false;
+        }
+
+
         __chipID = getChipID();
         log_i("Product id:%ld", __chipID);
 
@@ -604,6 +646,22 @@ private:
             log_i("Not find device GT911");
             return false;
         }
+
+        if (__config && __config_size != 0) {
+
+            log_d("Current version char :%x", getConfigVersion());
+            delay(100);
+            writeConfig(__config, __config_size);
+            if (__irq != -1) {
+                this->setGpioMode(__irq, INPUT);
+            }
+            log_d("WriteConfig version char :%x", getConfigVersion());
+            // delay(1000);
+            // size_t output_size;
+            // loadConfig(&output_size, true);
+            // log_d("loadConfig version char :%x", version_char);
+        }
+
         log_i("Firmware version: 0x%x", getFwVersion());
         getResolution(&x, &y);
         log_i("Resolution : X = %d Y = %d", x, y);
@@ -611,14 +669,6 @@ private:
         log_i("Refresh Rate:%d ms", getRefreshRate());
         log_i("MaxTouchPoint:%d", getMaxTouchPoint());
 
-        /*
-        * For the ESP32 platform, the default buffer is 128.
-        * Need to re-apply for a larger buffer to fully read the configuration table.
-        * */
-        if (!this->reallocBuffer(GT911_REG_LENGTH + 2 )) {
-            log_e("realloc i2c buffer failed !");
-            return false;
-        }
 
         // Get the default interrupt trigger mode of the current screen
         getInterruptMode();
@@ -635,7 +685,10 @@ private:
             log_e("UNKOWN");
         }
 
-
+        if (x == -1 || y == -1) {
+            log_e("The screen configuration is lost, please update the configuration file again !");
+            return false;
+        }
         return true;
     }
 
@@ -647,6 +700,8 @@ private:
 
 protected:
     int __irq_mode;
+    uint8_t *__config = NULL;
+    uint16_t __config_size = 0;
 };
 
 
