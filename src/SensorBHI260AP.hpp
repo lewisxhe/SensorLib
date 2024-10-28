@@ -335,21 +335,21 @@ public:
         return true;
     }
 
-   /**
-    * @brief  setInterruptCtrl
-    * @note   Set the interrupt control mask
-    * @param  data: 
-    *               BHY2_ICTL_DISABLE_FIFO_W
-    *               BHY2_ICTL_DISABLE_FIFO_NW
-    *               BHY2_ICTL_DISABLE_STATUS_FIFO
-    *               BHY2_ICTL_DISABLE_DEBUG
-    *               BHY2_ICTL_DISABLE_FAULT
-    *               BHY2_ICTL_ACTIVE_LOW
-    *               BHY2_ICTL_EDGE
-    *               BHY2_ICTL_OPEN_DRAIN
-    * 
-    * @retval true is success , false is failed 
-    */
+    /**
+     * @brief  setInterruptCtrl
+     * @note   Set the interrupt control mask
+     * @param  data:
+     *               BHY2_ICTL_DISABLE_FIFO_W
+     *               BHY2_ICTL_DISABLE_FIFO_NW
+     *               BHY2_ICTL_DISABLE_STATUS_FIFO
+     *               BHY2_ICTL_DISABLE_DEBUG
+     *               BHY2_ICTL_DISABLE_FAULT
+     *               BHY2_ICTL_ACTIVE_LOW
+     *               BHY2_ICTL_EDGE
+     *               BHY2_ICTL_OPEN_DRAIN
+     *
+     * @retval true is success , false is failed
+     */
     bool setInterruptCtrl(uint8_t data)
     {
         __error_code = bhy2_set_host_interrupt_ctrl(data, bhy2);
@@ -433,51 +433,48 @@ public:
     /**
      * @brief  onEvent
      * @note   Registered sensor event callback function
-     * @param  sensor_id: Sensor ID , see enum BhySensorID
      * @param  callback: Callback Function
      * @retval None
      */
-    void onEvent(BhySensorEvent event_id, BhyEventCb callback)
+    void onEvent(BhyEventCb callback)
     {
-        SensorEventCbList_t newEventHandler;
-        newEventHandler.cb = callback;
-        newEventHandler.event = event_id;
-        BoschParse::bhyEventVector.push_back(newEventHandler);
+        BoschParse::_event_callback = callback;
     }
 
     /**
      * @brief  removeEvent
      * @note   Remove sensor event callback function
-     * @param  sensor_id: Sensor ID , see enum BhySensorID
-     * @param  callback: Callback Function
      * @retval None
      */
-    void removeEvent(BhySensorEvent event_id, BhyEventCb callback)
+    void removeEvent()
     {
-        if (!callback) {
-            return;
-        }
-        for (uint32_t i = 0; i < BoschParse::bhyEventVector.size(); i++) {
-            SensorEventCbList_t entry = BoschParse::bhyEventVector[i];
-            if (entry.cb == callback && entry.event == event_id) {
-                BoschParse::bhyEventVector.erase(BoschParse::bhyEventVector.begin() + i);
-            }
-        }
+        BoschParse::_event_callback = NULL;
     }
 
     /**
      * @brief  onResultEvent
-     * @note   Registered sensor result callback function
+     * @note   Registered sensor result callback function , The same sensor ID can register multiple event callbacks. 
+     *         Please note that you should not register the same event callback repeatedly.
      * @param  sensor_id: Sensor ID , see enum BhySensorID
      * @param  callback: Callback Function
      * @retval None
      */
     void onResultEvent(BhySensorID sensor_id, BhyParseDataCallback callback)
     {
+#ifdef USE_STD_VECTOR
         ParseCallBackList_t newEventHandler;
         newEventHandler.cb = callback;
         newEventHandler.id = sensor_id;
         BoschParse::bhyParseEventVector.push_back(newEventHandler);
+#else
+        if (BoschParse::BoschParse_bhyParseEventVectorSize == BoschParse::BoschParse_bhyParseEventVectorCapacity) {
+            BoschParse::expandParseEventVector();
+        }
+        ParseCallBackList_t newEventHandler;
+        newEventHandler.cb = callback;
+        newEventHandler.id = sensor_id;
+        BoschParse::BoschParse_bhyParseEventVector[BoschParse::BoschParse_bhyParseEventVectorSize++] = newEventHandler;
+#endif
     }
 
     /**
@@ -492,12 +489,25 @@ public:
         if (!callback) {
             return;
         }
+#ifdef USE_STD_VECTOR
         for (uint32_t i = 0; i < BoschParse::bhyParseEventVector.size(); i++) {
             ParseCallBackList_t entry = BoschParse::bhyParseEventVector[i];
             if (entry.cb == callback && entry.id == sensor_id) {
                 BoschParse::bhyParseEventVector.erase(BoschParse::bhyParseEventVector.begin() + i);
             }
         }
+#else
+        for (uint32_t i = 0; i < BoschParse::BoschParse_bhyParseEventVectorSize; i++) {
+            ParseCallBackList_t entry = BoschParse::BoschParse_bhyParseEventVector[i];
+            if (entry.cb == callback && entry.id == sensor_id) {
+                for (uint32_t j = i; j < BoschParse::BoschParse_bhyParseEventVectorSize - 1; j++) {
+                    BoschParse::BoschParse_bhyParseEventVector[j] = BoschParse::BoschParse_bhyParseEventVector[j + 1];
+                }
+                BoschParse::BoschParse_bhyParseEventVectorSize--;
+                break;
+            }
+        }
+#endif
     }
 
     /**
@@ -591,7 +601,7 @@ public:
      * @param  sensor_id: Sensor ID , see enum BhySensorID
      * @param  sample_rate: Data output rate, unit: HZ
      * @param  report_latency_ms: Report interval in milliseconds
-     * @retval 
+     * @return bool true-> Success false-> failure
      */
     bool configure(uint8_t sensor_id, float sample_rate, uint32_t report_latency_ms)
     {
@@ -605,10 +615,25 @@ public:
     }
 
     /**
+     * @brief  configureRange
+     * @note   Set range of the sensor
+     * @param  sensor_id: Sensor ID , see enum BhySensorID
+     * @param  range:     Range for selected SensorID. See Table 79 in BHY260 datasheet 109 page
+     * @retval  bool true-> Success false-> failure
+     */
+    bool configureRange(uint8_t sensor_id, uint16_t range)
+    {
+        __error_code = bhy2_set_virt_sensor_range(sensor_id, range, bhy2);
+        BHY2_RLST_CHECK(__error_code != BHY2_OK, "bhy2_set_virt_sensor_range failed!", false);
+        return true;
+    }
+
+
+    /**
      * @brief  getConfigure
      * @note   Get sensor configuration
      * @param  sensor_id: Sensor ID , see enum BhySensorID
-     * @retval  struct bhy2_virt_sensor_conf 
+     * @retval  struct bhy2_virt_sensor_conf
      */
     struct bhy2_virt_sensor_conf getConfigure(uint8_t sensor_id)
     {
@@ -631,7 +656,7 @@ public:
 
     /**
      * @brief  setFirmware
-     * @note   Set the firmware 
+     * @note   Set the firmware
      * @param  *image: firmware data address
      * @param  image_len: firmware length
      * @param  write_flash: true : write to flash otherwise ram
@@ -710,6 +735,36 @@ public:
     {
         uint32_t pin_mask = pin  | (BHY2_OPEN_DRAIN << 8) | BHY2_GPIO_SET;
         bhy2_set_virt_sensor_cfg(SENSOR_ID_GPIO_EXP, (float)pin_mask, 0, bhy2);
+    }
+
+    /**
+     * @brief  setDebug
+     * @note   Whether to enable chip debug output
+     * @param  enable: true Enable message debug , false disable debug , Requires firmware support, the default firmware will not output any messages
+     * @param  &serial: Stream
+     * @retval None
+     */
+    void setDebug(bool enable)
+    {
+        uint8_t data = 0;
+        bhy2_get_host_interrupt_ctrl(&data, bhy2);
+        if (enable) {
+            data &= ~BHY2_ICTL_DISABLE_DEBUG;           /* Enable debug interrupts */
+        } else {
+            data |= BHY2_ICTL_DISABLE_DEBUG;            /* Disable debug interrupts */
+        }
+        bhy2_set_host_interrupt_ctrl(data, bhy2);
+        bhy2_register_fifo_parse_callback(BHY2_SYS_ID_DEBUG_MSG, enable ? BoschParse::parseDebugMessage : NULL, NULL, bhy2);
+    }
+
+    /**
+     * @brief setDebugCallback
+     * @param  cb: Sensor debug output callback function , Requires firmware support, the default firmware will not output any messages
+     * @retval None
+     */
+    void setDebugCallback(BhyDebugMessageCallback cb)
+    {
+        BoschParse::_debug_callback = cb;
     }
 
 private:

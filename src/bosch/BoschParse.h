@@ -33,8 +33,12 @@
 #include "SensorBhy2Define.h"
 #include "bosch/bhy2_parse.h"
 #include "bosch/common/common.h"
+
+#if defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_STM32)
 #include <vector>
 #include <functional>
+#define USE_STD_VECTOR
+#endif
 
 
 enum BoschOrientation {
@@ -47,12 +51,21 @@ enum BoschOrientation {
 class BoschParse
 {
 public:
-    static std::vector<SensorEventCbList_t> bhyEventVector;
+#ifdef USE_STD_VECTOR
     static std::vector<ParseCallBackList_t> bhyParseEventVector;
+#else
+    static ParseCallBackList_t *BoschParse_bhyParseEventVector;
+    static uint32_t BoschParse_bhyParseEventVectorSize;
+    static uint32_t BoschParse_bhyParseEventVectorCapacity ;
+    static void expandParseEventVector();
+    static BhyEventCb _event_callback;
+#endif
+    static BhyDebugMessageCallback _debug_callback;
 
     static void parseData(const struct bhy2_fifo_parse_data_info *fifo, void *user_data);
 
     static void parseMetaEvent(const struct bhy2_fifo_parse_data_info *callback_info, void *user_data);
 
     static void parseDebugMessage(const struct bhy2_fifo_parse_data_info *callback_info, void *callback_ref);
+
 };

@@ -46,22 +46,9 @@
         }                               \
     } while (0)
 
-typedef void (*BhyEventCb)(uint8_t event, uint8_t *data, uint32_t size);
-typedef void (*BhyParseDataCallback)(uint8_t sensor_id, uint8_t *data, uint32_t size,uint64_t *timestamp);
-
-
-
-typedef struct SensorEventCbList {
-    static uint8_t current_id;
-    uint8_t id;
-    BhyEventCb cb;
-    uint8_t event;
-    uint8_t *data;
-    SensorEventCbList() : id(current_id++), cb(NULL),  event(0), data(NULL)
-    {
-    }
-} SensorEventCbList_t;
-
+typedef void (*BhyEventCb)(uint8_t event, uint8_t sensor_id, uint8_t data);
+typedef void (*BhyParseDataCallback)(uint8_t sensor_id, uint8_t *data, uint32_t size, uint64_t *timestamp);
+typedef void (*BhyDebugMessageCallback)(const char * message);
 
 typedef struct ParseCallBackList {
     static uint8_t current_id;

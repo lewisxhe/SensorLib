@@ -29,10 +29,33 @@
  */
 #include "BoschParse.h"
 
+#ifdef USE_STD_VECTOR
 std::vector<SensorEventCbList_t> BoschParse::bhyEventVector;
 std::vector<ParseCallBackList_t> BoschParse::bhyParseEventVector;
-uint8_t SensorEventCbList::current_id = 1;
+#else
+ParseCallBackList_t *BoschParse::BoschParse_bhyParseEventVector = NULL;
+uint32_t BoschParse::BoschParse_bhyParseEventVectorSize = 0;
+uint32_t BoschParse::BoschParse_bhyParseEventVectorCapacity = 0;
+#endif
+
+BhyEventCb BoschParse::_event_callback = NULL;
+BhyDebugMessageCallback BoschParse::_debug_callback = NULL;
+
 uint8_t ParseCallBackList::current_id = 1;
+
+#ifndef USE_STD_VECTOR
+void BoschParse::expandParseEventVector()
+{
+    uint32_t newCapacity = BoschParse_bhyParseEventVectorCapacity == 0 ? 10 : 2 * BoschParse_bhyParseEventVectorCapacity;
+    ParseCallBackList_t *newVector = (ParseCallBackList_t *)realloc(BoschParse_bhyParseEventVector, newCapacity * sizeof(ParseCallBackList_t));
+    if (newVector == NULL) {
+        printf("Memory allocation failed for sensor result vector.\n");
+        return;
+    }
+    BoschParse_bhyParseEventVector = newVector;
+    BoschParse_bhyParseEventVectorCapacity = newCapacity;
+}
+#endif
 
 void BoschParse::parseData(const struct bhy2_fifo_parse_data_info *fifo, void *user_data)
 {
@@ -56,6 +79,7 @@ void BoschParse::parseData(const struct bhy2_fifo_parse_data_info *fifo, void *u
     LOG_PORT.println();
 #endif
 
+#ifdef USE_STD_VECTOR
     for (uint32_t i = 0; i < bhyParseEventVector.size(); i++) {
         ParseCallBackList_t entry = bhyParseEventVector[i];
         if (entry.cb ) {
@@ -66,6 +90,18 @@ void BoschParse::parseData(const struct bhy2_fifo_parse_data_info *fifo, void *u
             }
         }
     }
+#else
+    for (uint32_t i = 0; i < BoschParse_bhyParseEventVectorSize; i++) {
+        ParseCallBackList_t entry = BoschParse_bhyParseEventVector[i];
+        if (entry.cb != NULL) {
+            if (entry.id == fifo->sensor_id) {
+                if (entry.cb != NULL) {
+                    entry.cb(fifo->sensor_id, fifo->data_ptr, size, fifo->time_stamp);
+                }
+            }
+        }
+    }
+#endif
 }
 
 void BoschParse::parseMetaEvent(const struct bhy2_fifo_parse_data_info *callback_info, void *user_data)
@@ -84,10 +120,10 @@ void BoschParse::parseMetaEvent(const struct bhy2_fifo_parse_data_info *callback
 
 #if defined(ARDUINO_ARCH_NRF52)
     /*
-    * 
-    * Unknown error, NRF52 Arduino version 1.6.1 
-    * If you remove the serial output here, there will never be an interrupt. 
-    * Suspect SDK problem. 
+    *
+    * Unknown error, NRF52 Arduino version 1.6.1
+    * If you remove the serial output here, there will never be an interrupt.
+    * Suspect SDK problem.
     * Temporarily add event id here to print ten times, then close
     * */
     static uint8_t cnt = 10;
@@ -164,15 +200,8 @@ void BoschParse::parseMetaEvent(const struct bhy2_fifo_parse_data_info *callback
         break;
     }
 
-    for (uint32_t i = 0; i < bhyEventVector.size(); i++) {
-        SensorEventCbList_t entry = bhyEventVector[i];
-        if (entry.cb ) {
-            if (entry.event == meta_event_type) {
-                if (entry.cb) {
-                    entry.cb(meta_event_type, callback_info->data_ptr, callback_info->data_size);
-                }
-            }
-        }
+    if (_event_callback) {
+        _event_callback(meta_event_type, byte1, byte2);
     }
 }
 
@@ -186,7 +215,6 @@ void BoschParse::parseDebugMessage(const struct bhy2_fifo_parse_data_info *callb
 
     if (!callback_info) {
         log_i("Null reference");
-
         return;
     }
 
@@ -199,4 +227,8 @@ void BoschParse::parseDebugMessage(const struct bhy2_fifo_parse_data_info *callb
 
     // log_i("[DEBUG MSG]; T: %lu.%09lu; %s", s, ns, debug_msg);
     log_i("[DEBUG MSG]: %s", debug_msg);
+
+    if (_debug_callback) {
+        _debug_callback((const char *)debug_msg);
+    }
 }
