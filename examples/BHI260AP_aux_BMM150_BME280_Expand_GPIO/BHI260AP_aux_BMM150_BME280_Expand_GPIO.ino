@@ -120,6 +120,22 @@ void parse_bme280_sensor_data(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len
     }
 }
 
+void sensor_event_callback(uint8_t event, uint8_t sensor_id, uint8_t data)
+{
+    Serial.print("Sensor Event:");
+    switch (event) {
+    case BHY2_META_EVENT_SAMPLE_RATE_CHANGED:
+        Serial.printf("Sample rate changed for %s sensor\n", bhy.getSensorName(sensor_id));
+        break;
+    case BHY2_META_EVENT_POWER_MODE_CHANGED:
+        Serial.printf("Power mode changed for %s sensor\n", bhy.getSensorName(sensor_id));
+        break;
+    default:
+        Serial.printf("Other event : %u\n", event);
+        break;
+    }
+}
+
 
 void setup()
 {
@@ -161,6 +177,9 @@ void setup()
 #endif
 
     Serial.println("Initializing the sensor successfully!");
+
+    // Register sensor change event callback
+    bhy.onEvent(sensor_event_callback);
 
     // Register BME280 data parse callback function
     bhy.onResultEvent(SENSOR_ID_TEMP, parse_bme280_sensor_data);
@@ -314,5 +333,3 @@ bool disGpioMode(Commander &Cmdr)
     bhy.disableGpio(pin);
     return 0;
 }
-
-
