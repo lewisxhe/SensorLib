@@ -58,8 +58,8 @@ public:
     static uint32_t BoschParse_bhyParseEventVectorSize;
     static uint32_t BoschParse_bhyParseEventVectorCapacity ;
     static void expandParseEventVector();
-    static BhyEventCb _event_callback;
 #endif
+    static BhyEventCb _event_callback;
     static BhyDebugMessageCallback _debug_callback;
 
     static void parseData(const struct bhy2_fifo_parse_data_info *fifo, void *user_data);

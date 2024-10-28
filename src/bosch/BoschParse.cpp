@@ -30,7 +30,6 @@
 #include "BoschParse.h"
 
 #ifdef USE_STD_VECTOR
-std::vector<SensorEventCbList_t> BoschParse::bhyEventVector;
 std::vector<ParseCallBackList_t> BoschParse::bhyParseEventVector;
 #else
 ParseCallBackList_t *BoschParse::BoschParse_bhyParseEventVector = NULL;
