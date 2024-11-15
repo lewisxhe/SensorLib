@@ -43,6 +43,37 @@ class SensorBHI260AP
 {
     friend class BoschParse;
 public:
+
+    // The pin names are named according to the sensor manual.
+    enum BHI260AP_GPIO {
+        MCSB1 = 1,
+        RESV1 = 2,
+        RESV2 = 3,
+        MCSB2 = 4,  //It may be connected to the BMM150 sensor, select according to the actual situation
+        MCSB3 = 5,
+        MCSB4 = 6,
+
+        QSPI_CLK = 8, // If BHI260 carries external flash, it is not available
+        QSPI_CSN = 9, // If BHI260 carries external flash, it is not available
+        QSPI_D0 = 10, // If BHI260 carries external flash, it is not available
+        QSPI_D1 = 11, // If BHI260 carries external flash, it is not available
+        QSPI_D2 = 12, // If BHI260 carries external flash, it is not available
+        QSPI_D3 = 13, // If BHI260 carries external flash, it is not available
+
+        M2SCX = 14,
+        M2SDX = 15,
+        M2SDI = 16,
+        M3SCL = 17, //It may be connected to the BMM150 sensor, select according to the actual situation
+        M3SDA = 18, //It may be connected to the BMM150 sensor, select according to the actual situation
+        JTAG_CLK = 19,
+        JTAG_DIO = 20,
+
+        M1SCX = 127, // Invalid Pin
+        M1SDX = 128, // Invalid Pin
+        M1SDI = 129, // Invalid Pin
+        RESV3 = 130, // Invalid Pin
+    };
+
     SensorBHI260AP(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = BHI260AP_SLAVE_ADDRESS_L)
     {
         __handler.u.i2c_dev.scl = scl;
@@ -453,7 +484,7 @@ public:
 
     /**
      * @brief  onResultEvent
-     * @note   Registered sensor result callback function , The same sensor ID can register multiple event callbacks. 
+     * @note   Registered sensor result callback function , The same sensor ID can register multiple event callbacks.
      *         Please note that you should not register the same event callback repeatedly.
      * @param  sensor_id: Sensor ID , see enum BhySensorID
      * @param  callback: Callback Function
@@ -697,6 +728,7 @@ public:
      */
     uint8_t digitalRead(uint8_t pin, bool pullup = false)
     {
+        if (pin > JTAG_DIO)return;
         uint32_t pin_mask = pin   | BHY2_GPIO_SET;
         if (pullup) {
             pin_mask |= (BHY2_INPUT_PULLUP << 8);
@@ -721,6 +753,7 @@ public:
      */
     void digitalWrite(uint8_t pin, uint8_t level)
     {
+        if (pin > JTAG_DIO)return;
         uint32_t pin_mask = pin  | (BHY2_OUTPUT << 8) | (level << 6) | BHY2_GPIO_SET ;
         bhy2_set_virt_sensor_cfg(SENSOR_ID_GPIO_EXP, (float)pin_mask, 0, bhy2);
     }
@@ -728,11 +761,12 @@ public:
     /**
      * @brief  disableGpio
      * @note   Disable GPIO function
-     * @param  pin: ee BHI260AP_aux_BMM150_BME280_Expand_GPIO example
+     * @param  pin: see BHI260AP_aux_BMM150_BME280_Expand_GPIO example
      * @retval None
      */
     void disableGpio(uint8_t pin)
     {
+        if (pin > JTAG_DIO)return;
         uint32_t pin_mask = pin  | (BHY2_OPEN_DRAIN << 8) | BHY2_GPIO_SET;
         bhy2_set_virt_sensor_cfg(SENSOR_ID_GPIO_EXP, (float)pin_mask, 0, bhy2);
     }
