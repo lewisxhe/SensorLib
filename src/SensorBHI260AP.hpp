@@ -728,7 +728,7 @@ public:
      */
     uint8_t digitalRead(uint8_t pin, bool pullup = false)
     {
-        if (pin > JTAG_DIO)return;
+        if (pin > JTAG_DIO)return 0;
         uint32_t pin_mask = pin   | BHY2_GPIO_SET;
         if (pullup) {
             pin_mask |= (BHY2_INPUT_PULLUP << 8);
