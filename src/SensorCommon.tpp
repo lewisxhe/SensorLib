@@ -632,13 +632,16 @@ protected:
 
     void setClock(uint32_t frequency)
     {
+#if defined(ARDUINO)
         if (__wire) {
             __wire->setClock(frequency);
         }
+#endif
     }
 
     uint32_t getClock()
     {
+#if defined(ARDUINO)
         if (__wire) {
 #if defined(ARDUINO_ARCH_ESP32)
             return __wire->getClock();
@@ -646,6 +649,7 @@ protected:
             return 100000;
 #endif
         }
+#endif
         return 0;
     }
 
