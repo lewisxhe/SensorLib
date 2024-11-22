@@ -32,7 +32,7 @@
 #include "REG/XL9555Constants.h"
 #include "SensorCommon.tpp"
 #include "ExtensionSPI.tpp"
-
+#include "VirtualGpio.hpp"
 
 typedef void (*gpio_event_t)(void *user_data);
 typedef struct ioEvent {
@@ -48,6 +48,7 @@ typedef struct ioEvent {
 
 
 class ExtensionIOXL9555 :
+    public VirtualGpio,
     public SensorCommon<ExtensionIOXL9555>,
     public ExtensionSPI<ExtensionIOXL9555>
 {
@@ -258,19 +259,27 @@ public:
             val >>= 1;
         }
     }
+    void setClock(uint32_t frequency)
+    {
+        SensorCommon::setClock(frequency);
+    }
 
+    uint32_t getClock()
+    {
+        return SensorCommon::getClock();
+    }
 private:
     bool initImpl()
     {
         if (__addr == XL9555_UNKOWN_ADDRESS) {
             for (uint8_t addr = XL9555_SLAVE_ADDRESS0; addr <= XL9555_SLAVE_ADDRESS7; ++addr) {
                 if (probe(addr)) {
-                    log_e("Find the xl9555 chip address is 0x%X", addr);
+                    log_e("Found the xl9555 chip address is 0x%X", addr);
                     __addr = addr;
                     return true;
                 }
             }
-            log_e("No find the xl9555 chip ...");
+            log_e("No found xl9555 chip ...");
             return false;
         }
         return probe();
@@ -284,6 +293,7 @@ private:
     ioEvent_t event[16];
 
 protected:
+    uint32_t _frequency;
 
 };
 

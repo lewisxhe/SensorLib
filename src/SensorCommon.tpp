@@ -629,6 +629,26 @@ protected:
         return true;
     }
 
+
+    void setClock(uint32_t frequency)
+    {
+        if (__wire) {
+            __wire->setClock(frequency);
+        }
+    }
+
+    uint32_t getClock()
+    {
+        if (__wire) {
+#if defined(ARDUINO_ARCH_ESP32)
+            return __wire->getClock();
+#else
+            return 100000;
+#endif
+        }
+        return 0;
+    }
+
     /*
      * CRTP Helper
      */
