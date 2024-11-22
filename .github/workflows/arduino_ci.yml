@@ -55,8 +55,10 @@ jobs:
           - examples/TouchDrv_GT911_LilyGo_T_RGB/TouchDrv_GT911_LilyGo_T_RGB.ino
           - examples/XL9555_ExtensionIOInterrupt/XL9555_ExtensionIOInterrupt.ino
           - examples/XL9555_ExtensionIORead/XL9555_ExtensionIORead.ino
-          - examples/XL9555_ExtensionIOWirte/XL9555_ExtensionIOWirte.ino
+          - examples/XL9555_ExtensionIOWrite/XL9555_ExtensionIOWrite.ino
           - examples/XL9555_ioEvent/XL9555_ioEvent.ino
+          - examples/XL9555_AdjustBacklight/XL9555_AdjustBacklight.ino
+          - examples/AW9364_LedDriver/AW9364_LedDriver.ino
           - examples/BHI260AP_6DoF/BHI260AP_6DoF.ino
           - examples/BHI260AP_Orientation/BHI260AP_Orientation.ino
           - examples/BHI260AP_DebugInfo/BHI260AP_DebugInfo.ino

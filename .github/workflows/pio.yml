@@ -67,8 +67,10 @@ jobs:
           - examples/TouchDrv_GT9895_GetPoint
           - examples/XL9555_ExtensionIOInterrupt
           - examples/XL9555_ExtensionIORead
-          - examples/XL9555_ExtensionIOWirte
+          - examples/XL9555_ExtensionIOWrite
           - examples/XL9555_ioEvent
+          - examples/XL9555_AdjustBacklight
+          - examples/AW9364_LedDriver
 
     steps:
       - uses: actions/checkout@v3
