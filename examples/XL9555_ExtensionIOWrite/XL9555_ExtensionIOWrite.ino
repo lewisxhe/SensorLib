@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      XL9555_ExtensionIOWirte.ino
+ * @file      XL9555_ExtensionIOWrite.ino
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2024-09-14
  *
