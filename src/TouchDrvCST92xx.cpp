@@ -1150,15 +1150,19 @@ bool TouchDrvCST92xx::initImpl()
 
     }
 
-    reset();
+    if (__jump_check) {
 
-    if(__jump_check && __addr != CST92XX_BOOT_ADDRESS){
-        delay(55);
-    }
+        reset();
 
-    if (!this->probe()) {
-        log_e("device is not online");
-        return false;
+        // Wait for a while after reset
+        delay(120);
+
+        retry = 3;
+
+        while (!this->probe()) {
+            log_e("Device not found!");
+            delay(120);
+        }
     }
 
     if (chipType != CST9220_CHIP_ID && chipType != CST9217_CHIP_ID) {
