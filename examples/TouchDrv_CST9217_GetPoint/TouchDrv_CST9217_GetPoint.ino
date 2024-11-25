@@ -30,7 +30,7 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
-#include "TouchDrvCST92xx.h"
+#include "touch/TouchDrvCST92xx.h"
 #include "SensorWireHelper.h"
 
 
@@ -89,8 +89,8 @@ void setup()
     
 
     // Set to skip register check, used when the touch device address conflicts with other I2C device addresses [0x5A]
-    touch.jumpCheck();
-    
+    // touch.jumpCheck();
+
 
     touch.setPins(SENSOR_RST, SENSOR_IRQ);
     bool result = touch.begin(Wire, touchAddress, SENSOR_SDA, SENSOR_SCL);

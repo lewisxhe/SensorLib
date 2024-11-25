@@ -50,6 +50,7 @@
 
 TouchDrvCSTXXX touch;
 int16_t x[5], y[5];
+bool  isPressed = false;
 
 void scanDevices(void)
 {
@@ -119,13 +120,20 @@ void setup()
     }
 
     touch.setPins(SENSOR_RST, SENSOR_IRQ);
-    touch.begin(Wire, address, SENSOR_SDA, SENSOR_SCL);
 
+    // Support CST81X CST226 CST9217 CST9220 ....
+    bool result = touch.begin(Wire, address, SENSOR_SDA, SENSOR_SCL);
+    if (result == false) {
+        while (1) {
+            Serial.println("Failed to initialize CST series touch, please check the connection...");
+            delay(1000);
+        }
+    }
 
     Serial.print("Model :"); Serial.println(touch.getModelName());
 
     // T-Display-S3 CST816 touch panel, touch button coordinates are is 85 , 160
-    touch.setCenterButtonCoordinate(85, 360);
+    // touch.setCenterButtonCoordinate(85, 360);
 
     // T-Display-AMOLED 1.91 Inch CST816T touch panel, touch button coordinates is 600, 120.
     // touch.setCenterButtonCoordinate(600, 120);  // Only suitable for AMOLED 1.91 inch
@@ -151,25 +159,33 @@ void setup()
     // Set mirror xy
     // touch.setMirrorXY(true, true);
 
+    //Register touch plane interrupt pin
+    attachInterrupt(SENSOR_IRQ, []() {
+        isPressed = true;
+    }, FALLING);
+
 }
 
 void loop()
 {
-    uint8_t touched = touch.getPoint(x, y, touch.getSupportTouchPoint());
-    if (touched) {
-        for (int i = 0; i < touched; ++i) {
-            Serial.print("X[");
-            Serial.print(i);
-            Serial.print("]:");
-            Serial.print(x[i]);
-            Serial.print(" ");
-            Serial.print(" Y[");
-            Serial.print(i);
-            Serial.print("]:");
-            Serial.print(y[i]);
-            Serial.print(" ");
+    if (isPressed) {
+        isPressed = false;
+        uint8_t touched = touch.getPoint(x, y, touch.getSupportTouchPoint());
+        if (touched) {
+            for (int i = 0; i < touched; ++i) {
+                Serial.print("X[");
+                Serial.print(i);
+                Serial.print("]:");
+                Serial.print(x[i]);
+                Serial.print(" ");
+                Serial.print(" Y[");
+                Serial.print(i);
+                Serial.print("]:");
+                Serial.print(y[i]);
+                Serial.print(" ");
+            }
+            Serial.println();
         }
-        Serial.println();
     }
 
     delay(5);
