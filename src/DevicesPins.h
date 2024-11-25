@@ -64,7 +64,7 @@
 // T-Display-S3-Pro CST226SE✅
 #define SENSOR_SDA 5
 #define SENSOR_SCL 6
-#define SENSOR_IRQ 7
+#define SENSOR_IRQ 21
 #define SENSOR_RST 13
 #elif defined(ARDUINO_T_DISPLAY_S3)
 // T-Display-S3 CST816T✅
