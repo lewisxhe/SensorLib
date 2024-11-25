@@ -30,7 +30,7 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
-#include "touch/TouchDrvCST92xx.h"
+#include "TouchDrvCSTXXX.hpp"
 #include "SensorWireHelper.h"
 
 
