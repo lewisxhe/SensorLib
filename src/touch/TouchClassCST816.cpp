@@ -190,7 +190,7 @@ const char *TouchClassCST816::getModelName()
     default:
         break;
     }
-    return "UNKONW";
+    return "UNKNOW";
 }
 
 void TouchClassCST816::sleep()
@@ -296,10 +296,10 @@ bool TouchClassCST816::initImpl()
     reset();
 
     int chip_id =   readRegister(CST8xx_REG_CHIP_ID);
-    log_i("Chip ID:0x%x\n", chip_id);
+    log_i("Chip ID:0x%x", chip_id);
 
     int version =   readRegister(CST8xx_REG_FW_VERSION);
-    log_i("Version :0x%x\n", version);
+    log_i("Version :0x%x", version);
 
     // CST716  : 0x20
     // CST816S : 0xB4
@@ -311,12 +311,14 @@ bool TouchClassCST816::initImpl()
             chip_id != CST820_CHIP_ID &&
             chip_id != CST816D_CHIP_ID &&
             (chip_id != CST716_CHIP_ID || version == 0)) {
+        log_e("Chip ID does not match, should be CST816S:0X%02X , CST816T:0X%02X , CST816D:0X%02X , CST820:0X%02X , CST716:0X%02X",
+              CST816S_CHIP_ID, CST816T_CHIP_ID, CST816D_CHIP_ID, CST820_CHIP_ID, CST716_CHIP_ID);
         return false;
     }
 
     __chipID = chip_id;
 
-    log_i("Touch type:%s\n", getModelName());
+    log_i("Touch type:%s", getModelName());
 
     return true;
 }
