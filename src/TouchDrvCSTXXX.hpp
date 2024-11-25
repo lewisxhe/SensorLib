@@ -33,6 +33,7 @@
 #include "REG/CSTxxxConstants.h"
 #include "touch/TouchClassCST226.h"
 #include "touch/TouchClassCST816.h"
+#include "touch/TouchDrvCST92xx.h"
 #include "SensorCommon.tpp"
 
 class TouchDrvCSTXXX : public TouchDrvInterface
@@ -77,6 +78,16 @@ public:
             }
         }
 
+        if (!drv) {
+            drv = new TouchDrvCST92xx();
+            drv->setGpioCallback(__set_gpio_mode, __set_gpio_level, __get_gpio_level);
+            drv->setPins(__rst, __irq);
+            if (!drv->begin(wire, address, sda, scl)) {
+                delete drv;
+                drv = NULL;
+            }
+        }
+
         return drv != NULL;
     }
 #elif defined(ESP_PLATFORM)
@@ -102,6 +113,16 @@ public:
                 drv = NULL;
             }
         }
+
+        if (!drv) {
+            drv = new TouchDrvCST92xx();
+            drv->setGpioCallback(__set_gpio_mode, __set_gpio_level, __get_gpio_level);
+            drv->setPins(__rst, __irq);
+            if (!drv->begin(i2c_dev_bus_handle, addr)) {
+                delete drv;
+                drv = NULL;
+            }
+        }
         return drv != NULL;
     }
 #else
@@ -119,6 +140,16 @@ public:
 
         if (!drv) {
             drv = new TouchClassCST226();
+            drv->setGpioCallback(__set_gpio_mode, __set_gpio_level, __get_gpio_level);
+            drv->setPins(__rst, __irq);
+            if (!drv->begin(port_num, addr, sda, scl)) {
+                delete drv;
+                drv = NULL;
+            }
+        }
+
+        if (!drv) {
+            drv = new TouchDrvCST92xx();
             drv->setGpioCallback(__set_gpio_mode, __set_gpio_level, __get_gpio_level);
             drv->setPins(__rst, __irq);
             if (!drv->begin(port_num, addr, sda, scl)) {
@@ -163,6 +194,15 @@ public:
             }
         }
 
+        if (!drv) {
+            drv = new TouchDrvCST92xx();
+            drv->setGpioCallback(__set_gpio_mode, __set_gpio_level, __get_gpio_level);
+            drv->setPins(__rst, __irq);
+            if (!drv->begin(address, readRegCallback, writeRegCallback)) {
+                delete drv;
+                drv = NULL;
+            }
+        }
         return drv != NULL;
     }
 

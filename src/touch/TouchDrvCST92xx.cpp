@@ -1150,20 +1150,20 @@ bool TouchDrvCST92xx::initImpl()
 
     }
 
-    if (__jump_check) {
+    // Exit Boot Mode
+    reset();
 
-        reset();
+    // Wait for a while after reset
+    delay(120);
 
-        // Wait for a while after reset
+    retry = 3;
+
+    while (!this->probe()) {
+        log_e("Device not found!");
         delay(120);
-
-        retry = 3;
-
-        while (!this->probe()) {
-            log_e("Device not found!");
-            delay(120);
-        }
     }
+    
+    log_e("Exit boot mode successfully.");
 
     if (chipType != CST9220_CHIP_ID && chipType != CST9217_CHIP_ID) {
         return false;
