@@ -193,7 +193,9 @@ uint8_t TouchClassCST226::getSupportTouchPoint()
 
 bool TouchClassCST226::getResolution(int16_t *x, int16_t *y)
 {
-    return false;
+    *x = __resX;
+    *y = __resY;
+    return true;
 }
 
 void TouchClassCST226::setHomeButtonCallback(home_button_callback_t cb, void *user_data)
