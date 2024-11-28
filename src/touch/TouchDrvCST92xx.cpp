@@ -232,7 +232,9 @@ uint8_t TouchDrvCST92xx::getSupportTouchPoint()
 
 bool TouchDrvCST92xx::getResolution(int16_t *x, int16_t *y)
 {
-    return false;
+    *x = __resX;
+    *y = __resY;
+    return true;
 }
 
 void TouchDrvCST92xx::setCoverScreenCallback(home_button_callback_t cb, void *user_data)
@@ -321,6 +323,7 @@ ERROR:
 
 uint32_t TouchDrvCST92xx::getChipType()
 {
+#if 0
     // uint32_t chip_id = 0;
     uint32_t chip_type = 0;
     for (uint8_t retry = 3; retry > 0; retry--) {
@@ -339,6 +342,9 @@ uint32_t TouchDrvCST92xx::getChipType()
         return 0;
     }
     return chip_type;
+#else
+    return chipType;
+#endif
 }
 
 uint32_t TouchDrvCST92xx::get_u32_from_ptr(const void *ptr)
@@ -416,6 +422,90 @@ ERROR:
 
 }
 
+bool TouchDrvCST92xx::getAttribute()
+{
+    reset();
+
+    // Wait exit boot mode
+    delay(30);
+
+    uint8_t buffer[8];
+    // Enter Command mode
+    writeRegister(0xD1, 0x01);
+    delay(10);
+    uint8_t write_buffer[2] = {0xD1, 0xFC};
+    writeThenRead(write_buffer, 2, buffer, 4);
+    uint32_t checkcode = 0;
+    checkcode = buffer[3];
+    checkcode <<= 8;
+    checkcode |= buffer[2];
+    checkcode <<= 8;
+    checkcode |= buffer[1];
+    checkcode <<= 8;
+    checkcode |= buffer[0];
+
+    log_i("Chip checkcode:0x%lx.", checkcode);
+
+    write_buffer[0] = {0xD1};
+    write_buffer[1] = {0xF8};
+    writeThenRead(write_buffer, 2, buffer, 4);
+    __resX = ( buffer[1] << 8) | buffer[0];
+    __resY = ( buffer[3] << 8) | buffer[2];
+    log_i("Chip resolution X:%u Y:%u", __resX, __resY);
+
+    write_buffer[0] = {0xD2};
+    write_buffer[1] = {0x04};
+    writeThenRead(write_buffer, 2, buffer, 4);
+    chipType = buffer[3];
+    chipType <<= 8;
+    chipType |= buffer[2];
+
+
+    uint32_t ProjectID = buffer[1];
+    ProjectID <<= 8;
+    ProjectID |= buffer[0];
+    log_i("Chip type :0x%lx, ProjectID:0X%lx",
+          chipType, ProjectID);
+
+    write_buffer[0] = {0xD2};
+    write_buffer[1] = {0x08};
+    writeThenRead(write_buffer, 2, buffer, 8);
+
+    uint32_t fwVersion = buffer[3];
+    fwVersion <<= 8;
+    fwVersion |= buffer[2];
+    fwVersion <<= 8;
+    fwVersion |= buffer[1];
+    fwVersion <<= 8;
+    fwVersion |= buffer[0];
+
+    uint32_t checksum = buffer[7];
+    checksum <<= 8;
+    checksum |= buffer[6];
+    checksum <<= 8;
+    checksum |= buffer[5];
+    checksum <<= 8;
+    checksum |= buffer[4];
+
+    log_i("Chip ic version:0x%lx, checksum:0x%lx",
+          fwVersion, checksum);
+
+    if (fwVersion == 0xA5A5A5A5) {
+        log_e("Chip ic don't have firmware.");
+        return false;
+    }
+    if ((checkcode & 0xffff0000) != 0xCACA0000) {
+        log_e("Firmware info read error.");
+        return false;
+    }
+
+    if ((chipType != CST9220_CHIP_ID) && (chipType != CST9217_CHIP_ID)) {
+        log_e("Chip type error 0x%04lx", chipType);
+        return false;
+    }
+
+    return true;
+}
 
 bool TouchDrvCST92xx::setMode(uint8_t mode)
 {
@@ -555,9 +645,104 @@ bool TouchDrvCST92xx::setMode(uint8_t mode)
     return true;
 }
 
+
+
+void TouchDrvCST92xx::setGpioCallback(gpio_mode_fptr_t mode_cb,
+                                      gpio_write_fptr_t write_cb,
+                                      gpio_read_fptr_t read_cb)
+{
+    SensorCommon::setGpioModeCallback(mode_cb);
+    SensorCommon::setGpioWriteCallback(write_cb);
+    SensorCommon::setGpioReadCallback(read_cb);
+}
+
+bool TouchDrvCST92xx::initImpl()
+{
+
+    if (__rst != SENSOR_PIN_NONE) {
+        this->setGpioMode(__rst, OUTPUT);
+    }
+
+    if (__irq != SENSOR_PIN_NONE) {
+        this->setGpioMode(__irq, INPUT);
+    }
+
+#if 0
+    int retry = 5;
+
+    if (!__jump_check) {
+
+        while (retry > 0) {
+            if (enterBootloader()) {
+                break;
+            }
+            retry--;
+            delay(1000);
+        }
+        if (0 == retry) {
+            log_e("Enter boot loader mode failed!");
+            return false;
+        }
+
+        chipType = getChipType();
+
+        log_d("Chip ID:0x%x", chipType);
+
+    } else {
+
+        log_d("Jump check setting default IC type : CST9217");
+        // Jump check setting default IC type
+        chipType = CST9217_CHIP_ID;
+
+    }
+
+    // Exit Boot Mode
+    reset();
+
+    // Wait for a while after reset
+    delay(120);
+
+    retry = 3;
+
+    while (!this->probe()) {
+        log_e("Device not found!");
+        delay(120);
+    }
+
+    log_e("Exit boot mode successfully.");
+
+    if (chipType != CST9220_CHIP_ID && chipType != CST9217_CHIP_ID) {
+        return false;
+    }
+
+#else
+
+    if (!getAttribute()) {
+        return false;
+    }
+
+#endif
+
+    __chipID = chipType;
+
+    log_d("Touch type:%s", getModelName());
+
+    return true;
+}
+
+int TouchDrvCST92xx::getReadMaskImpl()
+{
+    return -1;
+}
+
+
+
 #if 0  /*DISABLE UPDATE FIRMWARE*/
 
-
+void TouchDrvCST92xx::jumpCheck()
+{
+    __jump_check = true;
+}
 
 bool TouchDrvCST92xx::getFirmwareInfo(void)
 {
@@ -1106,82 +1291,6 @@ END_UPGRADE:
 }
 
 #endif /*DISABLE UPDATE FIRMWARE*/
-
-void TouchDrvCST92xx::jumpCheck()
-{
-    __jump_check = true;
-}
-
-void TouchDrvCST92xx::setGpioCallback(gpio_mode_fptr_t mode_cb,
-                                      gpio_write_fptr_t write_cb,
-                                      gpio_read_fptr_t read_cb)
-{
-    SensorCommon::setGpioModeCallback(mode_cb);
-    SensorCommon::setGpioWriteCallback(write_cb);
-    SensorCommon::setGpioReadCallback(read_cb);
-}
-
-bool TouchDrvCST92xx::initImpl()
-{
-    int retry = 5;
-
-    if (!__jump_check) {
-        while (retry > 0) {
-            if (enterBootloader()) {
-                break;
-            }
-            retry--;
-            delay(1000);
-        }
-        if (0 == retry) {
-            log_e("Enter boot loader mode failed!");
-            return false;
-        }
-
-        chipType = getChipType();
-
-        log_d("Chip ID:0x%x", chipType);
-
-    } else {
-
-        log_d("Jump check setting default IC type : CST9217");
-        // Jump check setting default IC type
-        chipType = CST9217_CHIP_ID;
-
-    }
-
-    // Exit Boot Mode
-    reset();
-
-    // Wait for a while after reset
-    delay(120);
-
-    retry = 3;
-
-    while (!this->probe()) {
-        log_e("Device not found!");
-        delay(120);
-    }
-    
-    log_e("Exit boot mode successfully.");
-
-    if (chipType != CST9220_CHIP_ID && chipType != CST9217_CHIP_ID) {
-        return false;
-    }
-
-    __chipID = chipType;
-
-    log_d("Touch type:%s", getModelName());
-
-    return true;
-}
-
-int TouchDrvCST92xx::getReadMaskImpl()
-{
-    return -1;
-}
-
-
 
 
 

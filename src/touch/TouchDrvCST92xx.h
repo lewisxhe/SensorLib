@@ -71,11 +71,9 @@ public:
 #endif //ESP_IDF_VERSION
 #endif
 
-    void jumpCheck();
-
+    // void jumpCheck();
 
     bool begin(uint8_t addr, iic_fptr_t readRegCallback, iic_fptr_t writeRegCallback);
-
 
     void reset();
 
@@ -116,7 +114,7 @@ private:
 
     bool setMode(uint8_t mode);
     bool enterBootloader();
-
+    bool getAttribute();
     uint32_t readWordFromMem(uint8_t type, uint16_t mem_addr);
     void parseFingerData(uint8_t *data,  cst9xx_point_t *point);
     uint32_t get_u32_from_ptr(const void *ptr);
@@ -169,7 +167,7 @@ private:
 protected:
     int16_t __center_btn_x;
     int16_t __center_btn_y;
-    bool    __jump_check;
+    // bool    __jump_check;
 };
 
 
