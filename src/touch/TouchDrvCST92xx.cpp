@@ -30,8 +30,9 @@
 
 TouchDrvCST92xx::TouchDrvCST92xx():
     __center_btn_x(0),
-    __center_btn_y(0),
-    __jump_check(false)
+    __center_btn_y(0)
+    /*,
+    __jump_check(false)*/
 {
 }
 
