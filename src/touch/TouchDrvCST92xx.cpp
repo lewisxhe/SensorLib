@@ -465,7 +465,7 @@ bool TouchDrvCST92xx::getAttribute()
     uint32_t ProjectID = buffer[1];
     ProjectID <<= 8;
     ProjectID |= buffer[0];
-    log_i("Chip type :0x%lx, ProjectID:0X%lx",
+    log_i("Chip type :0x%x, ProjectID:0X%lx",
           chipType, ProjectID);
 
     write_buffer[0] = {0xD2};
@@ -501,7 +501,7 @@ bool TouchDrvCST92xx::getAttribute()
     }
 
     if ((chipType != CST9220_CHIP_ID) && (chipType != CST9217_CHIP_ID)) {
-        log_e("Chip type error 0x%04lx", chipType);
+        log_e("Chip type error 0x%x", chipType);
         return false;
     }
 
