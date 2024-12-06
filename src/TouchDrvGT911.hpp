@@ -604,12 +604,23 @@ private:
             this->setGpioLevel(__irq, HIGH);
             delayMicroseconds(120);
             this->setGpioLevel(__rst, HIGH);
+
+#if   defined(ARDUINO)
+            // In the Arduino ESP32 platform, the test delay is 8ms and the GT911 
+            // can be accessed correctly. If the time is too long, it will not be accessible.
+            delay(8);
+#elif defined(ESP_PLATFORM)
+            // For the variant of GPIO extended RST,
+            // communication and delay are carried out simultaneously, and 18 ms is measured in T-RGB esp-idf new api
             delay(18);
+#endif
+            
             this->setGpioMode(__irq, INPUT);
 
         } else if (__addr == GT911_SLAVE_ADDRESS_L &&
                    __rst != SENSOR_PIN_NONE &&
                    __irq != SENSOR_PIN_NONE) {
+
 
             log_i("GT911 using 0xBA address!");
 
@@ -620,7 +631,15 @@ private:
             this->setGpioLevel(__irq, LOW);
             delayMicroseconds(120);
             this->setGpioLevel(__rst, HIGH);
+#if   defined(ARDUINO)
+            // In the Arduino ESP32 platform, the test delay is 8ms and the GT911 
+            // can be accessed correctly. If the time is too long, it will not be accessible.
+            delay(8);
+#elif defined(ESP_PLATFORM)
+            // For the variant of GPIO extended RST,
+            // communication and delay are carried out simultaneously, and 18 ms is measured in T-RGB esp-idf new api
             delay(18);
+#endif
             this->setGpioMode(__irq, INPUT);
 
         }
