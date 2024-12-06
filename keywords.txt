@@ -26,6 +26,8 @@ TouchDrvGT911	KEYWORD1
 TouchDrvInterface	KEYWORD1
 TouchClassCST226	KEYWORD1
 TouchClassCST816	KEYWORD1
+TouchDrvGT9895	KEYWORD1
+AW9364LedDriver	KEYWORD1
 
 
 RTC_DateTime	KEYWORD1
@@ -80,6 +82,11 @@ transfer9	KEYWORD2
 transfer8	KEYWORD2
 setBitOrder	KEYWORD2
 beginSPI	KEYWORD2
+setPinEvent	KEYWORD2
+removePinEvent	KEYWORD2
+update	KEYWORD2
+setClock	KEYWORD2
+getClock	KEYWORD2
 
 
 ### PCF8563 Coloring Map ###
@@ -377,6 +384,10 @@ dumpRegister    KEYWORD2
 setMaxTouchPoint    KEYWORD2
 getMaxTouchPoint    KEYWORD2
 
+
+### AW9364LedDriver Coloring Map ###
+setBrightness    KEYWORD2
+getBrightness    KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
