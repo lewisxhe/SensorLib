@@ -1,4 +1,4 @@
-```
+```bash
  _____                                 _      _  _
 /  ___|                               | |    (_)| |
 \ `--.   ___  _ __   ___   ___   _ __ | |     _ | |__
@@ -16,7 +16,6 @@
 [![arduino-library-badge](https://www.ardu-badge.com/badge/SensorLib.svg?)](https://www.ardu-badge.com/SensorLib)
 [![PlatformIO Registry](https://badges.registry.platformio.org/packages/lewisxhe/library/SensorLib.svg)](https://registry.platformio.org/libraries/lewisxhe/SensorLib)
 
-
 [![LICENSE](https://img.shields.io/github/license/lewisxhe/SensorLib)](https://github.com/lewisxhe/SensorLib/blob/master/LICENSE)
 [![ISSUES](https://img.shields.io/github/issues/lewisxhe/SensorsLib)](https://github.com/lewisxhe/SensorsLib/issues)
 [![FORK](https://img.shields.io/github/forks/lewisxhe/SensorsLib)](https://github.com/lewisxhe/SensorsLib/graphs/contributors)
@@ -24,6 +23,7 @@
 [![releases](https://img.shields.io/github/release/lewisxhe/SensorsLib)](https://github.com/lewisxhe/SensorLib/releases)
 
 ## RTC
+
 ![PCF8563](https://img.shields.io/badge/PCF8563-GREEN)
 ![PCF85063](https://img.shields.io/badge/PCF85063-GREEN)
 ![HYM8563](https://img.shields.io/badge/HYM8563-GREEN)
@@ -37,17 +37,21 @@
 ![BHI260AP](https://img.shields.io/badge/BHI260AP-blue)
 
 ## GPIO Expansion
+
 ![XL9555](https://img.shields.io/badge/XL9555-yellow)
 ![XL9535](https://img.shields.io/badge/XL9535-yellow)
 
 ## Haptic Driver
+
 ![DRV2605](https://img.shields.io/badge/DRV2605-teal)
 
 ## Light Sensor
+
 ![CM32181](https://img.shields.io/badge/CM32181-brown)
 ![LTR553](https://img.shields.io/badge/LTR553-brown)
 
 ## Touchpad
+
 ![FT5206](https://img.shields.io/badge/FT5206-red)
 ![FT6206](https://img.shields.io/badge/FT6206-red)
 ![FT6236](https://img.shields.io/badge/FT6236-red)
@@ -62,6 +66,10 @@
 ![CST9217](https://img.shields.io/badge/CST9217-red)
 ![CST9220](https://img.shields.io/badge/CST9220-red)
 ![GT9895](https://img.shields.io/badge/GT9895-red)
+
+## LedDriver
+
+![AW9364](https://img.shields.io/badge/GT9895-pink)
 
 Support list:
 
@@ -90,4 +98,4 @@ Support list:
 | CST9217         | Capacitive touch         | ✔️   | ❌   |
 | CST9220         | Capacitive touch         | ✔️   | ❌   |
 | GT9895          | Capacitive touch         | ✔️   | ❌   |
-
+| AW9364          | Led Driver (GPIO)        | ❌   | ❌   |
