@@ -918,20 +918,11 @@ public:
         uint8_t buffer[9];
         readRegister(QMI8658_REG_CTRL1, buffer, 9);
         for (int i = 0; i < 9; ++i) {
-#if defined(ARDUINO)
-            Serial.printf("CTRL%d: REG:0x%02X HEX:0x%02X\n", i + 1, QMI8658_REG_CTRL1 + i, buffer[i]);
-#else
-            printf("CTRL%d: 0x%02x\n", i + 1, buffer[i]);
-#endif
+            log_d("CTRL%d: REG:0x%02X HEX:0x%02X\n", i + 1, QMI8658_REG_CTRL1 + i, buffer[i]);
         }
 
         buffer[0] =  readRegister(QMI8658_REG_FIFO_CTRL);
-#if defined(ARDUINO)
-        Serial.printf("FIFO_CTRL: REG:0x%02X HEX:0x%02X\n",  QMI8658_REG_FIFO_CTRL, buffer[0]);
-#else
-        printf("FIFO_CTRL: REG:0x%02X HEX:0x%02X\n",  QMI8658_REG_FIFO_CTRL, buffer[0]);
-#endif
-
+        log_d("FIFO_CTRL: REG:0x%02X HEX:0x%02X\n",  QMI8658_REG_FIFO_CTRL, buffer[0]);
     }
 
     void powerDown()
@@ -1761,9 +1752,9 @@ public:
         // If the absolute results of all three axes are higher than 200mg, the accelerometer can be considered functional.
         // Otherwise, the accelerometer cannot be considered functional.
         if (abs(dVX_mg) > 200 && abs(dVY_mg) > 200 && abs(dVZ_mg) > 200) {
-            Serial.println("Accelerometer is working properly.");
+            log_d("Accelerometer is working properly.");
         } else {
-            Serial.println("Accelerometer is not working properly.");
+            log_d("Accelerometer is not working properly.");
             return false;
         }
         return true;
@@ -1837,9 +1828,9 @@ public:
         //  If the absolute results of all three axes are higher than 300dps, the gyroscope can be considered functional.
         // Otherwise, the gyroscope cannot be considered functional.
         if (abs(dVX) > 300 && abs(dVY) > 300 && abs(dVZ) > 300) {
-            Serial.println("Gyro is working properly.");
+            log_d("Gyro is working properly.");
         } else {
-            Serial.println("Gyro is not working properly.");
+            log_d("Gyro is not working properly.");
             return false;
         }
 
