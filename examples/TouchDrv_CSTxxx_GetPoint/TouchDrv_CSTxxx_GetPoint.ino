@@ -121,6 +121,17 @@ void setup()
 
     touch.setPins(SENSOR_RST, SENSOR_IRQ);
 
+    /*
+    * Support type.
+    * TouchDrv_UNKOWN       : Judging by identification ID
+    * TouchDrv_CST8XX       : CST816X,CST716,CST820
+    * TouchDrv_CST226       : CST226X
+    * TouchDrv_CST92XX      : CST9217,CST9220
+    */
+    // Can choose fixed touch model or automatic identification by ID
+    // touch.setTouchDrvModel(TouchDrv_CST226);
+
+
     // Support CST81X CST226 CST9217 CST9220 ....
     bool result = touch.begin(Wire, address, SENSOR_SDA, SENSOR_SCL);
     if (result == false) {
