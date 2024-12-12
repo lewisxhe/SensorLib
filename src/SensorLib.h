@@ -51,6 +51,8 @@
 #include <string.h>
 #endif
 
+#include "SensorLib_Version.h"
+
 #ifdef ARDUINO_ARCH_MBED
 // Not supported at the moment
 #error The Arduino RP2040 MBED board package is not supported when PIO is used. Use the community package by Earle Philhower.
