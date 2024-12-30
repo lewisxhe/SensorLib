@@ -201,7 +201,7 @@ public:
         }
         if (!drv) {
             __touch_type = TouchDrv_UNKOWN;
-            return true;
+            return false;
         }
         return drv != NULL;
     }
@@ -246,7 +246,7 @@ public:
         }
         if (!drv) {
             __touch_type = TouchDrv_UNKOWN;
-            return true;
+            return false;
         }
         return drv != NULL;
     }
@@ -291,7 +291,7 @@ public:
         }
         if (!drv) {
             __touch_type = TouchDrv_UNKOWN;
-            return true;
+            return false;
         }
         return drv != NULL;
     }
@@ -347,7 +347,7 @@ public:
         }
         if (!drv) {
             __touch_type = TouchDrv_UNKOWN;
-            return true;
+            return false;
         }
         return drv != NULL;
     }
