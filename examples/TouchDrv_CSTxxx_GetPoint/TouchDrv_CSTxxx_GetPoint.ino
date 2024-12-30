@@ -124,7 +124,7 @@ void setup()
     /*
     * Support type.
     * TouchDrv_UNKOWN       : Judging by identification ID
-    * TouchDrv_CST8XX       : CST816X,CST716,CST820
+    * TouchDrv_CST8XX       : CST816X,CST328,CST716,CST820
     * TouchDrv_CST226       : CST226X
     * TouchDrv_CST92XX      : CST9217,CST9220
     */
@@ -149,6 +149,8 @@ void setup()
     // T-Display-AMOLED 1.91 Inch CST816T touch panel, touch button coordinates is 600, 120.
     // touch.setCenterButtonCoordinate(600, 120);  // Only suitable for AMOLED 1.91 inch
 
+    // T-Display-Bar Inch CST820 touch panel, touch button coordinates is 30,400
+    // touch.setCenterButtonCoordinate(30, 400);  // Only suitable for T-Display-Bar
 
     // Depending on the touch panel, not all touch panels have touch buttons.
     touch.setHomeButtonCallback([](void *user_data) {
