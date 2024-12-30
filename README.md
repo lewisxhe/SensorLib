@@ -69,7 +69,7 @@
 
 ## LedDriver
 
-![AW9364](https://img.shields.io/badge/GT9895-pink)
+![AW9364](https://img.shields.io/badge/AW9364-pink)
 
 Support list:
 
