@@ -60,23 +60,23 @@ const size_t fw_size = sizeof(BHI260AP_aux_BMM150_BME280_GPIO);
 
 /*
 * GPIO Comparison Table
-* M1SCX = N.A
-* M1SDX = N.A
-* M1SDI = N.A
-* M2SCX = 14    !OK
-* M2SDX = 15    !OK
-* M2SDI = 16    !OK
-* MCSB1 = 1     !OK
-* MCSB2 = 4     /aux BMM150
-* M3SCL = 17    /aux BMM150
-* M3SDA = 18    /aux BMM150
+* M1SCX = N.A   ! INVALID PIN
+* M1SDX = N.A   ! INVALID PIN
+* M1SDI = N.A   ! INVALID PIN
+* M2SCX = 14    ! OK
+* M2SDX = 15    ! OK
+* M2SDI = 16    ! OK
+* MCSB1 = 1     ! OK
+* MCSB2 = 4     ! aux BMM150
+* M3SCL = 17    ! aux BMM150
+* M3SDA = 18    ! aux BMM150
 * MCSB3 = 5     ! OK
 * MCSB4 = 6     ! OK
 * JTAG_CLK = 19 ! OK
 * JTAG_DIO = 20 ! OK
-* RESV1 = 2     ! no test
-* RESV2 = 3     ! no test
-* RESV3 = N.A
+* RESV1 = 2     ! INVALID PIN
+* RESV2 = 3     ! INVALID PIN
+* RESV3 = N.A   ! INVALID PIN
 * */
 
 #ifdef BHY2_USE_I2C
@@ -151,7 +151,7 @@ void setup()
     bhy.setFirmware(firmware, fw_size, WRITE_TO_FLASH, force_update);
 
     // Set to load firmware from flash
-    bhy.setBootFormFlash(WRITE_TO_FLASH);
+    bhy.setBootFromFlash(WRITE_TO_FLASH);
 
     Serial.println("Initializing Sensors...");
 #ifdef BHY2_USE_I2C
@@ -234,7 +234,7 @@ void initialiseCommander()
 bool helpHandler(Commander &Cmdr)
 {
     Serial.println("Help:");
-    Serial.println("\tCustom firmware valid gpio : 1, 2, 3, 5, 6, 14, 15, 16, 19, 20");
+    Serial.println("\tCustom firmware valid gpio : 1, 5, 6, 14, 15, 16, 19, 20");
     Serial.println("\tset gpio [gpio num] [level]");
     Serial.println("\tget gpio [gpio num] [pullup]");
     Serial.println("\tdis gpio [gpio num]");

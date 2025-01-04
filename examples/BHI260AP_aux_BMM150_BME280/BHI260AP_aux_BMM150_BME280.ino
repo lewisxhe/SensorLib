@@ -110,7 +110,7 @@ void setup()
     bhy.setFirmware(firmware, fw_size, WRITE_TO_FLASH, force_update);
 
     // Set to load firmware from flash
-    bhy.setBootFormFlash(WRITE_TO_FLASH);
+    bhy.setBootFromFlash(WRITE_TO_FLASH);
 
     Serial.println("Initializing Sensors...");
 #ifdef BHY2_USE_I2C

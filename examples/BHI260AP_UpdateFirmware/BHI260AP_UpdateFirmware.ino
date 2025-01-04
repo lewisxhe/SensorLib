@@ -157,7 +157,7 @@ void setup()
     // Set the firmware array address and firmware size
     bhy.setFirmware(firmware, fw_size, write_to_flash, force_update);
     // Set to load firmware from flash or ram
-    bhy.setBootFormFlash(write_to_flash);
+    bhy.setBootFromFlash(write_to_flash);
 
 #ifdef BHY2_USE_I2C
     // Using I2C interface

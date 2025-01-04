@@ -195,13 +195,19 @@ public:
         }
     }
 
+    // Deprecated API, wrong word
+    void setBootFormFlash(bool boot_from_flash) __attribute__((deprecated("The setBootFormFlash method will be replaced by setBootFromFlash in the future. Please update it to setBootFromFlash.")))
+    {
+        __boot_from_flash = boot_from_flash;
+    }
+
     /**
-     * @brief  setBootFormFlash
+     * @brief  setBootFromFlash
      * @note   Set whether to start from external flash
      * @param  boot_from_flash: true boot form flash or boot form ram
      * @retval None
      */
-    void setBootFormFlash(bool boot_from_flash)
+    void setBootFromFlash(bool boot_from_flash)
     {
         __boot_from_flash = boot_from_flash;
     }

@@ -123,7 +123,7 @@ void setup()
 
 #if WRITE_TO_FLASH
     // Set to load firmware from flash
-    bhy.setBootFormFlash(true);
+    bhy.setBootFromFlash(true);
 #endif
 
     Serial.println("Initializing Sensors...");
