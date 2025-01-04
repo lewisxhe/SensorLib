@@ -98,6 +98,7 @@ jobs:
           cd $HOME/Arduino/libraries ;
           git clone https://github.com/ThingPulse/esp8266-oled-ssd1306 ;
           git clone https://github.com/arduino-libraries/MadgwickAHRS ;
+          git clone https://github.com/CreativeRobotics/Commander ;
 
           cd $GITHUB_WORKSPACE ;
           if [[ "$BOARD" =~ "esp32:esp32:"        ]]; then
