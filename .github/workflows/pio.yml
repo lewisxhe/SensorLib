@@ -25,6 +25,8 @@ jobs:
           - examples/BHI260AP_aux_BMM150_euler
           - examples/BHI260AP_aux_BMM150_quaternion
           - examples/BHI260AP_aux_BMM150_BME280
+          - examples/BHI260AP_aux_BMM150_BME280_Expand_GPIO
+          - examples/BHI260AP_Expand_GPIO
           - examples/BHI260AP_DebugInfo
           - examples/BHI260AP_Orientation
           - examples/BHI260AP_StepCounter
