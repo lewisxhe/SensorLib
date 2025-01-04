@@ -42,16 +42,16 @@ public:
     {
         _driver_pin = pin;
         _virtualGpio = NULL;
-        this->pinMode(_driver_pin, OUTPUT);
-        this->digitalWrite(_driver_pin, LOW);
+        this->_pinMode(_driver_pin, OUTPUT);
+        this->_digitalWrite(_driver_pin, LOW);
     }
 
     void begin(VirtualGpio *handler, uint8_t pin)
     {
         _virtualGpio = handler;
         _driver_pin = pin;
-        this->pinMode(_driver_pin, OUTPUT);
-        this->digitalWrite(_driver_pin, LOW);
+        this->_pinMode(_driver_pin, OUTPUT);
+        this->_digitalWrite(_driver_pin, LOW);
     }
 
     void setBrightness(uint8_t value)
@@ -63,12 +63,12 @@ public:
             value = 16;
         }
         if (value == 0) {
-            this->digitalWrite(_driver_pin, 0);
+            this->_digitalWrite(_driver_pin, 0);
             _brightness = 0;
             return;
         }
         if (_brightness == 0) {
-            this->digitalWrite(_driver_pin, 1);
+            this->_digitalWrite(_driver_pin, 1);
             _brightness = MAX_BRIGHTNESS_STEPS;
         }
         int from = MAX_BRIGHTNESS_STEPS - _brightness;
@@ -86,8 +86,8 @@ public:
         }
 
         for (int i = 0; i < num; i++) {
-            this->digitalWrite(_driver_pin, 0);
-            this->digitalWrite(_driver_pin, 1);
+            this->_digitalWrite(_driver_pin, 0);
+            this->_digitalWrite(_driver_pin, 1);
         }
 
         if (_virtualGpio) {
@@ -106,7 +106,7 @@ public:
 
 protected:
 
-    void pinMode(uint8_t pin, uint8_t mode)
+    void _pinMode(uint8_t pin, uint8_t mode)
     {
         if (_virtualGpio) {
             _virtualGpio->pinMode(pin, mode);
@@ -115,7 +115,7 @@ protected:
         }
     }
 
-    void digitalWrite(uint8_t pin, uint8_t value)
+    void _digitalWrite(uint8_t pin, uint8_t value)
     {
         if (_virtualGpio) {
             _virtualGpio->digitalWrite(pin, value);
