@@ -86,6 +86,10 @@ void setup()
     bhy.setPins(BHI260AP_RST, BHI260AP_IRQ);
 
     Serial.println("Initializing Sensors...");
+
+    /*Set the default firmware, only 6 axes, no other functions*/
+    bhy.setFirmware(bhy2_firmware_image, sizeof(bhy2_firmware_image));
+
 #ifdef BHY2_USE_I2C
     // Using I2C interface
     // BHI260AP_SLAVE_ADDRESS_L = 0x28
