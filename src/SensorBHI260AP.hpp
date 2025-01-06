@@ -700,7 +700,7 @@ public:
      * @param  force_update: true, rewrite to flash or ram regardless of whether there is firmware, false, do not write if firmware is detected
      * @retval None
      */
-    void setFirmware(const uint8_t *image, size_t image_len, bool write_flash, bool force_update = false)
+    void setFirmware(const uint8_t *image, size_t image_len, bool write_flash = false, bool force_update = false)
     {
         __firmware = image;
         __firmware_size = image_len;
@@ -1091,28 +1091,38 @@ private:
             log_d("Expected Host Interface Control (0x06) to have bit 0x%x to be set\r\n", BHY2_HIF_CTRL_ASYNC_STATUS_CHANNEL);
         }
 
-        if (!__firmware) {
-            // Default write to ram
-            setFirmware(bhy2_firmware_image, sizeof(bhy2_firmware_image), false);
-        }
+        /*
+            if (!__firmware) {
+                // Default write to ram
+                setFirmware(bhy2_firmware_image, sizeof(bhy2_firmware_image), false);
+            }
+        */
 
         if (__boot_from_flash) {
-            if (!bootFromFlash() || __force_update) {
-                if (__force_update) {
-                    log_i("Force update firmware.");
+            if (__force_update) {
+                if ((__firmware == NULL) || (__firmware_size == 0)) {
+                    log_e("No valid firmware is set. Please use the \"setFirmware\" method to set the valid firmware.");
+                    return false;
                 }
-                //** If the boot from flash fails, re-upload the firmware to flash
                 __error_code = bhy2_soft_reset(bhy2);
                 BHY2_RLST_CHECK(__error_code != BHY2_OK, "reset bhy2 failed!", false);
-
+                log_i("Force update firmware.");
                 if (!uploadFirmware(__firmware, __firmware_size, __write_flash)) {
                     log_e("uploadFirmware failed!");
                     return false;
                 }
             }
+            if (!bootFromFlash()) {
+                return false;
+            }
         } else {
+            if ((__firmware == NULL) || (__firmware_size == 0)) {
+                log_e("No valid firmware is set. Please use the \"setFirmware\" method to set the valid firmware.");
+                return false;
+            }
+
             // ** Upload firmware to RAM
-            if (!uploadFirmware(__firmware, __firmware_size, __write_flash)) {
+            if (!uploadFirmware(__firmware, __firmware_size, false)) {
                 log_e("uploadFirmware failed!");
                 return false;
             }
