@@ -207,7 +207,7 @@ public:
 
     void setLightSensorGain(LightSensorGain gain)
     {
-        writeRegister(LTR553_REG_ALS_CONTR, 0xE3, gain);
+        writeRegister(LTR553_REG_ALS_CONTR, 0xE3, gain<<2);
     }
 
     int getLightSensor(uint8_t ch)
@@ -275,7 +275,8 @@ public:
         if (saturated) {
             *saturated = buffer[1] & 0x80;
         }
-        return buffer[0] | (buffer[1] & 0x03);
+        int high = buffer[1] & 0x07;
+        return (high << 8) | buffer[0];
     }
 
     void setPsLedPulsePeriod(PsLedPeriod period)
