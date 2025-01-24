@@ -40,6 +40,7 @@
 #include <ctype.h>
 #else
 #include <Arduino.h>
+#include <time.h>
 #endif
 
 #ifdef SENSORLIB_DEBUG

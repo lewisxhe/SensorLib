@@ -30,8 +30,6 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
-
-#define SENSORLIB_DEBUG Serial.printf
 #include "SensorBMA423.hpp"
 
 #ifndef SENSOR_SDA
@@ -55,7 +53,7 @@ void setup()
 
     pinMode(SENSOR_IRQ, INPUT);
 
-    DBG("BMA423 Sensor Temperature");
+    Serial.println("BMA423 Sensor Temperature");
 
     /*
     * BMA423_I2C_ADDR_PRIMARY   = 0x18
