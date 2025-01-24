@@ -110,7 +110,7 @@ void setup()
 
     beginPower();
 
-    if (!qmc.begin(Wire, SENSOR_SDA, SENSOR_SCL)) {
+    if (!qmc.begin(Wire, QMC6310U_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
         Serial.println("Failed to find QMC6310 - check your wiring!");
         while (1) {
             delay(1000);

@@ -37,8 +37,7 @@
 class QMC6310Constants
 {
 protected:
-    // Unique I2C device address
-    static constexpr uint8_t QMC6310_SLAVE_ADDRESS = 0x1C;
+
 
     // Register addresses
     static constexpr uint8_t REG_CHIP_ID = 0x00;

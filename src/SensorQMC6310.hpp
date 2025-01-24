@@ -32,6 +32,9 @@
 #include "REG/QMC6310Constants.h"
 #include "SensorPlatform.hpp"
 
+static constexpr uint8_t QMC6310U_SLAVE_ADDRESS = 0x1C;
+static constexpr uint8_t QMC6310N_SLAVE_ADDRESS = 0x3C;
+
 class Polar
 {
 public:
@@ -98,9 +101,9 @@ public:
     }
 
 #if defined(ARDUINO)
-    bool begin(TwoWire &wire, int sda = -1, int scl = -1)
+    bool begin(TwoWire &wire, uint8_t addr = QMC6310U_SLAVE_ADDRESS, int sda = -1, int scl = -1)
     {
-        if (!beginCommon<SensorCommI2C, HalArduino>(comm, hal, wire, QMC6310_SLAVE_ADDRESS, sda, scl)) {
+        if (!beginCommon<SensorCommI2C, HalArduino>(comm, hal, wire, addr, sda, scl)) {
             return false;
         }
         return initImpl();
@@ -108,17 +111,17 @@ public:
 #elif defined(ESP_PLATFORM)
 
 #if defined(USEING_I2C_LEGACY)
-    bool begin(i2c_port_t port_num, int sda = -1, int scl = -1)
+    bool begin(i2c_port_t port_num, uint8_t addr = QMC6310U_SLAVE_ADDRESS, int sda = -1, int scl = -1)
     {
-        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, port_num, QMC6310_SLAVE_ADDRESS, sda, scl)) {
+        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, port_num, addr, sda, scl)) {
             return false;
         }
         return initImpl();
     }
 #else
-    bool begin(i2c_master_bus_handle_t handle)
+    bool begin(i2c_master_bus_handle_t handle, uint8_t addr = QMC6310U_SLAVE_ADDRESS)
     {
-        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, handle, QMC6310_SLAVE_ADDRESS, sda, scl)) {
+        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, handle, addr, sda, scl)) {
             return false;
         }
         return initImpl();
@@ -127,10 +130,11 @@ public:
 #endif
 
     bool begin(SensorCommCustom::CustomCallback callback,
-               SensorCommCustomHal::CustomHalCallback hal_callback)
+               SensorCommCustomHal::CustomHalCallback hal_callback,
+               uint8_t addr = QMC6310U_SLAVE_ADDRESS)
     {
         if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(COMM_CUSTOM,
-                callback, hal_callback, QMC6310_SLAVE_ADDRESS, comm, hal)) {
+                callback, hal_callback, addr, comm, hal)) {
             return false;
         }
         return initImpl();
