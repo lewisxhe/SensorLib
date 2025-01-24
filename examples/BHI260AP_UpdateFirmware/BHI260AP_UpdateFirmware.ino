@@ -40,7 +40,7 @@
 // #define USE_SPI_INTERFACE        true
 
 #if !defined(USE_I2C_INTERFACE) && !defined(USE_SPI_INTERFACE)
-#define USE_I2C_INTERFACE
+#define USE_SPI_INTERFACE
 #warning "No interface type is selected, use I2C interface"
 #endif
 
