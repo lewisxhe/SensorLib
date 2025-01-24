@@ -685,10 +685,12 @@ BoschSensorInfo SensorBHI260AP::getSensorInfo()
     if (bhy2_get_error_value(&sensorInfo.sensor_error, _bhy2.get()) != BHY2_OK) {
         log_e("bhy2_get_error_value failed!");
     }
-    for (uint8_t i = 0; i < BHY2_SENSOR_ID_MAX; i++) {
-        if (bhy2_is_sensor_available(i, _bhy2.get())) {
-            if (bhy2_get_sensor_info(i, &sensorInfo.info[i], _bhy2.get()) != BHY2_OK) {
-                log_e("bhy2_get_sensor_info [%u] failed!", i);
+    if (sensorInfo.info) {
+        for (uint8_t i = 0; i < BHY2_SENSOR_ID_MAX; i++) {
+            if (bhy2_is_sensor_available(i, _bhy2.get())) {
+                if (bhy2_get_sensor_info(i, &sensorInfo.info[i], _bhy2.get()) != BHY2_OK) {
+                    log_e("bhy2_get_sensor_info [%u] failed!", i);
+                }
             }
         }
     }

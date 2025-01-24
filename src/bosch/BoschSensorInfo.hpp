@@ -60,13 +60,102 @@ public:
 
     ~BoschSensorInfo()
     {
-        free(info);
+        if (info) {
+            free(info);
+        }
+    }
+
+    BoschSensorInfo(const BoschSensorInfo &other)
+        : kernel_version(other.kernel_version),
+          user_version(other.user_version),
+          rom_version(other.rom_version),
+          product_id(other.product_id),
+          host_status(other.host_status),
+          feat_status(other.feat_status),
+          boot_status(other.boot_status),
+          sensor_error(other.sensor_error),
+          dev(other.dev),
+          info(nullptr)
+    {
+        if (other.info) {
+            info = (struct bhy2_sensor_info *)calloc(BHY2_SENSOR_ID_MAX, sizeof(struct bhy2_sensor_info));
+            for (int i = 0; i < BHY2_SENSOR_ID_MAX; ++i) {
+                info[i] = other.info[i];
+            }
+        }
+    }
+
+    BoschSensorInfo &operator=(const BoschSensorInfo &other)
+    {
+        if (this != &other) {
+            if (info) {
+                free(info);
+            }
+            kernel_version = other.kernel_version;
+            user_version = other.user_version;
+            rom_version = other.rom_version;
+            product_id = other.product_id;
+            host_status = other.host_status;
+            feat_status = other.feat_status;
+            boot_status = other.boot_status;
+            sensor_error = other.sensor_error;
+            dev = other.dev;
+            info = nullptr;
+            if (other.info) {
+                info = (struct bhy2_sensor_info *)calloc(BHY2_SENSOR_ID_MAX, sizeof(struct bhy2_sensor_info));
+                for (int i = 0; i < BHY2_SENSOR_ID_MAX; ++i) {
+                    info[i] = other.info[i];
+                }
+            }
+        }
+        return *this;
+    }
+
+    BoschSensorInfo(BoschSensorInfo &&other) noexcept
+        : kernel_version(other.kernel_version),
+          user_version(other.user_version),
+          rom_version(other.rom_version),
+          product_id(other.product_id),
+          host_status(other.host_status),
+          feat_status(other.feat_status),
+          boot_status(other.boot_status),
+          sensor_error(other.sensor_error),
+          dev(other.dev),
+          info(other.info)
+    {
+        other.info = nullptr;
+        other.dev = nullptr;
+    }
+
+    BoschSensorInfo &operator=(BoschSensorInfo &&other) noexcept
+    {
+        if (this != &other) {
+            if (info) {
+                free(info);
+            }
+            kernel_version = other.kernel_version;
+            user_version = other.user_version;
+            rom_version = other.rom_version;
+            product_id = other.product_id;
+            host_status = other.host_status;
+            feat_status = other.feat_status;
+            boot_status = other.boot_status;
+            sensor_error = other.sensor_error;
+            dev = other.dev;
+            info = other.info;
+            other.info = nullptr;
+            other.dev = nullptr;
+        }
+        return *this;
     }
 
 #ifdef ARDUINO
     void printVirtualSensorList(Stream &stream)
     {
         if (!dev) {
+            return;
+        }
+        if (!info) {
             return;
         }
         if (feat_status & BHY2_FEAT_STATUS_OPEN_RTOS_MSK) {
@@ -136,6 +225,9 @@ public:
     void printVirtualSensorList()
     {
         if (!dev) {
+            return;
+        }
+        if (!info) {
             return;
         }
         if (feat_status & BHY2_FEAT_STATUS_OPEN_RTOS_MSK) {
