@@ -104,6 +104,10 @@ jobs:
         # https://github.com/CreativeRobotics/Commander
         run: pio pkg install --library "creativerobotics/Commander @ ^4.3.0" -g
 
+      - name: Install Commander library
+        # https://github.com/CreativeRobotics/Commander
+        run: pio pkg install --library "adafruit/SdFat - Adafruit Fork @ ^2.2.3" -g
+
       - name: Run PlatformIO
         run: pio ci --lib="." --board=esp32dev --board=esp32-c3-devkitm-1 --board=esp32-s3-devkitm-1 --board=nrf52840_dk_adafruit 
         env:
