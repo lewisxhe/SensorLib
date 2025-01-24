@@ -225,7 +225,6 @@ isHighThreshold KEYWORD2
 setPins KEYWORD2
 setBootFromFlash    KEYWORD2
 getHandler  KEYWORD2
-printSensors    KEYWORD2
 printInfo   KEYWORD2
 setInterruptCtrl    KEYWORD2
 getInterruptCtrl    KEYWORD2
@@ -245,6 +244,11 @@ getScaling  KEYWORD2
 setFirmware KEYWORD2
 getSensorName   KEYWORD2
 getAccuracy KEYWORD2
+getPhySensorInfo KEYWORD2
+getSensorInfo KEYWORD2
+disableGpio KEYWORD2
+setDebug KEYWORD2
+setDebugCallback KEYWORD2
 
 ### SensorBMA423 Coloring Map ###
 enablePowerSave KEYWORD2

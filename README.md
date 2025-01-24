@@ -1,14 +1,6 @@
-```bash
- _____                                 _      _  _
-/  ___|                               | |    (_)| |
-\ `--.   ___  _ __   ___   ___   _ __ | |     _ | |__
- `--. \ / _ \| '_ \ / __| / _ \ | '__|| |    | || '_ \
-/\__/ /|  __/| | | |\__ \| (_) || |   | |____| || |_) |
-\____/  \___||_| |_||___/ \___/ |_|   \_____/|_||_.__/
-                 ···   ···
->  Commonly used I2C , SPI device multi-platform libraries
 
-```
+<center><img src="extras/images/SensroLib.jpg" width="80%" height="30%"></center>
+
 
 [![Build esp-idf](https://github.com/lewisxhe/SensorLib/actions/workflows/esp-idf.yml/badge.svg)](https://github.com/lewisxhe/SensorLib/actions/workflows/esp-idf.yml)
 [![Arduino CI](https://github.com/lewisxhe/SensorLib/actions/workflows/arduino_ci.yml/badge.svg)](https://github.com/lewisxhe/SensorLib/actions/workflows/arduino_ci.yml)
@@ -21,55 +13,6 @@
 [![FORK](https://img.shields.io/github/forks/lewisxhe/SensorsLib)](https://github.com/lewisxhe/SensorsLib/graphs/contributors)
 [![STAR](https://img.shields.io/github/stars/lewisxhe/SensorsLib)](https://github.com/lewisxhe/SensorsLib/stargazers)
 [![releases](https://img.shields.io/github/release/lewisxhe/SensorsLib)](https://github.com/lewisxhe/SensorLib/releases)
-
-## RTC
-
-![PCF8563](https://img.shields.io/badge/PCF8563-GREEN)
-![PCF85063](https://img.shields.io/badge/PCF85063-GREEN)
-![HYM8563](https://img.shields.io/badge/HYM8563-GREEN)
-
-## Motion Sensor
-
-![QMI8658](https://img.shields.io/badge/QMI8658-blue)
-![BMM150](https://img.shields.io/badge/BMM150-blue)
-![QMC6310](https://img.shields.io/badge/QMC6310-blue)
-![BMA423](https://img.shields.io/badge/BMA423-blue)
-![BHI260AP](https://img.shields.io/badge/BHI260AP-blue)
-
-## GPIO Expansion
-
-![XL9555](https://img.shields.io/badge/XL9555-yellow)
-![XL9535](https://img.shields.io/badge/XL9535-yellow)
-
-## Haptic Driver
-
-![DRV2605](https://img.shields.io/badge/DRV2605-teal)
-
-## Light Sensor
-
-![CM32181](https://img.shields.io/badge/CM32181-brown)
-![LTR553](https://img.shields.io/badge/LTR553-brown)
-
-## Touchpad
-
-![FT5206](https://img.shields.io/badge/FT5206-red)
-![FT6206](https://img.shields.io/badge/FT6206-red)
-![FT6236](https://img.shields.io/badge/FT6236-red)
-![FT3267](https://img.shields.io/badge/FT3267-red)
-![CST816S](https://img.shields.io/badge/CST816S-red)
-![CST816D](https://img.shields.io/badge/CST816D-red)
-![CST816T](https://img.shields.io/badge/CST816T-red)
-![CST820](https://img.shields.io/badge/CST820-red)
-![CST226SE](https://img.shields.io/badge/CST226SE-red)
-![CHSC5816](https://img.shields.io/badge/CHSC5816-red)
-![GT911](https://img.shields.io/badge/GT911-red)
-![CST9217](https://img.shields.io/badge/CST9217-red)
-![CST9220](https://img.shields.io/badge/CST9220-red)
-![GT9895](https://img.shields.io/badge/GT9895-red)
-
-## LedDriver
-
-![AW9364](https://img.shields.io/badge/AW9364-pink)
 
 Support list:
 

@@ -28,16 +28,20 @@
  *
  */
 #pragma once
-
-#include "SensorCommon.tpp"
+#include "SensorLib.h"
 #include "SensorBhy2Define.h"
 #include "bosch/bhy2_parse.h"
 #include "bosch/common/common.h"
 
-#if defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_STM32)
-#include <vector>
+#if __cplusplus >= 201103L
 #include <functional>
+#include <vector>
 #define USE_STD_VECTOR
+#endif
+
+// nrf52 arduino ide not applicable vector
+#if defined(ARDUINO) && !defined(PLATFORMIO) && defined(ARDUINO_ARCH_NRF52)
+#undef USE_STD_VECTOR
 #endif
 
 

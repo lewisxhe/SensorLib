@@ -22,19 +22,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      TouchDrvCSTXXX.tpp
+ * @file      TouchDrvCSTXXX.hpp
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2023-04-24
- * @date      last 2023-10-05
+ * @date      last 2025-01-20
  *
  */
 #pragma once
 
-#include "REG/CSTxxxConstants.h"
-#include "touch/TouchClassCST226.h"
-#include "touch/TouchClassCST816.h"
+#include "touch/TouchDrvCST226.h"
+#include "touch/TouchDrvCST816.h"
 #include "touch/TouchDrvCST92xx.h"
-#include "SensorCommon.tpp"
+
+#define CSTXXX_SLAVE_ADDRESS        (0x15)
+#define CST328_SLAVE_ADDRESS        (0x1A)
 
 enum TouchDrvType {
     TouchDrv_UNKOWN,
@@ -43,440 +44,108 @@ enum TouchDrvType {
     TouchDrv_CST92XX,
 };
 
-#if defined(ARDUINO)
-template<typename CST_TouchClass>
-CST_TouchClass *newTouchClassArduino(PLATFORM_WIRE_TYPE &wire,
-                                     uint8_t address,
-                                     int sda,
-                                     int scl,
-                                     int rst,
-                                     int irq,
-                                     gpio_write_fptr_t set_level_ptr,
-                                     gpio_read_fptr_t get_level_ptr,
-                                     gpio_mode_fptr_t set_mode_ptr
-                                    )
-{
-    CST_TouchClass *ptr = new CST_TouchClass();
-    ptr->setGpioCallback(set_mode_ptr, set_level_ptr, get_level_ptr);
-    ptr->setPins(rst, irq);
-    if (!ptr->begin(wire, address, sda, scl)) {
-        delete ptr;
-        ptr = NULL;
-    }
-    return ptr;
-}
-
-#elif defined(ESP_PLATFORM)
-
-#if ((ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,0,0)) && defined(CONFIG_SENSORLIB_ESP_IDF_NEW_API))
-
-template<typename CST_TouchClass>
-CST_TouchClass *newTouchClassIDF(i2c_master_bus_handle_t i2c_dev_bus_handle,
-                                 uint8_t addr,
-                                 int rst,
-                                 int irq,
-                                 gpio_write_fptr_t set_level_ptr,
-                                 gpio_read_fptr_t get_level_ptr,
-                                 gpio_mode_fptr_t set_mode_ptr)
-{
-    CST_TouchClass *ptr = new CST_TouchClass();
-    ptr->setGpioCallback(set_mode_ptr, set_level_ptr, get_level_ptr);
-    ptr->setPins(rst, irq);
-    if (!ptr->begin(i2c_dev_bus_handle, addr)) {
-        delete ptr;
-        ptr = NULL;
-    }
-    return ptr;
-}
-
-#else   /*ESP_IDF_VERSION*/
-
-template<typename CST_TouchClass>
-CST_TouchClass *newTouchClassIDF(i2c_port_t port_num,
-                                 uint8_t addr,
-                                 int sda,
-                                 int scl,
-                                 int rst,
-                                 int irq,
-                                 gpio_write_fptr_t set_level_ptr,
-                                 gpio_read_fptr_t get_level_ptr,
-                                 gpio_mode_fptr_t set_mode_ptr)
-{
-    CST_TouchClass *ptr = new CST_TouchClass();
-    ptr->setGpioCallback(set_mode_ptr, set_level_ptr, get_level_ptr);
-    ptr->setPins(rst, irq);
-    if (!ptr->begin(port_num, addr, sda, scl)) {
-        delete ptr;
-        ptr = NULL;
-    }
-    return ptr;
-}
-
-#endif  /*ESP_IDF_VERSION*/
-#endif /*ESP_PLATFORM*/
-
-template<typename CST_TouchClass>
-CST_TouchClass *newTouchClassCallFunction(uint8_t address,
-        iic_fptr_t readRegCallback,
-        iic_fptr_t writeRegCallback,
-        int rst,
-        int irq,
-        gpio_write_fptr_t set_level_ptr,
-        gpio_read_fptr_t get_level_ptr,
-        gpio_mode_fptr_t set_mode_ptr)
-{
-    CST_TouchClass *ptr = new CST_TouchClass();
-    ptr->setGpioCallback(set_mode_ptr, set_level_ptr, get_level_ptr);
-    ptr->setPins(rst, irq);
-    if (!ptr->begin(address, readRegCallback, writeRegCallback)) {
-        delete ptr;
-        ptr = NULL;
-    }
-    return ptr;
-}
-
-
-
-
 class TouchDrvCSTXXX : public TouchDrvInterface
 {
 public:
-    TouchDrvCSTXXX(): drv(NULL), __touch_type(TouchDrv_UNKOWN)
-    {
-    }
+    TouchDrvCSTXXX();
 
-    ~TouchDrvCSTXXX()
-    {
-        if (drv) {
-            delete drv;
-            drv = NULL;
-        }
-    }
+    ~TouchDrvCSTXXX();
 
-    void setTouchDrvModel(TouchDrvType model)
-    {
-        __touch_type = model;
-    }
+    // Set the touch screen model. If not set, the default is to read
+    // the touch screen version information to determine which screen it is.
+    void setTouchDrvModel(TouchDrvType model);
 
 #if defined(ARDUINO)
-    bool begin(PLATFORM_WIRE_TYPE &wire,
-               uint8_t address,
-               int sda,
-               int scl)
-    {
-        if (__touch_type == TouchDrv_UNKOWN) {
-            drv = newTouchClassArduino<TouchClassCST816>(wire, address, sda, scl, __rst, __irq,
-                    __set_gpio_level, __get_gpio_level,
-                    __set_gpio_mode);
-            if (drv) {
-                __touch_type = TouchDrv_CST8XX;
-                return true;
-            }
-            drv = newTouchClassArduino<TouchClassCST226>(wire, address, sda, scl, __rst, __irq,
-                    __set_gpio_level, __get_gpio_level,
-                    __set_gpio_mode);
-            if (drv) {
-                __touch_type = TouchDrv_CST226;
-                return true;
-            }
-            drv = newTouchClassArduino<TouchDrvCST92xx>(wire, address, sda, scl, __rst, __irq,
-                    __set_gpio_level, __get_gpio_level,
-                    __set_gpio_mode);
-            if (drv) {
-                __touch_type = TouchDrv_CST92XX;
-                return true;
-            }
-        } else if (__touch_type == TouchDrv_CST8XX) {
-            drv = newTouchClassArduino<TouchClassCST816>(wire, address, sda, scl, __rst, __irq,
-                    __set_gpio_level, __get_gpio_level,
-                    __set_gpio_mode);
-        } else if (__touch_type == TouchDrv_CST226) {
-            drv = newTouchClassArduino<TouchClassCST226>(wire, address, sda, scl, __rst, __irq,
-                    __set_gpio_level, __get_gpio_level,
-                    __set_gpio_mode);
-        } else if (__touch_type == TouchDrv_CST92XX) {
-            drv = newTouchClassArduino<TouchDrvCST92xx>(wire, address, sda, scl, __rst, __irq,
-                    __set_gpio_level, __get_gpio_level,
-                    __set_gpio_mode);
-        }
-        if (!drv) {
-            __touch_type = TouchDrv_UNKOWN;
-            return false;
-        }
-        return drv != NULL;
-    }
+    bool begin(TwoWire &wire, uint8_t addr, int sda, int scl)override;
 #elif defined(ESP_PLATFORM)
-#if ((ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,0,0)) && defined(CONFIG_SENSORLIB_ESP_IDF_NEW_API))
-    bool begin(i2c_master_bus_handle_t i2c_dev_bus_handle, uint8_t addr)
-    {
-        if (__touch_type == TouchDrv_UNKOWN) {
-            drv = newTouchClassIDF<TouchClassCST816>(i2c_dev_bus_handle, addr, __rst, __irq,
-                    __set_gpio_level, __get_gpio_level,
-                    __set_gpio_mode);
-            if (drv) {
-                __touch_type = TouchDrv_CST8XX;
-                return true;
-            }
-            drv = newTouchClassIDF<TouchClassCST226>(i2c_dev_bus_handle, addr, __rst, __irq,
-                    __set_gpio_level, __get_gpio_level,
-                    __set_gpio_mode);
-            if (drv) {
-                __touch_type = TouchDrv_CST226;
-                return true;
-            }
-            drv = newTouchClassIDF<TouchDrvCST92xx>(i2c_dev_bus_handle, addr, __rst, __irq,
-                                                    __set_gpio_level, __get_gpio_level,
-                                                    __set_gpio_mode);
-            if (drv) {
-                __touch_type = TouchDrv_CST92XX;
-                return true;
-            }
-        } else if (__touch_type == TouchDrv_CST8XX) {
-            drv = newTouchClassIDF<TouchClassCST816>(i2c_dev_bus_handle, addr, __rst, __irq,
-                    __set_gpio_level, __get_gpio_level,
-                    __set_gpio_mode);
-        } else if (__touch_type == TouchDrv_CST226) {
-            drv = newTouchClassIDF<TouchClassCST226>(i2c_dev_bus_handle, addr, __rst, __irq,
-                    __set_gpio_level, __get_gpio_level,
-                    __set_gpio_mode);
-        } else if (__touch_type == TouchDrv_CST92XX) {
-            drv = newTouchClassIDF<TouchDrvCST92xx>(i2c_dev_bus_handle, addr, __rst, __irq,
-                                                    __set_gpio_level, __get_gpio_level,
-                                                    __set_gpio_mode);
-        }
-        if (!drv) {
-            __touch_type = TouchDrv_UNKOWN;
-            return false;
-        }
-        return drv != NULL;
-    }
+#if defined(USEING_I2C_LEGACY)
+    bool begin(i2c_port_t port_num, uint8_t addr, int sda = -1, int scl = -1)override;
 #else
-    bool begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
-    {
+    bool begin(i2c_master_bus_handle_t handle, uint8_t addr)override;
+#endif  // ESP_PLATFORM
+#endif  // ARDUINO
 
-        if (__touch_type == TouchDrv_UNKOWN) {
-            drv = newTouchClassIDF<TouchClassCST816>(port_num, addr, sda, scl, __rst, __irq,
-                    __set_gpio_level, __get_gpio_level,
-                    __set_gpio_mode);
-            if (drv) {
-                __touch_type = TouchDrv_CST8XX;
-                return true;
-            }
-            drv = newTouchClassIDF<TouchClassCST226>(port_num, addr, sda, scl, __rst, __irq,
-                    __set_gpio_level, __get_gpio_level,
-                    __set_gpio_mode);
-            if (drv) {
-                __touch_type = TouchDrv_CST226;
-                return true;
-            }
-            drv = newTouchClassIDF<TouchDrvCST92xx>(port_num, addr, sda, scl, __rst, __irq,
-                                                    __set_gpio_level, __get_gpio_level,
-                                                    __set_gpio_mode);
-            if (drv) {
-                __touch_type = TouchDrv_CST92XX;
-                return true;
-            }
-        } else if (__touch_type == TouchDrv_CST8XX) {
-            drv = newTouchClassIDF<TouchClassCST816>(port_num, addr, sda, scl, __rst, __irq,
-                    __set_gpio_level, __get_gpio_level,
-                    __set_gpio_mode);
-        } else if (__touch_type == TouchDrv_CST226) {
-            drv = newTouchClassIDF<TouchClassCST226>(port_num, addr, sda, scl, __rst, __irq,
-                    __set_gpio_level, __get_gpio_level,
-                    __set_gpio_mode);
-        } else if (__touch_type == TouchDrv_CST92XX) {
-            drv = newTouchClassIDF<TouchDrvCST92xx>(port_num, addr, sda, scl, __rst, __irq,
-                                                    __set_gpio_level, __get_gpio_level,
-                                                    __set_gpio_mode);
-        }
-        if (!drv) {
-            __touch_type = TouchDrv_UNKOWN;
-            return false;
-        }
-        return drv != NULL;
-    }
-#endif //ESP_IDF_VERSION
-#endif//ARDUINO
+    // Set the callback I2C read and write method and initialize the touch screen.
+    // If successful, return true, otherwise false
 
+    bool begin(SensorCommCustom::CustomCallback callback,
+               SensorCommCustomHal::CustomHalCallback hal_callback,
+               uint8_t addr) override;
 
-    void setGpioCallback(gpio_mode_fptr_t mode_cb,
-                         gpio_write_fptr_t write_cb,
-                         gpio_read_fptr_t read_cb)
-    {
-        __set_gpio_level = write_cb;
-        __get_gpio_level = read_cb;
-        __set_gpio_mode = mode_cb;
-    }
+    // Set other ways to control touch RST or INT
+    void setGpioCallback(SensorHalCustom::CustomMode mode_cb,
+                         SensorHalCustom::CustomWrite write_cb,
+                         SensorHalCustom::CustomRead read_cb) override;
 
-    bool begin(uint8_t address, iic_fptr_t readRegCallback, iic_fptr_t writeRegCallback)
-    {
-        if (__touch_type == TouchDrv_UNKOWN) {
-            drv = newTouchClassCallFunction<TouchClassCST816>(address, readRegCallback, writeRegCallback, __rst, __irq,
-                    __set_gpio_level, __get_gpio_level,
-                    __set_gpio_mode);
-            if (drv) {
-                __touch_type = TouchDrv_CST8XX;
-                return true;
-            }
-            drv = newTouchClassCallFunction<TouchClassCST226>(address, readRegCallback, writeRegCallback, __rst, __irq,
-                    __set_gpio_level, __get_gpio_level,
-                    __set_gpio_mode);
-            if (drv) {
-                __touch_type = TouchDrv_CST226;
-                return true;
-            }
-            drv = newTouchClassCallFunction<TouchDrvCST92xx>(address, readRegCallback, writeRegCallback, __rst, __irq,
-                    __set_gpio_level, __get_gpio_level,
-                    __set_gpio_mode);
-            if (drv) {
-                __touch_type = TouchDrv_CST92XX;
-                return true;
-            }
-        } else if (__touch_type == TouchDrv_CST8XX) {
-            drv = newTouchClassCallFunction<TouchClassCST816>(address, readRegCallback, writeRegCallback, __rst, __irq,
-                    __set_gpio_level, __get_gpio_level,
-                    __set_gpio_mode);
-        } else if (__touch_type == TouchDrv_CST226) {
-            drv = newTouchClassCallFunction<TouchClassCST226>(address, readRegCallback, writeRegCallback, __rst, __irq,
-                    __set_gpio_level, __get_gpio_level,
-                    __set_gpio_mode);
-        } else if (__touch_type == TouchDrv_CST92XX) {
-            drv = newTouchClassCallFunction<TouchDrvCST92xx>(address, readRegCallback, writeRegCallback, __rst, __irq,
-                    __set_gpio_level, __get_gpio_level,
-                    __set_gpio_mode);
-        }
-        if (!drv) {
-            __touch_type = TouchDrv_UNKOWN;
-            return false;
-        }
-        return drv != NULL;
-    }
+    // Reset Touch
+    void reset()override;
 
+    // Get the XY coordinates of the touch screen touch
+    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point = 1)override;
 
-    void reset()
-    {
-        if (!drv)return;
-        drv->reset();
-    }
+    // Get whether the touch screen is pressed
+    bool isPressed()override;
 
-    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point = 1)
-    {
-        if (!drv)return 0;
-        return drv->getPoint(x_array, y_array, get_point);
-    }
+    // Get the touch screen model
+    const char *getModelName()override;
 
-    bool isPressed()
-    {
-        if (!drv)return false;
-        return drv->isPressed();
-    }
+    // Set the touch screen to sleep mode
+    void sleep()override;
 
-    const char *getModelName()
-    {
-        if (!drv)return "NULL";
-        return drv->getModelName();
-    }
+    // Wake up the touch screen, depends on the RST Pin, if it is not connected, it will be invalid
+    void wakeup()override;
 
-    void sleep()
-    {
-        if (!drv)return;
-        drv->sleep();
-    }
+    // Idle mode, this is not implemented, most of the CSTXXX series have automatic sleep function
+    void idle()override;
 
-    void wakeup()
-    {
-        if (!drv)return;
-        drv->reset();
-    }
+    // Get the maximum number of touch points supported by the touch screen
+    uint8_t getSupportTouchPoint()override;
 
-    void idle()
-    {
-        if (!drv)return;
-        drv->idle();
-    }
+    // Get touch screen resolution, not implemented
+    bool getResolution(int16_t *x, int16_t *y)override;
 
-    uint8_t getSupportTouchPoint()
-    {
-        if (!drv)return 0;
-        return drv->getSupportTouchPoint();
-    }
+    // Set the screen touch button coordinates
+    void setCenterButtonCoordinate(uint16_t x, uint16_t y);
 
-    bool getResolution(int16_t *x, int16_t *y)
-    {
-        if (!drv)return false;
-        return drv->getResolution(x, y);
-    }
+    // Set screen touch button callback function
+    void setHomeButtonCallback(TouchDrvInterface::HomeButtonCallback callback, void *user_data = NULL);
 
-    void setCenterButtonCoordinate(uint16_t x, uint16_t y)
-    {
-        if (!drv)return ;
-        const char *model = drv->getModelName();
-        if (strncmp(model, "CST8", 3) == 0) {
-            TouchClassCST816 *pT = static_cast<TouchClassCST816 *>(drv);
-            pT->setCenterButtonCoordinate(x, y);
-        }
-    }
+    // Disable automatic sleep, only for CST328
+    void disableAutoSleep();
 
-    void setHomeButtonCallback(home_button_callback_t callback, void *user_data = NULL)
-    {
-        if (!drv)return ;
-        const char *model = drv->getModelName();
-        if (strncmp(model, "CST8", 3) == 0) {
-            TouchClassCST816 *pT = static_cast<TouchClassCST816 *>(drv);
-            pT->setHomeButtonCallback(callback, user_data);
-            // pT->setCenterButtonCoordinate(600, 120);  // Only suitable for AMOLED 1.91 inch
+    // Enable automatic sleep, only for CST328
+    void enableAutoSleep();
 
-        } if (strncmp(model, "CST2", 3) == 0) {
-            TouchClassCST226 *pT = static_cast<TouchClassCST226 *>(drv);
-            pT->setHomeButtonCallback(callback, user_data);
-        }
-    }
+    // Swap XY coordinates
+    void setSwapXY(bool swap);
 
-    void disableAutoSleep()
-    {
-        if (!drv)return ;
-        const char *model = drv->getModelName();
-        if (strncmp(model, "CST8", 3) == 0) {
-            TouchClassCST816 *pT = static_cast<TouchClassCST816 *>(drv);
-            pT->disableAutoSleep();
-        }
-    }
+    // Mirror XY Coordinates
+    void setMirrorXY(bool mirrorX, bool mirrorY);
 
-    void enableAutoSleep()
-    {
-        if (!drv)return ;
-        const char *model = drv->getModelName();
-        if (strncmp(model, "CST8", 3) == 0) {
-            TouchClassCST816 *pT = static_cast<TouchClassCST816 *>(drv);
-            pT->enableAutoSleep();
-        }
-    }
-
-    void setSwapXY(bool swap)
-    {
-        if (!drv)return ;
-        drv->setSwapXY(swap);
-    }
-
-    void setMirrorXY(bool mirrorX, bool mirrorY)
-    {
-        if (!drv)return ;
-        drv->setMirrorXY(mirrorX, mirrorY);
-    }
-
-    void setMaxCoordinates(uint16_t x, uint16_t y)
-    {
-        if (!drv)return ;
-        drv->setMaxCoordinates(x, y);
-    }
+    // Set the maximum X, Y coordinates of the screen
+    void setMaxCoordinates(uint16_t x, uint16_t y);
 
 private:
-    gpio_write_fptr_t   __set_gpio_level        = NULL;
-    gpio_read_fptr_t    __get_gpio_level        = NULL;
-    gpio_mode_fptr_t    __set_gpio_mode         = NULL;
-    TouchDrvInterface *drv = NULL;
-    TouchDrvType        __touch_type;
+
+    using DriverCreator = std::unique_ptr<TouchDrvInterface> (*)();
+
+    static constexpr uint8_t driverCreatorMaxNum = 3;
+    static DriverCreator driverCreators[driverCreatorMaxNum];
+
+    std::unique_ptr<TouchDrvInterface> createDriver(TouchDrvType type)
+    {
+        if (/*type >= TouchDrv_UNKOWN &&*/
+            type < sizeof(driverCreators) / sizeof(driverCreators[0])) {
+            return driverCreators[type]();
+        }
+        return nullptr;
+    }
+
+    void setupDriver();
+
+    SensorHalCustom::CustomWrite        _writePtr;
+    SensorHalCustom::CustomRead         _readPtr;
+    SensorHalCustom::CustomMode         _modePtr;
+    TouchDrvType                        _touchType;
+    std::unique_ptr<TouchDrvInterface>  _drv;
 };
-
-
-

@@ -39,7 +39,7 @@
 #endif
 
 #ifndef SENSOR_IRQ
-#define SENSOR_IRQ  -1
+#define SENSOR_IRQ  10
 #endif
 
 ExtensionIOXL9555 io;
@@ -61,9 +61,7 @@ void setup()
     Serial.begin(115200);
 
     // Set the interrupt input to input pull-up
-    if (SENSOR_IRQ > 0) {
-        pinMode(SENSOR_IRQ, INPUT_PULLUP);
-    }
+    pinMode(SENSOR_IRQ, INPUT_PULLUP);
 
     /*
     *
@@ -84,7 +82,7 @@ void setup()
     */
     const uint8_t chip_address = XL9555_UNKOWN_ADDRESS;
 
-    if (!io.init(Wire, SENSOR_SDA, SENSOR_SCL, chip_address)) {
+    if (!io.begin(Wire, chip_address, SENSOR_SDA, SENSOR_SCL)) {
         while (1) {
             Serial.println("Failed to find XL9555 - check your wiring!");
             delay(1000);

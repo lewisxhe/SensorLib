@@ -28,49 +28,69 @@
  */
 #include "TouchDrvCST92xx.h"
 
-TouchDrvCST92xx::TouchDrvCST92xx():
-    __center_btn_x(0),
-    __center_btn_y(0)
-    /*,
-    __jump_check(false)*/
+TouchDrvCST92xx::TouchDrvCST92xx() : comm(nullptr), hal(nullptr),
+    _slave_addr(-1),
+    _center_btn_x(0),
+    _center_btn_y(0)
 {
+}
+
+TouchDrvCST92xx::~TouchDrvCST92xx()
+{
+    if (comm) {
+        comm->deinit();
+    }
 }
 
 
 #if defined(ARDUINO)
-bool TouchDrvCST92xx::begin(PLATFORM_WIRE_TYPE &wire, uint8_t address, int sda, int scl)
+bool TouchDrvCST92xx::begin(TwoWire &wire, uint8_t addr, int sda, int scl)
 {
-    return SensorCommon::begin(wire, address, sda, scl);
+    if (!beginCommon<SensorCommI2C, HalArduino>(comm, hal, wire, addr, sda, scl)) {
+        return false;
+    }
+    return initImpl();
 }
 
 #elif defined(ESP_PLATFORM)
 
-#if ((ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,0,0)) && defined(CONFIG_SENSORLIB_ESP_IDF_NEW_API))
-bool TouchDrvCST92xx::begin(i2c_master_bus_handle_t i2c_dev_bus_handle, uint8_t addr)
-{
-    return SensorCommon::begin(i2c_dev_bus_handle, addr);
-}
-#else
+#if defined(USEING_I2C_LEGACY)
 bool TouchDrvCST92xx::begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
 {
-    return SensorCommon::begin(port_num, addr, sda, scl);
+    if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, port_num, addr, sda, scl)) {
+        return false;
+    }
+    return true;
 }
-
-#endif //ESP_IDF_VERSION
-#endif //ARDUINO
-
-bool TouchDrvCST92xx::begin(uint8_t addr, iic_fptr_t readRegCallback, iic_fptr_t writeRegCallback)
+#else
+bool TouchDrvCST92xx::begin(i2c_master_bus_handle_t handle, uint8_t addr)
 {
-    return SensorCommon::begin(addr, readRegCallback, writeRegCallback);
+    if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, handle, addr)) {
+        return false;
+    }
+    return true;
+}
+#endif  //USEING_I2C_LEGACY
+#endif  //ARDUINO
+
+bool TouchDrvCST92xx::begin(SensorCommCustom::CustomCallback callback,
+                            SensorCommCustomHal::CustomHalCallback hal_callback,
+                            uint8_t addr)
+{
+    if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(COMM_CUSTOM,
+            callback, hal_callback, addr, comm, hal)) {
+        return false;
+    }
+    return initImpl();
 }
 
 void TouchDrvCST92xx::reset()
 {
-    if (__rst != SENSOR_PIN_NONE) {
-        this->setGpioMode(__rst, OUTPUT);
-        this->setGpioLevel(__rst, LOW);
-        delay(10);
-        this->setGpioLevel(__rst, HIGH);
+    if (_rst != -1) {
+        hal->pinMode(_rst, OUTPUT);
+        hal->digitalWrite(_rst, LOW);
+        hal->delay(10);
+        hal->digitalWrite(_rst, HIGH);
     }
 }
 
@@ -92,7 +112,7 @@ void TouchDrvCST92xx::parseFingerData(uint8_t *data,  cst9xx_point_t *point)
 uint8_t TouchDrvCST92xx::getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point)
 {
     int16_t res = 0;
-    uint8_t point = 0;
+    uint8_t numPoints = 0;
     uint8_t read_buffer[CST92XX_MAX_FINGER_NUM * 5 + 5] = {0};
     uint8_t write_buffer[4] = {0};
     cst9xx_point_t point_info[CST92XX_MAX_FINGER_NUM];
@@ -105,8 +125,8 @@ uint8_t TouchDrvCST92xx::getPoint(int16_t *x_array, int16_t *y_array, uint8_t ge
     //Write read command
     write_buffer[0] = highByte(CST92XX_READ_COMMAND);
     write_buffer[1] = lowByte(CST92XX_READ_COMMAND);
-    res = writeThenRead(write_buffer, 2, read_buffer, sizeof(read_buffer));
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeThenRead(write_buffer, 2, read_buffer, sizeof(read_buffer));
+    if (res != 0) {
         log_e("Write read command error");
         return 0;
     }
@@ -114,8 +134,8 @@ uint8_t TouchDrvCST92xx::getPoint(int16_t *x_array, int16_t *y_array, uint8_t ge
     write_buffer[0] = highByte(CST92XX_READ_COMMAND);
     write_buffer[1] = lowByte(CST92XX_READ_COMMAND);
     write_buffer[2] = CST92XX_ACK;
-    res = writeBuffer(write_buffer, 3);
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeBuffer(write_buffer, 3);
+    if (res != 0) {
         log_e("Write read ack error");
         return 0;
     }
@@ -127,11 +147,11 @@ uint8_t TouchDrvCST92xx::getPoint(int16_t *x_array, int16_t *y_array, uint8_t ge
     }
 
     // palm + gesture
-    if (CST92XX_GET_GESTURE(read_buffer[4])) {
+    if (read_buffer[4] & 0xF0) {
         log_d("read point read_buffer[4]=0x%x.\n", read_buffer[4]);
         if ((read_buffer[4] >> 7) == 0x01) {
-            if (__homeButtonCb) {
-                __homeButtonCb(__userData);
+            if (_HButtonCallback) {
+                _HButtonCallback(_userData);
             }
             // bool palm = true;
         } else if (read_buffer[4] >> 4) {
@@ -139,16 +159,16 @@ uint8_t TouchDrvCST92xx::getPoint(int16_t *x_array, int16_t *y_array, uint8_t ge
         }
     }
 
-    point = CST92XX_GET_FINGER_NUM(read_buffer[5]);
-    if (point > CST92XX_MAX_FINGER_NUM || point == 0) {
+    numPoints = (read_buffer[5] & 0x7F);
+    if (numPoints > CST92XX_MAX_FINGER_NUM || numPoints == 0) {
         return 0;
     }
 
     /*
     // button
     if ((read_buffer[5] & 0x80) == 0x80) {
-        uint8_t *data = read_buffer + point * 5;
-        if (point > 0) {
+        uint8_t *data = read_buffer + numPoints * 5;
+        if (numPoints > 0) {
             data += 2;
         }
         uint8_t key_id = data[0];
@@ -156,7 +176,7 @@ uint8_t TouchDrvCST92xx::getPoint(int16_t *x_array, int16_t *y_array, uint8_t ge
     }
     */
 
-    for (uint8_t i = 0; i < point; ++i) {
+    for (uint8_t i = 0; i < numPoints; ++i) {
         uint8_t *data = read_buffer + (i * 5) + (i == 0 ? 0 : 2);
         parseFingerData(data, &point_info[i]);
         x_array[i] = point_info[i].x;
@@ -169,16 +189,16 @@ uint8_t TouchDrvCST92xx::getPoint(int16_t *x_array, int16_t *y_array, uint8_t ge
         return 0;
     }
 
-    updateXY(point, x_array, y_array);
+    updateXY(numPoints, x_array, y_array);
 
-    return point;
+    return numPoints;
 }
 
 // CST9217/CST9217 touch level is once per second, not continuous low level
 bool TouchDrvCST92xx::isPressed()
 {
-    if (__irq != SENSOR_PIN_NONE) {
-        return this->getGpioLevel(__irq) == LOW;
+    if (_irq != -1) {
+        return hal->digitalRead(_irq) == LOW;
     }
     return getPoint(NULL, NULL, 1);
 }
@@ -186,7 +206,7 @@ bool TouchDrvCST92xx::isPressed()
 
 const char *TouchDrvCST92xx::getModelName()
 {
-    switch (__chipID) {
+    switch (_chipID) {
     case CST9220_CHIP_ID:
         return "CST9220";
     case CST9217_CHIP_ID:
@@ -206,13 +226,13 @@ void TouchDrvCST92xx::sleep()
     //Send sleep command
     write_buffer[0] = highByte(CST92XX_REG_SLEEP_MODE);
     write_buffer[1] = lowByte(CST92XX_REG_SLEEP_MODE);
-    writeBuffer(write_buffer, 2);
-#ifdef ESP32
-    if (__irq != SENSOR_PIN_NONE) {
-        this->setGpioMode(__irq, OPEN_DRAIN);
+    comm->writeBuffer(write_buffer, 2);
+#ifdef ARDUINO_ARCH_ESP32
+    if (_irq != -1) {
+        hal->pinMode(_irq, OPEN_DRAIN);
     }
-    if (__rst != SENSOR_PIN_NONE) {
-        this->setGpioMode(__rst, OPEN_DRAIN);
+    if (_rst != -1) {
+        hal->pinMode(_rst, OPEN_DRAIN);
     }
 #endif
 }
@@ -233,15 +253,15 @@ uint8_t TouchDrvCST92xx::getSupportTouchPoint()
 
 bool TouchDrvCST92xx::getResolution(int16_t *x, int16_t *y)
 {
-    *x = __resX;
-    *y = __resY;
+    *x = _resX;
+    *y = _resY;
     return true;
 }
 
-void TouchDrvCST92xx::setCoverScreenCallback(home_button_callback_t cb, void *user_data)
+void TouchDrvCST92xx::setCoverScreenCallback(HomeButtonCallback cb, void *user_data)
 {
-    __homeButtonCb = cb;
-    __userData = user_data;
+    _HButtonCallback = cb;
+    _userData = user_data;
 }
 
 /**
@@ -253,16 +273,18 @@ uint32_t TouchDrvCST92xx::readWordFromMem(uint8_t type, uint16_t mem_addr)
     uint8_t write_buffer[4] = {0};
     uint8_t read_buffer[4] = {0};
 
-    uint8_t slave_address = __addr;
+    if (_slave_addr != -1 && _slave_addr != CST92XX_BOOT_ADDRESS) {
+        I2CParam params(I2CParam::I2C_SET_ADDR, CST92XX_BOOT_ADDRESS);
+        comm->setParams(params);
+    }
 
-    __addr  = CST92XX_BOOT_ADDRESS;
 
     write_buffer[0] = 0xA0;
     write_buffer[1] = 0x10;
     write_buffer[2] = type;
 
-    res =  writeBuffer(write_buffer, 3);
-    if (res != DEV_WIRE_NONE) {
+    res =  comm->writeBuffer(write_buffer, 3);
+    if (res != 0) {
         log_e("Write 0A010 failed");
         goto ERROR;
     }
@@ -272,8 +294,8 @@ uint32_t TouchDrvCST92xx::readWordFromMem(uint8_t type, uint16_t mem_addr)
     write_buffer[2] = mem_addr;
     write_buffer[3] = mem_addr >> 8;
 
-    res = writeBuffer(write_buffer, 4);
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeBuffer(write_buffer, 4);
+    if (res != 0) {
         log_e("Write 0A00C failed");
         goto ERROR;
     }
@@ -282,8 +304,8 @@ uint32_t TouchDrvCST92xx::readWordFromMem(uint8_t type, uint16_t mem_addr)
     write_buffer[1] = 0x04;
     write_buffer[2] = 0xE4;
 
-    res = writeBuffer(write_buffer, 3);
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeBuffer(write_buffer, 3);
+    if (res != 0) {
         log_e("Write 0A004E4 failed");
         goto ERROR;
     }
@@ -294,8 +316,8 @@ uint32_t TouchDrvCST92xx::readWordFromMem(uint8_t type, uint16_t mem_addr)
         }
         write_buffer[0] = 0xA0;
         write_buffer[1] = 0x04;
-        res = writeThenRead(write_buffer, 2, read_buffer, 1);
-        if (res != DEV_WIRE_NONE) {
+        res = comm->writeThenRead(write_buffer, 2, read_buffer, 1);
+        if (res != 0) {
             log_e("Write 0A004 failed");
             goto ERROR;
         }
@@ -306,19 +328,25 @@ uint32_t TouchDrvCST92xx::readWordFromMem(uint8_t type, uint16_t mem_addr)
     }
     write_buffer[0] = 0xA0;
     write_buffer[1] = 0x18;
-    res = writeThenRead(write_buffer, 2, read_buffer, 4);
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeThenRead(write_buffer, 2, read_buffer, 4);
+    if (res != 0) {
         goto ERROR;
     }
 
-    __addr = slave_address;
+    if (_slave_addr != -1 && _slave_addr != CST92XX_BOOT_ADDRESS) {
+        I2CParam params(I2CParam::I2C_SET_ADDR, _slave_addr);
+        comm->setParams(params);
+    }
 
     return ((uint32_t)(read_buffer[0])) |
            (((uint32_t)(read_buffer[1])) << 8) |
            (((uint32_t)(read_buffer[2])) << 16) |
            (((uint32_t)(read_buffer[3])) << 24);
 ERROR:
-    __addr = slave_address;
+    if (_slave_addr != -1 && _slave_addr != CST92XX_BOOT_ADDRESS) {
+        I2CParam params(I2CParam::I2C_SET_ADDR, _slave_addr);
+        comm->setParams(params);
+    }
     return 0;
 }
 
@@ -334,7 +362,7 @@ uint32_t TouchDrvCST92xx::getChipType()
             chip_type &= 0xffff;
             break;
         }
-        delay(10);
+        hal->delay(10);
     }
     log_d("Chip Type: 0x%04lx", chip_type);
     // log_d("Module_id: 0x%04x", chip_id);
@@ -364,9 +392,10 @@ bool TouchDrvCST92xx::enterBootloader(void)
     uint8_t write_buffer[4] = {0};
     uint8_t read_buffer[4] = {0};
 
-    uint8_t slave_address = __addr;
-
-    __addr  = CST92XX_BOOT_ADDRESS;
+    if (_slave_addr != -1 && _slave_addr != CST92XX_BOOT_ADDRESS) {
+        I2CParam params(I2CParam::I2C_SET_ADDR, CST92XX_BOOT_ADDRESS);
+        comm->setParams(params);
+    }
 
     for (uint8_t i = 10;; i += 2) {
 
@@ -377,23 +406,23 @@ bool TouchDrvCST92xx::enterBootloader(void)
 
         reset();
 
-        delay(i);
+        hal->delay(i);
 
         for (check_cnt = 0; check_cnt < 5; check_cnt++) {
             write_buffer[0] = 0xA0;
             write_buffer[1] = 0x01;
             write_buffer[2] = 0xAA;
-            res = writeBuffer(write_buffer, 3);
-            if (res != DEV_WIRE_NONE) {
-                delay(2);
+            res = comm->writeBuffer(write_buffer, 3);
+            if (res != 0) {
+                hal->delay(2);
                 continue;
             }
-            delay(2);
+            hal->delay(2);
             write_buffer[0] = 0xA0;
             write_buffer[1] = 0x02;
-            res = writeThenRead(write_buffer, 2, read_buffer, 2);
-            if (res != DEV_WIRE_NONE) {
-                delay(2);
+            res = comm->writeThenRead(write_buffer, 2, read_buffer, 2);
+            if (res != 0) {
+                hal->delay(2);
                 continue;
             }
             if ((read_buffer[0] == 0x55) && (read_buffer[1] == 0xB0)) {
@@ -408,17 +437,23 @@ bool TouchDrvCST92xx::enterBootloader(void)
     write_buffer[0] = 0xA0;
     write_buffer[1] = 0x01;
     write_buffer[2] = 0x00;
-    res = writeBuffer(write_buffer, 3);
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeBuffer(write_buffer, 3);
+    if (res != 0) {
         log_e("Enter boot exit error");
         goto ERROR;
     }
-    __addr = slave_address;
+    if (_slave_addr != -1 && _slave_addr != CST92XX_BOOT_ADDRESS) {
+        I2CParam params(I2CParam::I2C_SET_ADDR, _slave_addr);
+        comm->setParams(params);
+    }
     log_d("Enter boot mode success!");
     return true;
 
 ERROR:
-    __addr = slave_address;
+    if (_slave_addr != -1 && _slave_addr != CST92XX_BOOT_ADDRESS) {
+        I2CParam params(I2CParam::I2C_SET_ADDR, _slave_addr);
+        comm->setParams(params);
+    }
     return false;
 
 }
@@ -428,14 +463,14 @@ bool TouchDrvCST92xx::getAttribute()
     reset();
 
     // Wait exit boot mode
-    delay(30);
+    hal->delay(30);
 
     uint8_t buffer[8];
     // Enter Command mode
-    writeRegister(0xD1, 0x01);
-    delay(10);
+    comm->writeRegister(0xD1, 0x01);
+    hal->delay(10);
     uint8_t write_buffer[2] = {0xD1, 0xFC};
-    writeThenRead(write_buffer, 2, buffer, 4);
+    comm->writeThenRead(write_buffer, 2, buffer, 4);
     uint32_t checkcode = 0;
     checkcode = buffer[3];
     checkcode <<= 8;
@@ -449,14 +484,14 @@ bool TouchDrvCST92xx::getAttribute()
 
     write_buffer[0] = {0xD1};
     write_buffer[1] = {0xF8};
-    writeThenRead(write_buffer, 2, buffer, 4);
-    __resX = ( buffer[1] << 8) | buffer[0];
-    __resY = ( buffer[3] << 8) | buffer[2];
-    log_i("Chip resolution X:%u Y:%u", __resX, __resY);
+    comm->writeThenRead(write_buffer, 2, buffer, 4);
+    _resX = ( buffer[1] << 8) | buffer[0];
+    _resY = ( buffer[3] << 8) | buffer[2];
+    log_i("Chip resolution X:%u Y:%u", _resX, _resY);
 
     write_buffer[0] = {0xD2};
     write_buffer[1] = {0x04};
-    writeThenRead(write_buffer, 2, buffer, 4);
+    comm->writeThenRead(write_buffer, 2, buffer, 4);
     chipType = buffer[3];
     chipType <<= 8;
     chipType |= buffer[2];
@@ -470,7 +505,7 @@ bool TouchDrvCST92xx::getAttribute()
 
     write_buffer[0] = {0xD2};
     write_buffer[1] = {0x08};
-    writeThenRead(write_buffer, 2, buffer, 8);
+    comm->writeThenRead(write_buffer, 2, buffer, 8);
 
     uint32_t fwVersion = buffer[3];
     fwVersion <<= 8;
@@ -519,23 +554,23 @@ bool TouchDrvCST92xx::setMode(uint8_t mode)
     for (i = 0; i < 3; i++) {
         write_buffer[0] = 0xD1;
         write_buffer[1] = 0x1E;
-        res = writeBuffer(write_buffer, 2);
-        if (res != DEV_WIRE_NONE) {
-            delay(200);
+        res = comm->writeBuffer(write_buffer, 2);
+        if (res != 0) {
+            hal->delay(200);
             continue;
         }
         write_buffer[0] = 0xD1;
         write_buffer[1] = 0x1E;
-        res = writeBuffer(write_buffer, 2);
-        if (res != DEV_WIRE_NONE) {
-            delay(200);
+        res = comm->writeBuffer(write_buffer, 2);
+        if (res != 0) {
+            hal->delay(200);
             continue;
         }
         write_buffer[0] = 0x00;
         write_buffer[1] = 0x02;
-        res = writeThenRead(write_buffer, 2, read_buffer, 4);
-        if (res != DEV_WIRE_NONE) {
-            delay(200);
+        res = comm->writeThenRead(write_buffer, 2, read_buffer, 4);
+        if (res != 0) {
+            hal->delay(200);
             continue;
         }
         if (read_buffer[1] == 0x1E)
@@ -572,17 +607,17 @@ bool TouchDrvCST92xx::setMode(uint8_t mode)
         for (i = 0; i < 10; i++) {
             write_buffer[0] = highByte(CST92XX_REG_FACTORY_MODE);
             write_buffer[1] = lowByte(CST92XX_REG_FACTORY_MODE);
-            res = writeBuffer(write_buffer, 2);
-            if (res != DEV_WIRE_NONE) {
-                delay(1);
+            res = comm->writeBuffer(write_buffer, 2);
+            if (res != 0) {
+                hal->delay(1);
                 continue;
             }
-            delay(10);
+            hal->delay(10);
             write_buffer[0] = 0x00;
             write_buffer[1] = 0x09;
-            res = writeThenRead(write_buffer, 2, read_buffer, 1);
-            if (res != DEV_WIRE_NONE) {
-                delay(1);
+            res = comm->writeThenRead(write_buffer, 2, read_buffer, 1);
+            if (res != 0) {
+                hal->delay(1);
                 continue;
             }
             if (read_buffer[0] == 0x14)
@@ -590,8 +625,8 @@ bool TouchDrvCST92xx::setMode(uint8_t mode)
         }
         write_buffer[0] = 0xD1;
         write_buffer[1] = 0x19;
-        res = writeBuffer(write_buffer, 2);
-        if (res != DEV_WIRE_NONE) {
+        res = comm->writeBuffer(write_buffer, 2);
+        if (res != 0) {
             log_e("set_work_mode 0xD119 error");
             return false;
         }
@@ -627,122 +662,64 @@ bool TouchDrvCST92xx::setMode(uint8_t mode)
     }
     }
     mode_cmd = write_buffer[1];
-    res = writeBuffer(write_buffer, 2);
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeBuffer(write_buffer, 2);
+    if (res != 0) {
         log_e("set_work_mode 0x%x  0x%x error", write_buffer[0], write_buffer[1]);
         return false;
     }
     write_buffer[0] = 0x00;
     write_buffer[1] = 0x02;
-    res = writeThenRead(write_buffer, 2, read_buffer, 2);
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeThenRead(write_buffer, 2, read_buffer, 2);
+    if (res != 0) {
         log_e("set_work_mode read 0x0002 failed : 0x%X 0x%X", read_buffer[0], read_buffer[1]);
     }
     if (mode_cmd != read_buffer[1]) {
         log_e("set work mode read 0x0002=0x%x failed", read_buffer[1]);
         return false;
     }
-    delay(10);
+    hal->delay(10);
     return true;
 }
 
 
 
-void TouchDrvCST92xx::setGpioCallback(gpio_mode_fptr_t mode_cb,
-                                      gpio_write_fptr_t write_cb,
-                                      gpio_read_fptr_t read_cb)
+void TouchDrvCST92xx::setGpioCallback(CustomMode mode_cb,
+                                      CustomWrite write_cb,
+                                      CustomRead read_cb)
 {
-    SensorCommon::setGpioModeCallback(mode_cb);
-    SensorCommon::setGpioWriteCallback(write_cb);
-    SensorCommon::setGpioReadCallback(read_cb);
+    SensorHalCustom::setCustomMode(mode_cb);
+    SensorHalCustom::setCustomWrite(write_cb);
+    SensorHalCustom::setCustomRead(read_cb);
 }
 
 bool TouchDrvCST92xx::initImpl()
 {
 
-    if (__rst != SENSOR_PIN_NONE) {
-        this->setGpioMode(__rst, OUTPUT);
+    if (_rst != -1) {
+        hal->pinMode(_rst, OUTPUT);
     }
 
-    if (__irq != SENSOR_PIN_NONE) {
-        this->setGpioMode(__irq, INPUT);
+    if (_irq != -1) {
+        hal->pinMode(_irq, INPUT);
     }
-
-#if 0
-    int retry = 5;
-
-    if (!__jump_check) {
-
-        while (retry > 0) {
-            if (enterBootloader()) {
-                break;
-            }
-            retry--;
-            delay(1000);
-        }
-        if (0 == retry) {
-            log_e("Enter boot loader mode failed!");
-            return false;
-        }
-
-        chipType = getChipType();
-
-        log_d("Chip ID:0x%x", chipType);
-
-    } else {
-
-        log_d("Jump check setting default IC type : CST9217");
-        // Jump check setting default IC type
-        chipType = CST9217_CHIP_ID;
-
-    }
-
-    // Exit Boot Mode
-    reset();
-
-    // Wait for a while after reset
-    delay(120);
-
-    retry = 3;
-
-    while (!this->probe()) {
-        log_e("Device not found!");
-        delay(120);
-    }
-
-    log_e("Exit boot mode successfully.");
-
-    if (chipType != CST9220_CHIP_ID && chipType != CST9217_CHIP_ID) {
-        return false;
-    }
-
-#else
 
     if (!getAttribute()) {
         return false;
     }
 
-#endif
-
-    __chipID = chipType;
+    _chipID = chipType;
 
     log_d("Touch type:%s", getModelName());
 
     return true;
 }
 
-int TouchDrvCST92xx::getReadMaskImpl()
-{
-    return -1;
-}
-
-
 
 #if 0  /*DISABLE UPDATE FIRMWARE*/
 
 void TouchDrvCST92xx::jumpCheck()
 {
-    __jump_check = true;
+    _jump_check = true;
 }
 
 bool TouchDrvCST92xx::getFirmwareInfo(void)
@@ -755,12 +732,12 @@ bool TouchDrvCST92xx::getFirmwareInfo(void)
 
     setMode(CST92_MODE_DEBUG_INFO);
 
-    delay(1);
+    hal->delay(1);
     write_buffer[0] = 0xD1;
     write_buffer[1] = 0x01;
-    res = writeBuffer(write_buffer, 2);
-    res |= writeBuffer(write_buffer, 2);
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeBuffer(write_buffer, 2);
+    res |= comm->writeBuffer(write_buffer, 2);
+    if (res != 0) {
         log_e("write 0xD101 error");
         return false;
     }
@@ -768,8 +745,8 @@ bool TouchDrvCST92xx::getFirmwareInfo(void)
     // BOOT TIME + CBCB
     write_buffer[0] = 0xD1;
     write_buffer[1] = 0xFC;
-    res = writeThenRead(write_buffer, 2, read_buffer, 4);
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeThenRead(write_buffer, 2, read_buffer, 4);
+    if (res != 0) {
         log_e("read 0xD1FC error");
         return false;
     }
@@ -779,8 +756,8 @@ bool TouchDrvCST92xx::getFirmwareInfo(void)
     // firmware_project_id   firmware_ic_type
     write_buffer[0] = 0xD2;
     write_buffer[1] = 0x04;
-    res = writeThenRead(write_buffer, 2, read_buffer, 4);
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeThenRead(write_buffer, 2, read_buffer, 4);
+    if (res != 0) {
         log_e("read 0xD204 error");
         return false;
     }
@@ -790,8 +767,8 @@ bool TouchDrvCST92xx::getFirmwareInfo(void)
     // firmware_version
     write_buffer[0] = 0xD2;
     write_buffer[1] = 0x08;
-    res = writeThenRead(write_buffer, 2, read_buffer, 4);
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeThenRead(write_buffer, 2, read_buffer, 4);
+    if (res != 0) {
         log_e("read 0xD208 error");
         return false;
     }
@@ -801,8 +778,8 @@ bool TouchDrvCST92xx::getFirmwareInfo(void)
     // firmware_info_checksum
     write_buffer[0] = 0xD2;
     write_buffer[1] = 0x1c;
-    res = writeThenRead(write_buffer, 2, read_buffer, 4);
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeThenRead(write_buffer, 2, read_buffer, 4);
+    if (res != 0) {
         log_e("read 0xD21c error");
         return false;
     }
@@ -813,8 +790,8 @@ bool TouchDrvCST92xx::getFirmwareInfo(void)
     // firmware_checksum
     write_buffer[0] = 0xD2;
     write_buffer[1] = 0x0C;
-    res = writeThenRead(write_buffer, 2, read_buffer, 4);
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeThenRead(write_buffer, 2, read_buffer, 4);
+    if (res != 0) {
         log_e("read 0xD20c error");
         return false;
     }
@@ -822,8 +799,8 @@ bool TouchDrvCST92xx::getFirmwareInfo(void)
     // tx_num   rx_num   key_num
     write_buffer[0] = 0xD1;
     write_buffer[1] = 0xF4;
-    res = writeThenRead(write_buffer, 2, read_buffer, 4);
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeThenRead(write_buffer, 2, read_buffer, 4);
+    if (res != 0) {
         log_e("read 0xD1F4 error");
         return false;
     }
@@ -850,54 +827,54 @@ int16_t TouchDrvCST92xx::eraseMem(void)
     int16_t res = 0;
     uint8_t write_buffer[4] = {0};
 
-    uint8_t slave_address = __addr;
+    uint8_t slave_address = _addr;
 
-    __addr  = CST92XX_BOOT_ADDRESS;
+    _addr  = CST92XX_BOOT_ADDRESS;
 
     write_buffer[0] = 0xA0;
     write_buffer[1] = 0x14;
     write_buffer[2] = 0x00;
     write_buffer[3] = 0x00;
-    res = writeBuffer(write_buffer, 4);
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeBuffer(write_buffer, 4);
+    if (res != 0) {
         goto ERROR;
     }
     write_buffer[0] = 0xA0;
     write_buffer[1] = 0x0C;
     write_buffer[2] = 0x80;
     write_buffer[3] = 0x7F;
-    res = writeBuffer(write_buffer, 4);
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeBuffer(write_buffer, 4);
+    if (res != 0) {
         goto ERROR;
     }
     write_buffer[0] = 0xA0;
     write_buffer[1] = 0x04;
     write_buffer[2] = 0xEC;
-    res = writeBuffer(write_buffer, 3);
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeBuffer(write_buffer, 3);
+    if (res != 0) {
         goto ERROR;
     }
-    delay(300);
+    hal->delay(300);
     for (uint16_t i = 0;; i += 10) {
         if (i >= 1000) {
             goto ERROR;
         }
-        delay(10);
+        hal->delay(10);
         write_buffer[0] = 0xA0;
         write_buffer[1] = 0x05;
-        res = writeThenRead(write_buffer, 2, write_buffer, 2);
-        if (res != DEV_WIRE_NONE) {
-            delay(10);
+        res = comm->writeThenRead(write_buffer, 2, write_buffer, 2);
+        if (res != 0) {
+            hal->delay(10);
             continue;
         }
         if (write_buffer[0] == 0x88) {
             break;
         }
     }
-    __addr = slave_address;
+    _addr = slave_address;
     return 0;
 ERROR:
-    __addr = slave_address;
+    _addr = slave_address;
     return -1;
 }
 
@@ -910,9 +887,9 @@ int16_t TouchDrvCST92xx::writeSRAM(uint8_t *buf, uint16_t len)
     uint16_t per_len = sizeof(write_buffer) - 2;
 
 
-    uint8_t slave_address = __addr;
+    uint8_t slave_address = _addr;
 
-    __addr  = CST92XX_BOOT_ADDRESS;
+    _addr  = CST92XX_BOOT_ADDRESS;
 
     while (len > 0) {
         uint16_t cur_len = len;
@@ -922,16 +899,16 @@ int16_t TouchDrvCST92xx::writeSRAM(uint8_t *buf, uint16_t len)
         write_buffer[0] = reg >> 8;
         write_buffer[1] = reg;
         memcpy(write_buffer + 2, buf, cur_len);
-        res = writeBuffer(write_buffer, cur_len + 2);
-        if (res != DEV_WIRE_NONE) {
-            __addr = slave_address;
+        res = comm->writeBuffer(write_buffer, cur_len + 2);
+        if (res != 0) {
+            _addr = slave_address;
             return -1;
         }
         reg += cur_len;
         buf += cur_len;
         len -= cur_len;
     }
-    __addr = slave_address;
+    _addr = slave_address;
     return 0;
 }
 
@@ -941,57 +918,57 @@ int16_t TouchDrvCST92xx::writeMemPage(uint16_t addr, uint8_t *buf, uint16_t len)
     uint8_t write_buffer[4] = {0};
 
 
-    uint8_t slave_address = __addr;
+    uint8_t slave_address = _addr;
 
-    __addr  = CST92XX_BOOT_ADDRESS;
+    _addr  = CST92XX_BOOT_ADDRESS;
 
     write_buffer[0] = 0xA0;
     write_buffer[1] = 0x0C;
     write_buffer[2] = len;
     write_buffer[3] = len >> 8;
-    res = writeBuffer(write_buffer, 4);
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeBuffer(write_buffer, 4);
+    if (res != 0) {
         goto ERROR;
     }
     write_buffer[0] = 0xA0;
     write_buffer[1] = 0x14;
     write_buffer[2] = addr;
     write_buffer[3] = addr >> 8;
-    res = writeBuffer(write_buffer, 4);
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeBuffer(write_buffer, 4);
+    if (res != 0) {
         goto ERROR;
     }
     res = writeSRAM(buf, len);
-    if (res != DEV_WIRE_NONE) {
+    if (res != 0) {
         goto ERROR;
     }
     write_buffer[0] = 0xA0;
     write_buffer[1] = 0x04;
     write_buffer[2] = 0xEE;
-    res = writeBuffer(write_buffer, 3);
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeBuffer(write_buffer, 3);
+    if (res != 0) {
         goto ERROR;
     }
     for (uint16_t t = 0;; t += 10) {
         if (t >= 1000) {
             goto ERROR;
         }
-        delay(10);
+        hal->delay(10);
         write_buffer[0] = 0xA0;
         write_buffer[1] = 0x05;
-        res = writeThenRead(write_buffer, 2, write_buffer, 1);
-        if (res != DEV_WIRE_NONE) {
-            delay(10);
+        res = comm->writeThenRead(write_buffer, 2, write_buffer, 1);
+        if (res != 0) {
+            hal->delay(10);
             continue;
         }
         if (write_buffer[0] == 0x55) {
             break;
         }
     }
-    __addr = slave_address;
+    _addr = slave_address;
     return 0;
 ERROR:
-    __addr = slave_address;
+    _addr = slave_address;
     return -1;
 
 }
@@ -1046,27 +1023,27 @@ int16_t TouchDrvCST92xx::calculateVerifyChecksum(void)
     uint8_t write_buffer[4] = {0};
     uint32_t checksum = 0;
 
-    uint8_t slave_address = __addr;
+    uint8_t slave_address = _addr;
 
-    __addr  = CST92XX_BOOT_ADDRESS;
+    _addr  = CST92XX_BOOT_ADDRESS;
 
 
     write_buffer[0] = 0xA0;
     write_buffer[1] = 0x03;
     write_buffer[2] = 0x00;
-    res = writeBuffer(write_buffer, 3);
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeBuffer(write_buffer, 3);
+    if (res != 0) {
         return -1;
     }
     for (uint16_t t = 0;; t += 10) {
         if (t >= 1000) {
             goto ERROR;
         }
-        delay(10);
+        hal->delay(10);
         write_buffer[0] = 0xA0;
         write_buffer[1] = 0x00;
-        res = writeThenRead(write_buffer, 2, write_buffer, 1);
-        if (res != DEV_WIRE_NONE) {
+        res = comm->writeThenRead(write_buffer, 2, write_buffer, 1);
+        if (res != 0) {
             goto ERROR;
         }
         if (write_buffer[0] == 0x01) {
@@ -1079,8 +1056,8 @@ int16_t TouchDrvCST92xx::calculateVerifyChecksum(void)
 
     write_buffer[0] = 0xA0;
     write_buffer[1] = 0x08;
-    res = writeThenRead(write_buffer, 2, write_buffer, 4);
-    if (res != DEV_WIRE_NONE) {
+    res = comm->writeThenRead(write_buffer, 2, write_buffer, 4);
+    if (res != 0) {
         goto ERROR;
     }
 
@@ -1092,10 +1069,10 @@ int16_t TouchDrvCST92xx::calculateVerifyChecksum(void)
     if (checksum != bin_data.checksum) {
         goto ERROR;
     }
-    __addr = slave_address;
+    _addr = slave_address;
     return 0;
 ERROR:
-    __addr = slave_address;
+    _addr = slave_address;
     return -1;
 
 }
@@ -1109,22 +1086,22 @@ int16_t TouchDrvCST92xx::upgradeFirmware(void)
 
         res = enterBootloader();
 
-        if (res != DEV_WIRE_NONE) {
+        if (res != 0) {
             log_e("enterBootloader fail.%d", retry);
             continue;
         }
         res = eraseMem();
-        if (res != DEV_WIRE_NONE) {
+        if (res != 0) {
             log_e("eraseMem fail.%d", retry);
             continue;
         }
         res = writeMemAll();
-        if (res != DEV_WIRE_NONE) {
+        if (res != 0) {
             log_e("writeMemAll fail.%d", retry);
             continue;
         }
         res = calculateVerifyChecksum();
-        if (res != DEV_WIRE_NONE) {
+        if (res != 0) {
             log_e("calculateVerifyChecksum fail.%d", retry);
             continue;
         } else {
@@ -1134,7 +1111,7 @@ int16_t TouchDrvCST92xx::upgradeFirmware(void)
 
     reset();
 
-    delay(40);
+    hal->delay(40);
 
     if ((retry == 0) && (res)) {
         log_e("upgradeFirmware fail exit.%d", retry);
@@ -1263,7 +1240,7 @@ int16_t TouchDrvCST92xx::updateFirmware(void)
         goto END_UPGRADE;
     }
     res = upgradeFirmwareJudge();
-    if (res != DEV_WIRE_NONE) {
+    if (res != 0) {
         log_d("upgradeFirmwareJudge return,no need update fw.");
         goto END_UPGRADE;
     } else {
@@ -1272,13 +1249,13 @@ int16_t TouchDrvCST92xx::updateFirmware(void)
     log_d("need_upgrade=%d, firmware_version=0x%04X.", need_upgrade, bin_data.version);
     if (need_upgrade) {
         res = upgradeFirmware();
-        if (res != DEV_WIRE_NONE) {
+        if (res != 0) {
             log_e("upgradeFirmware failed");
             goto END_UPGRADE;
         }
         log_d("upgradeFirmware OK done.");
         reset();
-        delay(40);
+        hal->delay(40);
         if (!getFirmwareInfo()) {
             log_e("get_firmware_info failed");
             reset();

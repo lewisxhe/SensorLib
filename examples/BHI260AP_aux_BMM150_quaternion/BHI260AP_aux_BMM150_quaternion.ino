@@ -53,23 +53,62 @@ const uint8_t *firmware = bhi26ap_aux_bmm150_fw;
 const size_t fw_size = sizeof(bhi26ap_aux_bmm150_fw);
 #endif
 
-#ifdef BHY2_USE_I2C
-#define BHI260AP_SDA          21
-#define BHI260AP_SCL          22
-#define BHI260AP_IRQ          39
-#define BHI260AP_RST          -1
-#else
-#define BHI260AP_MOSI         27
-#define BHI260AP_MISO         46
-#define BHI260AP_SCK          3
-#define BHI260AP_CS           28
-#define BHI260AP_IRQ          30
-#define BHI260AP_RST          -1
+// #define USE_I2C_INTERFACE        true
+// #define USE_SPI_INTERFACE        true
+
+#if !defined(USE_I2C_INTERFACE) && !defined(USE_SPI_INTERFACE)
+#define USE_I2C_INTERFACE
+#warning "No interface type is selected, use I2C interface"
 #endif
 
+#if defined(USE_SPI_INTERFACE)
+#ifndef SPI_MOSI
+#define SPI_MOSI    33
+#endif
+
+#ifndef SPI_MISO
+#define SPI_MISO    34
+#endif
+
+#ifndef SPI_SCK
+#define SPI_SCK     35
+#endif
+
+#ifndef BHI260_IRQ
+#define BHI260_IRQ  37
+#endif
+
+#ifndef BHI260_CS
+#define BHI260_CS   36
+#endif
+
+#else   //* I2C */
+
+#ifndef BHI260_SDA
+#define BHI260_SDA  2
+#endif
+
+#ifndef BHI260_SCL
+#define BHI260_SCL  3
+#endif
+
+#ifndef BHI260_IRQ
+#define BHI260_IRQ  8
+#endif
+#endif  /*USE_SPI_INTERFACE*/
+
+#ifndef BHI260_RST
+#define BHI260_RST -1
+#endif
 
 SensorBHI260AP bhy;
 
+bool isReadyFlag = false;
+
+void dataReadyISR()
+{
+    isReadyFlag = true;
+}
 
 void parse_quaternion(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp)
 {
@@ -112,8 +151,8 @@ void setup()
     Serial.begin(115200);
     while (!Serial);
 
-    // Set the reset pin and interrupt pin, if any
-    bhy.setPins(BHI260AP_RST, BHI260AP_IRQ);
+    // Set the reset pin
+    bhy.setPins(BHI260_RST);
 
     // Force update of the current firmware, regardless of whether it exists.
     // After uploading the firmware once, you can change it to false to speed up the startup time.
@@ -127,20 +166,22 @@ void setup()
 #endif
 
     Serial.println("Initializing Sensors...");
-#ifdef BHY2_USE_I2C
+#ifdef USE_I2C_INTERFACE
     // Using I2C interface
     // BHI260AP_SLAVE_ADDRESS_L = 0x28
     // BHI260AP_SLAVE_ADDRESS_H = 0x29
-    if (!bhy.init(Wire, BHI260AP_SDA, BHI260AP_SCL, BHI260AP_SLAVE_ADDRESS_L)) {
+    if (!bhy.begin(Wire, BHI260AP_SLAVE_ADDRESS_L, BHI260_SDA, BHI260_SCL)) {
         Serial.print("Failed to initialize sensor - error code:");
         Serial.println(bhy.getError());
         while (1) {
             delay(1000);
         }
     }
-#else
+#endif
+
+#ifdef USE_SPI_INTERFACE
     // Using SPI interface
-    if (!bhy.init(SPI, BHI260AP_CS, BHI260AP_MOSI, BHI260AP_MISO, BHI260AP_SCK)) {
+    if (!bhy.begin(SPI, BHI260_CS, SPI_MOSI, SPI_MISO, SPI_SCK)) {
         Serial.print("Failed to initialize sensor - error code:");
         Serial.println(bhy.getError());
         while (1) {
@@ -151,8 +192,9 @@ void setup()
 
     Serial.println("Initializing the sensor successfully!");
 
-    // Output all available sensors to Serial
-    bhy.printSensors(Serial);
+    // Output all sensors info to Serial
+    BoschSensorInfo info = bhy.getSensorInfo();
+    info.printInfo(Serial);
 
     float sample_rate = 100.0;      /* Read out hintr_ctrl measured at 100Hz */
     uint32_t report_latency_ms = 0; /* Report immediately */
@@ -167,6 +209,9 @@ void setup()
     // Register event callback function
     bhy.onResultEvent(QUAT_SENSOR_ID, parse_quaternion);
 
+    // Register interrupt function
+    pinMode(BHI260_IRQ, INPUT);
+    attachInterrupt(BHI260_IRQ, dataReadyISR, RISING);
 
 }
 
@@ -174,7 +219,10 @@ void setup()
 void loop()
 {
     // Update sensor fifo
-    bhy.update();
+    if (isReadyFlag) {
+        isReadyFlag = false;
+        bhy.update();
+    }
     delay(50);
 }
 

@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      TouchDrvGT911.tpp
+ * @file      TouchDrvGT911.hpp
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2023-04-12
  *
@@ -31,112 +31,87 @@
 
 #include "REG/GT911Constants.h"
 #include "TouchDrvInterface.hpp"
-#include "SensorCommon.tpp"
-
 
 #if defined(ARDUINO_ARCH_NRF52)
 // NRF52840 I2C BUFFER : 64 Bytes ,
 #warning "NRF Platform I2C Buffer expansion is not implemented , GT911 requires at least 188 bytes to read all configurations"
 #endif
 
-typedef struct GT911_Struct {
-    uint8_t trackID;
-    int16_t x;
-    int16_t y;
-    int16_t size;
-} GT911Point_t;
+#define GT911_GET_POINT(x)            (x & 0x0F)
+#define GT911_GET_BUFFER_STATUS(x)    (x & 0x80)
+#define GT911_GET_HAVE_KEY(x)         (x & 0x10)
 
-
-#define LOW_LEVEL_QUERY         0x03
-#define HIGH_LEVEL_QUERY        0x04
-
-class TouchDrvGT911 :
-    public TouchDrvInterface,
-    public SensorCommon<TouchDrvGT911>
+class TouchDrvGT911 :  public TouchDrvInterface, public GT911Constants
 {
-    friend class SensorCommon<TouchDrvGT911>;
+    typedef struct {
+        uint8_t trackID;
+        int16_t x;
+        int16_t y;
+        int16_t size;
+    } PointReg;
+
 public:
 
-
-#if defined(ARDUINO)
-    TouchDrvGT911(PLATFORM_WIRE_TYPE &w,
-                  int sda = DEFAULT_SDA,
-                  int scl = DEFAULT_SCL,
-                  uint8_t addr = GT911_SLAVE_ADDRESS_H)
-    {
-        __wire = &w;
-        __sda = sda;
-        __scl = scl;
-        __rst = SENSOR_PIN_NONE;
-        __irq = SENSOR_PIN_NONE;
-        __addr = addr;
-    }
-#endif
-
-    TouchDrvGT911()
-    {
-#if defined(ARDUINO)
-        __wire = &Wire;
-        __sda = DEFAULT_SDA;
-        __scl = DEFAULT_SCL;
-#endif
-        __rst = SENSOR_PIN_NONE;
-        __irq = SENSOR_PIN_NONE;
-        __addr = GT911_SLAVE_ADDRESS_H;
-    }
+    TouchDrvGT911() : comm(nullptr), hal(nullptr) {}
 
     ~TouchDrvGT911()
     {
-        deinit();
+        if (comm) {
+            comm->deinit();
+        }
     }
 
 #if defined(ARDUINO)
-    bool begin(PLATFORM_WIRE_TYPE &w,
-               uint8_t addr = GT911_SLAVE_ADDRESS_H,
-               int sda = DEFAULT_SDA,
-               int scl = DEFAULT_SCL
-              )
+    bool begin(TwoWire &wire, uint8_t addr = GT911_SLAVE_ADDRESS_H, int sda = -1, int scl = -1)
     {
-        return SensorCommon::begin(w, addr, sda, scl);
+        if (!beginCommon<SensorCommI2C, HalArduino>(comm, hal, wire, addr, sda, scl)) {
+            return false;
+        }
+        return initImpl(addr);
     }
 
-#elif defined(ESP_PLATFORM) && !defined(ARDUINO)
+#elif defined(ESP_PLATFORM)
 
-#if ((ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,0,0)) && defined(CONFIG_SENSORLIB_ESP_IDF_NEW_API))
-    bool begin(i2c_master_bus_handle_t i2c_dev_bus_handle, uint8_t addr)
+#if defined(USEING_I2C_LEGACY)
+    bool begin(i2c_port_t port_num, uint8_t addr = GT911_SLAVE_ADDRESS_H, int sda = -1, int scl = -1)
     {
-        return SensorCommon::begin(i2c_dev_bus_handle, addr);
+        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, port_num, addr, sda, scl)) {
+            return false;
+        }
+        return initImpl(addr);
     }
 #else
-    bool begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
+    bool begin(i2c_master_bus_handle_t handle, uint8_t addr = GT911_SLAVE_ADDRESS_H)
     {
-        return SensorCommon::begin(port_num, addr, sda, scl);
+        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, handle, addr)) {
+            return false;
+        }
+        return initImpl(addr);
     }
-#endif //ESP_IDF_VERSION
+#endif  //ESP_PLATFORM
+#endif  //ARDUINO
 
-#endif
 
-    bool begin(uint8_t addr, iic_fptr_t readRegCallback, iic_fptr_t writeRegCallback)
+    bool begin(SensorCommCustom::CustomCallback callback,
+               SensorCommCustomHal::CustomHalCallback hal_callback,
+               uint8_t addr)
     {
-        return SensorCommon::begin(addr, readRegCallback, writeRegCallback);
+        if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(COMM_CUSTOM,
+                callback, hal_callback, addr, comm, hal)) {
+            return false;
+        }
+        return initImpl(addr);
     }
-
-
-    void deinit()
-    {
-        // end();
-    }
-
 
     void reset()
     {
-        if (__rst != SENSOR_PIN_NONE) {
-            this->setGpioMode(__rst, OUTPUT);
-            this->setGpioLevel(__rst, HIGH);
-            delay(10);
+        if (_rst != -1) {
+            hal->pinMode(_rst, OUTPUT);
+            hal->digitalWrite(_rst, HIGH);
+            hal->delay(10);
         }
-        if (__irq != SENSOR_PIN_NONE) {
-            this->setGpioMode(__irq, INPUT);
+        if (_irq != -1) {
+            hal->pinMode(_irq, INPUT);
         }
         /*
         * If you perform a software reset on a board without a reset pin connected,
@@ -144,17 +119,17 @@ public:
         * For example, when debugging a LilyGo T-Deck, resetting the interrupt mode will
         * be invalid after a software reset.
         * */
-        // writeRegister(GT911_COMMAND, 0x02);
+        // comm->writeRegister(GT911_COMMAND, 0x02);
         // writeCommand(0x02);
     }
 
     void sleep()
     {
-        if (__irq != SENSOR_PIN_NONE) {
-            this->setGpioMode(__irq, OUTPUT);
-            this->setGpioLevel(__irq, LOW);
+        if (_irq != -1) {
+            hal->pinMode(_irq, OUTPUT);
+            hal->digitalWrite(_irq, LOW);
         }
-        // writeRegister(GT911_COMMAND, 0x05);
+        // comm->writeRegister(GT911_COMMAND, 0x05);
         writeCommand(0x05);
 
         /*
@@ -162,8 +137,8 @@ public:
         * The chip platform determines whether
         *
         * * */
-        // if (__irq != SENSOR_PIN_NONE) {
-        //     this->setGpioLevel(__irq, INPUT);
+        // if (_irq != -1) {
+        //     hal->digitalWrite(_irq, INPUT);
         // }
     }
 
@@ -171,11 +146,11 @@ public:
 
     void wakeup()
     {
-        if (__irq != SENSOR_PIN_NONE) {
-            this->setGpioMode(__irq, OUTPUT);
-            this->setGpioLevel(__irq, HIGH);
-            delay(8);
-            this->setGpioMode(__irq, INPUT);
+        if (_irq != -1) {
+            hal->pinMode(_irq, OUTPUT);
+            hal->digitalWrite(_irq, HIGH);
+            hal->delay(8);
+            hal->pinMode(_irq, INPUT);
         } else {
             reset();
         }
@@ -195,7 +170,7 @@ public:
     {
         uint8_t buffer[39];
         uint8_t touchPoint = 0;
-        GT911Point_t p[5];
+        PointReg p[5];
 
         if (!x_array || !y_array || size == 0)
             return 0;
@@ -206,8 +181,8 @@ public:
         // bool bufferStatus = GT911_GET_BUFFER_STATUS(val);
         // log_i("REG:0x%X S:0X%d K:%d\n", val,bufferStatus,haveKey);
 
-        if (__homeButtonCb && haveKey) {
-            __homeButtonCb(__userData);
+        if (_HButtonCallback && haveKey) {
+            _HButtonCallback(_userData);
         }
 
         clearBuffer();
@@ -219,8 +194,8 @@ public:
 
         // GT911_POINT_1  0X814F
         uint8_t write_buffer[2] = {0x81, 0x4F};
-        if (writeThenRead(write_buffer, SENSORLIB_COUNT(write_buffer),
-                          buffer, 39) == DEV_WIRE_ERR) {
+        if (comm->writeThenRead(write_buffer, arraySize(write_buffer),
+                                buffer, 39) == -1) {
             return 0;
         }
 
@@ -237,19 +212,6 @@ public:
             y_array[i] = p[i].y;
         }
 
-#ifdef LOG_PORT
-        LOG_PORT.println("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-        LOG_PORT.println("Touched  [0]ID  [0]Size  [0]X   [0]Y  [1]ID  [1]Size   [1]X    [1]Y  [2]ID  [2]Size   [2]X    [2]Y  [3]ID  [3]Size  [3]X    [3]Y  [4]ID  [4]Size  [4]X    [4]Y  ");
-        LOG_PORT.print(touchPoint); LOG_PORT.print("\t");
-        for (int i = 0; i < size; ++i) {
-            LOG_PORT.print(p[i].trackID); LOG_PORT.print("\t");
-            LOG_PORT.print(p[i].size); LOG_PORT.print("\t");
-            LOG_PORT.print( p[i].x); LOG_PORT.print("\t");
-            LOG_PORT.print( p[i].y); LOG_PORT.print("\t");
-        }
-        LOG_PORT.println();
-#endif
-
         updateXY(touchPoint, x_array, y_array);
 
         return touchPoint;
@@ -258,15 +220,15 @@ public:
 
     bool isPressed()
     {
-        if (__irq != SENSOR_PIN_NONE) {
-            if (__irq_mode == FALLING) {
-                return this->getGpioLevel(__irq) == LOW;
-            } else if (__irq_mode == RISING ) {
-                return this->getGpioLevel(__irq) == HIGH;
-            } else if (__irq_mode == LOW_LEVEL_QUERY) {
-                return this->getGpioLevel(__irq) == LOW;
-            }  else if (__irq_mode == HIGH_LEVEL_QUERY) {
-                return this->getGpioLevel(__irq) == HIGH;
+        if (_irq != -1) {
+            if (_irq_mode == FALLING) {
+                return hal->digitalRead(_irq) == LOW;
+            } else if (_irq_mode == RISING ) {
+                return hal->digitalRead(_irq) == HIGH;
+            } else if (_irq_mode == LOW_LEVEL_QUERY) {
+                return hal->digitalRead(_irq) == LOW;
+            }  else if (_irq_mode == HIGH_LEVEL_QUERY) {
+                return hal->digitalRead(_irq) == HIGH;
             }
         }
         return getPoint();
@@ -286,7 +248,7 @@ public:
         } else if (mode == HIGH_LEVEL_QUERY ) {
             val |= 0x03;
         }
-        __irq_mode = mode;
+        _irq_mode = mode;
         writeGT911(GT911_MODULE_SWITCH_1, val);
         return reloadConfig();
     }
@@ -304,13 +266,13 @@ public:
         // return val & 0x03;
         val &= 0x03;
         if (val == 0x00) {
-            __irq_mode = RISING;
+            _irq_mode = RISING;
         } else if (val == 0x01) {
-            __irq_mode = FALLING;
+            _irq_mode = FALLING;
         } else if (val == 0x02) {
-            __irq_mode = LOW_LEVEL_QUERY;
+            _irq_mode = LOW_LEVEL_QUERY;
         } else if (val == 0x03) {
-            __irq_mode = HIGH_LEVEL_QUERY;
+            _irq_mode = HIGH_LEVEL_QUERY;
         }
         return val;
     }
@@ -399,24 +361,24 @@ public:
         return "GT911";
     }
 
-    void  setGpioCallback(gpio_mode_fptr_t mode_cb,
-                          gpio_write_fptr_t write_cb,
-                          gpio_read_fptr_t read_cb)
+    void  setGpioCallback(CustomMode mode_cb,
+                          CustomWrite write_cb,
+                          CustomRead read_cb)
     {
-        SensorCommon::setGpioModeCallback(mode_cb);
-        SensorCommon::setGpioWriteCallback(write_cb);
-        SensorCommon::setGpioReadCallback(read_cb);
+        SensorHalCustom::setCustomMode(mode_cb);
+        SensorHalCustom::setCustomWrite(write_cb);
+        SensorHalCustom::setCustomRead(read_cb);
     }
 
-    void setHomeButtonCallback(home_button_callback_t cb, void *user_data)
+    void setHomeButtonCallback(HomeButtonCallback cb, void *user_data)
     {
-        __homeButtonCb = cb;
-        __userData = user_data;
+        _HButtonCallback = cb;
+        _userData = user_data;
     }
 
     bool writeConfig(const uint8_t *config_buffer, size_t buffer_size)
     {
-        setRegAddressLength(2);
+#if 0   //TODO:
         uint8_t check_sum = 0;
         for (int i = 0; i < (GT911_REG_LENGTH - 2 ); i++) {
             check_sum += config_buffer[i];
@@ -427,16 +389,19 @@ public:
             return false;
         }
         log_d("Update touch config , write %lu Bytes check sum:0x%X", buffer_size, check_sum);
-        int err =  writeRegister(GT911_CONFIG_VERSION, (uint8_t *)config_buffer, buffer_size);
-        setRegAddressLength(1);
+        uint8_t cmd[] = {lowByte(GT911_CONFIG_VERSION), highByte(GT911_CONFIG_VERSION)};
+        int err =  comm->writeRegister(GT911_CONFIG_VERSION, (uint8_t *)config_buffer, buffer_size);
+
 
 #if 0
-        while (digitalRead(__irq)) {
-            log_i("Wait irq.."); delay(500);
+        while (digitalRead(_irq)) {
+            log_i("Wait irq.."); hal->delay(500);
         }
-        int err =   writeBuffer((uint8_t *)config_buffer, buffer_size);
+        int err =   comm->writeBuffer((uint8_t *)config_buffer, buffer_size);
 #endif
-        return err == DEV_WIRE_NONE;
+        return err == 0;
+#endif
+        return false;
     }
 
     uint8_t *loadConfig(size_t *output_size, bool print_out = false)
@@ -445,7 +410,7 @@ public:
         uint8_t   *buffer = (uint8_t * )malloc(GT911_REG_LENGTH * sizeof(uint8_t));
         if (!buffer)return NULL;
         uint8_t write_buffer[2] = {highByte(GT911_CONFIG_VERSION), lowByte(GT911_CONFIG_VERSION)};
-        if (writeThenRead(write_buffer, SENSORLIB_COUNT(write_buffer), buffer, GT911_REG_LENGTH) == DEV_WIRE_ERR) {
+        if (comm->writeThenRead(write_buffer, arraySize(write_buffer), buffer, GT911_REG_LENGTH) == -1) {
             free(buffer);
             return NULL;
         }
@@ -469,7 +434,7 @@ public:
     bool reloadConfig()
     {
         uint8_t buffer[GT911_REG_LENGTH] = {highByte(GT911_CONFIG_VERSION), lowByte(GT911_CONFIG_VERSION)};
-        if (writeThenRead(buffer, 2, buffer, GT911_REG_LENGTH - 2) == DEV_WIRE_ERR) {
+        if (comm->writeThenRead(buffer, 2, buffer, GT911_REG_LENGTH - 2) == -1) {
             return false;
         }
 
@@ -517,8 +482,8 @@ public:
 
     void setConfigData(uint8_t *data, uint16_t length)
     {
-        __config = data;
-        __config_size = length;
+        _config = data;
+        _config_size = length;
     }
 
 private:
@@ -527,15 +492,15 @@ private:
     {
         uint8_t value = 0x00;
         uint8_t write_buffer[2] = {highByte(cmd), lowByte(cmd)};
-        writeThenRead(write_buffer, SENSORLIB_COUNT(write_buffer),
-                      &value, 1);
+        comm->writeThenRead(write_buffer, arraySize(write_buffer),
+                            &value, 1);
         return value;
     }
 
     int writeGT911(uint16_t cmd, uint8_t value)
     {
         uint8_t write_buffer[3] = {highByte(cmd), lowByte(cmd), value};
-        return writeBuffer(write_buffer, SENSORLIB_COUNT(write_buffer));
+        return comm->writeBuffer(write_buffer, arraySize(write_buffer));
     }
 
 
@@ -543,7 +508,7 @@ private:
     {
         // GT911_COMMAND 0x8040
         uint8_t write_buffer[3] = {0x80, 0x40, command};
-        writeBuffer(write_buffer, SENSORLIB_COUNT(write_buffer));
+        comm->writeBuffer(write_buffer, arraySize(write_buffer));
     }
 
     void inline clearBuffer()
@@ -554,132 +519,122 @@ private:
     bool probeAddress()
     {
         const uint8_t device_address[2]  = {GT911_SLAVE_ADDRESS_L, GT911_SLAVE_ADDRESS_H};
-        for (size_t i = 0; i < SENSORLIB_COUNT(device_address); ++i) {
-            __addr = device_address[i];
+        for (size_t i = 0; i < arraySize(device_address); ++i) {
+            I2CParam params(I2CParam::I2C_SET_ADDR, device_address[i]);
+            comm->setParams(params);
             for (int retry = 0; retry < 3; ++retry) {
-                if (getChipID() == GT911_DEV_ID) {
+                _chipID = getChipID();
+                if (_chipID == GT911_DEV_ID) {
+                    log_i("Touch device address found is : 0x%X", device_address[i]);
                     return true;
                 }
             }
         }
+        log_e("GT911 not found, touch device 7-bit address should be 0x5D or 0x14");
         return false;
     }
 
 
-    bool initImpl()
+    bool initImpl(uint8_t addr)
     {
         int16_t x = 0, y = 0;
 
-        if (__rst == SENSOR_PIN_NONE || __irq == SENSOR_PIN_NONE) {
+        if (addr == GT911_SLAVE_ADDRESS_H  && _rst != -1 && _irq != -1) {
 
-            if (__rst != SENSOR_PIN_NONE) {
-                this->setGpioMode(__rst, OUTPUT);
-                this->setGpioLevel(__rst, HIGH);
-                delay(10);
-            }
+            log_i("Try using 0x14 as the device address");
 
-            // Automatically determine the current device
-            // address when using the reset pin without connection
-            log_d("Probe address ....");
-            if (!probeAddress()) {
+            hal->pinMode(_rst, OUTPUT);
+            hal->pinMode(_irq, OUTPUT);
+
+            hal->digitalWrite(_rst, LOW);
+            hal->digitalWrite(_irq, HIGH);
+            hal->delayMicroseconds(120);
+            hal->digitalWrite(_rst, HIGH);
+
+#if   defined(ARDUINO)
+            // In the Arduino ESP32 platform, the test delay is 8ms and the GT911
+            // can be accessed correctly. If the time is too long, it will not be accessible.
+            hal->delay(8);
+#elif defined(ESP_PLATFORM)
+            // For the variant of GPIO extended RST,
+            // communication and delay are carried out simultaneously, and 18 ms is measured in T-RGB esp-idf new api
+            hal->delay(18);
+#endif
+
+            hal->pinMode(_irq, INPUT);
+
+        } else if (addr == GT911_SLAVE_ADDRESS_L && _rst != -1 && _irq != -1) {
+
+            log_i("Try using 0x5D as the device address");
+
+            hal->pinMode(_rst, OUTPUT);
+            hal->pinMode(_irq, OUTPUT);
+
+            hal->digitalWrite(_rst, LOW);
+            hal->digitalWrite(_irq, LOW);
+            hal->delayMicroseconds(120);
+            hal->digitalWrite(_rst, HIGH);
+#if   defined(ARDUINO)
+            // In the Arduino ESP32 platform, the test hal->delay is 8ms and the GT911
+            // can be accessed correctly. If the time is too long, it will not be accessible.
+            hal->delay(8);
+#elif defined(ESP_PLATFORM)
+            // For the variant of GPIO extended RST,
+            // communication and hal->delay are carried out simultaneously, and 18 ms is measured in T-RGB esp-idf new api
+            hal->delay(18);
+#endif
+            hal->pinMode(_irq, INPUT);
+
+        } else {
+            if (!autoProbe()) {
                 return false;
             }
-            log_d("Probe address is : 0x%X", __addr);
-
-            // Reset Config
-            reset();
-
-            this->setGpioMode(__irq, INPUT);
-
-        } else if (__addr == GT911_SLAVE_ADDRESS_H  &&
-                   __rst != SENSOR_PIN_NONE &&
-                   __irq != SENSOR_PIN_NONE) {
-
-            log_i("GT911 using 0x28 address!");
-
-            this->setGpioMode(__rst, OUTPUT);
-            this->setGpioMode(__irq, OUTPUT);
-
-            this->setGpioLevel(__rst, LOW);
-            this->setGpioLevel(__irq, HIGH);
-            delayMicroseconds(120);
-            this->setGpioLevel(__rst, HIGH);
-
-#if   defined(ARDUINO)
-            // In the Arduino ESP32 platform, the test delay is 8ms and the GT911 
-            // can be accessed correctly. If the time is too long, it will not be accessible.
-            delay(8);
-#elif defined(ESP_PLATFORM)
-            // For the variant of GPIO extended RST,
-            // communication and delay are carried out simultaneously, and 18 ms is measured in T-RGB esp-idf new api
-            delay(18);
-#endif
-            
-            this->setGpioMode(__irq, INPUT);
-
-        } else if (__addr == GT911_SLAVE_ADDRESS_L &&
-                   __rst != SENSOR_PIN_NONE &&
-                   __irq != SENSOR_PIN_NONE) {
-
-
-            log_i("GT911 using 0xBA address!");
-
-            this->setGpioMode(__rst, OUTPUT);
-            this->setGpioMode(__irq, OUTPUT);
-
-            this->setGpioLevel(__rst, LOW);
-            this->setGpioLevel(__irq, LOW);
-            delayMicroseconds(120);
-            this->setGpioLevel(__rst, HIGH);
-#if   defined(ARDUINO)
-            // In the Arduino ESP32 platform, the test delay is 8ms and the GT911 
-            // can be accessed correctly. If the time is too long, it will not be accessible.
-            delay(8);
-#elif defined(ESP_PLATFORM)
-            // For the variant of GPIO extended RST,
-            // communication and delay are carried out simultaneously, and 18 ms is measured in T-RGB esp-idf new api
-            delay(18);
-#endif
-            this->setGpioMode(__irq, INPUT);
-
         }
 
-        // For variants where the GPIO is controlled by I2C, a delay is required here
-        delay(20);
+        // For variants where the GPIO is controlled by I2C, a hal->delay is required here
+        hal->delay(20);
 
 
         /*
         * For the ESP32 platform, the default buffer is 128.
         * Need to re-apply for a larger buffer to fully read the configuration table.
-        * */
+        *
+        * TODO: NEED FIX
         if (!this->reallocBuffer(GT911_REG_LENGTH + 2)) {
             log_e("realloc i2c buffer failed !");
             return false;
         }
+         */
 
+        _chipID = getChipID();
 
-        __chipID = getChipID();
-        log_i("Product id:%ld", __chipID);
-
-        if (__chipID != GT911_DEV_ID) {
-            log_i("Not find device GT911");
-            return false;
+        if (_chipID != GT911_DEV_ID) {
+            log_i("Not found device GT911,Try to found the GT911");
+            if (!autoProbe()) {
+                return false;
+            }
         }
 
-        if (__config && __config_size != 0) {
+        log_i("Product id:%ld", _chipID);
+
+#if 0
+        /*If the configuration is not written, the touch screen may be damaged. */
+        if (_config && _config_size != 0) {
 
             log_d("Current version char :%x", getConfigVersion());
-            delay(100);
-            writeConfig(__config, __config_size);
-            if (__irq != -1) {
-                this->setGpioMode(__irq, INPUT);
+            hal->delay(100);
+            writeConfig(_config, _config_size);
+            if (_irq != -1) {
+                hal->pinMode(_irq, INPUT);
             }
             log_d("WriteConfig version char :%x", getConfigVersion());
-            // delay(1000);
+            // hal->delay(1000);
             // size_t output_size;
             // loadConfig(&output_size, true);
             // log_d("loadConfig version char :%x", version_char);
         }
+#endif
+
 
         log_i("Firmware version: 0x%x", getFwVersion());
         getResolution(&x, &y);
@@ -692,13 +647,13 @@ private:
         // Get the default interrupt trigger mode of the current screen
         getInterruptMode();
 
-        if ( __irq_mode == RISING) {
+        if ( _irq_mode == RISING) {
             log_i("Interrupt Mode:  RISING");
-        } else if (__irq_mode == FALLING) {
+        } else if (_irq_mode == FALLING) {
             log_i("Interrupt Mode:  FALLING");
-        } else if (__irq_mode == LOW_LEVEL_QUERY) {
+        } else if (_irq_mode == LOW_LEVEL_QUERY) {
             log_i("Interrupt Mode:  LOW_LEVEL_QUERY");
-        } else if (__irq_mode == HIGH_LEVEL_QUERY) {
+        } else if (_irq_mode == HIGH_LEVEL_QUERY) {
             log_i("Interrupt Mode:  HIGH_LEVEL_QUERY");
         } else {
             log_e("UNKOWN");
@@ -708,20 +663,42 @@ private:
             log_e("The screen configuration is lost, please update the configuration file again !");
             return false;
         }
+
         return true;
     }
 
-    int getReadMaskImpl()
+    bool autoProbe()
     {
-        return -1;
+        if (_rst != -1) {
+            hal->pinMode(_rst, OUTPUT);
+            hal->digitalWrite(_rst, HIGH);
+            hal->delay(10);
+        }
+
+        // Automatically determine the current device
+        // address when using the reset pin without connection
+        if (!probeAddress()) {
+            return false;
+        }
+
+        // Reset Config
+        reset();
+
+        if (_irq != -1) {
+            hal->pinMode(_irq, INPUT);
+        }
+
+        return true;
     }
 
+    static constexpr uint8_t LOW_LEVEL_QUERY  = 0x03;
+    static constexpr uint8_t HIGH_LEVEL_QUERY = 0x04;
 
 protected:
-    int __irq_mode;
-    uint8_t *__config = NULL;
-    uint16_t __config_size = 0;
+    std::unique_ptr<SensorCommBase> comm;
+    std::unique_ptr<SensorHal> hal;
+
+    int _irq_mode;
+    uint8_t *_config = NULL;
+    uint16_t _config_size = 0;
 };
-
-
-

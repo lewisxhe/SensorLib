@@ -31,6 +31,9 @@
 #include <SPI.h>
 #include <Arduino.h>
 #include "SensorQMC6310.hpp"
+#ifdef ARDUINO_T_BEAM_S3_SUPREME
+#include <XPowersAXP2101.tpp>   //PMU Library https://github.com/lewisxhe/XPowersLib.git
+#endif
 
 #ifndef SENSOR_SDA
 #define SENSOR_SDA  17
@@ -40,13 +43,23 @@
 #define SENSOR_SCL  18
 #endif
 
-#ifndef SENSOR_IRQ
-#define SENSOR_IRQ  -1
-#endif
-
-
 SensorQMC6310 qmc;
 
+void beginPower()
+{
+    // T_BEAM_S3_SUPREME The PMU voltage needs to be turned on to use the sensor
+#if defined(ARDUINO_T_BEAM_S3_SUPREME)
+    XPowersAXP2101 power;
+    power.begin(Wire1, AXP2101_SLAVE_ADDRESS, 42, 41);
+    power.disableALDO1();
+    power.disableALDO2();
+    delay(250);
+    power.setALDO1Voltage(3300);
+    power.enableALDO1();
+    power.setALDO2Voltage(3300);
+    power.enableALDO2();
+#endif
+}
 
 void calibrate()
 {
@@ -160,7 +173,9 @@ void setup()
     Serial.begin(115200);
     while (!Serial);
 
-    if (!qmc.begin(Wire, QMC6310_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
+    beginPower();
+
+    if (!qmc.begin(Wire, SENSOR_SDA, SENSOR_SCL)) {
         Serial.println("Failed to find QMC6310 - check your wiring!");
         while (1) {
             delay(1000);
@@ -215,9 +230,6 @@ void setup()
         * * */
         SensorQMC6310::DSR_1);
 
-
-
-
     // Calibration algorithm reference from
     // https://github.com/CoreElectronics/CE-PiicoDev-QMC6310-MicroPython-Module
     calibrate();
@@ -230,7 +242,6 @@ void setup()
 
 void loop()
 {
-
     //Wait data ready
     if (qmc.isDataReady()) {
 

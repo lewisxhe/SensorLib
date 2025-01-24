@@ -32,12 +32,11 @@
 #if defined(ARDUINO)
 
 
-
+// regdump does not call Wire.begin, you need to call it before using regdump
 int SensorWireHelper::regdump(TwoWire &w, Stream &serial, uint8_t devAddr, uint8_t start, uint8_t length)
 {
     uint8_t *buffer =  (uint8_t *)malloc(length);
     if (!buffer) return -1;
-    w.begin();
     w.beginTransmission(devAddr);
     w.write(start);
     if (w.endTransmission() != 0) {

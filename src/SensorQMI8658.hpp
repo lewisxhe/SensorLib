@@ -30,21 +30,16 @@
 #pragma once
 
 #include "REG/QMI8658Constants.h"
-#include "SensorCommon.tpp"
-#ifndef ARDUINO
-#include <math.h>
-#include <stdio.h>
-#endif
-typedef struct __IMUdata {
+#include "SensorPlatform.hpp"
+
+typedef struct {
     float x;
     float y;
     float z;
 } IMUdata;
 
-class SensorQMI8658 :
-    public SensorCommon<SensorQMI8658>
+class SensorQMI8658 : public QMI8658Constants
 {
-    friend class SensorCommon<SensorQMI8658>;
 public:
 
     typedef void (*EventCallBack_t)(void);
@@ -213,101 +208,133 @@ public:
         NO_MOTION_LOGIC_OR = _BV(7),
     };
 
-#if defined(ARDUINO)
-    SensorQMI8658(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = QMI8658_L_SLAVE_ADDRESS)
-    {
-        __wire = &w;
-        __sda = sda;
-        __scl = scl;
-        __addr = addr;
-    }
-
-    SensorQMI8658(int cs, int mosi = -1, int miso = -1, int sck = -1, PLATFORM_SPI_TYPE &spi = SPI)
-    {
-        __spi = &spi;
-        __cs = cs;
-        __miso = miso;
-        __mosi = mosi;
-        __sck = sck;
-    }
-
-#endif
-
-    SensorQMI8658()
-    {
-#if defined(ARDUINO)
-        __wire = &Wire;
-        __sda = DEFAULT_SDA;
-        __scl = DEFAULT_SCL;
-#endif
-        __addr = QMI8658_L_SLAVE_ADDRESS;
-    }
+    SensorQMI8658() : comm(nullptr), hal(nullptr) {}
 
     ~SensorQMI8658()
     {
-        log_i("~SensorQMI8658");
-        if (__fifo_buffer) {
-            free(__fifo_buffer);
-            __fifo_buffer = NULL;
+        if (comm) {
+            comm->deinit();
         }
-        deinit();
+        if (fifo_buffer) {
+            free(fifo_buffer);
+            fifo_buffer = NULL;
+        }
     }
 
 #if defined(ARDUINO)
-    bool init(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = QMI8658_L_SLAVE_ADDRESS)
+    bool begin(TwoWire &wire, uint8_t addr = QMI8658_L_SLAVE_ADDRESS, int sda = -1, int scl = -1)
     {
-        return SensorCommon::begin(w, addr, sda, scl);
+        if (!beginCommon<SensorCommI2C, HalArduino>(comm, hal, wire, addr, sda, scl)) {
+            return false;
+        }
+        return initImpl();
     }
-#endif
 
-    void deinit()
+    bool begin(SPIClass &spi, uint8_t csPin, int mosi = -1, int miso = -1, int sck = -1)
     {
-        // end();
+        if (!beginCommon<SensorCommSPI, HalArduino>(comm, hal, spi, csPin, mosi, miso, sck)) {
+            return false;
+        }
+        return initImpl();
+    }
+
+#elif defined(ESP_PLATFORM)
+
+#if defined(USEING_I2C_LEGACY)
+    bool begin(i2c_port_t port_num, uint8_t addr = QMI8658_L_SLAVE_ADDRESS, int sda = -1, int scl = -1)
+    {
+        hal = std::make_unique<HalEspIDF>();
+        if (!hal) {
+            return false;
+        }
+        comm = std::make_unique<SensorCommI2C>(port_num, addr, sda, scl);
+        if (!comm) {
+            return false;
+        }
+        comm->init();
+        return initImpl();
+    }
+#else
+    bool begin(i2c_master_bus_handle_t handle, uint8_t addr = QMI8658_L_SLAVE_ADDRESS)
+    {
+        hal = std::make_unique<HalEspIDF>();
+        if (!hal) {
+            return false;
+        }
+        comm = std::make_unique<SensorCommI2C>(handle, addr);
+        if (!comm) {
+            return false;
+        }
+        comm->init();
+        return initImpl();
+    }
+#endif  //ESP_PLATFORM
+
+
+    bool begin(spi_host_device_t host, spi_device_handle_t handle, uint8_t csPin, int mosi, int miso, int sck)
+    {
+        if (!beginCommon<SensorCommSPI, HalEspIDF>(comm, hal,
+                host, handle, csPin, mosi, miso, sck)) {
+            return false;
+        }
+        return initImpl();
+    }
+#endif  //ARDUINO
+
+    bool begin(SensorCommCustom::CustomCallback callback,
+               SensorCommCustomHal::CustomHalCallback hal_callback,
+               uint8_t addr = QMI8658_L_SLAVE_ADDRESS)
+    {
+        if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(COMM_CUSTOM,
+                callback, hal_callback, addr, comm, hal)) {
+            return false;
+        }
+        return initImpl();
     }
 
     bool reset(bool waitResult = true, uint32_t timeout = 500)
     {
         int val = 0;  // initialize with some value to avoid compilation errors
-        writeRegister(QMI8658_REG_RESET, QMI8658_REG_RESET_DEFAULT);
+        comm->writeRegister(QMI8658_REG_RESET, QMI8658_REG_RESET_DEFAULT);
         // Maximum 15ms for the Reset process to be finished
         if (waitResult) {
-            uint32_t start = millis();
-            while (millis() - start < timeout) {
-                val = readRegister(QMI8658_REG_RST_RESULT);
-                if (val != DEV_WIRE_ERR && val == QMI8658_REG_RST_RESULT_VAL) {
+            uint32_t start = hal->millis();
+            while (hal->millis() - start < timeout) {
+                val = comm->readRegister(QMI8658_REG_RST_RESULT);
+                if (val != -1 && val == QMI8658_REG_RST_RESULT_VAL) {
 
                     //EN.ADDR_AI
-                    setRegisterBit(QMI8658_REG_CTRL1, 6);
+                    comm->setRegisterBit(QMI8658_REG_CTRL1, 6);
 
                     return true;
                 }
-                delay(10);
+                hal->delay(10);
             }
             log_e("Reset chip failed, Response val = %d - 0x%X", val, val);
             return false;
         }
 
         //EN.ADDR_AI
-        setRegisterBit(QMI8658_REG_CTRL1, 6);
+        comm->setRegisterBit(QMI8658_REG_CTRL1, 6);
 
         return true;
     }
 
     uint8_t getChipID()
     {
-        return readRegister(QMI8658_REG_REVISION);
+        return comm->readRegister(QMI8658_REG_REVISION);
     }
 
     int whoAmI()
     {
-        return readRegister(QMI8658_REG_WHOAMI);
+        return comm->readRegister(QMI8658_REG_WHOAMI);
     }
 
     uint32_t getTimestamp()
     {
         uint8_t  buffer[3];
         uint32_t timestamp;
-        if (readRegister(QMI8658_REG_TIMESTAMP_L, buffer, 3) != DEV_WIRE_ERR) {
+        if (comm->readRegister(QMI8658_REG_TIMESTAMP_L, buffer, 3) != -1) {
             timestamp = (uint32_t)(((uint32_t)buffer[2] << 16) |
                                    ((uint32_t)buffer[1] << 8) | buffer[0]);
             if (timestamp > lastTimestamp) {
@@ -323,7 +350,7 @@ public:
     float getTemperature_C()
     {
         uint8_t buffer[2];
-        if (readRegister(QMI8658_REG_TEMPERATURE_L, buffer, 2) !=  DEV_WIRE_ERR) {
+        if (comm->readRegister(QMI8658_REG_TEMPERATURE_L, buffer, 2) !=  -1) {
             return (float)buffer[1] + ((float)buffer[0] / 256.0);
         }
         return NAN;
@@ -333,12 +360,12 @@ public:
     {
         switch (pin) {
         case INTERRUPT_PIN_1:
-            enable ? setRegisterBit(QMI8658_REG_CTRL1, 3) : clrRegisterBit(QMI8658_REG_CTRL1, 3);
-            __irq_enable_mask = enable ? __irq_enable_mask | 0x01 : __irq_enable_mask & 0xFE;
+            enable ? comm->setRegisterBit(QMI8658_REG_CTRL1, 3) : comm->clrRegisterBit(QMI8658_REG_CTRL1, 3);
+            _irq_enable_mask = enable ? _irq_enable_mask | 0x01 : _irq_enable_mask & 0xFE;
             break;
         case INTERRUPT_PIN_2:
-            enable ? setRegisterBit(QMI8658_REG_CTRL1, 4) : clrRegisterBit(QMI8658_REG_CTRL1, 4);
-            __irq_enable_mask = enable ? __irq_enable_mask | 0x02 : __irq_enable_mask & 0xFD;
+            enable ? comm->setRegisterBit(QMI8658_REG_CTRL1, 4) : comm->clrRegisterBit(QMI8658_REG_CTRL1, 4);
+            _irq_enable_mask = enable ? _irq_enable_mask | 0x02 : _irq_enable_mask & 0xFD;
             break;
         default:
             break;
@@ -347,14 +374,14 @@ public:
 
     uint8_t getIrqStatus()
     {
-        return readRegister(QMI8658_REG_STATUS_INT);
+        return comm->readRegister(QMI8658_REG_STATUS_INT);
     }
 
 
     void enableDataReadyINT(bool enable = true)
     {
-        enable ? clrRegisterBit(QMI8658_REG_CTRL7, 5) :
-        setRegisterBit(QMI8658_REG_CTRL7, 5);
+        enable ? comm->clrRegisterBit(QMI8658_REG_CTRL7, 5) :
+        comm->setRegisterBit(QMI8658_REG_CTRL7, 5);
     }
 
 
@@ -367,8 +394,8 @@ public:
         }
 
         //setAccelRange
-        if (writeRegister(QMI8658_REG_CTRL2, 0x8F, (range << 4)) != DEV_WIRE_NONE) {
-            return DEV_WIRE_ERR;
+        if (comm->writeRegister(QMI8658_REG_CTRL2, 0x8F, (range << 4)) != 0) {
+            return -1;
         }
 
         switch (range) {
@@ -383,30 +410,30 @@ public:
         }
 
         // setAccelOutputDataRate
-        if (writeRegister(QMI8658_REG_CTRL2, 0xF0, odr) != DEV_WIRE_NONE) {
-            return DEV_WIRE_ERR;
+        if (comm->writeRegister(QMI8658_REG_CTRL2, 0xF0, odr) != 0) {
+            return -1;
         }
 
         if (lpfOdr != LPF_OFF) {
             // setAccelLowPassFitterOdr
-            if (writeRegister(QMI8658_REG_CTRL5, QMI8658_ACCEL_LPF_MASK,  (lpfOdr << 1)) != DEV_WIRE_NONE) {
-                return DEV_WIRE_ERR;
+            if (comm->writeRegister(QMI8658_REG_CTRL5, QMI8658_ACCEL_LPF_MASK,  (lpfOdr << 1)) != 0) {
+                return -1;
             }
             // Enable Low-Pass Fitter
-            setRegisterBit(QMI8658_REG_CTRL5, 0);
+            comm->setRegisterBit(QMI8658_REG_CTRL5, 0);
         } else {
             // Disable Low-Pass Fitter
-            clrRegisterBit(QMI8658_REG_CTRL5, 0);
+            comm->clrRegisterBit(QMI8658_REG_CTRL5, 0);
         }
 
         // setAccelSelfTest
-        // selfTest ? setRegisterBit(QMI8658_REG_CTRL2, 7) : clrRegisterBit(QMI8658_REG_CTRL2, 7);
+        // selfTest ? comm->setRegisterBit(QMI8658_REG_CTRL2, 7) : comm->clrRegisterBit(QMI8658_REG_CTRL2, 7);
 
         if (en) {
             enableAccelerometer();
         }
 
-        return DEV_WIRE_NONE;
+        return 0;
     }
 
 
@@ -419,8 +446,8 @@ public:
         }
 
         // setGyroRange
-        if (writeRegister(QMI8658_REG_CTRL3, 0x8F, (range << 4)) != DEV_WIRE_NONE) {
-            return DEV_WIRE_ERR;
+        if (comm->writeRegister(QMI8658_REG_CTRL3, 0x8F, (range << 4)) != 0) {
+            return -1;
         }
 
         switch (range) {
@@ -438,30 +465,30 @@ public:
         }
 
         // setGyroOutputDataRate
-        if (writeRegister(QMI8658_REG_CTRL3, 0xF0, odr) != DEV_WIRE_NONE) {
-            return DEV_WIRE_ERR;
+        if (comm->writeRegister(QMI8658_REG_CTRL3, 0xF0, odr) != 0) {
+            return -1;
         }
 
         // setGyroLowPassFitterOdr
         if (lpfOdr != LPF_OFF) {
-            if (writeRegister(QMI8658_REG_CTRL5, QMI8658_GYRO_LPF_MASK,  (lpfOdr << 5)) != DEV_WIRE_NONE) {
-                return DEV_WIRE_ERR;
+            if (comm->writeRegister(QMI8658_REG_CTRL5, QMI8658_GYRO_LPF_MASK,  (lpfOdr << 5)) != 0) {
+                return -1;
             }
             // Enable Low-Pass Fitter
-            setRegisterBit(QMI8658_REG_CTRL5, 4);
+            comm->setRegisterBit(QMI8658_REG_CTRL5, 4);
         } else {
             // Disable Low-Pass Fitter
-            clrRegisterBit(QMI8658_REG_CTRL5, 4);
+            comm->clrRegisterBit(QMI8658_REG_CTRL5, 4);
         }
 
         // setGyroSelfTest
-        // selfTest ? setRegisterBit(QMI8658_REG_CTRL3, 7) : clrRegisterBit(QMI8658_REG_CTRL3, 7);
+        // selfTest ? comm->setRegisterBit(QMI8658_REG_CTRL3, 7) : comm->clrRegisterBit(QMI8658_REG_CTRL3, 7);
 
         if (en) {
             enableGyroscope();
         }
 
-        return DEV_WIRE_NONE;
+        return 0;
     }
 
 
@@ -482,40 +509,40 @@ public:
         }
 
         // Reset FIFO configure
-        if (writeCommand(CTRL_CMD_RST_FIFO) != DEV_WIRE_NONE) {
+        if (writeCommand(CTRL_CMD_RST_FIFO) != 0) {
             log_e("Reset fifo failed!");
-            return DEV_WIRE_ERR;
+            return -1;
         }
 
-        __fifo_interrupt = true;
+        _fifo_interrupt = true;
 
         switch (pin) {
         case INTERRUPT_PIN_1:
-            setRegisterBit(QMI8658_REG_CTRL1, 2);
+            comm->setRegisterBit(QMI8658_REG_CTRL1, 2);
             break;
         case INTERRUPT_PIN_2:
-            clrRegisterBit(QMI8658_REG_CTRL1, 2);
+            comm->clrRegisterBit(QMI8658_REG_CTRL1, 2);
             break;
         case INTERRUPT_PIN_DISABLE:
             // Saves whether the fifo interrupt pin is enabled
-            __fifo_interrupt  = false;
+            _fifo_interrupt  = false;
             break;
         default:
             break;
         }
 
         // Set fifo mode and samples len
-        __fifo_mode = (samples << 2) | mode;
-        if (writeRegister(QMI8658_REG_FIFO_CTRL, __fifo_mode) == DEV_WIRE_ERR) {
-            return DEV_WIRE_ERR;
+        _fifo_mode = (samples << 2) | mode;
+        if (comm->writeRegister(QMI8658_REG_FIFO_CTRL, _fifo_mode) == -1) {
+            return -1;
         }
 
         /*
         * The FIFO_WTM register(0x13) indicates the expected level of FIFO data that host wants to get the FIFO Watermark interrupt.
         * The unit is sample, which means 6 bytes if one of accelerometer and gyroscope is enabled, and 12 bytes if both are enabled.
         * */
-        if (writeRegister(QMI8658_REG_FIFO_WTM_TH, trigger_samples ) == DEV_WIRE_ERR) {
-            return DEV_WIRE_ERR;
+        if (comm->writeRegister(QMI8658_REG_FIFO_WTM_TH, trigger_samples ) == -1) {
+            return -1;
         }
 
         if (enGyro) {
@@ -526,7 +553,7 @@ public:
             enableAccelerometer();
         }
 
-        int res =  readRegister(QMI8658_REG_FIFO_CTRL);
+        int res =  comm->readRegister(QMI8658_REG_FIFO_CTRL);
         log_d("QMI8658_REG_FIFO_CTRL : 0x%X", res);
         if ((res & 0x02) == 0x02) {
             log_d("Enabled Stream mode.");
@@ -546,17 +573,17 @@ public:
             log_d("16 samples.");
         }
 
-        return DEV_WIRE_NONE;
+        return 0;
     }
 
     uint16_t readFromFifo(IMUdata *acc, uint16_t accLength, IMUdata *gyro, uint16_t gyrLength)
     {
-        if (__fifo_mode == FIFO_MODE_BYPASS) {
+        if (_fifo_mode == FIFO_MODE_BYPASS) {
             log_e("FIFO is not configured.");
             return 0;
         }
 
-        if (!__gyro_enabled && !__accel_enabled) {
+        if (!_gyro_enabled && !_accel_enabled) {
             log_e("Sensor not enabled.");
             return 0;
         }
@@ -566,12 +593,12 @@ public:
             return 0;
         }
 
-        if (!__fifo_buffer) {
+        if (!fifo_buffer) {
             log_e("FIFO buffer is NULL");
             return 0;
         }
 
-        uint8_t enabled_sensor_count = (__accel_enabled && __gyro_enabled) ? 2 : 1;
+        uint8_t enabled_sensor_count = (_accel_enabled && _gyro_enabled) ? 2 : 1;
         uint16_t samples_per_sensor = data_bytes / (6 * enabled_sensor_count);
         uint16_t total_samples = samples_per_sensor * enabled_sensor_count;
 
@@ -581,12 +608,12 @@ public:
         uint16_t gyro_index = 0;
 
         for (uint16_t i = 0; i < total_samples; ++i) {
-            auto data = reinterpret_cast<int16_t *>(&__fifo_buffer[i * 6]);
+            auto data = reinterpret_cast<int16_t *>(&fifo_buffer[i * 6]);
             int16_t x = data[0];
             int16_t y = data[1];
             int16_t z = data[2];
 
-            if (__accel_enabled && __gyro_enabled) {
+            if (_accel_enabled && _gyro_enabled) {
                 if (i % 2 == 0) {
                     // Accel
                     if (accel_index < accLength) {
@@ -604,14 +631,14 @@ public:
                         gyro_index++;
                     }
                 }
-            } else if (__accel_enabled) {
+            } else if (_accel_enabled) {
                 if (accel_index < accLength) {
                     acc[accel_index].x = x * accelScales;
                     acc[accel_index].y = y * accelScales;
                     acc[accel_index].z = z * accelScales;
                     accel_index++;
                 }
-            } else if (__gyro_enabled) {
+            } else if (_gyro_enabled) {
                 if (gyro_index < gyrLength) {
                     gyro[gyro_index].x = x * gyroScales;
                     gyro[gyro_index].y = y * gyroScales;
@@ -630,12 +657,12 @@ private:
     {
         uint8_t sam[] = {16, 32, 64, 128};
         uint8_t sensors  = 0;
-        if (__gyro_enabled && __accel_enabled) {
+        if (_gyro_enabled && _accel_enabled) {
             sensors = 2;
-        } else if (__gyro_enabled || __accel_enabled) {
+        } else if (_gyro_enabled || _accel_enabled) {
             sensors = 1;
         }
-        uint8_t samples =  ((__fifo_mode >> 2) & 0x03) ;
+        uint8_t samples =  ((_fifo_mode >> 2) & 0x03) ;
         return sam[samples] * 6 * sensors;
     }
 
@@ -649,38 +676,38 @@ private:
         uint8_t  status[2];
         uint16_t fifo_bytes   = 0;
 
-        if ((__irq != -1) && __fifo_interrupt) {
+        if ((_irq != -1) && _fifo_interrupt) {
             /*
              * Once the corresponds INT pin is configured to the push-pull mode, the FIFO watermark interrupt can be seen on the
              * corresponds INT pin. It will keep high level as long as the FIFO filled level is equal to or higher than the watermark, will
              * drop to low level as long as the FIFO filled level is lower than the configured FIFO watermark after reading out by host
              * and FIFO_RD_MODE is cleared.
             */
-            if (this->getGpioLevel(__irq) == LOW) {
+            if (hal->digitalRead(_irq) == LOW) {
                 return false;
             }
         }
 
         size_t alloc_size = getFifoNeedBytes();
-        if (!__fifo_buffer) {
-            __fifo_buffer = (uint8_t *)calloc(alloc_size, sizeof(uint8_t));
-            if (!__fifo_buffer) {
+        if (!fifo_buffer) {
+            fifo_buffer = (uint8_t *)calloc(alloc_size, sizeof(uint8_t));
+            if (!fifo_buffer) {
                 log_e("Calloc buffer size %u bytes failed!", alloc_size);
                 return 0;
             }
-            __fifo_size = alloc_size;
+            _fifo_size = alloc_size;
 
-        } else if (alloc_size > __fifo_size) {
-            __fifo_buffer = (uint8_t *)realloc(__fifo_buffer, alloc_size);
-            if (!__fifo_buffer) {
+        } else if (alloc_size > _fifo_size) {
+            fifo_buffer = (uint8_t *)realloc(fifo_buffer, alloc_size);
+            if (!fifo_buffer) {
                 log_e("Realloc buffer size %u bytes failed!", alloc_size);
                 return 0;
             }
         }
 
         // 1.Got FIFO watermark interrupt by INT pin or polling the FIFO_STATUS register (FIFO_WTM and/or FIFO_FULL).
-        int val = readRegister(QMI8658_REG_FIFO_STATUS);
-        if (val == DEV_WIRE_ERR) {
+        int val = comm->readRegister(QMI8658_REG_FIFO_STATUS);
+        if (val == -1) {
             return 0;
         }
         log_d("FIFO status:0x%x", val);
@@ -701,7 +728,7 @@ private:
         }
 
         // 2.Read the FIFO_SMPL_CNT and FIFO_STATUS registers, to calculate the level of FIFO content data, refer to 8.4 FIFO Sample Count.
-        if (readRegister(QMI8658_REG_FIFO_COUNT, status, 2) == DEV_WIRE_ERR) {
+        if (comm->readRegister(QMI8658_REG_FIFO_COUNT, status, 2) == -1) {
             log_e("Bus communication failed!");
             return 0;
         }
@@ -717,18 +744,18 @@ private:
         //Samples 128 * 6 * 2  = 1536
 
         // 3.Send CTRL_CMD_REQ_FIFO (0x05) by CTRL9 command, to enable FIFO read mode. Refer to CTRL_CMD_REQ_FIFO for details.
-        if (writeCommand(CTRL_CMD_REQ_FIFO) != DEV_WIRE_NONE) {
+        if (writeCommand(CTRL_CMD_REQ_FIFO) != 0) {
             log_e("Request FIFO failed!");
             return 0;
         }
         // 4.Read from the FIFO_DATA register per FIFO_Sample_Count.
-        if (readRegister(QMI8658_REG_FIFO_DATA, __fifo_buffer, fifo_bytes) == DEV_WIRE_ERR) {
+        if (comm->readRegister(QMI8658_REG_FIFO_DATA, fifo_buffer, fifo_bytes) == -1) {
             log_e("Request FIFO data failed !");
             return 0;
         }
 
         // 5.Disable the FIFO Read Mode by setting FIFO_CTRL.FIFO_rd_mode to 0. New data will be filled into FIFO afterwards.
-        if (writeRegister(QMI8658_REG_FIFO_CTRL, __fifo_mode) == DEV_WIRE_ERR) {
+        if (comm->writeRegister(QMI8658_REG_FIFO_CTRL, _fifo_mode) == -1) {
             log_e("Clear FIFO flag failed!");
             return 0;
         }
@@ -741,16 +768,16 @@ public:
 
     bool enableAccelerometer()
     {
-        if (setRegisterBit(QMI8658_REG_CTRL7, 0)) {
-            __accel_enabled = true;
+        if (comm->setRegisterBit(QMI8658_REG_CTRL7, 0)) {
+            _accel_enabled = true;
         }
-        return __accel_enabled;
+        return _accel_enabled;
     }
 
     bool disableAccelerometer()
     {
-        if (clrRegisterBit(QMI8658_REG_CTRL7, 0)) {
-            __accel_enabled = false;
+        if (comm->clrRegisterBit(QMI8658_REG_CTRL7, 0)) {
+            _accel_enabled = false;
             return true;
         }
         return false;
@@ -758,26 +785,26 @@ public:
 
     bool isEnableAccelerometer()
     {
-        return __accel_enabled;
+        return _accel_enabled;
     }
 
     bool isEnableGyroscope()
     {
-        return __gyro_enabled;
+        return _gyro_enabled;
     }
 
     bool enableGyroscope()
     {
-        if (setRegisterBit(QMI8658_REG_CTRL7, 1)) {
-            __gyro_enabled = true;
+        if (comm->setRegisterBit(QMI8658_REG_CTRL7, 1)) {
+            _gyro_enabled = true;
         }
-        return __gyro_enabled;
+        return _gyro_enabled;
     }
 
     bool disableGyroscope()
     {
-        if (clrRegisterBit(QMI8658_REG_CTRL7, 1)) {
-            __gyro_enabled = false;
+        if (comm->clrRegisterBit(QMI8658_REG_CTRL7, 1)) {
+            _gyro_enabled = false;
             return true;
         }
         return false;
@@ -785,11 +812,11 @@ public:
 
     bool getAccelRaw(int16_t *rawBuffer)
     {
-        if (!__accel_enabled) {
+        if (!_accel_enabled) {
             return false;
         }
         uint8_t buffer[6] = {0};
-        if (readRegister(QMI8658_REG_AX_L, buffer, 6) != DEV_WIRE_ERR) {
+        if (comm->readRegister(QMI8658_REG_AX_L, buffer, 6) != -1) {
             rawBuffer[0] = (int16_t)(buffer[1] << 8) | (buffer[0]);
             rawBuffer[1] = (int16_t)(buffer[3] << 8) | (buffer[2]);
             rawBuffer[2] = (int16_t)(buffer[5] << 8) | (buffer[4]);
@@ -801,7 +828,7 @@ public:
 
     bool getAccelerometer(float &x, float &y, float &z)
     {
-        if (!__accel_enabled) {
+        if (!_accel_enabled) {
             return false;
         }
         int16_t raw[3];
@@ -826,11 +853,11 @@ public:
 
     bool getGyroRaw(int16_t *rawBuffer)
     {
-        if (!__gyro_enabled) {
+        if (!_gyro_enabled) {
             return false;
         }
         uint8_t buffer[6] = {0};
-        if (readRegister(QMI8658_REG_GX_L, buffer, 6) != DEV_WIRE_ERR) {
+        if (comm->readRegister(QMI8658_REG_GX_L, buffer, 6) != -1) {
             rawBuffer[0] = (int16_t)(buffer[1] << 8) | (buffer[0]);
             rawBuffer[1] = (int16_t)(buffer[3] << 8) | (buffer[2]);
             rawBuffer[2] = (int16_t)(buffer[5] << 8) | (buffer[4]);
@@ -842,7 +869,7 @@ public:
 
     int getGyroscope(float &x, float &y, float &z)
     {
-        if (!__gyro_enabled) {
+        if (!_gyro_enabled) {
             return false;
         }
         int16_t raw[3];
@@ -857,23 +884,23 @@ public:
 
     bool getDataReady()
     {
-        if ((__irq_enable_mask & 0x03) && (__irq != -1)) {
-            if (this->getGpioLevel(__irq)) {
+        if ((_irq_enable_mask & 0x03) && (_irq != -1)) {
+            if (hal->digitalRead(_irq)) {
                 return false;
             }
         }
 
         switch (sampleMode) {
         case SYNC_MODE:
-            return  getRegisterBit(QMI8658_REG_STATUS_INT, 1);
+            return  comm->getRegisterBit(QMI8658_REG_STATUS_INT, 1);
         case ASYNC_MODE:
             //TODO: When Accel and Gyro are configured with different rates, this will always be false
-            if (__accel_enabled & __gyro_enabled) {
-                return readRegister(QMI8658_REG_STATUS0) & 0x03;
-            } else if (__gyro_enabled) {
-                return readRegister(QMI8658_REG_STATUS0) & 0x02;
-            } else if (__accel_enabled) {
-                return readRegister(QMI8658_REG_STATUS0) & 0x01;
+            if (_accel_enabled & _gyro_enabled) {
+                return comm->readRegister(QMI8658_REG_STATUS0) & 0x03;
+            } else if (_gyro_enabled) {
+                return comm->readRegister(QMI8658_REG_STATUS0) & 0x02;
+            } else if (_accel_enabled) {
+                return comm->readRegister(QMI8658_REG_STATUS0) & 0x01;
             }
             break;
         default:
@@ -885,20 +912,20 @@ public:
     int enableSyncSampleMode()
     {
         sampleMode = SYNC_MODE;
-        return setRegisterBit(QMI8658_REG_CTRL7, 7);
+        return comm->setRegisterBit(QMI8658_REG_CTRL7, 7);
     }
 
     int disableSyncSampleMode()
     {
         sampleMode = ASYNC_MODE;
-        return clrRegisterBit(QMI8658_REG_CTRL7, 7);
+        return comm->clrRegisterBit(QMI8658_REG_CTRL7, 7);
     }
 
     int enableLockingMechanism()
     {
         enableSyncSampleMode();
-        if (writeRegister(QMI8658_REG_CAL1_L, 0x01) != DEV_WIRE_NONE) {
-            return DEV_WIRE_ERR;
+        if (comm->writeRegister(QMI8658_REG_CAL1_L, 0x01) != 0) {
+            return -1;
         }
         return writeCommand(CTRL_CMD_AHB_CLOCK_GATING);
 
@@ -907,8 +934,8 @@ public:
     int disableLockingMechanism()
     {
         disableSyncSampleMode();
-        if (writeRegister(QMI8658_REG_CAL1_L, 0x00) != DEV_WIRE_NONE) {
-            return DEV_WIRE_ERR;
+        if (comm->writeRegister(QMI8658_REG_CAL1_L, (uint8_t)0x00) != 0) {
+            return -1;
         }
         return writeCommand(CTRL_CMD_AHB_CLOCK_GATING);
     }
@@ -916,12 +943,12 @@ public:
     void dumpCtrlRegister()
     {
         uint8_t buffer[9];
-        readRegister(QMI8658_REG_CTRL1, buffer, 9);
+        comm->readRegister(QMI8658_REG_CTRL1, buffer, 9);
         for (int i = 0; i < 9; ++i) {
             log_d("CTRL%d: REG:0x%02X HEX:0x%02X\n", i + 1, QMI8658_REG_CTRL1 + i, buffer[i]);
         }
 
-        buffer[0] =  readRegister(QMI8658_REG_FIFO_CTRL);
+        buffer[0] =  comm->readRegister(QMI8658_REG_FIFO_CTRL);
         log_d("FIFO_CTRL: REG:0x%02X HEX:0x%02X\n",  QMI8658_REG_FIFO_CTRL, buffer[0]);
     }
 
@@ -929,23 +956,23 @@ public:
     {
         disableAccelerometer();
         disableGyroscope();
-        setRegisterBit(QMI8658_REG_CTRL1, 1);
+        comm->setRegisterBit(QMI8658_REG_CTRL1, 1);
     }
 
     void powerOn()
     {
-        clrRegisterBit(QMI8658_REG_CTRL1, 1);
+        comm->clrRegisterBit(QMI8658_REG_CTRL1, 1);
     }
 
     int getStatusRegister()
     {
-        return readRegister(QMI8658_REG_STATUS1);
+        return comm->readRegister(QMI8658_REG_STATUS1);
     }
 
     int configActivityInterruptMap(IntPin pin)
     {
-        return pin == INTERRUPT_PIN_1 ? setRegisterBit(QMI8658_REG_CTRL8, 6)
-               : clrRegisterBit(QMI8658_REG_CTRL8, 6);
+        return pin == INTERRUPT_PIN_1 ? comm->setRegisterBit(QMI8658_REG_CTRL8, 6)
+               : comm->clrRegisterBit(QMI8658_REG_CTRL8, 6);
     }
 
     /**
@@ -994,25 +1021,25 @@ public:
             disableAccelerometer();
         }
 
-        writeRegister(QMI8658_REG_CAL1_L, ped_sample_cnt & 0xFF);
-        writeRegister(QMI8658_REG_CAL1_H, (ped_sample_cnt >> 8) & 0xFF);
-        writeRegister(QMI8658_REG_CAL2_L, ped_fix_peak2peak & 0xFF);
-        writeRegister(QMI8658_REG_CAL2_H, (ped_fix_peak2peak >> 8) & 0xFF);
-        writeRegister(QMI8658_REG_CAL3_L, ped_fix_peak & 0xFF);
-        writeRegister(QMI8658_REG_CAL3_H, (ped_fix_peak >> 8) & 0xFF);
-        writeRegister(QMI8658_REG_CAL4_H, 0x01);
-        writeRegister(QMI8658_REG_CAL4_L, 0x02);
+        comm->writeRegister(QMI8658_REG_CAL1_L, ped_sample_cnt & 0xFF);
+        comm->writeRegister(QMI8658_REG_CAL1_H, (ped_sample_cnt >> 8) & 0xFF);
+        comm->writeRegister(QMI8658_REG_CAL2_L, ped_fix_peak2peak & 0xFF);
+        comm->writeRegister(QMI8658_REG_CAL2_H, (ped_fix_peak2peak >> 8) & 0xFF);
+        comm->writeRegister(QMI8658_REG_CAL3_L, ped_fix_peak & 0xFF);
+        comm->writeRegister(QMI8658_REG_CAL3_H, (ped_fix_peak >> 8) & 0xFF);
+        comm->writeRegister(QMI8658_REG_CAL4_H, 0x01);
+        comm->writeRegister(QMI8658_REG_CAL4_L, 0x02);
 
         writeCommand(CTRL_CMD_CONFIGURE_PEDOMETER);
 
-        writeRegister(QMI8658_REG_CAL1_L, ped_time_up & 0xFF);
-        writeRegister(QMI8658_REG_CAL1_H, (ped_time_up >> 8) & 0xFF);
-        writeRegister(QMI8658_REG_CAL2_L, ped_time_low);
-        writeRegister(QMI8658_REG_CAL2_H, ped_time_cnt_entry);
-        writeRegister(QMI8658_REG_CAL3_L, ped_fix_precision);
-        writeRegister(QMI8658_REG_CAL3_H, ped_sig_count);
-        writeRegister(QMI8658_REG_CAL4_H, 0x02);
-        writeRegister(QMI8658_REG_CAL4_L, 0x02);
+        comm->writeRegister(QMI8658_REG_CAL1_L, ped_time_up & 0xFF);
+        comm->writeRegister(QMI8658_REG_CAL1_H, (ped_time_up >> 8) & 0xFF);
+        comm->writeRegister(QMI8658_REG_CAL2_L, ped_time_low);
+        comm->writeRegister(QMI8658_REG_CAL2_H, ped_time_cnt_entry);
+        comm->writeRegister(QMI8658_REG_CAL3_L, ped_fix_precision);
+        comm->writeRegister(QMI8658_REG_CAL3_H, ped_sig_count);
+        comm->writeRegister(QMI8658_REG_CAL4_H, 0x02);
+        comm->writeRegister(QMI8658_REG_CAL4_L, 0x02);
 
         writeCommand(CTRL_CMD_CONFIGURE_PEDOMETER);
 
@@ -1029,7 +1056,7 @@ public:
     uint32_t getPedometerCounter()
     {
         uint8_t buffer[3];
-        if (readRegister(QMI8658_REG_STEP_CNT_LOW, buffer, 3) != DEV_WIRE_ERR) {
+        if (comm->readRegister(QMI8658_REG_STEP_CNT_LOW, buffer, 3) != -1) {
             return (uint32_t)(((uint32_t)buffer[2] << 16) | ((uint32_t)buffer[1] << 8) | buffer[0]);
         }
         return 0;
@@ -1043,7 +1070,7 @@ public:
     // The Pedometer can only work in Non-SyncSample mode
     bool enablePedometer(IntPin pin = INTERRUPT_PIN_DISABLE)
     {
-        if (!__accel_enabled)return false;
+        if (!_accel_enabled)return false;
 
         switch (pin) {
         case INTERRUPT_PIN_1:
@@ -1054,13 +1081,13 @@ public:
         default:
             break;
         }
-        return setRegisterBit(QMI8658_REG_CTRL8, 4);
+        return comm->setRegisterBit(QMI8658_REG_CTRL8, 4);
     }
 
     bool disablePedometer()
     {
-        if (!__accel_enabled)return false;
-        return clrRegisterBit(QMI8658_REG_CTRL8, 4);
+        if (!_accel_enabled)return false;
+        return comm->clrRegisterBit(QMI8658_REG_CTRL8, 4);
     }
 
 
@@ -1113,24 +1140,24 @@ public:
         if (enAccel) {
             disableAccelerometer();
         }
-        writeRegister(QMI8658_REG_CAL1_L, peakWindow);
-        writeRegister(QMI8658_REG_CAL1_H, priority);
-        writeRegister(QMI8658_REG_CAL2_L, tapWindow & 0xFF);
-        writeRegister(QMI8658_REG_CAL2_H, (tapWindow >> 8) & 0xFF);
-        writeRegister(QMI8658_REG_CAL3_L, dTapWindow & 0xFF);
-        writeRegister(QMI8658_REG_CAL3_H, (dTapWindow >> 8) & 0xFF);
-        // writeRegister(QMI8658_REG_CAL4_L, 0x02);
-        writeRegister(QMI8658_REG_CAL4_H, 0x01);
+        comm->writeRegister(QMI8658_REG_CAL1_L, peakWindow);
+        comm->writeRegister(QMI8658_REG_CAL1_H, priority);
+        comm->writeRegister(QMI8658_REG_CAL2_L, tapWindow & 0xFF);
+        comm->writeRegister(QMI8658_REG_CAL2_H, (tapWindow >> 8) & 0xFF);
+        comm->writeRegister(QMI8658_REG_CAL3_L, dTapWindow & 0xFF);
+        comm->writeRegister(QMI8658_REG_CAL3_H, (dTapWindow >> 8) & 0xFF);
+        // comm->writeRegister(QMI8658_REG_CAL4_L, 0x02);
+        comm->writeRegister(QMI8658_REG_CAL4_H, 0x01);
 
         writeCommand(CTRL_CMD_CONFIGURE_TAP);
 
         // 1-byte unsigned,7-bits fraction
         uint8_t alphaHex = (uint8_t)(alpha * 128);
-        writeRegister(QMI8658_REG_CAL1_L, alphaHex);
+        comm->writeRegister(QMI8658_REG_CAL1_L, alphaHex);
 
         // 1-byte unsigned,7-bits fraction
         uint8_t gammaHex = (uint8_t)(gamma * 128);
-        writeRegister(QMI8658_REG_CAL1_H, gammaHex);
+        comm->writeRegister(QMI8658_REG_CAL1_H, gammaHex);
 
         const double g = 9.81; // Earth's gravitational acceleration m/s^2
         double resolution = 0.001 * g * g; // Calculation resolution  0.001g^2
@@ -1138,16 +1165,16 @@ public:
         double acceleration_square = peakMagThr * g * g;     // Calculate the square of the acceleration
         uint16_t value = (uint16_t)(acceleration_square / resolution); // Calculates the value of a 2-byte unsigned integer
 
-        writeRegister(QMI8658_REG_CAL2_L, lowByte(value));
-        writeRegister(QMI8658_REG_CAL2_H, highByte(value));
+        comm->writeRegister(QMI8658_REG_CAL2_L, lowByte(value));
+        comm->writeRegister(QMI8658_REG_CAL2_H, highByte(value));
 
         acceleration_square = UDMThr * g * g;     // Calculate the square of the acceleration
         value = (uint16_t)(acceleration_square / resolution); // Calculates the value of a 2-byte unsigned integer
 
-        writeRegister(QMI8658_REG_CAL3_L, lowByte(value));
-        writeRegister(QMI8658_REG_CAL3_H, highByte(value));
-        // writeRegister(QMI8658_REG_CAL4_L, 0x02);
-        writeRegister(QMI8658_REG_CAL4_H, 0x02);
+        comm->writeRegister(QMI8658_REG_CAL3_L, lowByte(value));
+        comm->writeRegister(QMI8658_REG_CAL3_H, highByte(value));
+        // comm->writeRegister(QMI8658_REG_CAL4_L, 0x02);
+        comm->writeRegister(QMI8658_REG_CAL4_H, 0x02);
 
         writeCommand(CTRL_CMD_CONFIGURE_TAP);
 
@@ -1164,7 +1191,7 @@ public:
 
     bool enableTap(IntPin pin = INTERRUPT_PIN_DISABLE)
     {
-        if (!__accel_enabled)return false;
+        if (!_accel_enabled)return false;
         switch (pin) {
         case INTERRUPT_PIN_1:
         case INTERRUPT_PIN_2:
@@ -1174,17 +1201,17 @@ public:
         default:
             break;
         }
-        return setRegisterBit(QMI8658_REG_CTRL8, 0);
+        return comm->setRegisterBit(QMI8658_REG_CTRL8, 0);
     }
 
     bool disableTap()
     {
-        return clrRegisterBit(QMI8658_REG_CTRL8, 0);
+        return comm->clrRegisterBit(QMI8658_REG_CTRL8, 0);
     }
 
     TapEvent getTapStatus()
     {
-        int val = readRegister(QMI8658_REG_TAP_STATUS);
+        int val = comm->readRegister(QMI8658_REG_TAP_STATUS);
         if (val & _BV(7)) {
             log_i("Tap was detected on the negative direction of the Tap axis");
         } else {
@@ -1268,25 +1295,25 @@ public:
             disableAccelerometer();
         }
 
-        writeRegister(QMI8658_REG_CAL1_L, mgToBytes(AnyMotionXThr));
-        writeRegister(QMI8658_REG_CAL1_H, mgToBytes(AnyMotionYThr));
-        writeRegister(QMI8658_REG_CAL2_L, mgToBytes(AnyMotionZThr));
-        writeRegister(QMI8658_REG_CAL2_H, mgToBytes(NoMotionXThr));
-        writeRegister(QMI8658_REG_CAL3_L, mgToBytes(NoMotionYThr));
-        writeRegister(QMI8658_REG_CAL3_H, mgToBytes(NoMotionZThr));
-        writeRegister(QMI8658_REG_CAL4_L, modeCtrl);
-        writeRegister(QMI8658_REG_CAL4_H, 0x01);
+        comm->writeRegister(QMI8658_REG_CAL1_L, mgToBytes(AnyMotionXThr));
+        comm->writeRegister(QMI8658_REG_CAL1_H, mgToBytes(AnyMotionYThr));
+        comm->writeRegister(QMI8658_REG_CAL2_L, mgToBytes(AnyMotionZThr));
+        comm->writeRegister(QMI8658_REG_CAL2_H, mgToBytes(NoMotionXThr));
+        comm->writeRegister(QMI8658_REG_CAL3_L, mgToBytes(NoMotionYThr));
+        comm->writeRegister(QMI8658_REG_CAL3_H, mgToBytes(NoMotionZThr));
+        comm->writeRegister(QMI8658_REG_CAL4_L, modeCtrl);
+        comm->writeRegister(QMI8658_REG_CAL4_H, 0x01);
 
         writeCommand(CTRL_CMD_CONFIGURE_MOTION);
 
-        writeRegister(QMI8658_REG_CAL1_L, AnyMotionWindow);
-        writeRegister(QMI8658_REG_CAL1_H, NoMotionWindow);
-        writeRegister(QMI8658_REG_CAL2_L, lowByte(SigMotionWaitWindow));
-        writeRegister(QMI8658_REG_CAL2_H, highByte(SigMotionWaitWindow));
-        writeRegister(QMI8658_REG_CAL3_L, lowByte(SigMotionConfirmWindow));
-        writeRegister(QMI8658_REG_CAL3_H, highByte(SigMotionConfirmWindow));
-        // writeRegister(QMI8658_REG_CAL4_L, 0x02);
-        writeRegister(QMI8658_REG_CAL4_H, 0x02);
+        comm->writeRegister(QMI8658_REG_CAL1_L, AnyMotionWindow);
+        comm->writeRegister(QMI8658_REG_CAL1_H, NoMotionWindow);
+        comm->writeRegister(QMI8658_REG_CAL2_L, lowByte(SigMotionWaitWindow));
+        comm->writeRegister(QMI8658_REG_CAL2_H, highByte(SigMotionWaitWindow));
+        comm->writeRegister(QMI8658_REG_CAL3_L, lowByte(SigMotionConfirmWindow));
+        comm->writeRegister(QMI8658_REG_CAL3_H, highByte(SigMotionConfirmWindow));
+        // comm->writeRegister(QMI8658_REG_CAL4_L, 0x02);
+        comm->writeRegister(QMI8658_REG_CAL4_H, 0x02);
 
         writeCommand(CTRL_CMD_CONFIGURE_MOTION);
 
@@ -1302,7 +1329,7 @@ public:
 
     bool enableMotionDetect(IntPin pin = INTERRUPT_PIN_DISABLE)
     {
-        if (!__accel_enabled)return false;
+        if (!_accel_enabled)return false;
         switch (pin) {
         case INTERRUPT_PIN_1:
         case INTERRUPT_PIN_2:
@@ -1312,17 +1339,17 @@ public:
         default:
             break;
         }
-        setRegisterBit(QMI8658_REG_CTRL8, 1);
-        setRegisterBit(QMI8658_REG_CTRL8, 2);
-        setRegisterBit(QMI8658_REG_CTRL8, 3);
+        comm->setRegisterBit(QMI8658_REG_CTRL8, 1);
+        comm->setRegisterBit(QMI8658_REG_CTRL8, 2);
+        comm->setRegisterBit(QMI8658_REG_CTRL8, 3);
         return true;
     }
 
     bool disableMotionDetect()
     {
-        clrRegisterBit(QMI8658_REG_CTRL8, 1);
-        clrRegisterBit(QMI8658_REG_CTRL8, 2);
-        clrRegisterBit(QMI8658_REG_CTRL8, 3);
+        comm->clrRegisterBit(QMI8658_REG_CTRL8, 1);
+        comm->clrRegisterBit(QMI8658_REG_CTRL8, 2);
+        comm->clrRegisterBit(QMI8658_REG_CTRL8, 3);
         return false;
     }
 
@@ -1356,25 +1383,25 @@ public:
 
         //Reset default value
         if (!reset()) {
-            return DEV_WIRE_ERR;
+            return -1;
         }
 
         // Disable sensors
-        clrRegisterBit(QMI8658_REG_CTRL7, 0);
+        comm->clrRegisterBit(QMI8658_REG_CTRL7, 0);
 
         //setAccelRange
-        if (writeRegister(QMI8658_REG_CTRL2, 0x8F, (ACC_RANGE_8G << 4)) != DEV_WIRE_NONE) {
-            return DEV_WIRE_ERR;
+        if (comm->writeRegister(QMI8658_REG_CTRL2, 0x8F, (ACC_RANGE_8G << 4)) != 0) {
+            return -1;
         }
 
         // setAccelOutputDataRate
-        if (writeRegister(QMI8658_REG_CTRL2, 0xF0, odr) != DEV_WIRE_NONE) {
-            return DEV_WIRE_ERR;
+        if (comm->writeRegister(QMI8658_REG_CTRL2, 0xF0, odr) != 0) {
+            return -1;
         }
 
         //set wom
-        if (writeRegister(QMI8658_REG_CAL1_L, WoMThreshold) != DEV_WIRE_NONE) {
-            return DEV_WIRE_ERR;
+        if (comm->writeRegister(QMI8658_REG_CAL1_L, WoMThreshold) != 0) {
+            return -1;
         }
 
         if ( pin == INTERRUPT_PIN_1) {
@@ -1385,19 +1412,19 @@ public:
 
         val <<= 6;
         val |= (blankingTime & 0x3F);
-        if (writeRegister(QMI8658_REG_CAL1_H, val) != DEV_WIRE_NONE) {
-            return DEV_WIRE_ERR;
+        if (comm->writeRegister(QMI8658_REG_CAL1_H, val) != 0) {
+            return -1;
         }
 
-        if (writeCommand(CTRL_CMD_WRITE_WOM_SETTING) != DEV_WIRE_NONE) {
-            return DEV_WIRE_ERR;
+        if (writeCommand(CTRL_CMD_WRITE_WOM_SETTING) != 0) {
+            return -1;
         }
 
         enableAccelerometer();
 
         enableINT(pin);
 
-        return DEV_WIRE_NONE;
+        return 0;
     }
 
 
@@ -1428,7 +1455,7 @@ public:
         // STATUS0 0x2E
         // STATUS1 0x2F
         uint8_t status[3];
-        if (readRegister(QMI8658_REG_STATUS_INT, status, 3) != DEV_WIRE_NONE) {
+        if (comm->readRegister(QMI8658_REG_STATUS_INT, status, 3) != 0) {
             return 0;
         }
 
@@ -1475,7 +1502,7 @@ public:
             if (status[1] & 0x02) {
                 result |= STATUS0_GYRO_DATA_READY;
                 if (eventGyroDataReady)eventGyroDataReady();
-                __gDataReady = true;
+                _gDataReady = true;
             }
             // Accelerometer new data available
             // 0: No updates since last read.
@@ -1483,7 +1510,7 @@ public:
             if (status[1] & 0x01) {
                 result |= STATUS0_ACCEL_DATA_READY;
                 if (eventAccelDataReady)eventAccelDataReady();
-                __aDataReady = true;
+                _aDataReady = true;
             }
         }
 
@@ -1582,22 +1609,22 @@ public:
     bool calibration(uint16_t *gX_gain = NULL, uint16_t *gY_gain = NULL, uint16_t *gZ_gain = NULL)
     {
         // 1.Set CTRL7.aEN = 0 and CTRL7.gEN = 0, to disable the accelerometer and gyroscope.
-        if (writeRegister(QMI8658_REG_CTRL7, 0x00) != DEV_WIRE_NONE) {
+        if (comm->writeRegister(QMI8658_REG_CTRL7, (uint8_t)0x00) != 0) {
             return false;
         }
 
         // 2.Issue the CTRL_CMD_ON_DEMAND_CALIBRATION (0xA2) by CTRL9 command.
-        if (writeCommand(CTRL_CMD_ON_DEMAND_CALIBRATION, 3000) != DEV_WIRE_NONE) {
+        if (writeCommand(CTRL_CMD_ON_DEMAND_CALIBRATION, 3000) != 0) {
             return false;
         }
 
         // 3.And wait about 1.5 seconds for QMI8658A to finish the CTRL9 command.
-        delay(1600);
+        hal->delay(1600);
 
         // 4.Read the COD_STATUS register (0x46) to check the result/status of the COD implementation.
-        int result =  readRegister(QMI8658_REG_COD_STATUS);
+        int result =  comm->readRegister(QMI8658_REG_COD_STATUS);
 
-        if (result == DEV_WIRE_ERR)return false;
+        if (result == -1)return false;
 
         // During the process, it is recommended to place the device in quiet, otherwise, the COD might fail and report error.
 
@@ -1637,7 +1664,7 @@ public:
 
         if (gX_gain && gY_gain && gZ_gain) {
             uint8_t rawBuffer[6] = {0};
-            if (readRegister(QMI8658_REG_DVX_L, rawBuffer, 6) != DEV_WIRE_NONE) {
+            if (comm->readRegister(QMI8658_REG_DVX_L, rawBuffer, 6) != 0) {
                 return false;
             }
             *gX_gain = ((uint16_t)rawBuffer[0]) | (uint16_t)(rawBuffer[1] << 8);
@@ -1652,7 +1679,7 @@ public:
     bool writeCalibration(uint16_t gX_gain, uint16_t gY_gain, uint16_t gZ_gain)
     {
         // 1. Disable Accelerometer and Gyroscope by setting CTRL7.aEN = 0 and CTRL7.gEN = 0
-        if (writeRegister(QMI8658_REG_CTRL7, 0x00) != DEV_WIRE_NONE) {
+        if (comm->writeRegister(QMI8658_REG_CTRL7, (uint8_t)0x00) != 0) {
             return false;
         }
 
@@ -1669,10 +1696,10 @@ public:
             highByte(gZ_gain),
         };
 
-        writeRegister(QMI8658_REG_CAL1_L, buffer, sizeof(buffer));
+        comm->writeRegister(QMI8658_REG_CAL1_L, buffer, sizeof(buffer));
 
         // 5. Write 0xAA to CTRL9 and follow CTRL9 protocol
-        if (writeCommand(CTRL_CMD_APPLY_GYRO_GAINS, 3000) != DEV_WIRE_NONE) {
+        if (writeCommand(CTRL_CMD_APPLY_GYRO_GAINS, 3000) != 0) {
             return false;
         }
 
@@ -1683,12 +1710,12 @@ public:
     bool selfTestAccel()
     {
         // 1- Disable the sensors (CTRL7 = 0x00).
-        if (writeRegister(QMI8658_REG_CTRL7, 0x00) != DEV_WIRE_NONE) {
+        if (comm->writeRegister(QMI8658_REG_CTRL7, (uint8_t)0x00) != 0) {
             return false;
         }
 
         // 2- Set proper accelerometer ODR (CTRL2.aODR) and bit CTRL2.aST (bit7) to 1 to trigger the Self-Test.
-        if (writeRegister(QMI8658_REG_CTRL2, 0xF0, ACC_ODR_1000Hz | 0x80) != DEV_WIRE_NONE) {
+        if (comm->writeRegister(QMI8658_REG_CTRL2, 0xF0, ACC_ODR_1000Hz | 0x80) != 0) {
             return false;
         }
 
@@ -1696,11 +1723,11 @@ public:
         int retry = 50;
         int dataReady = 0x00;
         while (dataReady != 0x01) {
-            uint8_t reg_var = readRegister(QMI8658_REG_STATUS_INT);
+            uint8_t reg_var = comm->readRegister(QMI8658_REG_STATUS_INT);
             log_d("reg_var : %x", reg_var);
             dataReady = reg_var & 0x01;
-            // dataReady = readRegister(QMI8658_REG_STATUS_INT) & 0x01;
-            delay(20);
+            // dataReady = comm->readRegister(QMI8658_REG_STATUS_INT) & 0x01;
+            hal->delay(20);
             if (--retry <= 0) {
                 log_e("No response.");
                 return false;
@@ -1710,16 +1737,16 @@ public:
         log_i("Data is ready for reading....");
 
         //4- Set CTRL2.aST(bit7) to 0, to clear STATUSINT1.bit0 and/or INT2.
-        clrRegisterBit(QMI8658_REG_CTRL2, 7);
+        comm->clrRegisterBit(QMI8658_REG_CTRL2, 7);
 
         // 5- Check for QMI8658A drives INT2 back to Low, and sets STATUSINT1.bit0 to 0.
         retry = 50;
         while (dataReady == 0x01) {
-            uint8_t reg_var = readRegister(QMI8658_REG_STATUS_INT);
+            uint8_t reg_var = comm->readRegister(QMI8658_REG_STATUS_INT);
             log_d("reg_var : %x", reg_var);
             dataReady = (reg_var & 0x01);
-            // dataReady = !(readRegister(QMI8658_REG_STATUS_INT) & 0x01);
-            delay(20);
+            // dataReady = !(comm->readRegister(QMI8658_REG_STATUS_INT) & 0x01);
+            hal->delay(20);
             if (--retry <= 0) {
                 log_e("No response.");
                 return false;
@@ -1735,7 +1762,7 @@ public:
         */
         uint8_t rawBuffer[6];
 
-        if (readRegister(QMI8658_REG_DVX_L, rawBuffer, 6) != DEV_WIRE_NONE) {
+        if (comm->readRegister(QMI8658_REG_DVX_L, rawBuffer, 6) != 0) {
             return false;
         }
 
@@ -1764,19 +1791,19 @@ public:
     bool selfTestGyro()
     {
         // 1- Disable the sensors (CTRL7 = 0x00).
-        if (writeRegister(QMI8658_REG_CTRL7, 0x00) != DEV_WIRE_NONE) {
+        if (comm->writeRegister(QMI8658_REG_CTRL7, (uint8_t)0x00) != 0) {
             return false;
         }
 
         // 2- Set the bit gST to 1. (CTRL3.bit7 = 1’b1).
-        setRegisterBit(QMI8658_REG_CTRL3, 7);
+        comm->setRegisterBit(QMI8658_REG_CTRL3, 7);
 
         // 3- Wait for QMI8658A to drive INT2 to High, if INT2 is enabled, or STATUS_INT.bit0 is set to 1.
         int retry = 50;
         int dataReady = 0x00;
         while (dataReady != 0x01) {
-            dataReady = readRegister(QMI8658_REG_STATUS_INT) & 0x01;
-            delay(20);
+            dataReady = comm->readRegister(QMI8658_REG_STATUS_INT) & 0x01;
+            hal->delay(20);
             if (--retry <= 0) {
                 log_e("No response.");
                 return false;
@@ -1786,13 +1813,13 @@ public:
         log_i("Data is ready for reading....");
 
         //4- Set CTRL3.aST(bit7) to 0, to clear STATUS_INT1.bit0 and/or INT2.
-        clrRegisterBit(QMI8658_REG_CTRL3, 7);
+        comm->clrRegisterBit(QMI8658_REG_CTRL3, 7);
 
         // 5- Check for QMI8658A drives INT2 back to Low, or sets STATUSINT1.bit0 to 0.
         retry = 50;
         while (dataReady != 0x00) {
-            dataReady = !(readRegister(QMI8658_REG_STATUS_INT) & 0x01);
-            delay(20);
+            dataReady = !(comm->readRegister(QMI8658_REG_STATUS_INT) & 0x01);
+            hal->delay(20);
             if (--retry <= 0) {
                 log_e("No response.");
                 return false;
@@ -1807,7 +1834,7 @@ public:
                 Read the 16 bits result in format signed U12.4, resolution is 62.5mdps (1 / 2^4 dps).
         */
         uint8_t rawBuffer[6];
-        if (readRegister(QMI8658_REG_DVX_L, rawBuffer, 6) != DEV_WIRE_NONE) {
+        if (comm->readRegister(QMI8658_REG_DVX_L, rawBuffer, 6) != 0) {
             return false;
         }
 
@@ -1850,9 +1877,9 @@ public:
         data[4] = lowByte(offset_z);
         data[5] = highByte(offset_z);
 
-        writeRegister(QMI8658_REG_CAL1_L, data, 2);
-        writeRegister(QMI8658_REG_CAL2_L, data + 2, 2);
-        writeRegister(QMI8658_REG_CAL3_L, data + 4, 2);
+        comm->writeRegister(QMI8658_REG_CAL1_L, data, 2);
+        comm->writeRegister(QMI8658_REG_CAL2_L, data + 2, 2);
+        comm->writeRegister(QMI8658_REG_CAL3_L, data + 4, 2);
 
         writeCommand(CTRL_CMD_ACCEL_HOST_DELTA_OFFSET);
     }
@@ -1870,35 +1897,35 @@ public:
         data[4] = lowByte(offset_z);
         data[5] = highByte(offset_z);
 
-        writeRegister(QMI8658_REG_CAL1_L, data, 2);
-        writeRegister(QMI8658_REG_CAL2_L, data + 2, 2);
-        writeRegister(QMI8658_REG_CAL3_L, data + 4, 2);
+        comm->writeRegister(QMI8658_REG_CAL1_L, data, 2);
+        comm->writeRegister(QMI8658_REG_CAL2_L, data + 2, 2);
+        comm->writeRegister(QMI8658_REG_CAL3_L, data + 4, 2);
 
         writeCommand(CTRL_CMD_GYRO_HOST_DELTA_OFFSET);
 
     }
 
-    void setPins(int irq)
+    void setPins(int _irq)
     {
-        __irq = irq;
+        _irq = _irq;
     }
 
 private:
     float accelScales, gyroScales;
     uint32_t lastTimestamp = 0;
     uint8_t sampleMode = ASYNC_MODE;
-    bool __accel_enabled = false;
-    bool __gyro_enabled = false;
+    bool _accel_enabled = false;
+    bool _gyro_enabled = false;
     uint32_t revisionID;
     uint8_t  usid[6];
-    bool __gDataReady = false;
-    bool __aDataReady = false;
-    int __irq = -1;
-    uint8_t __irq_enable_mask = false;
-    uint8_t __fifo_mode;
-    bool __fifo_interrupt = false;;
-    uint8_t *__fifo_buffer = NULL;
-    uint16_t __fifo_size = 0;
+    bool _gDataReady = false;
+    bool _aDataReady = false;
+    int _irq = -1;
+    uint8_t _irq_enable_mask = false;
+    uint8_t _fifo_mode;
+    bool _fifo_interrupt = false;;
+    uint8_t *fifo_buffer = NULL;
+    uint16_t _fifo_size = 0;
 
     EventCallBack_t eventWomEvent = NULL;
     EventCallBack_t eventTagEvent = NULL;
@@ -1915,34 +1942,34 @@ private:
     {
         int      val;
         uint32_t startMillis;
-        if (writeRegister(QMI8658_REG_CTRL9, cmd) == DEV_WIRE_ERR) {
-            return DEV_WIRE_ERR;
+        if (comm->writeRegister(QMI8658_REG_CTRL9, cmd) == -1) {
+            return -1;
         }
-        startMillis = millis();
+        startMillis = hal->millis();
         do {
-            val = readRegister(QMI8658_REG_STATUS_INT);
-            delay(1);
-            if (millis() - startMillis > wait_ms) {
+            val = comm->readRegister(QMI8658_REG_STATUS_INT);
+            hal->delay(1);
+            if (hal->millis() - startMillis > wait_ms) {
                 log_e("wait for ctrl9 command done time out : %d val:%d", cmd, val);
-                return DEV_WIRE_TIMEOUT;
+                return -1;
             }
-        } while (val != DEV_WIRE_ERR && !(val & 0x80));
+        } while (val != -1 && !(val & 0x80));
 
-        if (writeRegister(QMI8658_REG_CTRL9, CTRL_CMD_ACK) == DEV_WIRE_ERR) {
-            return DEV_WIRE_ERR;
+        if (comm->writeRegister(QMI8658_REG_CTRL9, CTRL_CMD_ACK) == -1) {
+            return -1;
         }
 
-        startMillis = millis();
+        startMillis = hal->millis();
         do {
-            val = readRegister(QMI8658_REG_STATUS_INT);
-            delay(1);
-            if (millis() - startMillis > wait_ms) {
+            val = comm->readRegister(QMI8658_REG_STATUS_INT);
+            hal->delay(1);
+            if (hal->millis() - startMillis > wait_ms) {
                 log_e("Clear ctrl9 command done flag timeout : %d val:%d", cmd, val);
-                return DEV_WIRE_TIMEOUT;
+                return -1;
             }
-        } while (val != DEV_WIRE_ERR && (val & 0x80));
+        } while (val != -1 && (val & 0x80));
 
-        return DEV_WIRE_NONE;
+        return 0;
     }
 
 
@@ -1962,8 +1989,8 @@ protected:
         uint8_t buffer[6] = {0};
 
 
-        if (__irq != -1) {
-            this->setGpioMode(__irq, INPUT);
+        if (_irq != -1) {
+            hal->pinMode(_irq, INPUT);
         }
 
         if (!reset()) {
@@ -1976,27 +2003,27 @@ protected:
             return false;
         }
         // Enable address auto increment, Big-Endian format
-        // writeRegister(QMI8658_REG_CTRL1, 0x60);
+        // comm->writeRegister(QMI8658_REG_CTRL1, 0x60);
 
         // Little-Endian / address auto increment
-        // writeRegister(QMI8658_REG_CTRL1, 0x40);
+        // comm->writeRegister(QMI8658_REG_CTRL1, 0x40);
 
         // no need . reset function has set
         //EN.ADDR_AI
-        // setRegisterBit(QMI8658_REG_CTRL1, 6);
+        // comm->setRegisterBit(QMI8658_REG_CTRL1, 6);
 
         // Use STATUS_INT.bit7 as CTRL9 handshake
-        writeRegister(QMI8658_REG_CTRL8, 0x80);
+        comm->writeRegister(QMI8658_REG_CTRL8, 0x80);
 
         // Get firmware version and usid
         writeCommand(CTRL_CMD_COPY_USID);
 
-        if (readRegister(QMI8658_REG_DQW_L, buffer, 3) != DEV_WIRE_ERR) {
+        if (comm->readRegister(QMI8658_REG_DQW_L, buffer, 3) != -1) {
             revisionID = buffer[0] | (uint32_t)(buffer[1] << 8) | (uint32_t)(buffer[2] << 16);
             log_d("FW Version :0x%02X%02X%02X", buffer[0], buffer[1], buffer[2]);
         }
 
-        if (readRegister(QMI8658_REG_DVX_L, usid, 6) != DEV_WIRE_ERR) {
+        if (comm->readRegister(QMI8658_REG_DVX_L, usid, 6) != -1) {
             log_d("USID :%02X%02X%02X%02X%02X%02X",
                   usid[0], usid[1], usid[2],
                   usid[3], usid[4], usid[5]);
@@ -2005,11 +2032,9 @@ protected:
         return true;
     }
 
-    int getReadMaskImpl()
-    {
-        return 0x80;
-    }
-
+protected:
+    std::unique_ptr<SensorCommBase> comm;
+    std::unique_ptr<SensorHal> hal;
 };
 
 

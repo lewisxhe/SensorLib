@@ -6,7 +6,8 @@ on:
   push:
     paths:
       - "src/**"
-      - "examples/ESP_IDF_TouchDrv_Example/**"
+      - "examples/ESP_IDF_TouchDrvExample/**"
+      - "examples/ESP_IDF_SensorExamples/**"
       - ".github/workflows/esp-idf.yml"
 
 jobs:
@@ -21,9 +22,18 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: "recursive"
-      - name: Build esp-idf examples
+      - name: Export ESP-IDF environment variables
+        shell: bash
+        run: . ${IDF_PATH}/export.sh
+      - name: Build ESP_IDF_TouchDrvExample
         shell: bash
         run: |
-          . ${IDF_PATH}/export.sh
-          cd examples/ESP_IDF_TouchDrv_Example
+          cd $GITHUB_WORKSPACE ;
+          cd examples/ESP_IDF_TouchDrvExample
+          idf.py build
+      - name: Build ESP_IDF_SensorExamples
+        shell: bash
+        run: |
+          cd $GITHUB_WORKSPACE ;
+          cd examples/ESP_IDF_SensorExamples
           idf.py build

@@ -54,7 +54,11 @@ void setup()
 
     pinMode(SENSOR_IRQ, INPUT);
 
-    if (!accel.begin(Wire, BMA423_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
+    /*
+    * BMA423_I2C_ADDR_PRIMARY   = 0x18
+    * BMA423_I2C_ADDR_SECONDARY = 0x19
+    * * */
+    if (!accel.begin(Wire, BMA423_I2C_ADDR_SECONDARY, SENSOR_SDA, SENSOR_SCL)) {
         Serial.println("Failed to find BMA423 - check your wiring!");
         while (1) {
             delay(1000);
@@ -66,6 +70,7 @@ void setup()
     accel.configAccelerometer();
 
     accel.enableAccelerometer();
+    
 
     Serial.println("Output ...");
 }

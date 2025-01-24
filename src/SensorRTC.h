@@ -50,7 +50,7 @@
 #define RTC_DAYS_IN_NOVEMBER    (30u)
 #define RTC_DAYS_IN_DECEMBER    (31u)
 
-enum {
+enum DataTimeFormat {
     DATETIME_FORMAT_HM,
     DATETIME_FORMAT_HMS,
     DATETIME_FORMAT_YYYY_MM_DD,
@@ -59,8 +59,6 @@ enum {
     DATETIME_FORMAT_YYYY_MM_DD_H_M_S,
     DATETIME_FORMAT_YYYY_MM_DD_H_M_S_WEEK,
 };
-
-
 
 class RTC_DateTime
 {
@@ -184,12 +182,12 @@ template <class chipType>
 class RTCCommon
 {
 public:
-    const char *strftime(uint8_t sytle = DATETIME_FORMAT_YYYY_MM_DD_H_M_S_WEEK)
+    const char *strftime(uint8_t style = DATETIME_FORMAT_YYYY_MM_DD_H_M_S_WEEK)
     {
         const char *weekString[] = {"Sun", "Mon", "Tue", "Wed", "Thur", "Fri", "Sat"};
         static char format[64];
         RTC_DateTime t = thisChip().getDateTime();
-        switch (sytle) {
+        switch (style) {
         case DATETIME_FORMAT_HM:
             snprintf(format, sizeof(format), "%02d:%02d", t.hour, t.minute);
             break;

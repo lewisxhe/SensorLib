@@ -973,18 +973,3 @@ const char *get_sensor_axis_names(uint8_t sensor_id)
 
     return ret;
 }
-
-void check_bhy2_api(unsigned int line, const char *func, int8_t val)
-{
-    int i = 3;
-    while (i--) {
-
-        Serial.printf("BHI260 API failed at line %u. The function %s returned error code %d. %s\r\n",
-                      line,
-                      func,
-                      val,
-                      get_api_error(val));
-        delay(1000);
-    }
-}
-

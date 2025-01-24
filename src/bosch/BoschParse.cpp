@@ -225,7 +225,7 @@ void BoschParse::parseDebugMessage(const struct bhy2_fifo_parse_data_info *callb
     debug_msg[msg_length] = '\0'; /* Terminate the string */
 
     // log_i("[DEBUG MSG]; T: %lu.%09lu; %s", s, ns, debug_msg);
-    log_i("[DEBUG MSG]: %s", debug_msg);
+    log_d("[DEBUG MSG]: %s", debug_msg);
 
     if (_debug_callback) {
         _debug_callback((const char *)debug_msg);

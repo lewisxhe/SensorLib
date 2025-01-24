@@ -45,7 +45,7 @@
 #endif
 
 SensorPCF85063 rtc;
-uint32_t lastMillis;
+uint32_t intervalue;
 
 void setup()
 {
@@ -54,8 +54,8 @@ void setup()
 
     pinMode(SENSOR_IRQ, INPUT_PULLUP);
 
-    if (!rtc.begin(Wire, PCF85063_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
-        Serial.println("Failed to find PCF8563 - check your wiring!");
+    if (!rtc.begin(Wire, SENSOR_SDA, SENSOR_SCL)) {
+        Serial.println("Failed to find PCF85063 - check your wiring!");
         while (1) {
             delay(1000);
         }
@@ -75,8 +75,8 @@ void setup()
 
 void loop()
 {
-    if (millis() - lastMillis > 1000) {
-        lastMillis = millis();
+    if (millis() - intervalue > 1000) {
+        intervalue = millis();
         RTC_DateTime datetime = rtc.getDateTime();
         Serial.printf(" Year :"); Serial.print(datetime.year);
         Serial.printf(" Month:"); Serial.print(datetime.month);

@@ -32,20 +32,20 @@
 #include <Arduino.h>
 #include "TouchDrvCSTXXX.hpp"
 
-#ifndef SENSOR_SDA
-#define SENSOR_SDA  8
+#ifndef TOUCH_SDA
+#define TOUCH_SDA  8
 #endif
 
-#ifndef SENSOR_SCL
-#define SENSOR_SCL  10
+#ifndef TOUCH_SCL
+#define TOUCH_SCL  10
 #endif
 
-#ifndef SENSOR_IRQ
-#define SENSOR_IRQ  5
+#ifndef TOUCH_IRQ
+#define TOUCH_IRQ  5
 #endif
 
-#ifndef SENSOR_RST
-#define SENSOR_RST  -1
+#ifndef TOUCH_RST
+#define TOUCH_RST  -1
 #endif
 
 TouchDrvCSTXXX touch;
@@ -77,11 +77,11 @@ void setup()
     Serial.begin(115200);
     while (!Serial);
 
-#if SENSOR_RST != -1
-    pinMode(SENSOR_RST, OUTPUT);
-    digitalWrite(SENSOR_RST, LOW);
+#if TOUCH_RST != -1
+    pinMode(TOUCH_RST, OUTPUT);
+    digitalWrite(TOUCH_RST, LOW);
     delay(30);
-    digitalWrite(SENSOR_RST, HIGH);
+    digitalWrite(TOUCH_RST, HIGH);
     delay(50);
     // delay(1000);
 #endif
@@ -90,14 +90,16 @@ void setup()
     uint8_t address = 0xFF;
 
 #if defined(ARDUINO_ARCH_RP2040)
-    Wire.setSCL(SENSOR_SCL);
-    Wire.setSDA(SENSOR_SDA);
+    Wire.setSCL(TOUCH_SCL);
+    Wire.setSDA(TOUCH_SDA);
     Wire.begin();
-#elif defined(NRF52840_XXAA) || defined(NRF52832_XXAA)
-    Wire.setPins(SENSOR_SDA, SENSOR_SCL);
+#elif defined(ARDUINO_ARCH_NRF52)
+    Wire.setPins(TOUCH_SDA, TOUCH_SCL);
     Wire.begin();
+#elif defined(ARDUINO_ARCH_ESP32)
+    Wire.begin(TOUCH_SDA, TOUCH_SCL);
 #else
-    Wire.begin(SENSOR_SDA, SENSOR_SCL);
+    Wire.begin();
 #endif
 
     // Scan I2C devices
@@ -119,7 +121,7 @@ void setup()
         Serial.println("Could't find touch chip!"); delay(1000);
     }
 
-    touch.setPins(SENSOR_RST, SENSOR_IRQ);
+    touch.setPins(TOUCH_RST, TOUCH_IRQ);
 
     /*
     * Support type.
@@ -133,7 +135,7 @@ void setup()
 
 
     // Support CST81X CST226 CST9217 CST9220 ....
-    bool result = touch.begin(Wire, address, SENSOR_SDA, SENSOR_SCL);
+    bool result = touch.begin(Wire, address, TOUCH_SDA, TOUCH_SCL);
     if (result == false) {
         while (1) {
             Serial.println("Failed to initialize CST series touch, please check the connection...");
@@ -143,7 +145,7 @@ void setup()
 
     Serial.print("Model :"); Serial.println(touch.getModelName());
 
-    // T-Display-S3 CST816 touch panel, touch button coordinates are is 85 , 160
+    // T-Display-S3 CST328 touch panel, touch button coordinates are is 85 , 360
     // touch.setCenterButtonCoordinate(85, 360);
 
     // T-Display-AMOLED 1.91 Inch CST816T touch panel, touch button coordinates is 600, 120.
@@ -173,7 +175,7 @@ void setup()
     // touch.setMirrorXY(true, true);
 
     //Register touch plane interrupt pin
-    attachInterrupt(SENSOR_IRQ, []() {
+    attachInterrupt(TOUCH_IRQ, []() {
         isPressed = true;
     }, FALLING);
 

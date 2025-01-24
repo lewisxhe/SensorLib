@@ -33,9 +33,9 @@
 /** Major version number (X.x.x) */
 #define SENSORLIB_VERSION_MAJOR   0
 /** Minor version number (x.X.x) */
-#define SENSORLIB_VERSION_MINOR   2
+#define SENSORLIB_VERSION_MINOR   3
 /** Patch version number (x.x.X) */
-#define SENSORLIB_VERSION_PATCH   5
+#define SENSORLIB_VERSION_PATCH   0
 
 /**
  * Macro to convert SENSORLIB version number into an integer
@@ -53,4 +53,4 @@
                                              SENSORLIB_VERSION_MINOR, \
                                              SENSORLIB_VERSION_PATCH)
 
-#define SENSORLIB_VERSION_STR   "v0.2.5"
+#define SENSORLIB_VERSION_STR   "v0.3.0"

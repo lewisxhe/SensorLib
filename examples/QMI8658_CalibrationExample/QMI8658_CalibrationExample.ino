@@ -31,11 +31,14 @@
 #include <Wire.h>
 #include <SPI.h>
 #include "SensorQMI8658.hpp"
+#ifdef ARDUINO_T_BEAM_S3_SUPREME
+#include <XPowersAXP2101.tpp>   //PMU Library https://github.com/lewisxhe/XPowersLib.git
+#endif
 
 
-// #define USE_WIRE
+// #define USE_I2C              //Using the I2C interface
 
-#if defined(USE_WIRE)
+#ifdef USE_I2C
 #ifndef SENSOR_SDA
 #define SENSOR_SDA  17
 #endif
@@ -44,42 +47,58 @@
 #define SENSOR_SCL  18
 #endif
 
-#ifndef SENSOR_IRQ
-#define SENSOR_IRQ  -1
-#endif
+#else   /*SPI interface*/
 
-#else
-
-//USE SPI
 #ifndef SPI_MOSI
-#define SPI_MOSI                    (35)
+#define SPI_MOSI   (35)
 #endif
 
 #ifndef SPI_SCK
-#define SPI_SCK                     (36)
+#define SPI_SCK    (36)
 #endif
 
 #ifndef SPI_MISO
-#define SPI_MISO                    (37)
+#define SPI_MISO   (37)
 #endif
+
+#endif  /*USE_I2C*/
 
 #ifndef IMU_CS
-#define IMU_CS                      (34)
+#define IMU_CS      34      // IMU CS PIN
 #endif
 
-#ifndef IMU_INT
-#define IMU_INT                     (33)
+#ifndef IMU_IRQ
+#define IMU_IRQ     33      // IMU INT PIN
 #endif
 
+#ifndef OLED_SDA
+#define OLED_SDA    22      // Display Wire SDA Pin
 #endif
+
+#ifndef OLED_SCL
+#define OLED_SCL    21      // Display Wire SCL Pin
+#endif
+
 
 
 SensorQMI8658 qmi;
-
 IMUdata acc;
 IMUdata gyr;
 
 
+void beginPower()
+{
+    // T_BEAM_S3_SUPREME The PMU voltage needs to be turned on to use the sensor
+#if defined(ARDUINO_T_BEAM_S3_SUPREME)
+    XPowersAXP2101 power;
+    power.begin(Wire1, AXP2101_SLAVE_ADDRESS, 42, 41);
+    power.disableALDO1();
+    power.disableALDO2();
+    delay(250);
+    power.setALDO1Voltage(3300); power.enableALDO1();
+    power.setALDO2Voltage(3300); power.enableALDO2();
+#endif
+}
 
 void setup()
 {
@@ -89,22 +108,26 @@ void setup()
 
     delay(3000);
 
-#ifdef USE_WIRE
-    //Using WIRE !!
-    if (!qmi.begin(Wire, QMI8658_L_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
-        Serial.println("Failed to find QMI8658 - check your wiring!");
-        while (1) {
-            delay(1000);
-        }
-    }
+    beginPower();
+
+
+    bool ret = false;
+#ifdef USE_I2C
+    ret = qmi.begin(Wire, QMI8658_L_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL);
 #else
-    if (!qmi.begin(IMU_CS, SPI_MOSI, SPI_MISO, SPI_SCK)) {
+#if defined(SPI_MOSI) && defined(SPI_SCK) && defined(SPI_MISO)
+    ret = qmi.begin(SPI, IMU_CS, SPI_MOSI, SPI_MISO, SPI_SCK);
+#else
+    ret = qmi.begin(SPI, IMU_CS);
+#endif
+#endif
+
+    if (!ret) {
         Serial.println("Failed to find QMI8658 - check your wiring!");
         while (1) {
             delay(1000);
         }
     }
-#endif
 
     /* Get chip id*/
     Serial.print("Device ID:");
@@ -113,16 +136,16 @@ void setup()
     uint16_t gX_gain = 0,  gY_gain = 0,  gZ_gain = 0;
 
     // Call internal calibration to calibrate the sensor
-    bool result = false;
+    ret = false;
 
-    while (!result) {
+    while (!ret) {
 
         // Calibrate only once, do not obtain calibration value
         // result = qmi.calibration();
 
         // Get the calibration value after calibration
-        result = qmi.calibration(&gX_gain, &gY_gain, &gZ_gain);
-        if (result) {
+        ret = qmi.calibration(&gX_gain, &gY_gain, &gZ_gain);
+        if (ret) {
             Serial.println("All calibrations are completed");
             break;
         }
@@ -141,8 +164,8 @@ void setup()
     Serial.print("Gyro-Z gain : "); Serial.println(gZ_gain);
 
     // The example only provides a method for writing calibration values
-    result = qmi.writeCalibration(gX_gain, gY_gain, gZ_gain);
-    if (result) {
+    ret = qmi.writeCalibration(gX_gain, gY_gain, gZ_gain);
+    if (ret) {
         Serial.println("Write calibrations successfully");
     } else {
         Serial.println("Write calibrations failed!");

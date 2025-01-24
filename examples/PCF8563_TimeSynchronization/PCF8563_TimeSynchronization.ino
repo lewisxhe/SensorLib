@@ -36,10 +36,17 @@
 #include <sntp.h>
 #include "SensorPCF8563.hpp"
 
-// lilygo t-beam-s3-core pin
-#define SENSOR_SDA                     42
-#define SENSOR_SCL                     41
-#define SENSOR_IRQ                     14
+#ifndef SENSOR_SDA
+#define SENSOR_SDA  42
+#endif
+
+#ifndef SENSOR_SCL
+#define SENSOR_SCL  41
+#endif
+
+#ifndef SENSOR_IRQ
+#define SENSOR_IRQ  14
+#endif
 
 const char *ssid       = "YOUR_SSID";
 const char *password   = "YOUR_PASS";
@@ -52,7 +59,7 @@ const int   daylightOffset_sec = 3600;
 const char *time_zone = "CST-8";  // TimeZone rule for Europe/Rome including daylight adjustment rules (optional)
 
 SensorPCF8563 rtc;
-uint32_t lastMillis;
+uint32_t intervalue;
 
 
 // Callback function (get's called when time adjusts via NTP)
@@ -69,11 +76,9 @@ void setup()
     Serial.begin(115200);
     while (!Serial);
 
-
-
     pinMode(SENSOR_IRQ, INPUT_PULLUP);
 
-    if (!rtc.begin(Wire, PCF8563_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
+    if (!rtc.begin(Wire, SENSOR_SDA, SENSOR_SCL)) {
         Serial.println("Failed to find PCF8563 - check your wiring!");
         while (1) {
             delay(1000);
@@ -123,9 +128,9 @@ void setup()
 
 void loop()
 {
-    if (millis() - lastMillis > 1000) {
+    if (millis() - intervalue > 1000) {
 
-        lastMillis = millis();
+        intervalue = millis();
 
         // hardware clock
         struct tm hwTimeinfo;

@@ -30,20 +30,20 @@
 #include <Arduino.h>
 #include "TouchDrvGT9895.hpp"
 
-#ifndef SENSOR_SDA
-#define SENSOR_SDA  2
+#ifndef TOUCH_SDA
+#define TOUCH_SDA  2
 #endif
 
-#ifndef SENSOR_SCL
-#define SENSOR_SCL  3
+#ifndef TOUCH_SCL
+#define TOUCH_SCL  3
 #endif
 
-#ifndef SENSOR_IRQ
-#define SENSOR_IRQ  1
+#ifndef TOUCH_IRQ
+#define TOUCH_IRQ  1
 #endif
 
-#ifndef SENSOR_RST
-#define SENSOR_RST  10
+#ifndef TOUCH_RST
+#define TOUCH_RST  10
 #endif
 
 TouchDrvGT9895 touch;
@@ -59,9 +59,9 @@ void setup()
     delay(3000);
 
     // Set touch interrupt and reset Pin
-    touch.setPins(SENSOR_RST, SENSOR_IRQ);
+    touch.setPins(TOUCH_RST, TOUCH_IRQ);
 
-    if (!touch.begin(Wire, GT9895_SLAVE_ADDRESS_L, SENSOR_SDA, SENSOR_SCL )) {
+    if (!touch.begin(Wire, GT9895_SLAVE_ADDRESS_L, TOUCH_SDA, TOUCH_SCL )) {
         while (1) {
             Serial.println("Failed to find GT9895 - check your wiring!");
             delay(1000);

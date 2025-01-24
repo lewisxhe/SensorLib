@@ -32,24 +32,29 @@
 #include <Arduino.h>
 #include "SensorPCF8563.hpp"
 
-// lilygo t-beam-s3-core pin
-#define SENSOR_SDA                     42
-#define SENSOR_SCL                     41
-#define SENSOR_IRQ                     14
+#ifndef SENSOR_SDA
+#define SENSOR_SDA  42
+#endif
+
+#ifndef SENSOR_SCL
+#define SENSOR_SCL  41
+#endif
+
+#ifndef SENSOR_IRQ
+#define SENSOR_IRQ  14
+#endif
 
 SensorPCF8563 rtc;
-uint32_t lastMillis;
+uint32_t intervalue;
 
 void setup()
 {
     Serial.begin(115200);
     while (!Serial);
 
-
-
     pinMode(SENSOR_IRQ, INPUT_PULLUP);
 
-    if (!rtc.begin(Wire, PCF8563_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
+    if (!rtc.begin(Wire, SENSOR_SDA, SENSOR_SCL)) {
         Serial.println("Failed to find PCF8563 - check your wiring!");
         while (1) {
             delay(1000);
@@ -70,8 +75,8 @@ void setup()
 
 void loop()
 {
-    if (millis() - lastMillis > 1000) {
-        lastMillis = millis();
+    if (millis() - intervalue > 1000) {
+        intervalue = millis();
         RTC_DateTime datetime = rtc.getDateTime();
         Serial.printf(" Year :"); Serial.print(datetime.year);
         Serial.printf(" Month:"); Serial.print(datetime.month);

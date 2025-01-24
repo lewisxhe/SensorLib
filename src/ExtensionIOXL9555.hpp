@@ -30,8 +30,8 @@
 #pragma once
 
 #include "REG/XL9555Constants.h"
-#include "SensorCommon.tpp"
-#include "ExtensionSPI.tpp"
+#include "SensorPlatform.hpp"
+#include "ExtensionSPI.hpp"
 #include "VirtualGpio.hpp"
 
 typedef void (*gpio_event_t)(void *user_data);
@@ -49,10 +49,9 @@ typedef struct ioEvent {
 
 class ExtensionIOXL9555 :
     public VirtualGpio,
-    public SensorCommon<ExtensionIOXL9555>,
+    public XL95xxConstants,
     public ExtensionSPI<ExtensionIOXL9555>
 {
-    friend class SensorCommon<ExtensionIOXL9555>;
     friend class ExtensionSPI<ExtensionIOXL9555>;
 public:
 
@@ -81,45 +80,65 @@ public:
         IO15,
     };
 
-
-#if defined(ARDUINO)
-    ExtensionIOXL9555(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = XL9555_UNKOWN_ADDRESS)
-    {
-        __wire = &w;
-        __sda = sda;
-        __scl = scl;
-        __addr = addr;
-    }
-#endif
-
-    ExtensionIOXL9555()
-    {
-#if defined(ARDUINO)
-        __wire = &Wire;
-        __sda = DEFAULT_SDA;
-        __scl = DEFAULT_SCL;
-#endif
-        __addr = XL9555_UNKOWN_ADDRESS;
-    }
+    ExtensionIOXL9555() : comm(nullptr) {}
 
     ~ExtensionIOXL9555()
     {
-        deinit();
+        if (comm) {
+            comm->deinit();
+        }
     }
 
 #if defined(ARDUINO)
-    bool init(PLATFORM_WIRE_TYPE &w, int sda = DEFAULT_SDA, int scl = DEFAULT_SCL, uint8_t addr = XL9555_UNKOWN_ADDRESS)
+    bool begin(TwoWire &wire, uint8_t addr = XL9555_UNKOWN_ADDRESS, int sda = -1, int scl = -1)
     {
-        return SensorCommon::begin(w, addr, sda, scl);
+        comm = std::make_unique<SensorCommI2C>(wire, addr, sda, scl);
+        if (!comm) {
+            return false;
+        }
+        comm->init();
+        return initImpl(addr);
     }
-#endif
 
+#elif defined(ESP_PLATFORM)
+
+#if defined(USEING_I2C_LEGACY)
+    bool begin(i2c_port_t port_num, uint8_t addr = XL9555_UNKOWN_ADDRESS, int sda = -1, int scl = -1)
+    {
+        comm = std::make_unique<SensorCommI2C>(port_num, addr, sda, scl);
+        if (!comm) {
+            return false;
+        }
+        comm->init();
+        return initImpl(addr);
+    }
+#else
+    bool begin(i2c_master_bus_handle_t handle, uint8_t addr = XL9555_UNKOWN_ADDRESS)
+    {
+        comm = std::make_unique<SensorCommI2C>(handle, addr);
+        if (!comm) {
+            return false;
+        }
+        comm->init();
+        return initImpl(addr);
+    }
+#endif  //ESP_PLATFORM
+#endif  //ARDUINO
+
+    bool begin(SensorCommCustom::CustomCallback callback, uint8_t addr)
+    {
+        comm = std::make_unique<SensorCommCustom>(callback, addr);
+        if (!comm) {
+            return false;
+        }
+        comm->init();
+        return initImpl(addr);
+    }
 
     void deinit()
     {
         // end();
     }
-
 
     void pinMode(uint8_t pin, uint8_t mode)
     {
@@ -132,10 +151,10 @@ public:
         }
         switch (mode) {
         case INPUT:
-            setRegisterBit(registers, pin);
+            comm->setRegisterBit(registers, pin);
             break;
         case OUTPUT:
-            clrRegisterBit(registers, pin);
+            comm->clrRegisterBit(registers, pin);
             break;
         default:
             break;
@@ -151,7 +170,7 @@ public:
         } else {
             registers = XL9555_CTRL_INP0;
         }
-        return getRegisterBit(registers, pin);
+        return comm->getRegisterBit(registers, pin);
     }
 
     void digitalWrite(uint8_t pin, uint8_t val)
@@ -163,7 +182,7 @@ public:
         } else {
             registers = XL9555_CTRL_OUTP0;
         }
-        val ? setRegisterBit(registers, pin) : clrRegisterBit(registers,  pin);
+        val ? comm->setRegisterBit(registers, pin) : comm->clrRegisterBit(registers,  pin);
     }
 
     // Invert gpio
@@ -176,20 +195,20 @@ public:
     // Read 8-bit gpio input status
     int readPort(uint8_t port)
     {
-        return readRegister(port == PORT0 ? XL9555_CTRL_INP0 : XL9555_CTRL_INP1);
+        return comm->readRegister(port == PORT0 ? XL9555_CTRL_INP0 : XL9555_CTRL_INP1);
     }
 
     // Write 8 bits of data to the specified port
     int writePort(uint8_t port, uint8_t mask)
     {
-        return writeRegister(port == PORT0 ? XL9555_CTRL_OUTP0 : XL9555_CTRL_OUTP1, mask);
+        return comm->writeRegister(port == PORT0 ? XL9555_CTRL_OUTP0 : XL9555_CTRL_OUTP1, mask);
     }
 
     // Read 16-bit gpio input status
     uint16_t read()
     {
         uint16_t val = 0x0;
-        readRegister(XL9555_CTRL_INP0, (uint8_t *)&val, 2);
+        comm->readRegister(XL9555_CTRL_INP0, (uint8_t *)&val, 2);
         return val;
     }
 
@@ -197,19 +216,19 @@ public:
     void write(uint16_t value)
     {
         uint8_t buffer[2] = {highByte(value), lowByte(value)};
-        writeRegister(XL9555_CTRL_OUTP0, buffer, 2);
+        comm->writeRegister(XL9555_CTRL_OUTP0, buffer, 2);
     }
 
     // Read the specified port configuration status
     int readConfig(uint8_t port)
     {
-        return readRegister(port == PORT0 ? XL9555_CTRL_CFG0 : XL9555_CTRL_CFG1);
+        return comm->readRegister(port == PORT0 ? XL9555_CTRL_CFG0 : XL9555_CTRL_CFG1);
     }
 
     // Configure the specified port as input or output , 0xFF = all pin input , 0x00 = all pin output
     int configPort(uint8_t port, uint8_t mask)
     {
-        return writeRegister(port == PORT0 ? XL9555_CTRL_CFG0 : XL9555_CTRL_CFG1, mask);
+        return comm->writeRegister(port == PORT0 ? XL9555_CTRL_CFG0 : XL9555_CTRL_CFG1, mask);
     }
 
     void setPinEvent(uint8_t pin, uint8_t mode, gpio_event_t event, void *user_data)
@@ -259,43 +278,43 @@ public:
             val >>= 1;
         }
     }
+
     void setClock(uint32_t frequency)
     {
-        SensorCommon::setClock(frequency);
+        //TODO:
     }
 
     uint32_t getClock()
     {
-        return SensorCommon::getClock();
+        //TODO:
+        return 0;
     }
 private:
-    bool initImpl()
+
+    bool initImpl(uint8_t addr)
     {
-        if (__addr == XL9555_UNKOWN_ADDRESS) {
-            for (uint8_t addr = XL9555_SLAVE_ADDRESS0; addr <= XL9555_SLAVE_ADDRESS7; ++addr) {
-                if (probe(addr)) {
-                    log_e("Found the xl9555 chip address is 0x%X", addr);
-                    __addr = addr;
+        if (addr == XL9555_UNKOWN_ADDRESS) {
+            log_d("Try to automatically discover the device");
+            for (uint8_t a = XL9555_SLAVE_ADDRESS0; a <= XL9555_SLAVE_ADDRESS7; ++a) {
+                I2CParam params(I2CParam::I2C_SET_ADDR, a);
+                comm->setParams(params);
+                log_d("Try to use 0x%02x address.", a);
+                if (comm->readRegister(XL9555_CTRL_INP0) != -1) {
+                    log_d("Found the xl9555 chip address is 0x%X", a);
                     return true;
                 }
             }
             log_e("No found xl9555 chip ...");
             return false;
         }
-        return probe();
-    }
-
-    int getReadMaskImpl()
-    {
-        return -1;
+        if (comm->readRegister(XL9555_CTRL_INP0) < 0 ) {
+            return false;
+        }
+        return true;
     }
 
     ioEvent_t event[16];
-
 protected:
     uint32_t _frequency;
-
+    std::unique_ptr<SensorCommBase> comm;
 };
-
-
-
