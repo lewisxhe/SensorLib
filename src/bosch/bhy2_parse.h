@@ -101,6 +101,17 @@ void bhy2_parse_xyz(const uint8_t *data, struct bhy2_data_xyz *vector);
  */
 uint32_t bhy2_parse_step_counter(const uint8_t *data);
 
+
+/**
+ * @brief  Function converts quaternion to Euler angle
+ * @param  *data: Quaternions data
+ * @param  *roll: Data pointer
+ * @param  *pitch: Data pointer
+ * @param  *yaw: Data pointer
+ * @retval None
+ */
+void bhy2_quaternion_to_euler(const uint8_t *data, float *roll, float *pitch, float *yaw);
+
 /* End of CPP Guard */
 #ifdef __cplusplus
 }
