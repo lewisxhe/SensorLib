@@ -32,27 +32,6 @@
 #include <Arduino.h>
 #include "SensorBHI260AP.hpp"
 
-/*
-Write the firmware containing the BMM150 magnetometer function into the flash.
-This function requires the BHI260AP external SPI Flash.
-If there is no Flash, it can only be written and run in RAM.
-Example firmware source: https://github.com/boschsensortec/BHY2_SensorAPI/tree/master/firmware
-You can also compile custom firmware to write
-How to build custom firmware see : https://www.bosch-sensortec.com/media/boschsensortec/downloads/application_notes_1/bst-bhi260ab-an000.pdf
-*/
-#define WRITE_TO_FLASH          1           //Set 1 write fw to flash ,set 0 write fw to ram
-
-#if   WRITE_TO_FLASH
-#include "BHI260AP_aux_BMM150-flash.fw.h"
-const uint8_t *firmware = bhi26ap_aux_bmm150_flash_fw;
-const size_t fw_size = sizeof(bhi26ap_aux_bmm150_flash_fw);
-
-#else
-#include "BHI260AP_aux_BMM150.fw.h"
-const uint8_t *firmware = bhi26ap_aux_bmm150_fw;
-const size_t fw_size = sizeof(bhi26ap_aux_bmm150_fw);
-#endif
-
 // #define USE_I2C_INTERFACE        true
 // #define USE_SPI_INTERFACE        true
 
@@ -103,6 +82,37 @@ const size_t fw_size = sizeof(bhi26ap_aux_bmm150_fw);
 
 SensorBHI260AP bhy;
 
+// The firmware runs in RAM and will be lost if the power is off. The firmware will be loaded from RAM each time it is run.
+// #define BOSCH_APP30_SHUTTLE_BHI260_FW
+#define BOSCH_APP30_SHUTTLE_BHI260_AUX_BMM150FW
+// #define BOSCH_APP30_SHUTTLE_BHI260_BME68X
+// #define BOSCH_APP30_SHUTTLE_BHI260_BMP390
+// #define BOSCH_APP30_SHUTTLE_BHI260_TURBO
+// #define BOSCH_BHI260_AUX_BEM280
+// #define BOSCH_BHI260_AUX_BMM150_BEM280
+// #define BOSCH_BHI260_AUX_BMM150_BEM280_GPIO
+// #define BOSCH_BHI260_AUX_BMM150_GPIO
+// #define BOSCH_BHI260_GPIO
+
+// Firmware is stored in flash and booted from flash,Depends on BHI260 hardware connected to SPI Flash
+// #define BOSCH_APP30_SHUTTLE_BHI260_AUX_BMM150_FLASH
+// #define BOSCH_APP30_SHUTTLE_BHI260_BME68X_FLASH
+// #define BOSCH_APP30_SHUTTLE_BHI260_BMP390_FLASH
+// #define BOSCH_APP30_SHUTTLE_BHI260_FLASH
+// #define BOSCH_APP30_SHUTTLE_BHI260_TURBO_FLASH
+// #define BOSCH_BHI260_AUX_BEM280_FLASH
+// #define BOSCH_BHI260_AUX_BMM150_BEM280_FLASH
+// #define BOSCH_BHI260_AUX_BMM150_BEM280_GPIO_FLASH
+// #define BOSCH_BHI260_AUX_BMM150_GPIO_FLASH
+// #define BOSCH_BHI260_GPIO_FLASH
+
+#include <BoschFirmware.h>
+
+// Force update of current firmware, whether it exists or not.
+// Only works when external SPI Flash is connected to BHI260.
+// After uploading firmware once, you can change this to false to speed up boot time.
+bool force_update_spi_firmware = true;
+
 bool isReadyFlag = false;
 
 void dataReadyISR()
@@ -145,6 +155,12 @@ void parse_quaternion(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64
     */
 }
 
+// Firmware update progress callback
+void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
+{
+    float progress = (float)transferred / total * 100;
+    Serial.printf("Upload progress: %.2f%%\n", progress);
+}
 
 void setup()
 {
@@ -154,18 +170,25 @@ void setup()
     // Set the reset pin
     bhy.setPins(BHI260_RST);
 
-    // Force update of the current firmware, regardless of whether it exists.
-    // After uploading the firmware once, you can change it to false to speed up the startup time.
-    bool force_update = true;
-    // Set the firmware array address and firmware size
-    bhy.setFirmware(firmware, fw_size, WRITE_TO_FLASH, force_update);
+    Serial.println("Initializing Sensors...");
 
-#if WRITE_TO_FLASH
+    // Set the firmware array address and firmware size
+    bhy.setFirmware(bosch_firmware_image, bosch_firmware_size, bosch_firmware_type, force_update_spi_firmware);
+
+    // Set the firmware update processing progress callback function
+    // bhy.setUpdateProcessCallback(progress_callback, NULL);
+
+    // Set the maximum transfer bytes of I2C/SPI,The default size is I2C 32 bytes, SPI 256 bytes.
+    // bhy.setMaxiTransferSize(256);
+
+    // Set the processing fifo data buffer size,The default size is 512 bytes.
+    // bhy.setProcessBufferSize(1024);
+
     // Set to load firmware from flash
-    bhy.setBootFromFlash(true);
-#endif
+    bhy.setBootFromFlash(bosch_firmware_type);
 
     Serial.println("Initializing Sensors...");
+    
 #ifdef USE_I2C_INTERFACE
     // Using I2C interface
     // BHI260AP_SLAVE_ADDRESS_L = 0x28
@@ -196,7 +219,7 @@ void setup()
     BoschSensorInfo info = bhy.getSensorInfo();
     info.printInfo(Serial);
 
-    float sample_rate = 100.0;      /* Read out hintr_ctrl measured at 100Hz */
+    float sample_rate = 100.0;      /* Read out data measured at 100Hz */
     uint32_t report_latency_ms = 0; /* Report immediately */
 
     /*

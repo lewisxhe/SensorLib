@@ -36,49 +36,6 @@
 Commander cmd;
 void initialiseCommander();
 
-/*
-Write the firmware containing the BMM150 magnetometer function into the flash.
-This function requires the BHI260AP external SPI Flash.
-If there is no Flash, it can only be written and run in RAM.
-Example firmware source: https://github.com/boschsensortec/BHY2_SensorAPI/tree/master/firmware
-You can also compile custom firmware to write
-How to build custom firmware see : https://www.bosch-sensortec.com/media/boschsensortec/downloads/application_notes_1/bst-bhi260ab-an000.pdf
-*/
-#define WRITE_TO_FLASH          true           //Set 1 write fw to flash ,set 0 write fw to ram
-
-#if   WRITE_TO_FLASH
-// Custom firmware with GPIO input and output functions
-#include "BHI260AP_aux_BMM150_BME280_GPIO_flash.fw.h"
-const uint8_t *firmware = BHI260AP_aux_BMM150_BME280_GPIO_flash;
-const size_t fw_size = sizeof(BHI260AP_aux_BMM150_BME280_GPIO_flash);
-#else
-#include "BHI260AP_aux_BMM150_BME280_GPIO.fw.h"
-// Custom firmware with GPIO input and output functions
-const uint8_t *firmware = BHI260AP_aux_BMM150_BME280_GPIO;
-const size_t fw_size = sizeof(BHI260AP_aux_BMM150_BME280_GPIO);
-#endif
-
-/*
-* GPIO Comparison Table
-* M1SCX = N.A   ! INVALID PIN
-* M1SDX = N.A   ! INVALID PIN
-* M1SDI = N.A   ! INVALID PIN
-* M2SCX = 14    ! OK
-* M2SDX = 15    ! OK
-* M2SDI = 16    ! OK
-* MCSB1 = 1     ! OK
-* MCSB2 = 4     ! aux BMM150
-* M3SCL = 17    ! aux BMM150
-* M3SDA = 18    ! aux BMM150
-* MCSB3 = 5     ! OK
-* MCSB4 = 6     ! OK
-* JTAG_CLK = 19 ! OK
-* JTAG_DIO = 20 ! OK
-* RESV1 = 2     ! INVALID PIN
-* RESV2 = 3     ! INVALID PIN
-* RESV3 = N.A   ! INVALID PIN
-* */
-
 // #define USE_I2C_INTERFACE        true
 // #define USE_SPI_INTERFACE        true
 
@@ -129,6 +86,37 @@ const size_t fw_size = sizeof(BHI260AP_aux_BMM150_BME280_GPIO);
 
 SensorBHI260AP bhy;
 
+// The firmware runs in RAM and will be lost if the power is off. The firmware will be loaded from RAM each time it is run.
+// #define BOSCH_APP30_SHUTTLE_BHI260_FW
+// #define BOSCH_APP30_SHUTTLE_BHI260_AUX_BMM150FW
+// #define BOSCH_APP30_SHUTTLE_BHI260_BME68X
+// #define BOSCH_APP30_SHUTTLE_BHI260_BMP390
+// #define BOSCH_APP30_SHUTTLE_BHI260_TURBO
+// #define BOSCH_BHI260_AUX_BEM280
+// #define BOSCH_BHI260_AUX_BMM150_BEM280
+#define BOSCH_BHI260_AUX_BMM150_BEM280_GPIO
+// #define BOSCH_BHI260_AUX_BMM150_GPIO
+// #define BOSCH_BHI260_GPIO
+
+// Firmware is stored in flash and booted from flash,Depends on BHI260 hardware connected to SPI Flash
+// #define BOSCH_APP30_SHUTTLE_BHI260_AUX_BMM150_FLASH
+// #define BOSCH_APP30_SHUTTLE_BHI260_BME68X_FLASH
+// #define BOSCH_APP30_SHUTTLE_BHI260_BMP390_FLASH
+// #define BOSCH_APP30_SHUTTLE_BHI260_FLASH
+// #define BOSCH_APP30_SHUTTLE_BHI260_TURBO_FLASH
+// #define BOSCH_BHI260_AUX_BEM280_FLASH
+// #define BOSCH_BHI260_AUX_BMM150_BEM280_FLASH
+// #define BOSCH_BHI260_AUX_BMM150_BEM280_GPIO_FLASH
+// #define BOSCH_BHI260_AUX_BMM150_GPIO_FLASH
+// #define BOSCH_BHI260_GPIO_FLASH
+
+#include <BoschFirmware.h>
+
+// Force update of current firmware, whether it exists or not.
+// Only works when external SPI Flash is connected to BHI260.
+// After uploading firmware once, you can change this to false to speed up boot time.
+bool force_update_spi_firmware = true;
+
 bool isReadyFlag = false;
 
 void dataReadyISR()
@@ -177,6 +165,12 @@ void sensor_event_callback(uint8_t event, uint8_t sensor_id, uint8_t data)
     }
 }
 
+// Firmware update progress callback
+void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
+{
+    float progress = (float)transferred / total * 100;
+    Serial.printf("Upload progress: %.2f%%\n", progress);
+}
 
 void setup()
 {
@@ -185,16 +179,26 @@ void setup()
 
     // Set the reset pin
     bhy.setPins(BHI260_RST);
-    // Force update of the current firmware, regardless of whether it exists.
-    // After uploading the firmware once, you can change it to false to speed up the startup time.
-    bool force_update = true;
-    // Set the firmware array address and firmware size
-    bhy.setFirmware(firmware, fw_size, WRITE_TO_FLASH, force_update);
-
-    // Set to load firmware from flash
-    bhy.setBootFromFlash(WRITE_TO_FLASH);
 
     Serial.println("Initializing Sensors...");
+
+    // Set the firmware array address and firmware size
+    bhy.setFirmware(bosch_firmware_image, bosch_firmware_size, bosch_firmware_type, force_update_spi_firmware);
+
+    // Set the firmware update processing progress callback function
+    // bhy.setUpdateProcessCallback(progress_callback, NULL);
+
+    // Set the maximum transfer bytes of I2C/SPI,The default size is I2C 32 bytes, SPI 256 bytes.
+    // bhy.setMaxiTransferSize(256);
+
+    // Set the processing fifo data buffer size,The default size is 512 bytes.
+    // bhy.setProcessBufferSize(1024);
+
+    // Set to load firmware from flash
+    bhy.setBootFromFlash(bosch_firmware_type);
+
+    Serial.println("Initializing Sensors...");
+    
 #ifdef USE_I2C_INTERFACE
     // Using I2C interface
     // BHI260AP_SLAVE_ADDRESS_L = 0x28
@@ -243,8 +247,6 @@ void setup()
     pinMode(BHI260_IRQ, INPUT);
     attachInterrupt(BHI260_IRQ, dataReadyISR, RISING);
 }
-
-uint32_t check_millis = 0;
 
 void loop()
 {
@@ -329,7 +331,26 @@ bool setPressure(Commander &Cmdr)
 }
 
 
-
+/*
+* GPIO Comparison Table
+* M1SCX = N.A   ! INVALID PIN
+* M1SDX = N.A   ! INVALID PIN
+* M1SDI = N.A   ! INVALID PIN
+* M2SCX = 14    ! OK
+* M2SDX = 15    ! OK
+* M2SDI = 16    ! OK
+* MCSB1 = 1     ! OK
+* MCSB2 = 4     ! aux BMM150
+* M3SCL = 17    ! aux BMM150
+* M3SDA = 18    ! aux BMM150
+* MCSB3 = 5     ! OK
+* MCSB4 = 6     ! OK
+* JTAG_CLK = 19 ! OK
+* JTAG_DIO = 20 ! OK
+* RESV1 = 2     ! INVALID PIN
+* RESV2 = 3     ! INVALID PIN
+* RESV3 = N.A   ! INVALID PIN
+* */
 bool setGpioLevel(Commander &Cmdr)
 {
     int values[2] = {0, 0};
