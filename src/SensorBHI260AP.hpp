@@ -33,8 +33,6 @@
 
 #include "bosch/BoschParse.h"
 #include "bosch/SensorBhy2Define.h"
-#include "bosch/firmware/BHI260AP.fw.h"
-#include "bosch/BoschSensorControl.hpp"
 #include "bosch/BoschSensorControl.hpp"
 #include "bosch/BoschPhySensorInfo.hpp"
 #include "bosch/BoschSensorInfo.hpp"
@@ -44,6 +42,9 @@ class SensorBHI260AP
 {
     friend class BoschParse;
 public:
+
+    using ProcessCallback = void (*)(void *user_data, uint32_t total, uint32_t transferred);
+
     // The pin names are named according to the sensor manual.
     enum BHI260AP_GPIO {
         MCSB1 = 1,
@@ -253,18 +254,18 @@ public:
      *         Please note that you should not register the same event callback repeatedly.
      * @param  sensor_id: Sensor ID , see enum BhySensorID
      * @param  callback: Callback Function
-     * @retval None
+     * @retval bool true-> Success false-> failure
      */
-    void onResultEvent(BhySensorID sensor_id, BhyParseDataCallback callback);
+    bool onResultEvent(BhySensorID sensor_id, BhyParseDataCallback callback);
 
     /**
      * @brief  removeResultEvent
      * @note   Remove the registered result callback function
      * @param  sensor_id: Sensor ID , see enum BhySensorID
      * @param  callback: Callback Function
-     * @retval None
+     * @retval bool true-> Success false-> failure
      */
-    void removeResultEvent(BhySensorID sensor_id, BhyParseDataCallback callback);
+    bool removeResultEvent(BhySensorID sensor_id, BhyParseDataCallback callback);
 
     /**
      * @brief  setProcessBufferSize
@@ -420,6 +421,16 @@ public:
      */
     void setMaxiTransferSize(uint16_t size_of_bytes);
 
+
+    /**
+     * @brief  setUpdateProcessCallback
+     * @note   Set the callback function of the firmware update process to obtain the update progress
+     * @param  callback: callback function
+     * @param  *user_data: user data, can be nullptr
+     * @retval None
+     */
+    void setUpdateProcessCallback(ProcessCallback callback, void *user_data = nullptr);
+
 private:
 
     /**
@@ -451,7 +462,8 @@ protected:
     int                 _max_rw_length;
     uint8_t             _accuracy;      /* Accuracy is reported as a meta event. */
     bool                _debug;
+    ProcessCallback     _process_callback;
+    void               *_process_callback_user_data;
     char                _err_buffer[128];
-
 
 };

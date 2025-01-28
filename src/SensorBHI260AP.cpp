@@ -44,7 +44,9 @@ SensorBHI260AP::SensorBHI260AP(): comm(nullptr),
     _force_update(false),
     _max_rw_length(-1),
     _accuracy(0),
-    _debug(false)
+    _debug(false),
+    _process_callback(nullptr),
+    _process_callback_user_data(nullptr)
 {
 }
 
@@ -285,10 +287,13 @@ void SensorBHI260AP::removeEvent()
  *         Please note that you should not register the same event callback repeatedly.
  * @param  sensor_id: Sensor ID , see enum BhySensorID
  * @param  callback: Callback Function
- * @retval None
+ * @retval bool true-> Success false-> failure
  */
-void SensorBHI260AP::onResultEvent(BhySensorID sensor_id, BhyParseDataCallback callback)
+bool SensorBHI260AP::onResultEvent(BhySensorID sensor_id, BhyParseDataCallback callback)
 {
+    if (!bhy2_is_sensor_available(sensor_id, _bhy2.get())) {
+        log_e("%s not present", getSensorName(sensor_id)); return false;
+    }
 #ifdef USE_STD_VECTOR
     ParseCallBackList_t newEventHandler;
     newEventHandler.cb = callback;
@@ -303,6 +308,7 @@ void SensorBHI260AP::onResultEvent(BhySensorID sensor_id, BhyParseDataCallback c
     newEventHandler.id = sensor_id;
     BoschParse::BoschParse_bhyParseEventVector[BoschParse::BoschParse_bhyParseEventVectorSize++] = newEventHandler;
 #endif
+    return true;
 }
 
 /**
@@ -310,12 +316,15 @@ void SensorBHI260AP::onResultEvent(BhySensorID sensor_id, BhyParseDataCallback c
  * @note   Remove the registered result callback function
  * @param  sensor_id: Sensor ID , see enum BhySensorID
  * @param  callback: Callback Function
- * @retval None
+ * @retval bool true-> Success false-> failure
  */
-void SensorBHI260AP::removeResultEvent(BhySensorID sensor_id, BhyParseDataCallback callback)
+bool SensorBHI260AP::removeResultEvent(BhySensorID sensor_id, BhyParseDataCallback callback)
 {
+    if (!bhy2_is_sensor_available(sensor_id, _bhy2.get())) {
+        log_e("%s not present", getSensorName(sensor_id)); return false;
+    }
     if (!callback) {
-        return;
+        return false;
     }
 #ifdef USE_STD_VECTOR
     for (uint32_t i = 0; i < BoschParse::bhyParseEventVector.size(); i++) {
@@ -336,6 +345,7 @@ void SensorBHI260AP::removeResultEvent(BhySensorID sensor_id, BhyParseDataCallba
         }
     }
 #endif
+    return true;
 }
 
 /**
@@ -383,7 +393,9 @@ bool SensorBHI260AP::uploadFirmware(const uint8_t *firmware, uint32_t length, bo
             return false;
         }
         log_d("Loading firmware into FLASH.");
-        _error_code = bhy2_upload_firmware_to_flash(firmware, length, _bhy2.get());
+        _error_code = bhy2_upload_firmware_to_flash(firmware, length, _bhy2.get(),
+                      _process_callback,
+                      _process_callback_user_data);
         BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_upload_firmware_to_flash failed!", false);
         log_d("Loading firmware into FLASH Done");
     } else {
@@ -443,7 +455,7 @@ const char *SensorBHI260AP::getError()
 bool SensorBHI260AP::configure(uint8_t sensor_id, float sample_rate, uint32_t report_latency_ms)
 {
     if (!bhy2_is_sensor_available(sensor_id, _bhy2.get())) {
-        log_e("Sensor not present"); return false;
+        log_e("%s not present", getSensorName(sensor_id)); return false;
     }
     _error_code = bhy2_set_virt_sensor_cfg(sensor_id, sample_rate, report_latency_ms, _bhy2.get());
     BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_set_virt_sensor_cfg failed!", false);
@@ -714,6 +726,19 @@ void SensorBHI260AP::setMaxiTransferSize(uint16_t size_of_bytes)
     }
     _max_rw_length = size_of_bytes;
 }
+
+/**
+ * @brief  setUpdateProcessCallback
+ * @note   Set the callback function of the firmware update process to obtain the update progress
+ * @param  callback: callback function
+ * @param  *user_data: user data, can be nullptr
+ * @retval None
+ */
+void SensorBHI260AP::setUpdateProcessCallback(ProcessCallback callback, void *user_data)
+{
+    _process_callback = callback;
+}
+
 
 /**
  * @brief  bootFromFlash
