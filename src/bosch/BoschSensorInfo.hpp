@@ -181,28 +181,28 @@ public:
     {
         stream.printf("Boot Status : 0x%02x: ", boot_status);
         if (boot_status & BHY2_BST_FLASH_DETECTED) {
-            stream.printf("\tFlash detected. ");
+            stream.printf("\tFlash detected. \n");
         }
         if (boot_status & BHY2_BST_FLASH_VERIFY_DONE) {
-            stream.printf("\tFlash verify done. ");
+            stream.printf("\tFlash verify done. \n");
         }
         if (boot_status & BHY2_BST_FLASH_VERIFY_ERROR) {
-            stream.printf("Flash verification failed. ");
+            stream.printf("Flash verification failed. \n");
         }
         if (boot_status & BHY2_BST_NO_FLASH) {
-            stream.printf("\tNo flash installed. ");
+            stream.printf("\tNo flash installed. \n");
         }
         if (boot_status & BHY2_BST_HOST_INTERFACE_READY) {
-            stream.printf("\tHost interface ready. ");
+            stream.printf("\tHost interface ready. \n");
         }
         if (boot_status & BHY2_BST_HOST_FW_VERIFY_DONE) {
-            stream.printf("\tFirmware verification done. ");
+            stream.printf("\tFirmware verification done. \n");
         }
         if (boot_status & BHY2_BST_HOST_FW_VERIFY_ERROR) {
-            stream.printf("\tFirmware verification error. ");
+            stream.printf("\tFirmware verification error. \n");
         }
         if (boot_status & BHY2_BST_HOST_FW_IDLE) {
-            stream.printf("\tFirmware halted. ");
+            stream.printf("\tFirmware halted. \n");
         }
     }
 
@@ -253,28 +253,28 @@ public:
     {
         printf("Boot Status : 0x%02x: ", boot_status);
         if (boot_status & BHY2_BST_FLASH_DETECTED) {
-            printf("\tFlash detected. ");
+            printf("\tFlash detected. \n");
         }
         if (boot_status & BHY2_BST_FLASH_VERIFY_DONE) {
-            printf("\tFlash verify done. ");
+            printf("\tFlash verify done. \n");
         }
         if (boot_status & BHY2_BST_FLASH_VERIFY_ERROR) {
-            printf("Flash verification failed. ");
+            printf("Flash verification failed. \n");
         }
         if (boot_status & BHY2_BST_NO_FLASH) {
-            printf("\tNo flash installed. ");
+            printf("\tNo flash installed. \n");
         }
         if (boot_status & BHY2_BST_HOST_INTERFACE_READY) {
-            printf("\tHost interface ready. ");
+            printf("\tHost interface ready. \n");
         }
         if (boot_status & BHY2_BST_HOST_FW_VERIFY_DONE) {
-            printf("\tFirmware verification done. ");
+            printf("\tFirmware verification done. \n");
         }
         if (boot_status & BHY2_BST_HOST_FW_VERIFY_ERROR) {
-            printf("\tFirmware verification error. ");
+            printf("\tFirmware verification error. \n");
         }
         if (boot_status & BHY2_BST_HOST_FW_IDLE) {
-            printf("\tFirmware halted. ");
+            printf("\tFirmware halted. \n");
         }
     }
 
