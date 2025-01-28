@@ -932,6 +932,9 @@ bool SensorBHI260AP::initImpl(bhy2_intf interface)
     }
 
     if (_boot_from_flash) {
+        if (!bootFromFlash()) {
+            return false;
+        }
         if (_force_update) {
             if ((_firmware_stream == NULL) || (_firmware_size == 0)) {
                 log_e("No valid firmware is set. Please use the \"setFirmware\" method to set the valid firmware.");
@@ -944,9 +947,6 @@ bool SensorBHI260AP::initImpl(bhy2_intf interface)
                 log_e("uploadFirmware failed!");
                 return false;
             }
-        }
-        if (!bootFromFlash()) {
-            return false;
         }
     } else {
         if ((_firmware_stream == NULL) || (_firmware_size == 0)) {
