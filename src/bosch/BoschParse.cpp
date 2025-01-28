@@ -117,20 +117,6 @@ void BoschParse::parseMetaEvent(const struct bhy2_fifo_parse_data_info *callback
     (void)event_text;
     uint8_t *accuracy = (uint8_t *)user_data;
 
-#if defined(ARDUINO_ARCH_NRF52)
-    /*
-    *
-    * Unknown error, NRF52 Arduino version 1.6.1
-    * If you remove the serial output here, there will never be an interrupt.
-    * Suspect SDK problem.
-    * Temporarily add event id here to print ten times, then close
-    * */
-    static uint8_t cnt = 10;
-    if (cnt) {
-        cnt--;
-        Serial.print("parseMetaEvent:"); Serial.println(meta_event_type);
-    }
-#endif
 
     if (callback_info->sensor_id == BHY2_SYS_ID_META_EVENT) {
         event_text = "[META EVENT]";
