@@ -600,6 +600,7 @@ typedef BHY2_INTF_RET_TYPE (*bhy2_read_fptr_t)(uint8_t reg_addr, uint8_t *reg_da
 typedef BHY2_INTF_RET_TYPE (*bhy2_write_fptr_t)(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length,
         void *intf_ptr);
 typedef void (*bhy2_delay_us_fptr_t)(uint32_t period_us, void *intf_ptr);
+typedef void (*bhy2_progress_callback)(void *user_data, uint32_t total, uint32_t transferred);
 
 enum bhy2_intf {
     BHY2_SPI_INTERFACE = 1,
