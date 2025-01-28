@@ -715,7 +715,7 @@ BoschSensorInfo SensorBHI260AP::getSensorInfo()
  * @brief  setMaxiTransferSize
  * @note   Set the maximum number of bytes transmitted by the interface , Called before begin
  * @param  size_of_bytes: The maximum transmission bytes of different platforms are different.
- *                        Set it according to the platform. If not set, the default is 32 bytes.
+ *                        Set it according to the platform. If not set, the default is I2C 32 bytes, SPI 256 bytes.
  * @retval None
  */
 void SensorBHI260AP::setMaxiTransferSize(uint16_t size_of_bytes)
@@ -876,8 +876,8 @@ bool SensorBHI260AP::initImpl(bhy2_intf interface)
             return false;
         }
 #else
-        // Other platforms are set to 64 bytes
-        _max_rw_length = 32;
+        // Other platforms,I2C 32 Bytes , SPI 256 Bytes
+        _max_rw_length = interface == BHY2_I2C_INTERFACE ? 32 : 256;
 #endif
     }
 

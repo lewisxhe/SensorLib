@@ -416,7 +416,7 @@ public:
      * @brief  setMaxiTransferSize
      * @note   Set the maximum number of bytes transmitted by the interface , Called before begin
      * @param  size_of_bytes: The maximum transmission bytes of different platforms are different.
-     *                        Set it according to the platform. If not set, the default is 32 bytes.
+     *                        Set it according to the platform. If not set, the default is I2C 32 bytes, SPI 256 bytes.
      * @retval None
      */
     void setMaxiTransferSize(uint16_t size_of_bytes);
