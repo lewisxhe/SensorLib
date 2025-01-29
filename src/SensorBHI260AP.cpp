@@ -285,11 +285,11 @@ void SensorBHI260AP::removeEvent()
  * @brief  onResultEvent
  * @note   Registered sensor result callback function , The same sensor ID can register multiple event callbacks.
  *         Please note that you should not register the same event callback repeatedly.
- * @param  sensor_id: Sensor ID , see enum BhySensorID
+ * @param  sensor_id: Sensor ID , see enum BoschSensorID
  * @param  callback: Callback Function
  * @retval bool true-> Success false-> failure
  */
-bool SensorBHI260AP::onResultEvent(BhySensorID sensor_id, BhyParseDataCallback callback)
+bool SensorBHI260AP::onResultEvent(BoschSensorID sensor_id, BhyParseDataCallback callback)
 {
     if (!bhy2_is_sensor_available(sensor_id, _bhy2.get())) {
         log_e("%s not present", getSensorName(sensor_id)); return false;
@@ -314,11 +314,11 @@ bool SensorBHI260AP::onResultEvent(BhySensorID sensor_id, BhyParseDataCallback c
 /**
  * @brief  removeResultEvent
  * @note   Remove the registered result callback function
- * @param  sensor_id: Sensor ID , see enum BhySensorID
+ * @param  sensor_id: Sensor ID , see enum BoschSensorID
  * @param  callback: Callback Function
  * @retval bool true-> Success false-> failure
  */
-bool SensorBHI260AP::removeResultEvent(BhySensorID sensor_id, BhyParseDataCallback callback)
+bool SensorBHI260AP::removeResultEvent(BoschSensorID sensor_id, BhyParseDataCallback callback)
 {
     if (!bhy2_is_sensor_available(sensor_id, _bhy2.get())) {
         log_e("%s not present", getSensorName(sensor_id)); return false;
@@ -447,7 +447,7 @@ const char *SensorBHI260AP::getError()
 /**
  * @brief  configure
  * @note   Sensor Configuration
- * @param  sensor_id: Sensor ID , see enum BhySensorID
+ * @param  sensor_id: Sensor ID , see enum BoschSensorID
  * @param  sample_rate: Data output rate, unit: HZ
  * @param  report_latency_ms: Report interval in milliseconds
  * @return bool true-> Success false-> failure
@@ -466,7 +466,7 @@ bool SensorBHI260AP::configure(uint8_t sensor_id, float sample_rate, uint32_t re
 /**
  * @brief  configureRange
  * @note   Set range of the sensor
- * @param  sensor_id: Sensor ID , see enum BhySensorID
+ * @param  sensor_id: Sensor ID , see enum BoschSensorID
  * @param  range:     Range for selected SensorID. See Table 79 in BHY260 datasheet 109 page
  * @retval  bool true-> Success false-> failure
  */
@@ -481,7 +481,7 @@ bool SensorBHI260AP::configureRange(uint8_t sensor_id, uint16_t range)
 /**
  * @brief  getConfigure
  * @note   Get sensor configuration
- * @param  sensor_id: Sensor ID , see enum BhySensorID
+ * @param  sensor_id: Sensor ID , see enum BoschSensorID
  * @retval  struct bhy2_virt_sensor_conf
  */
 struct bhy2_virt_sensor_conf SensorBHI260AP::getConfigure(uint8_t sensor_id)
@@ -495,7 +495,7 @@ struct bhy2_virt_sensor_conf SensorBHI260AP::getConfigure(uint8_t sensor_id)
 /**
  * @brief  getScaling
  * @note   Get sensor scale factor
- * @param  sensor_id: Sensor ID , see enum BhySensorID
+ * @param  sensor_id: Sensor ID , see enum BoschSensorID
  * @retval scale factor
  */
 float SensorBHI260AP::getScaling(uint8_t sensor_id)
@@ -523,7 +523,7 @@ void SensorBHI260AP::setFirmware(const uint8_t *image, size_t image_len, bool wr
 /**
  * @brief  getSensorName
  * @note   Get sensor name
- * @param  sensor_id: Sensor ID , see enum BhySensorID
+ * @param  sensor_id: Sensor ID , see enum BoschSensorID
  * @retval sensor name
  */
 const char *SensorBHI260AP::getSensorName(uint8_t sensor_id)
@@ -553,11 +553,11 @@ uint8_t SensorBHI260AP::digitalRead(uint8_t pin, bool pullup)
     } else {
         pin_mask |= (BHY2_INPUT << 8);
     }
-    bhy2_set_virt_sensor_cfg(SENSOR_ID_GPIO_EXP, (float)pin_mask, 0, _bhy2.get());
+    bhy2_set_virt_sensor_cfg(BoschSensorID::GPIO_EXP, (float)pin_mask, 0, _bhy2.get());
     pin_mask = pin /*GetCmd*/;
-    bhy2_set_virt_sensor_cfg(SENSOR_ID_GPIO_EXP, (float)pin_mask, 0, _bhy2.get());
+    bhy2_set_virt_sensor_cfg(BoschSensorID::GPIO_EXP, (float)pin_mask, 0, _bhy2.get());
     bhy2_virt_sensor_conf conf;
-    bhy2_get_virt_sensor_cfg(SENSOR_ID_GPIO_EXP, &conf, _bhy2.get());
+    bhy2_get_virt_sensor_cfg(BoschSensorID::GPIO_EXP, &conf, _bhy2.get());
     uint8_t level = conf.sample_rate;
     return level;
 }
@@ -573,7 +573,7 @@ void SensorBHI260AP::digitalWrite(uint8_t pin, uint8_t level)
 {
     if (pin > JTAG_DIO)return;
     uint32_t pin_mask = pin  | (BHY2_OUTPUT << 8) | (level << 6) | BHY2_GPIO_SET ;
-    bhy2_set_virt_sensor_cfg(SENSOR_ID_GPIO_EXP, (float)pin_mask, 0, _bhy2.get());
+    bhy2_set_virt_sensor_cfg(BoschSensorID::GPIO_EXP, (float)pin_mask, 0, _bhy2.get());
 }
 
 /**
@@ -586,7 +586,7 @@ void SensorBHI260AP::disableGpio(uint8_t pin)
 {
     if (pin > JTAG_DIO)return;
     uint32_t pin_mask = pin  | (BHY2_OPEN_DRAIN << 8) | BHY2_GPIO_SET;
-    bhy2_set_virt_sensor_cfg(SENSOR_ID_GPIO_EXP, (float)pin_mask, 0, _bhy2.get());
+    bhy2_set_virt_sensor_cfg(BoschSensorID::GPIO_EXP, (float)pin_mask, 0, _bhy2.get());
 }
 
 /**
