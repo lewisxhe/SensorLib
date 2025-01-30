@@ -33,7 +33,7 @@
 #include "SensorBHI260AP.hpp"
 
 // #define USE_I2C_INTERFACE        true
-// #define USE_SPI_INTERFACE        true
+#define USE_SPI_INTERFACE        true
 
 #if !defined(USE_I2C_INTERFACE) && !defined(USE_SPI_INTERFACE)
 #define USE_I2C_INTERFACE
@@ -113,7 +113,7 @@ SensorBHI260AP bhy;
 // Force update of current firmware, whether it exists or not.
 // Only works when external SPI Flash is connected to BHI260.
 // After uploading firmware once, you can change this to false to speed up boot time.
-bool force_update_spi_firmware = true;
+bool force_update_flash_firmware = true;
 
 bool isReadyFlag = false;
 
@@ -140,7 +140,7 @@ void setup()
     Serial.println("Initializing Sensors...");
 
     // Set the firmware array address and firmware size
-    bhy.setFirmware(bosch_firmware_image, bosch_firmware_size, bosch_firmware_type, force_update_spi_firmware);
+    bhy.setFirmware(bosch_firmware_image, bosch_firmware_size, bosch_firmware_type, force_update_flash_firmware);
 
     // Set the firmware update processing progress callback function
     // bhy.setUpdateProcessCallback(progress_callback, NULL);
@@ -189,12 +189,10 @@ void setup()
     float sample_rate = 100.0;      /* Read out data measured at 100Hz */
     uint32_t report_latency_ms = 0; /* Report immediately */
 
-    // Direction detection relies on the accelerometer, and the accelerometer needs to be turned on first.
-    bhy.configure(SENSOR_ID_ACC_PASS, sample_rate, report_latency_ms);
     // Enable direction detection
-    bhy.configure(SENSOR_ID_DEVICE_ORI, sample_rate, report_latency_ms);
+    bhy.configure(SensorBHI260AP::DEVICE_ORIENTATION, sample_rate, report_latency_ms);
     // Set the direction detection result output processing function
-    bhy.onResultEvent(SENSOR_ID_DEVICE_ORI, orientation_process_callback);
+    bhy.onResultEvent(SensorBHI260AP::DEVICE_ORIENTATION, orientation_process_callback);
 
     // Register interrupt function
     pinMode(BHI260_IRQ, INPUT);

@@ -111,7 +111,7 @@ SensorBHI260AP bhy;
 // Force update of current firmware, whether it exists or not.
 // Only works when external SPI Flash is connected to BHI260.
 // After uploading firmware once, you can change this to false to speed up boot time.
-bool force_update_spi_firmware = true;
+bool force_update_flash_firmware = true;
 
 bool isReadyFlag = false;
 
@@ -190,7 +190,7 @@ void setup()
     Serial.println("Initializing Sensors...");
 
     // Set the firmware array address and firmware size
-    bhy.setFirmware(bosch_firmware_image, bosch_firmware_size, bosch_firmware_type, force_update_spi_firmware);
+    bhy.setFirmware(bosch_firmware_image, bosch_firmware_size, bosch_firmware_type, force_update_flash_firmware);
 
     // Set the firmware update processing progress callback function
     // bhy.setUpdateProcessCallback(progress_callback, NULL);
@@ -244,10 +244,10 @@ void setup()
     * The Euler function depends on BMM150.
     * If the hardware is not connected to BMM150, the Euler function cannot be used.
     * * */
-    bhy.configure(SENSOR_EULER_ID, sample_rate, report_latency_ms);
+    bhy.configure(SensorBHI260AP::ORIENTATION_WAKE_UP, sample_rate, report_latency_ms);
 
     // Register event callback function
-    bhy.onResultEvent(SENSOR_EULER_ID, parse_euler);
+    bhy.onResultEvent(SensorBHI260AP::ORIENTATION_WAKE_UP, parse_euler);
 
     // Register interrupt function
     pinMode(BHI260_IRQ, INPUT);

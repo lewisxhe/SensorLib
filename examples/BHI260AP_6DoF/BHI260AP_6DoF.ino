@@ -112,7 +112,7 @@ SensorBHI260AP bhy;
 // Force update of current firmware, whether it exists or not.
 // Only works when external SPI Flash is connected to BHI260.
 // After uploading firmware once, you can change this to false to speed up boot time.
-bool force_update_spi_firmware = true;
+bool force_update_flash_firmware = true;
 
 bool isReadyFlag = false;
 
@@ -154,7 +154,7 @@ void setup()
     Serial.println("Initializing Sensors...");
 
     // Set the firmware array address and firmware size
-    bhy.setFirmware(bosch_firmware_image, bosch_firmware_size, bosch_firmware_type, force_update_spi_firmware);
+    bhy.setFirmware(bosch_firmware_image, bosch_firmware_size, bosch_firmware_type, force_update_flash_firmware);
 
     // Set the firmware update processing progress callback function
     // bhy.setUpdateProcessCallback(progress_callback, NULL);
@@ -204,14 +204,14 @@ void setup()
     uint32_t report_latency_ms = 0; /* Report immediately */
 
     // Enable acceleration
-    bhy.configure(SENSOR_ID_ACC_PASS, sample_rate, report_latency_ms);
+    bhy.configure(SensorBHI260AP::ACCEL_PASSTHROUGH, sample_rate, report_latency_ms);
     // Enable gyroscope
-    bhy.configure(SENSOR_ID_GYRO_PASS, sample_rate, report_latency_ms);
+    bhy.configure(SensorBHI260AP::GYRO_PASSTHROUGH, sample_rate, report_latency_ms);
 
     // Set the acceleration sensor result callback function
-    bhy.onResultEvent(SENSOR_ID_ACC_PASS, data_ready_callback);
+    bhy.onResultEvent(SensorBHI260AP::ACCEL_PASSTHROUGH, data_ready_callback);
     // Set the gyroscope sensor result callback function
-    bhy.onResultEvent(SENSOR_ID_GYRO_PASS, data_ready_callback);
+    bhy.onResultEvent(SensorBHI260AP::GYRO_PASSTHROUGH, data_ready_callback);
 
     // Register interrupt function
     pinMode(BHI260_IRQ, INPUT);

@@ -111,7 +111,7 @@ SensorBHI260AP bhy;
 // Force update of current firmware, whether it exists or not.
 // Only works when external SPI Flash is connected to BHI260.
 // After uploading firmware once, you can change this to false to speed up boot time.
-bool force_update_spi_firmware = true;
+bool force_update_flash_firmware = true;
 
 bool isReadyFlag = false;
 
@@ -151,7 +151,7 @@ void setup()
     Serial.println("Initializing Sensors...");
 
     // Set the firmware array address and firmware size
-    bhy.setFirmware(bosch_firmware_image, bosch_firmware_size, bosch_firmware_type, force_update_spi_firmware);
+    bhy.setFirmware(bosch_firmware_image, bosch_firmware_size, bosch_firmware_type, force_update_flash_firmware);
 
     // Set the firmware update processing progress callback function
     // bhy.setUpdateProcessCallback(progress_callback, NULL);
@@ -200,16 +200,15 @@ void setup()
     float sample_rate = 100.0;      /* Read out data measured at 100Hz */
     uint32_t report_latency_ms = 0; /* Report immediately */
 
-    // Direction Step count  relies on the accelerometer, and the accelerometer needs to be turned on first.
-    bhy.configure(SENSOR_ID_ACC_PASS, sample_rate, report_latency_ms);
+
     // Enable Step detector
-    bhy.configure(SENSOR_ID_STD, sample_rate, report_latency_ms);
+    bhy.configure(SensorBHI260AP::STEP_DETECTOR, sample_rate, report_latency_ms);
     // Enable Step counter
-    bhy.configure(SENSOR_ID_STC, sample_rate, report_latency_ms);
+    bhy.configure(SensorBHI260AP::STEP_COUNTER, sample_rate, report_latency_ms);
 
     // Set the number of steps to detect the callback function
-    bhy.onResultEvent(SENSOR_ID_STD, step_detector_process_callback);
-    bhy.onResultEvent(SENSOR_ID_STC, step_counter_process_callback);
+    bhy.onResultEvent(SensorBHI260AP::STEP_DETECTOR, step_detector_process_callback);
+    bhy.onResultEvent(SensorBHI260AP::STEP_COUNTER, step_counter_process_callback);
 
     // Register interrupt function
     pinMode(BHI260_IRQ, INPUT);

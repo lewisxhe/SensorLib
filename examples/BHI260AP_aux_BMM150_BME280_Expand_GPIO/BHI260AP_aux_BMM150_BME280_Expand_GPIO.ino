@@ -115,7 +115,7 @@ SensorBHI260AP bhy;
 // Force update of current firmware, whether it exists or not.
 // Only works when external SPI Flash is connected to BHI260.
 // After uploading firmware once, you can change this to false to speed up boot time.
-bool force_update_spi_firmware = true;
+bool force_update_flash_firmware = true;
 
 bool isReadyFlag = false;
 
@@ -130,16 +130,15 @@ void parse_bme280_sensor_data(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len
     float temperature = 0;
     float pressure = 0;
     switch (sensor_id) {
-    case SENSOR_ID_HUM:
-    case SENSOR_ID_HUM_WU:
+    case SensorBHI260AP::HUMIDITY:
         bhy2_parse_humidity(data_ptr, &humidity);
         Serial.print("humidity:"); Serial.print(humidity); Serial.println("%");
         break;
-    case SENSOR_ID_TEMP:
+    case SensorBHI260AP::TEMPERATURE:
         bhy2_parse_temperature_celsius(data_ptr, &temperature);
         Serial.print("temperature:"); Serial.print(temperature); Serial.println("*C");
         break;
-    case SENSOR_ID_BARO:
+    case SensorBHI260AP::BAROMETER:
         bhy2_parse_pressure(data_ptr, &pressure);
         Serial.print("pressure:"); Serial.print(pressure); Serial.println("hPa");
         break;
@@ -183,7 +182,7 @@ void setup()
     Serial.println("Initializing Sensors...");
 
     // Set the firmware array address and firmware size
-    bhy.setFirmware(bosch_firmware_image, bosch_firmware_size, bosch_firmware_type, force_update_spi_firmware);
+    bhy.setFirmware(bosch_firmware_image, bosch_firmware_size, bosch_firmware_type, force_update_flash_firmware);
 
     // Set the firmware update processing progress callback function
     // bhy.setUpdateProcessCallback(progress_callback, NULL);
@@ -229,9 +228,9 @@ void setup()
     bhy.onEvent(sensor_event_callback);
 
     // Register BME280 data parse callback function
-    bhy.onResultEvent(SENSOR_ID_TEMP, parse_bme280_sensor_data);
-    bhy.onResultEvent(SENSOR_ID_HUM, parse_bme280_sensor_data);
-    bhy.onResultEvent(SENSOR_ID_BARO, parse_bme280_sensor_data);
+    bhy.onResultEvent(SensorBHI260AP::TEMPERATURE, parse_bme280_sensor_data);
+    bhy.onResultEvent(SensorBHI260AP::HUMIDITY, parse_bme280_sensor_data);
+    bhy.onResultEvent(SensorBHI260AP::BAROMETER, parse_bme280_sensor_data);
 
     // Output all sensors info to Serial
     BoschSensorInfo info = bhy.getSensorInfo();
@@ -302,7 +301,7 @@ bool setTemperature(Commander &Cmdr)
         return 0;
     }
     Cmdr.getFloat(sample_rate);
-    bhy.configure(SENSOR_ID_TEMP, sample_rate, 0);
+    bhy.configure(SensorBHI260AP::TEMPERATURE, sample_rate, 0);
     return 0;
 }
 
@@ -314,7 +313,7 @@ bool setHumidity(Commander &Cmdr)
         return 0;
     }
     Cmdr.getFloat(sample_rate);
-    bhy.configure(SENSOR_ID_HUM, sample_rate, 0);
+    bhy.configure(SensorBHI260AP::HUMIDITY, sample_rate, 0);
     return 0;
 }
 
@@ -326,7 +325,7 @@ bool setPressure(Commander &Cmdr)
         return 0;
     }
     Cmdr.getFloat(sample_rate);
-    bhy.configure(SENSOR_ID_BARO, sample_rate, 0);
+    bhy.configure(SensorBHI260AP::BAROMETER, sample_rate, 0);
     return 0;
 }
 
