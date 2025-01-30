@@ -44,6 +44,7 @@
 #undef USE_STD_VECTOR
 #endif
 
+typedef struct bhy2_virt_sensor_conf SensorConfig;
 
 enum BoschOrientation {
     BHY2_DIRECTION_TOP_RIGHT,

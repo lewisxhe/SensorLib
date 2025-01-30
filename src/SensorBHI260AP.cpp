@@ -482,9 +482,9 @@ bool SensorBHI260AP::configureRange(uint8_t sensor_id, uint16_t range)
  * @brief  getConfigure
  * @note   Get sensor configuration
  * @param  sensor_id: Sensor ID , see enum BoschSensorID
- * @retval  struct bhy2_virt_sensor_conf
+ * @retval  SensorConfig
  */
-struct bhy2_virt_sensor_conf SensorBHI260AP::getConfigure(uint8_t sensor_id)
+SensorConfig SensorBHI260AP::getConfigure(uint8_t sensor_id)
 {
     bhy2_virt_sensor_conf conf;
     bhy2_get_virt_sensor_cfg(sensor_id, &conf, _bhy2.get());
