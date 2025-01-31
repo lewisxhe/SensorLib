@@ -464,6 +464,13 @@ public:
      */
     void setUpdateProcessCallback(ProcessCallback callback, void *user_data = nullptr);
 
+    /**
+     * @brief  availableSensorNums
+     * @note   Get the number of available sensors
+     * @retval available sensors
+     */
+    const uint8_t availableSensorNums();
+
 protected:
 
     void parseData(const struct bhy2_fifo_parse_data_info *fifo, void *user_data) override;
@@ -508,6 +515,7 @@ protected:
     SensorEventCallback _event_callback;
     SensorDebugMessageCallback _debug_callback;
     BoschParseCallbackManager  _callback_manager;
+    uint8_t             _sensor_available_nums;
     char                _err_buffer[128];
 
 };

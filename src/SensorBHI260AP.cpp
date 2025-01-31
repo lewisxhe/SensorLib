@@ -716,6 +716,15 @@ void SensorBHI260AP::setUpdateProcessCallback(ProcessCallback callback, void *us
     _process_callback = callback;
 }
 
+/**
+ * @brief  availableSensorNums
+ * @note   Get the number of available sensors
+ * @retval available sensors
+ */
+const uint8_t SensorBHI260AP::availableSensorNums() 
+{
+    return _sensor_available_nums;
+}
 
 /**
  * @brief  bootFromFlash
@@ -1094,6 +1103,7 @@ bool SensorBHI260AP::initImpl(bhy2_intf interface)
     // Only register valid sensor IDs
     for (uint8_t i = 0; i < BHY2_SENSOR_ID_MAX; i++) {
         if (bhy2_is_sensor_available(i, _bhy2.get())) {
+            _sensor_available_nums++;
             bhy2_register_fifo_parse_callback(i, BoschParseStatic::parseData, this, _bhy2.get());
         }
     }
