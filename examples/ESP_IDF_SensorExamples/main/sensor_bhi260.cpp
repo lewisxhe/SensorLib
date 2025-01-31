@@ -173,15 +173,15 @@ esp_err_t bhi260_init()
     uint32_t report_latency_ms = 0; /* Report immediately */
 
     // Enable acceleration
-    bhy.configure(SENSOR_ID_ACC_PASS, sample_rate, report_latency_ms);
+    bhy.configure(SensorBHI260AP::ACCEL_PASSTHROUGH, sample_rate, report_latency_ms);
     // Enable gyroscope
-    bhy.configure(SENSOR_ID_GYRO_PASS, sample_rate, report_latency_ms);
+    bhy.configure(SensorBHI260AP::GYRO_PASSTHROUGH, sample_rate, report_latency_ms);
 
     // Set the acceleration sensor result callback function
-    bhy.onResultEvent(SENSOR_ID_ACC_PASS, accel_process_callback);
+    bhy.onResultEvent(SensorBHI260AP::ACCEL_PASSTHROUGH, accel_process_callback);
 
     // Set the gyroscope sensor result callback function
-    bhy.onResultEvent(SENSOR_ID_GYRO_PASS, gyro_process_callback);
+    bhy.onResultEvent(SensorBHI260AP::GYRO_PASSTHROUGH, gyro_process_callback);
 
     // Registration interruption
     bhi260_isr_init();
