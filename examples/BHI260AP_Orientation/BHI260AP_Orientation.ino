@@ -216,7 +216,7 @@ void orientation_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_
     char report[256];
     uint8_t direction = *data_ptr;
     switch (direction) {
-    case BHY2_DIRECTION_BOTTOM_LEFT:
+    case SensorBHI260AP::DIRECTION_BOTTOM_LEFT:
         sprintf( report, "\r\n  ________________  " \
                  "\r\n |                | " \
                  "\r\n |                | " \
@@ -227,7 +227,7 @@ void orientation_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_
                  "\r\n |________________| \r\n" );
 
         break;
-    case BHY2_DIRECTION_TOP_RIGHT:
+    case SensorBHI260AP::DIRECTION_TOP_RIGHT:
         sprintf( report, "\r\n  ________________  " \
                  "\r\n |                | " \
                  "\r\n |             *  | " \
@@ -237,7 +237,7 @@ void orientation_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_
                  "\r\n |                | " \
                  "\r\n |________________| \r\n" );
         break;
-    case BHY2_DIRECTION_TOP_LEFT:
+    case SensorBHI260AP::DIRECTION_TOP_LEFT:
         sprintf( report, "\r\n  ________________  " \
                  "\r\n |                | " \
                  "\r\n |  *             | " \
@@ -247,7 +247,7 @@ void orientation_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_
                  "\r\n |                | " \
                  "\r\n |________________| \r\n" );
         break;
-    case BHY2_DIRECTION_BOTTOM_RIGHT:
+    case SensorBHI260AP::DIRECTION_BOTTOM_RIGHT:
         sprintf( report, "\r\n  ________________  " \
                  "\r\n |                | " \
                  "\r\n |                | " \
