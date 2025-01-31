@@ -31,7 +31,6 @@
 #pragma once
 
 #include "bosch/BMM150/bmm150.h"
-#include "bosch/SensorBhy2Define.h"
 #include "SensorPlatform.hpp"
 
 #if defined(ARDUINO)

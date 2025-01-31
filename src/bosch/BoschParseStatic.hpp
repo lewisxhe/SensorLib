@@ -2,7 +2,7 @@
  *
  * @license MIT License
  *
- * Copyright (c) 2022 lewis he
+ * Copyright (c) 2025 lewis he
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,55 +22,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      BoschParse.h
+ * @file      BoschParseStatic.hpp
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2023-09-30
+ * @date      2025-01-30
  *
  */
 #pragma once
-#include "SensorLib.h"
-#include "SensorBhy2Define.h"
-#include "bosch/bhy2_parse.h"
-#include "bosch/common/common.h"
+#include "BoschParseBase.hpp"
 
-#if __cplusplus >= 201103L
-#include <functional>
-#include <vector>
-#define USE_STD_VECTOR
-#endif
-
-// nrf52 arduino ide not applicable vector
-#if defined(ARDUINO) && !defined(PLATFORMIO) && defined(ARDUINO_ARCH_NRF52)
-#undef USE_STD_VECTOR
-#endif
-
-typedef struct bhy2_virt_sensor_conf SensorConfig;
-
-enum BoschOrientation {
-    BHY2_DIRECTION_TOP_RIGHT,
-    BHY2_DIRECTION_TOP_LEFT,
-    BHY2_DIRECTION_BOTTOM_LEFT,
-    BHY2_DIRECTION_BOTTOM_RIGHT,
-};
-
-class BoschParse
+class BoschParseStatic
 {
 public:
-#ifdef USE_STD_VECTOR
-    static std::vector<ParseCallBackList_t> bhyParseEventVector;
-#else
-    static ParseCallBackList_t *BoschParse_bhyParseEventVector;
-    static uint32_t BoschParse_bhyParseEventVectorSize;
-    static uint32_t BoschParse_bhyParseEventVectorCapacity ;
-    static void expandParseEventVector();
-#endif
-    static BhyEventCb _event_callback;
-    static BhyDebugMessageCallback _debug_callback;
-
     static void parseData(const struct bhy2_fifo_parse_data_info *fifo, void *user_data);
-
     static void parseMetaEvent(const struct bhy2_fifo_parse_data_info *callback_info, void *user_data);
-
-    static void parseDebugMessage(const struct bhy2_fifo_parse_data_info *callback_info, void *callback_ref);
-
+    static void parseDebugMessage(const struct bhy2_fifo_parse_data_info *callback_info, void *user_data);
 };
+
+
+

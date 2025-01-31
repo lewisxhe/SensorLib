@@ -28,6 +28,17 @@
  *
  */
 #include "SensorBHI260AP.hpp"
+#include "bosch/BoschParseStatic.hpp"
+
+#define BHY2_RLST_CHECK(ret, str, val) \
+    do                                 \
+    {                                  \
+        if (ret)                       \
+        {                              \
+            log_e(str);                \
+            return val;                 \
+        }                               \
+    } while (0)
 
 static constexpr uint16_t max_process_buffer_size = 512;
 
@@ -46,7 +57,9 @@ SensorBHI260AP::SensorBHI260AP(): comm(nullptr),
     _accuracy(0),
     _debug(false),
     _process_callback(nullptr),
-    _process_callback_user_data(nullptr)
+    _process_callback_user_data(nullptr),
+    _event_callback(nullptr),
+    _debug_callback(nullptr)
 {
 }
 
@@ -266,9 +279,9 @@ uint16_t SensorBHI260AP::getKernelVersion()
  * @param  callback: Callback Function
  * @retval None
  */
-void SensorBHI260AP::onEvent(BhyEventCb callback)
+void SensorBHI260AP::onEvent(SensorEventCallback callback)
 {
-    BoschParse::_event_callback = callback;
+    _event_callback = callback;
 }
 
 /**
@@ -278,7 +291,7 @@ void SensorBHI260AP::onEvent(BhyEventCb callback)
  */
 void SensorBHI260AP::removeEvent()
 {
-    BoschParse::_event_callback = NULL;
+    _event_callback = NULL;
 }
 
 /**
@@ -289,26 +302,12 @@ void SensorBHI260AP::removeEvent()
  * @param  callback: Callback Function
  * @retval bool true-> Success false-> failure
  */
-bool SensorBHI260AP::onResultEvent(BoschSensorID sensor_id, BhyParseDataCallback callback)
+bool SensorBHI260AP::onResultEvent(BoschSensorID sensor_id, SensorDataParseCallback callback)
 {
     if (!bhy2_is_sensor_available(sensor_id, _bhy2.get())) {
         log_e("%s not present", getSensorName(sensor_id)); return false;
     }
-#ifdef USE_STD_VECTOR
-    ParseCallBackList_t newEventHandler;
-    newEventHandler.cb = callback;
-    newEventHandler.id = sensor_id;
-    BoschParse::bhyParseEventVector.push_back(newEventHandler);
-#else
-    if (BoschParse::BoschParse_bhyParseEventVectorSize == BoschParse::BoschParse_bhyParseEventVectorCapacity) {
-        BoschParse::expandParseEventVector();
-    }
-    ParseCallBackList_t newEventHandler;
-    newEventHandler.cb = callback;
-    newEventHandler.id = sensor_id;
-    BoschParse::BoschParse_bhyParseEventVector[BoschParse::BoschParse_bhyParseEventVectorSize++] = newEventHandler;
-#endif
-    return true;
+    return  _callback_manager.add(sensor_id, callback);
 }
 
 /**
@@ -318,34 +317,12 @@ bool SensorBHI260AP::onResultEvent(BoschSensorID sensor_id, BhyParseDataCallback
  * @param  callback: Callback Function
  * @retval bool true-> Success false-> failure
  */
-bool SensorBHI260AP::removeResultEvent(BoschSensorID sensor_id, BhyParseDataCallback callback)
+bool SensorBHI260AP::removeResultEvent(BoschSensorID sensor_id, SensorDataParseCallback callback)
 {
     if (!bhy2_is_sensor_available(sensor_id, _bhy2.get())) {
         log_e("%s not present", getSensorName(sensor_id)); return false;
     }
-    if (!callback) {
-        return false;
-    }
-#ifdef USE_STD_VECTOR
-    for (uint32_t i = 0; i < BoschParse::bhyParseEventVector.size(); i++) {
-        ParseCallBackList_t entry = BoschParse::bhyParseEventVector[i];
-        if (entry.cb == callback && entry.id == sensor_id) {
-            BoschParse::bhyParseEventVector.erase(BoschParse::bhyParseEventVector.begin() + i);
-        }
-    }
-#else
-    for (uint32_t i = 0; i < BoschParse::BoschParse_bhyParseEventVectorSize; i++) {
-        ParseCallBackList_t entry = BoschParse::BoschParse_bhyParseEventVector[i];
-        if (entry.cb == callback && entry.id == sensor_id) {
-            for (uint32_t j = i; j < BoschParse::BoschParse_bhyParseEventVectorSize - 1; j++) {
-                BoschParse::BoschParse_bhyParseEventVector[j] = BoschParse::BoschParse_bhyParseEventVector[j + 1];
-            }
-            BoschParse::BoschParse_bhyParseEventVectorSize--;
-            break;
-        }
-    }
-#endif
-    return true;
+    return  _callback_manager.remove(sensor_id, callback);
 }
 
 /**
@@ -605,9 +582,9 @@ void SensorBHI260AP::setDebugKernel(bool enable)
  * @param  cb: Sensor debug output callback function , Requires firmware support, the default firmware will not output any messages
  * @retval None
  */
-void SensorBHI260AP::setDebugCallback(BhyDebugMessageCallback cb)
+void SensorBHI260AP::setDebugCallback(SensorDebugMessageCallback cb)
 {
-    BoschParse::_debug_callback = cb;
+    _debug_callback = cb;
 }
 
 
@@ -847,6 +824,124 @@ void SensorBHI260AP::print_boot_status(uint8_t boot_status)
     }
 }
 
+void SensorBHI260AP::parseData(const struct bhy2_fifo_parse_data_info *fifo, void *user_data)
+{
+    if (user_data != this) {
+        return;
+    }
+#ifdef BHI260AP_PARSE_DATA_DUMP
+    log_i("ID:[%d]:%s: DATA LEN:%u", fifo->sensor_id, get_sensor_name(fifo->sensor_id), fifo->data_size);
+    SensorLibDumpBuffer(fifo->data_ptr, fifo->data_size);
+#endif
+    _callback_manager.call(fifo->sensor_id, fifo->data_ptr, fifo->data_size, fifo->time_stamp);
+}
+
+void SensorBHI260AP::parseMetaEvent(const struct bhy2_fifo_parse_data_info *callback_info, void *user_data)
+{
+    if (user_data != this) {
+        return;
+    }
+    uint8_t meta_event_type = callback_info->data_ptr[0];
+    uint8_t byte1 = callback_info->data_ptr[1];
+    uint8_t byte2 = callback_info->data_ptr[2];
+    const char *event_text;
+    // Remove warning
+    UNUSED(byte1);
+    UNUSED(byte2);
+    UNUSED(event_text);
+
+    if (callback_info->sensor_id == BHY2_SYS_ID_META_EVENT) {
+        event_text = "[META EVENT]";
+    } else if (callback_info->sensor_id == BHY2_SYS_ID_META_EVENT_WU) {
+        event_text = "[META EVENT WAKE UP]";
+    } else {
+        return;
+    }
+
+    switch (meta_event_type) {
+    case BHY2_META_EVENT_FLUSH_COMPLETE:
+        log_i("%s Flush complete for sensor id %u", event_text, byte1);
+        break;
+    case BHY2_META_EVENT_SAMPLE_RATE_CHANGED:
+        log_i("%s Sample rate changed for sensor id %u", event_text, byte1);
+        break;
+    case BHY2_META_EVENT_POWER_MODE_CHANGED:
+        log_i("%s Power mode changed for sensor id %u", event_text, byte1);
+        break;
+    case BHY2_META_EVENT_ALGORITHM_EVENTS:
+        log_i("%s Algorithm event", event_text);
+        break;
+    case BHY2_META_EVENT_SENSOR_STATUS:
+        log_i("%s Accuracy for sensor id %u changed to %u", event_text, byte1, byte2);
+        _accuracy = byte2;
+        break;
+    case BHY2_META_EVENT_BSX_DO_STEPS_MAIN:
+        log_i("%s BSX event (do steps main)", event_text);
+        break;
+    case BHY2_META_EVENT_BSX_DO_STEPS_CALIB:
+        log_i("%s BSX event (do steps calib)", event_text);
+        break;
+    case BHY2_META_EVENT_BSX_GET_OUTPUT_SIGNAL:
+        log_i("%s BSX event (get output signal)", event_text);
+        break;
+    case BHY2_META_EVENT_SENSOR_ERROR:
+        log_i("%s Sensor id %u reported error 0x%02X", event_text, byte1, byte2);
+        break;
+    case BHY2_META_EVENT_FIFO_OVERFLOW:
+        log_i("%s FIFO overflow", event_text);
+        break;
+    case BHY2_META_EVENT_DYNAMIC_RANGE_CHANGED:
+        log_i("%s Dynamic range changed for sensor id %u", event_text, byte1);
+        break;
+    case BHY2_META_EVENT_FIFO_WATERMARK:
+        log_i("%s FIFO watermark reached", event_text);
+        break;
+    case BHY2_META_EVENT_INITIALIZED:
+        log_i("%s Firmware initialized. Firmware version %u", event_text, ((uint16_t)byte2 << 8) | byte1);
+        break;
+    case BHY2_META_TRANSFER_CAUSE:
+        log_i("%s Transfer cause for sensor id %u", event_text, byte1);
+        break;
+    case BHY2_META_EVENT_SENSOR_FRAMEWORK:
+        log_i("%s Sensor framework event for sensor id %u", event_text, byte1);
+        break;
+    case BHY2_META_EVENT_RESET:
+        log_i("%s Reset event", event_text);
+        break;
+    case BHY2_META_EVENT_SPACER:
+        return;
+    default:
+        log_i("%s Unknown meta event with id: %u", event_text, meta_event_type);
+        break;
+    }
+
+    if (_event_callback) {
+        _event_callback(meta_event_type, byte1, byte2);
+    }
+}
+
+void SensorBHI260AP::parseDebugMessage(const struct bhy2_fifo_parse_data_info *callback_info, void *user_data)
+{
+    if (user_data != this) {
+        return;
+    }
+    uint8_t msg_length = 0;
+    uint8_t debug_msg[17] = { 0 }; /* Max payload size is 16 bytes, adds a trailing zero if the payload is full */
+    if (!callback_info) {
+        log_i("Null reference");
+        return;
+    }
+    msg_length = callback_info->data_ptr[0];
+    memcpy(debug_msg, &callback_info->data_ptr[1], msg_length);
+    debug_msg[msg_length] = '\0'; /* Terminate the string */
+    log_d("[DEBUG MSG]: %s", debug_msg);
+
+    if (_debug_callback) {
+        _debug_callback((const char *)debug_msg);
+    }
+}
+
+
 bool SensorBHI260AP::initImpl(bhy2_intf interface)
 {
     uint8_t product_id = 0;
@@ -965,15 +1060,14 @@ bool SensorBHI260AP::initImpl(bhy2_intf interface)
     BHY2_RLST_CHECK(!version, "getKernelVersion failed!", false);
     log_i("Boot successful. Kernel version %u.", version);
 
-    //Set event callback
-    _error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT, BoschParse::parseMetaEvent, (void *)&_accuracy, _bhy2.get());
+    _error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT, BoschParseStatic::parseMetaEvent, this, _bhy2.get());
     BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_register_fifo_parse_callback failed!", false);
 
-    _error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT_WU, BoschParse::parseMetaEvent, (void *)&_accuracy, _bhy2.get());
+    _error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT_WU, BoschParseStatic::parseMetaEvent, this, _bhy2.get());
     BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_register_fifo_parse_callback failed!", false);
 
     if (_debug) {
-        _error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_DEBUG_MSG, BoschParse::parseDebugMessage, NULL, _bhy2.get());
+        _error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_DEBUG_MSG, BoschParseStatic::parseDebugMessage, this, _bhy2.get());
         BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_register_fifo_parse_callback parseDebugMessage failed!", false);
     }
 
@@ -1000,7 +1094,7 @@ bool SensorBHI260AP::initImpl(bhy2_intf interface)
     // Only register valid sensor IDs
     for (uint8_t i = 0; i < BHY2_SENSOR_ID_MAX; i++) {
         if (bhy2_is_sensor_available(i, _bhy2.get())) {
-            bhy2_register_fifo_parse_callback(i, BoschParse::parseData, NULL, _bhy2.get());
+            bhy2_register_fifo_parse_callback(i, BoschParseStatic::parseData, this, _bhy2.get());
         }
     }
     return _error_code == BHY2_OK;

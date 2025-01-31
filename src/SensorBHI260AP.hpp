@@ -29,19 +29,54 @@
  *            Simplification for Arduino
  */
 #pragma once
-#include "bosch/BoschParse.h"
-#include "bosch/SensorBhy2Define.h"
 #include "bosch/BoschSensorControl.hpp"
 #include "bosch/BoschPhySensorInfo.hpp"
 #include "bosch/BoschSensorInfo.hpp"
 #include "SensorPlatform.hpp"
 #include "bosch/BoschSensorID.hpp"
+#include "bosch/BoschParseBase.hpp"
+#include "bosch/BoschParseCallbackManager.hpp"
 
-class SensorBHI260AP : public BoschVirtualSensor
+
+#define BHI260AP_SLAVE_ADDRESS_L          0x28
+#define BHI260AP_SLAVE_ADDRESS_H          0x29
+
+using SensorConfig = struct bhy2_virt_sensor_conf;
+
+using SensorDataParseCallback = void (*)(uint8_t sensor_id, uint8_t *data, uint32_t size, uint64_t *timestamp);
+
+class SensorBHI260AP : public BoschVirtualSensor, BoschParseBase
 {
 public:
-
     using ProcessCallback = void (*)(void *user_data, uint32_t total, uint32_t transferred);
+    using SensorDebugMessageCallback = void (*)(const char *message);
+    using SensorEventCallback = void (*)(uint8_t event, uint8_t sensor_id, uint8_t data);
+
+    enum BoschOrientation {
+        DIRECTION_TOP_RIGHT,
+        DIRECTION_TOP_LEFT,
+        DIRECTION_BOTTOM_LEFT,
+        DIRECTION_BOTTOM_RIGHT,
+    };
+
+    enum SensorEvent {
+        EVENT_FLUSH_COMPLETE           = 1,
+        EVENT_SAMPLE_RATE_CHANGED,
+        EVENT_POWER_MODE_CHANGED,
+        EVENT_ALGORITHM_EVENTS         = 5,
+        EVENT_SENSOR_STATUS,
+        EVENT_BSX_DO_STEPS_MAIN,
+        EVENT_BSX_DO_STEPS_CALIB,
+        EVENT_BSX_GET_OUTPUT_SIGNAL,
+        EVENT_SENSOR_ERROR             = 11,
+        EVENT_FIFO_OVERFLOW,
+        EVENT_DYNAMIC_RANGE_CHANGED,
+        EVENT_FIFO_WATERMARK,
+        EVENT_INITIALIZED              = 16,
+        EVENT_TRANSFER_CAUSE,
+        EVENT_SENSOR_FRAMEWORK,
+        EVENT_RESET,
+    };
 
     // The pin names are named according to the sensor manual.
     enum BHI260AP_GPIO {
@@ -237,7 +272,7 @@ public:
      * @param  callback: Callback Function
      * @retval None
      */
-    void onEvent(BhyEventCb callback);
+    void onEvent(SensorEventCallback callback);
 
     /**
      * @brief  removeEvent
@@ -254,7 +289,7 @@ public:
      * @param  callback: Callback Function
      * @retval bool true-> Success false-> failure
      */
-    bool onResultEvent(BoschSensorID sensor_id, BhyParseDataCallback callback);
+    bool onResultEvent(BoschSensorID sensor_id, SensorDataParseCallback callback);
 
     /**
      * @brief  removeResultEvent
@@ -263,7 +298,7 @@ public:
      * @param  callback: Callback Function
      * @retval bool true-> Success false-> failure
      */
-    bool removeResultEvent(BoschSensorID sensor_id, BhyParseDataCallback callback);
+    bool removeResultEvent(BoschSensorID sensor_id, SensorDataParseCallback callback);
 
     /**
      * @brief  setProcessBufferSize
@@ -392,7 +427,7 @@ public:
      * @param  cb: Sensor debug output callback function , Requires firmware support, the default firmware will not output any messages
      * @retval None
      */
-    void setDebugCallback(BhyDebugMessageCallback cb);
+    void setDebugCallback(SensorDebugMessageCallback cb);
 
     /**
      * @brief  getPhySensorInfo
@@ -429,6 +464,14 @@ public:
      */
     void setUpdateProcessCallback(ProcessCallback callback, void *user_data = nullptr);
 
+protected:
+
+    void parseData(const struct bhy2_fifo_parse_data_info *fifo, void *user_data) override;
+
+    void parseMetaEvent(const struct bhy2_fifo_parse_data_info *callback_info, void *user_data) override;
+
+    void parseDebugMessage(const struct bhy2_fifo_parse_data_info *callback_info, void *user_data) override;
+
 private:
 
     /**
@@ -462,6 +505,9 @@ protected:
     bool                _debug;
     ProcessCallback     _process_callback;
     void               *_process_callback_user_data;
+    SensorEventCallback _event_callback;
+    SensorDebugMessageCallback _debug_callback;
+    BoschParseCallbackManager  _callback_manager;
     char                _err_buffer[128];
-    
+
 };
