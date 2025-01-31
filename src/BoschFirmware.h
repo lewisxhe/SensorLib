@@ -50,6 +50,8 @@
     #include "bosch/firmware/bosch_bhi260_aux_bmm150_gpio.h"
 #elif defined(BOSCH_BHI260_GPIO)
     #include "bosch/firmware/bosch_bhi260_gpio.h"
+#elif defined(BOSCH_BHI260_KILO)
+    #include "bosch/firmware/bosch_bhi260_kilo.h"
 #elif defined(BOSCH_APP30_SHUTTLE_BHI260_AUX_BMM150_FLASH)
     #include "bosch/firmware/bosch_app30_shuttle_bhi260_aux_bmm150_flash.h"
 #elif defined(BOSCH_APP30_SHUTTLE_BHI260_BME68X_FLASH)
@@ -70,6 +72,10 @@
     #include "bosch/firmware/bosch_bhi260_aux_bmm150_gpio_flash.h"
 #elif defined(BOSCH_BHI260_GPIO_FLASH)
     #include "bosch/firmware/bosch_bhi260_gpio_flash.h"
+#elif defined(BOSCH_BHI260_KILO_FLASH)
+    #include "bosch/firmware/bosch_bhi260_kilo_flash.h"
+#elif defined(BOSCH_BHI260_KILO_TURBO_FLASH)
+    #include "bosch/firmware/bosch_bhi260_kilo_turbo_flash.h"
 #else
     #warning "None of the defined conditions were met, so no firmware will be included".
 #endif
