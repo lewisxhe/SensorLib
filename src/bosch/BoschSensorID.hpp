@@ -84,6 +84,8 @@ public:
         GYRO_OFFSET_WAKE_UP                     = (92),  /*BHY2_SENSOR_ID_GYRO_BIAS_WU: Gyroscope offset wake up */
         MAGNETOMETER_OFFSET_WAKE_UP             = (93),  /*BHY2_SENSOR_ID_MAG_BIAS_WU: Magnetometer offset wake up */
         STEP_DETECTOR_WAKE_UP                   = (94),  /*BHY2_SENSOR_ID_STD_WU: Step detector wake up */
+        KLIO                                    = (112), /*BHY2_SENSOR_ID_KLIO Supported by kilo firmware ,defined in bhy2_klio_defs.h */
+        SWIM                                    = (114), /*BHY2_SENSOR_ID_SWIM:Supported by swim firmware ,defined in bhy2_swim_defs.h */
         TEMPERATURE                             = (128), /*BHY2_SENSOR_ID_TEMP: Temperature */
         BAROMETER                               = (129), /*BHY2_SENSOR_ID_BARO: Barometer */
         HUMIDITY                                = (130), /*BHY2_SENSOR_ID_HUM: Humidity */
