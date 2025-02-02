@@ -38,7 +38,7 @@
 #include <vector>
 #endif
 
-using SensorDataParseCallback = void (*)(uint8_t sensor_id, uint8_t *data, uint32_t size, uint64_t *timestamp);
+using SensorDataParseCallback = void (*)(uint8_t sensor_id, uint8_t *data, uint32_t size, uint64_t *timestamp, void *user_data);
 
 class BoschParseCallbackManager
 {
@@ -48,7 +48,8 @@ private:
         SensorDataParseCallback cb;
         uint32_t length;
         uint8_t *data;
-        Entry() : id(0), cb(nullptr), length(0), data(nullptr) {}
+        void *user_data;
+        Entry() : id(0), cb(nullptr), length(0), data(nullptr), user_data(nullptr) {}
     };
 
 #ifdef USE_CUSTOM_VECTOR
@@ -60,7 +61,7 @@ private:
         capacity *= 2;
         Entry *newEntries = static_cast<Entry *>(std::realloc(entries, capacity * sizeof(Entry)));
         if (!newEntries) {
-            return false; 
+            return false;
         }
         entries = newEntries;
         return true;
@@ -90,7 +91,7 @@ public:
 #endif
     }
 
-    bool add(uint8_t sensor_id, SensorDataParseCallback callback)
+    bool add(uint8_t sensor_id, SensorDataParseCallback callback, void *user_data)
     {
         if (!callback) {
             return false;
@@ -104,11 +105,13 @@ public:
         Entry newEntry;
         newEntry.id = sensor_id;
         newEntry.cb = callback;
+        newEntry.user_data = user_data;
         entries[size++] = newEntry;
 #else
         Entry newEntry;
         newEntry.id = sensor_id;
         newEntry.cb = callback;
+        newEntry.user_data = user_data;
         entries.push_back(newEntry);
 #endif
         return true;
@@ -148,7 +151,7 @@ public:
         for (uint32_t i = 0; i < size; i++) {
             if (entries[i].cb) {
                 if (entries[i].id == sensor_id) {
-                    entries[i].cb(sensor_id, data, size, timestamp);
+                    entries[i].cb(sensor_id, data, size, timestamp, entries[i].user_data);
                 }
             }
         }
@@ -156,7 +159,7 @@ public:
         for (uint32_t i = 0; i < entries.size(); i++) {
             if (entries[i].cb) {
                 if (entries[i].id == sensor_id) {
-                    entries[i].cb(sensor_id, data, size, timestamp);
+                    entries[i].cb(sensor_id, data, size, timestamp, entries[i].user_data);
                 }
             }
         }
