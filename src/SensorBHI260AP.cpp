@@ -300,14 +300,15 @@ void SensorBHI260AP::removeEvent()
  *         Please note that you should not register the same event callback repeatedly.
  * @param  sensor_id: Sensor ID , see enum BoschSensorID
  * @param  callback: Callback Function
+ * @param  *user_data: user data,can be null
  * @retval bool true-> Success false-> failure
  */
-bool SensorBHI260AP::onResultEvent(BoschSensorID sensor_id, SensorDataParseCallback callback)
+bool SensorBHI260AP::onResultEvent(BoschSensorID sensor_id, SensorDataParseCallback callback, void *user_data)
 {
     if (!bhy2_is_sensor_available(sensor_id, _bhy2.get())) {
         log_e("%s not present", getSensorName(sensor_id)); return false;
     }
-    return  _callback_manager.add(sensor_id, callback);
+    return  _callback_manager.add(sensor_id, callback, user_data);
 }
 
 /**
@@ -721,7 +722,7 @@ void SensorBHI260AP::setUpdateProcessCallback(ProcessCallback callback, void *us
  * @note   Get the number of available sensors
  * @retval available sensors
  */
-const uint8_t SensorBHI260AP::availableSensorNums() 
+const uint8_t SensorBHI260AP::availableSensorNums()
 {
     return _sensor_available_nums;
 }

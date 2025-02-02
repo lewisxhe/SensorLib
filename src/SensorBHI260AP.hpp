@@ -42,13 +42,11 @@
 #define BHI260AP_SLAVE_ADDRESS_H          0x29
 
 using SensorConfig = struct bhy2_virt_sensor_conf;
-
-using SensorDataParseCallback = void (*)(uint8_t sensor_id, uint8_t *data, uint32_t size, uint64_t *timestamp);
+using ProcessCallback = void (*)(void *user_data, uint32_t total, uint32_t transferred);
 
 class SensorBHI260AP : public BoschVirtualSensor, BoschParseBase
 {
 public:
-    using ProcessCallback = void (*)(void *user_data, uint32_t total, uint32_t transferred);
     using SensorDebugMessageCallback = void (*)(const char *message);
     using SensorEventCallback = void (*)(uint8_t event, uint8_t sensor_id, uint8_t data);
 
@@ -287,9 +285,10 @@ public:
      *         Please note that you should not register the same event callback repeatedly.
      * @param  sensor_id: Sensor ID , see enum BoschSensorID
      * @param  callback: Callback Function
+     * @param  *user_data: user data,can be null
      * @retval bool true-> Success false-> failure
      */
-    bool onResultEvent(BoschSensorID sensor_id, SensorDataParseCallback callback);
+    bool onResultEvent(BoschSensorID sensor_id, SensorDataParseCallback callback, void *user_data = nullptr);
 
     /**
      * @brief  removeResultEvent
