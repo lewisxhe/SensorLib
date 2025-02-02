@@ -120,13 +120,13 @@ void dataReadyISR()
     isReadyFlag = true;
 }
 
-void step_detector_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp)
+void step_detector_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
 {
     Serial.print(bhy.getSensorName(sensor_id));
     Serial.println(" detected.");
 }
 
-void step_counter_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp)
+void step_counter_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
 {
     Serial.print(bhy.getSensorName(sensor_id));
     Serial.print(":");

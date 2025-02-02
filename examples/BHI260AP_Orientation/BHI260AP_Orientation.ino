@@ -80,7 +80,7 @@
 #define BHI260_RST -1
 #endif
 
-void orientation_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp);
+void orientation_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data);
 
 SensorBHI260AP bhy;
 
@@ -211,7 +211,7 @@ void loop()
 }
 
 
-void orientation_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp)
+void orientation_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
 {
     char report[256];
     uint8_t direction = *data_ptr;

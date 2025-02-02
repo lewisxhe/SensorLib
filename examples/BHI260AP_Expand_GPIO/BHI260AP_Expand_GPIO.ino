@@ -88,7 +88,7 @@ SensorBHI260AP bhy;
 
 // The firmware runs in RAM and will be lost if the power is off. The firmware will be loaded from RAM each time it is run.
 // #define BOSCH_APP30_SHUTTLE_BHI260_FW
-#define BOSCH_APP30_SHUTTLE_BHI260_AUX_BMM150FW
+// #define BOSCH_APP30_SHUTTLE_BHI260_AUX_BMM150FW
 // #define BOSCH_APP30_SHUTTLE_BHI260_BME68X
 // #define BOSCH_APP30_SHUTTLE_BHI260_BMP390
 // #define BOSCH_APP30_SHUTTLE_BHI260_TURBO
@@ -96,7 +96,7 @@ SensorBHI260AP bhy;
 // #define BOSCH_BHI260_AUX_BMM150_BEM280
 // #define BOSCH_BHI260_AUX_BMM150_BEM280_GPIO
 // #define BOSCH_BHI260_AUX_BMM150_GPIO
-// #define BOSCH_BHI260_GPIO
+#define BOSCH_BHI260_GPIO
 
 // Firmware is stored in flash and booted from flash,Depends on BHI260 hardware connected to SPI Flash
 // #define BOSCH_APP30_SHUTTLE_BHI260_AUX_BMM150_FLASH

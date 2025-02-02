@@ -124,7 +124,7 @@ void dataReadyISR()
     isReadyFlag = true;
 }
 
-void parse_bme280_sensor_data(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp)
+void parse_bme280_sensor_data(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
 {
     float humidity = 0;
     float temperature = 0;
@@ -197,7 +197,7 @@ void setup()
     bhy.setBootFromFlash(bosch_firmware_type);
 
     Serial.println("Initializing Sensors...");
-    
+
 #ifdef USE_I2C_INTERFACE
     // Using I2C interface
     // BHI260AP_SLAVE_ADDRESS_L = 0x28

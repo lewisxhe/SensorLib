@@ -121,7 +121,7 @@ void dataReadyISR()
     isReadyFlag = true;
 }
 
-void data_ready_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp)
+void data_ready_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
 {
     struct bhy2_data_xyz data;
     float scaling_factor = get_sensor_default_scaling(sensor_id);
@@ -169,7 +169,7 @@ void setup()
     bhy.setBootFromFlash(bosch_firmware_type);
 
     Serial.println("Initializing Sensors...");
-    
+
 #ifdef USE_I2C_INTERFACE
     // Using I2C interface
     // BHI260AP_SLAVE_ADDRESS_L = 0x28

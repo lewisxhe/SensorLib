@@ -120,7 +120,7 @@ void dataReadyISR()
     isReadyFlag = true;
 }
 
-void parse_euler(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp)
+void parse_euler(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
 {
     struct bhy2_data_orientation data;
     uint32_t s, ns;
@@ -205,7 +205,7 @@ void setup()
     bhy.setBootFromFlash(bosch_firmware_type);
 
     Serial.println("Initializing Sensors...");
-    
+
 #ifdef USE_I2C_INTERFACE
     // Using I2C interface
     // BHI260AP_SLAVE_ADDRESS_L = 0x28

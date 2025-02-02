@@ -121,7 +121,7 @@ void dataReadyISR()
     isReadyFlag = true;
 }
 
-void bhy_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp)
+void bhy_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
 {
     struct bhy2_data_xyz data;
     float scaling_factor = get_sensor_default_scaling(sensor_id);
