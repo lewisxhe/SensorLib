@@ -28,6 +28,9 @@ jobs:
         - examples/BHI260AP_Orientation/BHI260AP_Orientation.ino
         - examples/BHI260AP_StepCounter/BHI260AP_StepCounter.ino
         - examples/BHI260AP_UpdateFirmware/BHI260AP_UpdateFirmware.ino
+        - examples/BHI260AP_Klio_Recognition/BHI260AP_Klio_Recognition.ino
+        - examples/BHI260AP_Klio_RecognizeMultiple/BHI260AP_Klio_RecognizeMultiple.ino
+        - examples/BHI260AP_Klio_Selflearning/BHI260AP_Klio_Selflearning.ino
         - examples/BMA423_Accelerometer/BMA423_Accelerometer.ino
         - examples/BMA423_Feature/BMA423_Feature.ino
         - examples/BMA423_Orientation/BMA423_Orientation.ino

@@ -27,6 +27,9 @@ jobs:
         - examples/BHI260AP_aux_BMM150_BME280_Expand_GPIO
         - examples/BHI260AP_aux_BMM150_euler
         - examples/BHI260AP_aux_BMM150_quaternion
+        - examples/BHI260AP_Klio_Recognition
+        - examples/BHI260AP_Klio_RecognizeMultiple
+        - examples/BHI260AP_Klio_Selflearning
         - examples/BMA423_Accelerometer
         - examples/BMA423_Feature
         - examples/BMA423_Orientation
