@@ -85,11 +85,11 @@ SensorBHI260AP bhy;
 SensorBHI260AP_Klio klio(bhy);
 
 // The firmware runs in RAM and will be lost if the power is off. The firmware will be loaded from RAM each time it is run.
-#define BOSCH_BHI260_KILO
+#define BOSCH_BHI260_KLIO
 
 // Firmware is stored in flash and booted from flash,Depends on BHI260 hardware connected to SPI Flash
-// #define BOSCH_BHI260_KILO_FLASH
-// #define BOSCH_BHI260_KILO_TURBO_FLASH
+// #define BOSCH_BHI260_KLIO_FLASH
+// #define BOSCH_BHI260_KLIO_TURBO_FLASH
 
 #include <BoschFirmware.h>
 
@@ -225,7 +225,7 @@ void setup()
     if (!klio.writePattern(action1_pattern_id,
                            action1_pattern,
                            sizeof(action1_pattern))) {
-        Serial.println("Kilo write pattern failed!");
+        Serial.println("Klio write pattern failed!");
     }
 
     // Start the recognition process for a specific pattern.

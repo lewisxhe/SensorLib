@@ -291,7 +291,7 @@ private:
 
     /**
        * @brief Static KLIO callback function to handle sensor data.
-       *        This function calls the corresponding non - static member function kilo_call_local for actual processing.
+       *        This function calls the corresponding non - static member function klio_call_local for actual processing.
        *
        * @param sensor_id The sensor ID.
        * @param data The sensor data array.
@@ -299,7 +299,7 @@ private:
        * @param timestamp The timestamp of the data.
        * @param user_data A pointer to user - defined data.
        */
-    static void static_kilo_callback(uint8_t sensor_id, uint8_t *data, uint32_t size, uint64_t *timestamp, void *user_data);
+    static void static_klio_callback(uint8_t sensor_id, uint8_t *data, uint32_t size, uint64_t *timestamp, void *user_data);
 
     /**
      * @brief Local KLIO callback function to actually handle sensor data.
@@ -310,11 +310,11 @@ private:
      * @param timestamp The timestamp of the data.
      * @param user_data A pointer to user - defined data.
      */
-    void kilo_call_local(uint8_t sensor_id, uint8_t *data_ptr, uint32_t size, uint64_t *timestamp, void *user_data);
+    void klio_call_local(uint8_t sensor_id, uint8_t *data_ptr, uint32_t size, uint64_t *timestamp, void *user_data);
 
     /**
      * @brief Static KLIO log callback function to handle sensor log data.
-     *        This function calls the corresponding non - static member function kilo_log_call_local for actual processing.
+     *        This function calls the corresponding non - static member function klio_log_call_local for actual processing.
      *
      * @param sensor_id The sensor ID.
      * @param data The sensor log data array.
@@ -322,7 +322,7 @@ private:
      * @param timestamp The timestamp of the log data.
      * @param user_data A pointer to user - defined data.
      */
-    static void static_kilo_log_callback(uint8_t sensor_id, uint8_t *data, uint32_t size, uint64_t *timestamp, void *user_data);
+    static void static_klio_log_callback(uint8_t sensor_id, uint8_t *data, uint32_t size, uint64_t *timestamp, void *user_data);
 
     /**
      * @brief Local KLIO log callback function to actually handle sensor log data.
@@ -333,7 +333,7 @@ private:
      * @param timestamp The timestamp of the log data.
      * @param user_data A pointer to user - defined data.
      */
-    void kilo_log_call_local(uint8_t sensor_id, uint8_t *data_ptr, uint32_t size, uint64_t *timestamp, void *user_data);
+    void klio_log_call_local(uint8_t sensor_id, uint8_t *data_ptr, uint32_t size, uint64_t *timestamp, void *user_data);
 
     template<typename Func, typename... Args>
     bool KlioTemplate(Func func, Args &&... args);

@@ -85,11 +85,11 @@ SensorBHI260AP bhy;
 SensorBHI260AP_Klio klio(bhy);
 
 // The firmware runs in RAM and will be lost if the power is off. The firmware will be loaded from RAM each time it is run.
-#define BOSCH_BHI260_KILO
+#define BOSCH_BHI260_KLIO
 
 // Firmware is stored in flash and booted from flash,Depends on BHI260 hardware connected to SPI Flash
-// #define BOSCH_BHI260_KILO_FLASH
-// #define BOSCH_BHI260_KILO_TURBO_FLASH
+// #define BOSCH_BHI260_KLIO_FLASH
+// #define BOSCH_BHI260_KLIO_TURBO_FLASH
 
 #include <BoschFirmware.h>
 
@@ -197,7 +197,7 @@ void learning_event_callback(SensorBHI260AP_Klio::LeaningChangeReason reason, ui
         // Try to write the learned pattern to the sensor using the writePattern function.
         if (!klio.writePattern(examples_id, tmp_buf, bufsize)) {
             // If the write operation fails, print an error message.
-            Serial.println("Kilo write pattern failed!");
+            Serial.println("Klio write pattern failed!");
         }
         // Print messages indicating that the action recognition will start.
         Serial.println("Start recognizing actions");

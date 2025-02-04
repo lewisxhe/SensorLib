@@ -64,9 +64,9 @@ void SensorBHI260AP_Klio::end()
 {
     if (sensor) {
         sensor->configure(SensorBHI260AP::KLIO, 0, 0);
-        sensor->removeResultEvent(SensorBHI260AP::KLIO, static_kilo_callback);
+        sensor->removeResultEvent(SensorBHI260AP::KLIO, static_klio_callback);
         sensor->configure(SensorBHI260AP::KLIO_LOG, 0, 0);
-        sensor->removeResultEvent(SensorBHI260AP::KLIO_LOG, static_kilo_log_callback);
+        sensor->removeResultEvent(SensorBHI260AP::KLIO_LOG, static_klio_log_callback);
     }
 
     if (similarity_result_buf ) {
@@ -121,16 +121,16 @@ bool SensorBHI260AP_Klio::begin()
     max_patterns = *((uint16_t *) param_buf);
     similarity_result_buf = (float *)malloc(sizeof(float) * max_patterns);
     if (!similarity_result_buf) {
-        log_e("Kilo result buffer allocate failed!");
+        log_e("Klio result buffer allocate failed!");
         return false;
     }
     similarity_idx_buf = (uint8_t *)malloc(sizeof(uint8_t) * max_patterns);
     if (!similarity_idx_buf) {
-        log_e("Kilo index buffer allocate failed!");
+        log_e("Klio index buffer allocate failed!");
         free(similarity_result_buf);
         return false;
     }
-    log_d("Kilo process allocate successfully!");
+    log_d("Klio process allocate successfully!");
 
     /* Get maximum supported pattern size */
     length = sizeof(param_buf);
@@ -140,8 +140,8 @@ bool SensorBHI260AP_Klio::begin()
         return false;
     }
     max_pattern_size = *((uint16_t *) param_buf);
-    log_d("Kilo Max patterns   :%u", max_patterns);
-    log_d("Kilo Max pattern len:%u", max_pattern_size);
+    log_d("Klio Max patterns   :%u", max_patterns);
+    log_d("Klio Max pattern len:%u", max_pattern_size);
 
     uint8_t ignore_insignificant_movement = 1;
     /* Prevent learning with small movements, parameter writes should be done after reset and before sensor enable */
@@ -149,9 +149,9 @@ bool SensorBHI260AP_Klio::begin()
                  sizeof(ignore_insignificant_movement));
 
 
-    sensor->onResultEvent(SensorBHI260AP::KLIO_LOG, static_kilo_log_callback, this);
+    sensor->onResultEvent(SensorBHI260AP::KLIO_LOG, static_klio_log_callback, this);
 
-    return  sensor->onResultEvent(SensorBHI260AP::KLIO, static_kilo_callback, this);
+    return  sensor->onResultEvent(SensorBHI260AP::KLIO, static_klio_callback, this);
 }
 
 bool SensorBHI260AP_Klio::setState(bool learning_enable, bool learning_reset, bool recognition_enable, bool recognition_reset)
@@ -212,13 +212,13 @@ const uint8_t SensorBHI260AP_Klio::getMaxPatterns()
     return max_patterns;
 }
 
-void SensorBHI260AP_Klio::static_kilo_callback(uint8_t sensor_id, uint8_t *data, uint32_t size, uint64_t *timestamp, void *user_data)
+void SensorBHI260AP_Klio::static_klio_callback(uint8_t sensor_id, uint8_t *data, uint32_t size, uint64_t *timestamp, void *user_data)
 {
     SensorBHI260AP_Klio *self = static_cast<SensorBHI260AP_Klio *>(user_data);
-    self->kilo_call_local(sensor_id, data, size, timestamp, self);
+    self->klio_call_local(sensor_id, data, size, timestamp, self);
 }
 
-void SensorBHI260AP_Klio::kilo_call_local(uint8_t sensor_id, uint8_t *data_ptr, uint32_t size, uint64_t *timestamp, void *user_data)
+void SensorBHI260AP_Klio::klio_call_local(uint8_t sensor_id, uint8_t *data_ptr, uint32_t size, uint64_t *timestamp, void *user_data)
 {
     bhy2_klio_sensor_frame_t data;
     if (size != 11) {
@@ -238,13 +238,13 @@ void SensorBHI260AP_Klio::kilo_call_local(uint8_t sensor_id, uint8_t *data_ptr, 
     }
 }
 
-void SensorBHI260AP_Klio::static_kilo_log_callback(uint8_t sensor_id, uint8_t *data, uint32_t size, uint64_t *timestamp, void *user_data)
+void SensorBHI260AP_Klio::static_klio_log_callback(uint8_t sensor_id, uint8_t *data, uint32_t size, uint64_t *timestamp, void *user_data)
 {
     SensorBHI260AP_Klio *self = static_cast<SensorBHI260AP_Klio *>(user_data);
-    self->kilo_log_call_local(sensor_id, data, size, timestamp, self);
+    self->klio_log_call_local(sensor_id, data, size, timestamp, self);
 }
 
-void SensorBHI260AP_Klio::kilo_log_call_local(uint8_t sensor_id, uint8_t *data_ptr, uint32_t size, uint64_t *timestamp, void *user_data)
+void SensorBHI260AP_Klio::klio_log_call_local(uint8_t sensor_id, uint8_t *data_ptr, uint32_t size, uint64_t *timestamp, void *user_data)
 {
     bhy2_klio_log_frame_t data;
     memcpy(&data, data_ptr, sizeof(data));
