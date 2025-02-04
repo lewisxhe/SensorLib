@@ -76,6 +76,110 @@ public:
         EVENT_RESET,
     };
 
+    /**
+    * @enum SensorRemap
+    * @brief Enumeration representing different remapping options for the sensor's orientation.
+    *
+    * This enum defines various positions and orientations of the sensor chip. Each value corresponds
+    * to a specific corner or location of the chip, which can be used to remap the axes of the sensor
+    * according to its physical placement.
+    *
+    * Top view of the chip, where 'T' stands for top, 
+    * 'B' stands for bottom, 
+    * 'L' stands for left, and 'R' stands for right
+    *  -------------
+    * | TL         TR |
+    * |               |
+    * |               |
+    * |               |
+    * | BL         BR |
+    *  -------------
+    *
+    * There is also a bottom view of the chip：
+    *
+    *  -------------
+    * | BT         BB |
+    * |               |
+    * |               |
+    * |               |
+    * | LT         RT |
+    *  -------------
+    */
+    enum SensorRemap {
+        // Chip top view, upper left corner
+        //  -------------
+        // | *             |
+        // |               |
+        // |               |
+        // |               |
+        // |               |
+        //  -------------
+        TOP_LAYER_LEFT_CORNER,
+        // Chip top view, upper right corner
+        //  -------------
+        // |             * |
+        // |               |
+        // |               |
+        // |               |
+        // |               |
+        //  -------------
+        TOP_LAYER_RIGHT_CORNER,
+        // Chip top view, bottom right corner of the top
+        //  -------------
+        // |               |
+        // |               |
+        // |               |
+        // |               |
+        // |             * |
+        //  -------------
+        TOP_LAYER_BOTTOM_RIGHT_CORNER,
+        // The top view of the chip, the lower left corner of the front bottom
+        //  -------------
+        // |               |
+        // |               |
+        // |               |
+        // |               |
+        // | *             |
+        //  -------------
+        TOP_LAYER_BOTTOM_LEFT_CORNER,
+        // The bottom view of the chip, the upper left corner of the top
+        //  -------------
+        // | *             |
+        // |               |
+        // |               |
+        // |               |
+        // |               |
+        //  -------------
+        BOTTOM_LAYER_TOP_LEFT_CORNER,
+        // The bottom view of the chip, the upper right corner of the top
+        //  -------------
+        // |             * |
+        // |               |
+        // |               |
+        // |               |
+        // |               |
+        //  -------------
+        BOTTOM_LAYER_TOP_RIGHT_CORNER,
+        // The bottom view of the chip, the lower right corner of the bottom
+        //  -------------
+        // |               |
+        // |               |
+        // |               |
+        // |               |
+        // |             * |
+        //  -------------
+        BOTTOM_LAYER_BOTTOM_RIGHT_CORNER,
+        // Chip bottom view, bottom left corner
+        //  -------------
+        // |               |
+        // |               |
+        // |               |
+        // |               |
+        // | *             |
+        //  -------------
+        BOTTOM_LAYER_BOTTOM_LEFT_CORNER,
+    };
+
     // The pin names are named according to the sensor manual.
     enum BHI260AP_GPIO {
         MCSB1 = 1,
@@ -469,6 +573,20 @@ public:
      * @retval available sensors
      */
     const uint8_t availableSensorNums();
+
+
+    /**
+    * @brief Set the axis remapping for the sensor based on the specified orientation.
+    *
+    * This function allows you to configure the sensor's axis remapping according to a specific
+    * physical orientation of the chip. By passing one of the values from the SensorRemap enum,
+    * you can ensure that the sensor data is correctly interpreted based on how the chip is placed.
+    * [bst-bhi260ab-ds000.pdf](https://www.mouser.com/datasheet/2/783/bst-bhi260ab-ds000-1816249.pdf)
+    * 20.3 Sensing axes and axes remapping
+    * @param remap An enumeration value from SensorRemap that specifies the desired axis remapping.
+    * @return Returns true if the axis remapping is successfully set; false otherwise.
+    */
+    bool setRemapAxes(SensorRemap remap);
 
 protected:
 

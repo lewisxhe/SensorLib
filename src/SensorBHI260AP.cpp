@@ -728,6 +728,78 @@ const uint8_t SensorBHI260AP::availableSensorNums()
 }
 
 /**
+* @brief Set the axis remapping for the sensor based on the specified orientation.
+*
+* This function allows you to configure the sensor's axis remapping according to a specific
+* physical orientation of the chip. By passing one of the values from the SensorRemap enum,
+* you can ensure that the sensor data is correctly interpreted based on how the chip is placed.
+*
+* @param remap An enumeration value from SensorRemap that specifies the desired axis remapping.
+* @return Returns true if the axis remapping is successfully set; false otherwise.
+*/
+bool SensorBHI260AP::setRemapAxes(SensorRemap remap)
+{
+    if (remap < TOP_LAYER_LEFT_CORNER || remap > BOTTOM_LAYER_BOTTOM_LEFT_CORNER) {
+        log_e("Invalid SensorRemap value passed to setRemapAxes!");
+        return false;
+    }
+
+    // Acceleration - related orientation matrices for different mounting directions
+    struct bhy2_orient_matrix acc_matrices[] = {
+        // P0 mounting direction, default direction, axis direction is consistent with the default coordinate system
+        {1, 0, 0, 0, 1, 0, 0, 0, 1},
+        // P1 mounting direction, P0 is rotated 90° clockwise around the Z - axis
+        {0, -1, 0, 1, 0, 0, 0, 0, 1},
+        // P2 mounting direction, P0 is rotated 180° clockwise around the Z - axis
+        {-1, 0, 0, 0, -1, 0, 0, 0, 1},
+        // P3 mounting direction, P0 is rotated 270° clockwise around the Z - axis
+        {0, 1, 0, -1, 0, 0, 0, 0, 1},
+        // P4 mounting direction, P0 is flipped vertically (rotated 180° around the X - axis)
+        {1, 0, 0, 0, -1, 0, 0, 0, -1},
+        // P5 mounting direction, P4 is rotated 90° clockwise around the Z - axis
+        {0, 1, 0, 1, 0, 0, 0, 0, -1},
+        // P6 mounting direction, P4 is rotated 180° clockwise around the Z - axis
+        {-1, 0, 0, 0, 1, 0, 0, 0, -1},
+        // P7 mounting direction, P4 is rotated 270° clockwise around the Z - axis
+        {0, -1, 0, -1, 0, 0, 0, 0, -1}
+    };
+
+    // Gyroscope - related orientation matrices for different mounting directions
+    struct bhy2_orient_matrix gyro_matrices[] = {
+        // P0 mounting direction, default direction, axis direction is consistent with the default coordinate system
+        {1, 0, 0, 0, 1, 0, 0, 0, 1},
+        // P1 mounting direction, P0 is rotated 90° clockwise around the Z - axis
+        {0, -1, 0, 1, 0, 0, 0, 0, 1},
+        // P2 mounting direction, P0 is rotated 180° clockwise around the Z - axis
+        {-1, 0, 0, 0, -1, 0, 0, 0, 1},
+        // P3 mounting direction, P0 is rotated 270° clockwise around the Z - axis
+        {0, 1, 0, -1, 0, 0, 0, 0, 1},
+        // P4 mounting direction, P0 is flipped vertically (rotated 180° around the X - axis)
+        {1, 0, 0, 0, -1, 0, 0, 0, -1},
+        // P5 mounting direction, P4 is rotated 90° clockwise around the Z - axis
+        {0, 1, 0, 1, 0, 0, 0, 0, -1},
+        // P6 mounting direction, P4 is rotated 180° clockwise around the Z - axis
+        {-1, 0, 0, 0, 1, 0, 0, 0, -1},
+        // P7 mounting direction, P4 is rotated 270° clockwise around the Z - axis
+        {0, -1, 0, -1, 0, 0, 0, 0, -1}
+    };
+
+    // Set the orientation matrix for the accelerometer
+    _error_code = bhy2_set_orientation_matrix(BHY2_PHYS_SENSOR_ID_ACCELEROMETER, acc_matrices[remap], _bhy2.get());
+    if (_error_code != BHY2_OK) {
+        log_e("Set acceleration orientation matrix failed!");
+        return false;
+    }
+    // Set the orientation matrix for the gyroscope
+    _error_code = bhy2_set_orientation_matrix(BHY2_PHYS_SENSOR_ID_GYROSCOPE, gyro_matrices[remap], _bhy2.get());
+    if (_error_code != BHY2_OK) {
+        log_e("Set gyroscope orientation matrix failed!");
+        return false;
+    }
+    return true;
+}
+
+/**
  * @brief  bootFromFlash
  * @note   Boot from external flash
  * @retval bool true-> Success false-> failure
