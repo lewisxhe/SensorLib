@@ -30,6 +30,7 @@ jobs:
         - examples/BHI260AP_Klio_Recognition
         - examples/BHI260AP_Klio_RecognizeMultiple
         - examples/BHI260AP_Klio_Selflearning
+        - examples/BHI260AP_Quaternion_Euler_Remapping
         - examples/BMA423_Accelerometer
         - examples/BMA423_Feature
         - examples/BMA423_Orientation

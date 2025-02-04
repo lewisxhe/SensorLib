@@ -31,6 +31,7 @@ jobs:
         - examples/BHI260AP_Klio_Recognition/BHI260AP_Klio_Recognition.ino
         - examples/BHI260AP_Klio_RecognizeMultiple/BHI260AP_Klio_RecognizeMultiple.ino
         - examples/BHI260AP_Klio_Selflearning/BHI260AP_Klio_Selflearning.ino
+        - examples/BHI260AP_Quaternion_Euler_Remapping/BHI260AP_Quaternion_Euler_Remapping.ino
         - examples/BMA423_Accelerometer/BMA423_Accelerometer.ino
         - examples/BMA423_Feature/BMA423_Feature.ino
         - examples/BMA423_Orientation/BMA423_Orientation.ino
