@@ -119,7 +119,17 @@
 #define SENSOR_SDA   9
 #define SENSOR_SCL   8
 #define USE_SPI_INTERFACE   1
+#define TOUCH_BUTTON  14
+#elif defined(ARDUINO_T_ULTIMA)
+#define SPI_MOSI     4
+#define SPI_MISO     7
+#define SPI_SCK      26
+#define BHI260_CS    27
+#define BHI260_IRQ   5
+#define BHI260_RST   -1
+#define USE_SPI_INTERFACE   1
 #endif
+
 
 
 
