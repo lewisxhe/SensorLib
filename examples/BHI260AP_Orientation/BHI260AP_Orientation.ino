@@ -30,10 +30,11 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
-#include "SensorBHI260AP.hpp"
+#include <SensorBHI260AP.hpp>
+#include <bosch/BoschSensorDataHelper.hpp>
 
 // #define USE_I2C_INTERFACE        true
-#define USE_SPI_INTERFACE        true
+// #define USE_SPI_INTERFACE        true
 
 #if !defined(USE_I2C_INTERFACE) && !defined(USE_SPI_INTERFACE)
 #define USE_I2C_INTERFACE
@@ -80,9 +81,20 @@
 #define BHI260_RST -1
 #endif
 
-void orientation_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data);
-
 SensorBHI260AP bhy;
+
+/*
+* Define the USING_DATA_HELPER use of data assistants.
+* No callback function will be used. Data can be obtained directly through
+* the data assistant. Note that this method is not a thread-safe function.
+* Please pay attention to protecting data access security.
+* */
+#define USING_DATA_HELPER
+
+#ifdef USING_DATA_HELPER
+SensorOrientation orientation(bhy);
+#endif
+
 
 // The firmware runs in RAM and will be lost if the power is off. The firmware will be loaded from RAM each time it is run.
 #define BOSCH_APP30_SHUTTLE_BHI260_FW
@@ -129,92 +141,9 @@ void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
     Serial.printf("Upload progress: %.2f%%\n", progress);
 }
 
-void setup()
-{
-    Serial.begin(115200);
-    while (!Serial);
-
-    // Set the reset pin
-    bhy.setPins(BHI260_RST);
-
-    Serial.println("Initializing Sensors...");
-
-    // Set the firmware array address and firmware size
-    bhy.setFirmware(bosch_firmware_image, bosch_firmware_size, bosch_firmware_type, force_update_flash_firmware);
-
-    // Set the firmware update processing progress callback function
-    // bhy.setUpdateProcessCallback(progress_callback, NULL);
-
-    // Set the maximum transfer bytes of I2C/SPI,The default size is I2C 32 bytes, SPI 256 bytes.
-    // bhy.setMaxiTransferSize(256);
-
-    // Set the processing fifo data buffer size,The default size is 512 bytes.
-    // bhy.setProcessBufferSize(1024);
-
-    // Set to load firmware from flash
-    bhy.setBootFromFlash(bosch_firmware_type);
-
-    Serial.println("Initializing Sensors...");
-
-#ifdef USE_I2C_INTERFACE
-    // Using I2C interface
-    // BHI260AP_SLAVE_ADDRESS_L = 0x28
-    // BHI260AP_SLAVE_ADDRESS_H = 0x29
-    if (!bhy.begin(Wire, BHI260AP_SLAVE_ADDRESS_L, BHI260_SDA, BHI260_SCL)) {
-        Serial.print("Failed to initialize sensor - error code:");
-        Serial.println(bhy.getError());
-        while (1) {
-            delay(1000);
-        }
-    }
-#endif
-
-#ifdef USE_SPI_INTERFACE
-    // Using SPI interface
-    if (!bhy.begin(SPI, BHI260_CS, SPI_MOSI, SPI_MISO, SPI_SCK)) {
-        Serial.print("Failed to initialize sensor - error code:");
-        Serial.println(bhy.getError());
-        while (1) {
-            delay(1000);
-        }
-    }
-#endif
-
-    Serial.println("Init BHI260AP Sensor success!");
-
-    // Output all sensors info to Serial
-    BoschSensorInfo info = bhy.getSensorInfo();
-    info.printInfo(Serial);
-
-    float sample_rate = 100.0;      /* Read out data measured at 100Hz */
-    uint32_t report_latency_ms = 0; /* Report immediately */
-
-    // Enable direction detection
-    bhy.configure(SensorBHI260AP::DEVICE_ORIENTATION, sample_rate, report_latency_ms);
-    // Set the direction detection result output processing function
-    bhy.onResultEvent(SensorBHI260AP::DEVICE_ORIENTATION, orientation_process_callback);
-
-    // Register interrupt function
-    pinMode(BHI260_IRQ, INPUT);
-    attachInterrupt(BHI260_IRQ, dataReadyISR, RISING);
-}
-
-
-void loop()
-{
-    // Update sensor fifo
-    if (isReadyFlag) {
-        isReadyFlag = false;
-        bhy.update();
-    }
-    delay(50);
-}
-
-
-void orientation_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
+void print_orientation(uint8_t direction)
 {
     char report[256];
-    uint8_t direction = *data_ptr;
     switch (direction) {
     case SensorBHI260AP::DIRECTION_BOTTOM_LEFT:
         sprintf( report, "\r\n  ________________  " \
@@ -261,8 +190,108 @@ void orientation_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_
         sprintf( report, "None of the 3D orientation axes is set in BHI260 - accelerometer.\r\n" );
         break;
     }
-    Serial.print(bhy.getSensorName(sensor_id));
-    Serial.print(":");
+
     Serial.println(direction);
     Serial.println(report);
 }
+
+#ifndef USING_DATA_HELPER
+void orientation_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
+{
+    uint8_t direction = *data_ptr;
+    Serial.print(bhy.getSensorName(sensor_id));
+    Serial.print(":");
+    print_orientation(direction);
+}
+#endif
+
+void setup()
+{
+    Serial.begin(115200);
+    while (!Serial);
+
+    // Set the reset pin
+    bhy.setPins(BHI260_RST);
+
+    Serial.println("Initializing Sensors...");
+
+    // Set the firmware array address and firmware size
+    bhy.setFirmware(bosch_firmware_image, bosch_firmware_size, bosch_firmware_type, force_update_flash_firmware);
+
+    // Set the firmware update processing progress callback function
+    // bhy.setUpdateProcessCallback(progress_callback, NULL);
+
+    // Set the maximum transfer bytes of I2C/SPI,The default size is I2C 32 bytes, SPI 256 bytes.
+    // bhy.setMaxiTransferSize(256);
+
+    // Set the processing fifo data buffer size,The default size is 512 bytes.
+    // bhy.setProcessBufferSize(1024);
+
+    // Set to load firmware from flash
+    bhy.setBootFromFlash(bosch_firmware_type);
+
+#ifdef USE_I2C_INTERFACE
+    // Using I2C interface
+    // BHI260AP_SLAVE_ADDRESS_L = 0x28
+    // BHI260AP_SLAVE_ADDRESS_H = 0x29
+    if (!bhy.begin(Wire, BHI260AP_SLAVE_ADDRESS_L, BHI260_SDA, BHI260_SCL)) {
+        Serial.print("Failed to initialize sensor - error code:");
+        Serial.println(bhy.getError());
+        while (1) {
+            delay(1000);
+        }
+    }
+#endif
+
+#ifdef USE_SPI_INTERFACE
+    // Using SPI interface
+    if (!bhy.begin(SPI, BHI260_CS, SPI_MOSI, SPI_MISO, SPI_SCK)) {
+        Serial.print("Failed to initialize sensor - error code:");
+        Serial.println(bhy.getError());
+        while (1) {
+            delay(1000);
+        }
+    }
+#endif
+
+    Serial.println("Init BHI260AP Sensor success!");
+
+    // Output all sensors info to Serial
+    BoschSensorInfo info = bhy.getSensorInfo();
+    info.printInfo(Serial);
+
+    // The orientation sensor will only report when it changes, so the value is 0 ~ 1
+    float sample_rate = 1;
+    uint32_t report_latency_ms = 0; /* Report immediately */
+
+#ifdef USING_DATA_HELPER
+    orientation.enable(sample_rate, report_latency_ms);
+#else
+// Enable direction detection
+    bhy.configure(SensorBHI260AP::DEVICE_ORIENTATION, sample_rate, report_latency_ms);
+// Set the direction detection result output processing function
+    bhy.onResultEvent(SensorBHI260AP::DEVICE_ORIENTATION, orientation_process_callback);
+#endif
+    // Set the specified pin (BHI260_IRQ) as an input pin.
+    pinMode(BHI260_IRQ, INPUT);
+    // Attach an interrupt service routine (ISR) 'dataReadyISR' to the specified pin (BHI260_IRQ).
+    attachInterrupt(BHI260_IRQ, dataReadyISR, RISING);
+}
+
+
+void loop()
+{
+    // Update sensor fifo
+    if (isReadyFlag) {
+        isReadyFlag = false;
+        bhy.update();
+    }
+
+#ifdef USING_DATA_HELPER
+    if (orientation.hasUpdated()) {
+        print_orientation(orientation.getOrientation());
+    }
+#endif
+    delay(50);
+}
+

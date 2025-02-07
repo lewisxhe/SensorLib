@@ -30,7 +30,8 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
-#include "SensorBHI260AP.hpp"
+#include <SensorBHI260AP.hpp>
+#include <bosch/BoschSensorDataHelper.hpp>
 
 // #define USE_I2C_INTERFACE        true
 // #define USE_SPI_INTERFACE        true
@@ -82,6 +83,19 @@
 
 SensorBHI260AP bhy;
 
+/*
+* Define the USING_DATA_HELPER use of data assistants.
+* No callback function will be used. Data can be obtained directly through
+* the data assistant. Note that this method is not a thread-safe function.
+* Please pay attention to protecting data access security.
+* */
+#define USING_DATA_HELPER
+
+#ifdef USING_DATA_HELPER
+SensorTemperature temperature(bhy);
+SensorHumidity humidity(bhy);
+SensorPressure pressure(bhy);
+#endif
 
 // The firmware runs in RAM and will be lost if the power is off. The firmware will be loaded from RAM each time it is run.
 // #define BOSCH_APP30_SHUTTLE_BHI260_FW
@@ -121,6 +135,7 @@ void dataReadyISR()
     isReadyFlag = true;
 }
 
+#ifndef USING_DATA_HELPER
 void parse_bme280_sensor_data(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
 {
     float humidity = 0;
@@ -137,13 +152,14 @@ void parse_bme280_sensor_data(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len
         break;
     case SensorBHI260AP::BAROMETER:
         bhy2_parse_pressure(data_ptr, &pressure);
-        Serial.print("pressure:"); Serial.print(pressure); Serial.println("hPa");
+        Serial.print("pressure:"); Serial.print(pressure); Serial.println("Pa");
         break;
     default:
         Serial.println("Unkown.");
         break;
     }
 }
+#endif
 
 // Firmware update progress callback
 void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
@@ -176,8 +192,6 @@ void setup()
 
     // Set to load firmware from flash
     bhy.setBootFromFlash(bosch_firmware_type);
-
-    Serial.println("Initializing Sensors...");
 
 #ifdef USE_I2C_INTERFACE
     // Using I2C interface
@@ -214,7 +228,7 @@ void setup()
     * sample_rate ​​can only control the rate of the pressure sensor.
     * Temperature and humidity will only be updated when there is a change.
     * * */
-    float sample_rate = 1.0;        /* Set to 1Hz update frequency */
+    float sample_rate = 2.0;       /* Set pressure sensor to 2Hz update frequency */
     uint32_t report_latency_ms = 0; /* Report immediately */
 
     /*
@@ -222,34 +236,61 @@ void setup()
     * Function depends on BME280.
     * If the hardware is not connected to BME280, the function cannot be used.
     * * */
+#ifdef USING_DATA_HELPER
+    temperature.enable();
+    humidity.enable();
+    pressure.enable(sample_rate, report_latency_ms);
+#else
     bool rlst = false;
-
     rlst = bhy.configure(SensorBHI260AP::TEMPERATURE, sample_rate, report_latency_ms);
     Serial.printf("Configure temperature sensor %.2f HZ %s\n", sample_rate, rlst ? "successfully" : "failed");
     rlst = bhy.configure(SensorBHI260AP::BAROMETER, sample_rate, report_latency_ms);
     Serial.printf("Configure pressure sensor %.2f HZ %s\n", sample_rate,  rlst ? "successfully" : "failed");
     rlst = bhy.configure(SensorBHI260AP::HUMIDITY, sample_rate, report_latency_ms);
     Serial.printf("Configure humidity sensor %.2f HZ %s\n", sample_rate,  rlst ? "successfully" : "failed");
-
     // Register BME280 data parse callback function
     Serial.println("Register sensor result callback function");
     bhy.onResultEvent(SensorBHI260AP::TEMPERATURE, parse_bme280_sensor_data);
     bhy.onResultEvent(SensorBHI260AP::HUMIDITY, parse_bme280_sensor_data);
     bhy.onResultEvent(SensorBHI260AP::BAROMETER, parse_bme280_sensor_data);
-
-    // Register interrupt function
+#endif
+    // Set the specified pin (BHI260_IRQ) as an input pin.
     pinMode(BHI260_IRQ, INPUT);
+    // Attach an interrupt service routine (ISR) 'dataReadyISR' to the specified pin (BHI260_IRQ).
     attachInterrupt(BHI260_IRQ, dataReadyISR, RISING);
 }
 
 
 void loop()
 {
+    uint32_t s;
+    uint32_t ns;
+
     // Update sensor fifo
     if (isReadyFlag) {
         isReadyFlag = false;
         bhy.update();
     }
+#ifdef USING_DATA_HELPER
+    if (temperature.hasUpdated()) {
+        temperature.getLastTime(s, ns);
+        Serial.printf("[T: %u.%09u] ", s, ns);
+        Serial.printf("Temperature: %.2f *C %.2f *F %.2f K\n",
+                      temperature.getCelsius(), temperature.getFahrenheit(), temperature.getKelvin());
+    }
+
+    if (humidity.hasUpdated()) {
+        humidity.getLastTime(s, ns);
+        Serial.printf("[T: %u.%09u] ", s, ns);
+        Serial.printf("Humidity: %.2f %%\n", humidity.getHumidity());
+    }
+
+    if (pressure.hasUpdated()) {
+        pressure.getLastTime(s, ns);
+        Serial.printf("[T: %u.%09u] ", s, ns);
+        Serial.printf("Pressure: %.2f Pascal\n", pressure.getPressure());
+    }
+#endif
     delay(50);
 }
 

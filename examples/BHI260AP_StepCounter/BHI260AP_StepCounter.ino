@@ -30,7 +30,8 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
-#include "SensorBHI260AP.hpp"
+#include <SensorBHI260AP.hpp>
+#include <bosch/BoschSensorDataHelper.hpp>
 
 // #define USE_I2C_INTERFACE        true
 // #define USE_SPI_INTERFACE        true
@@ -82,6 +83,19 @@
 
 SensorBHI260AP bhy;
 
+/*
+* Define the USING_DATA_HELPER use of data assistants.
+* No callback function will be used. Data can be obtained directly through
+* the data assistant. Note that this method is not a thread-safe function.
+* Please pay attention to protecting data access security.
+* */
+#define USING_DATA_HELPER
+
+#ifdef USING_DATA_HELPER
+SensorStepCounter stepCounter(bhy);
+SensorStepDetector stepDetector(bhy);
+#endif
+
 // The firmware runs in RAM and will be lost if the power is off. The firmware will be loaded from RAM each time it is run.
 #define BOSCH_APP30_SHUTTLE_BHI260_FW
 // #define BOSCH_APP30_SHUTTLE_BHI260_AUX_BMM150FW
@@ -120,6 +134,7 @@ void dataReadyISR()
     isReadyFlag = true;
 }
 
+#ifndef USING_DATA_HELPER
 void step_detector_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
 {
     Serial.print(bhy.getSensorName(sensor_id));
@@ -132,6 +147,7 @@ void step_counter_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32
     Serial.print(":");
     Serial.println(bhy2_parse_step_counter(data_ptr));
 }
+#endif
 
 // Firmware update progress callback
 void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
@@ -197,32 +213,55 @@ void setup()
     BoschSensorInfo info = bhy.getSensorInfo();
     info.printInfo(Serial);
 
-    float sample_rate = 100.0;      /* Read out data measured at 100Hz */
+    // The stepcount sensor will only report when it changes, so the value is 0 ~ 1
+    float sample_rate = 1.0;
     uint32_t report_latency_ms = 0; /* Report immediately */
 
-
+#ifdef USING_DATA_HELPER
+    stepDetector.enable(sample_rate, report_latency_ms);
+    stepCounter.enable(sample_rate, report_latency_ms);
+#else
     // Enable Step detector
     bhy.configure(SensorBHI260AP::STEP_DETECTOR, sample_rate, report_latency_ms);
     // Enable Step counter
     bhy.configure(SensorBHI260AP::STEP_COUNTER, sample_rate, report_latency_ms);
-
     // Set the number of steps to detect the callback function
     bhy.onResultEvent(SensorBHI260AP::STEP_DETECTOR, step_detector_process_callback);
     bhy.onResultEvent(SensorBHI260AP::STEP_COUNTER, step_counter_process_callback);
+#endif
 
-    // Register interrupt function
+    // Set the specified pin (BHI260_IRQ) as an input pin.
     pinMode(BHI260_IRQ, INPUT);
+    // Attach an interrupt service routine (ISR) 'dataReadyISR' to the specified pin (BHI260_IRQ).
     attachInterrupt(BHI260_IRQ, dataReadyISR, RISING);
 }
 
 
 void loop()
 {
+    uint32_t s;
+    uint32_t ns;
+
     // Update sensor fifo
     if (isReadyFlag) {
         isReadyFlag = false;
         bhy.update();
     }
+
+#ifdef USING_DATA_HELPER
+    if (stepCounter.hasUpdated()) {
+        stepCounter.getLastTime(s, ns);
+        Serial.printf("[T: %u.%09u]: Step Count:", s, ns);
+        Serial.println(stepCounter.getStepCount());
+    }
+    if (stepDetector.hasUpdated()) {
+        if (stepDetector.isDetected()) {
+            stepDetector.getLastTime(s, ns);
+            Serial.printf("[T: %u.%09u]:", s, ns);
+            Serial.println("Step detector detects steps");
+        }
+    }
+#endif
     delay(50);
 }
 

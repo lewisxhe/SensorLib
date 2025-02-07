@@ -30,7 +30,8 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
-#include "SensorBHI260AP.hpp"
+#include <SensorBHI260AP.hpp>
+#include <bosch/BoschSensorDataHelper.hpp>
 
 // #define USE_I2C_INTERFACE        true
 // #define USE_SPI_INTERFACE        true
@@ -82,6 +83,18 @@
 
 SensorBHI260AP bhy;
 
+/*
+* Define the USING_DATA_HELPER use of data assistants.
+* No callback function will be used. Data can be obtained directly through
+* the data assistant. Note that this method is not a thread-safe function.
+* Please pay attention to protecting data access security.
+* */
+#define USING_DATA_HELPER
+
+#ifdef USING_DATA_HELPER
+SensorEuler euler(bhy);
+#endif
+
 // The firmware runs in RAM and will be lost if the power is off. The firmware will be loaded from RAM each time it is run.
 // #define BOSCH_APP30_SHUTTLE_BHI260_FW
 #define BOSCH_APP30_SHUTTLE_BHI260_AUX_BMM150FW
@@ -120,21 +133,18 @@ void dataReadyISR()
     isReadyFlag = true;
 }
 
+#ifndef USING_DATA_HELPER
 void parse_euler(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
 {
     struct bhy2_data_orientation data;
     uint32_t s, ns;
     uint64_t tns;
-
     // Function to parse FIFO frame data into orientation
     bhy2_parse_orientation(data_ptr, &data);
-
     uint64_t _timestamp =  *timestamp;
     time_to_s_ns(_timestamp, &s, &ns, &tns);
-
     uint8_t accuracy =  bhy.getAccuracy();
     if (accuracy) {
-
         Serial.print("SID:"); Serial.print(sensor_id);
         Serial.print(" T:"); Serial.print(s);
         Serial.print("."); Serial.print(ns);
@@ -142,35 +152,16 @@ void parse_euler(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *t
         Serial.print(" y:"); Serial.print(data.pitch * 360.0f / 32768.0f);
         Serial.print(" x:"); Serial.print(data.roll * 360.0f / 32768.0f);
         Serial.print(" acc:"); Serial.println(accuracy);
-        /*
-        Serial.printf("SID: %u; T: %u.%09u; h: %f, p: %f, r: %f; acc: %u\r\n",
-                      sensor_id,
-                      s,
-                      ns,
-                      data.heading * 360.0f / 32768.0f,
-                      data.pitch * 360.0f / 32768.0f,
-                      data.roll * 360.0f / 32768.0f,
-                      accuracy);
-        */
     } else {
-
         Serial.print("SID:"); Serial.print(sensor_id);
         Serial.print(" T:"); Serial.print(s);
         Serial.print("."); Serial.print(ns);
         Serial.print(" x:"); Serial.print(data.heading * 360.0f / 32768.0f);
         Serial.print(" y:"); Serial.print(data.pitch * 360.0f / 32768.0f);
         Serial.print(" x:"); Serial.println(data.roll * 360.0f / 32768.0f);
-        /*
-        Serial.printf("SID: %u; T: %u.%09u; h: %f, p: %f, r: %f\r\n",
-                      sensor_id,
-                      s,
-                      ns,
-                      data.heading * 360.0f / 32768.0f,
-                      data.pitch * 360.0f / 32768.0f,
-                      data.roll * 360.0f / 32768.0f);
-        */
     }
 }
+#endif
 
 // Firmware update progress callback
 void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
@@ -203,8 +194,6 @@ void setup()
 
     // Set to load firmware from flash
     bhy.setBootFromFlash(bosch_firmware_type);
-
-    Serial.println("Initializing Sensors...");
 
 #ifdef USE_I2C_INTERFACE
     // Using I2C interface
@@ -244,13 +233,16 @@ void setup()
     * The Euler function depends on BMM150.
     * If the hardware is not connected to BMM150, the Euler function cannot be used.
     * * */
+#ifdef USING_DATA_HELPER
+    euler.enable(sample_rate, report_latency_ms);
+#else
     bhy.configure(SensorBHI260AP::ORIENTATION_WAKE_UP, sample_rate, report_latency_ms);
-
     // Register event callback function
     bhy.onResultEvent(SensorBHI260AP::ORIENTATION_WAKE_UP, parse_euler);
-
-    // Register interrupt function
+#endif
+    // Set the specified pin (BHI260_IRQ) as an input pin.
     pinMode(BHI260_IRQ, INPUT);
+    // Attach an interrupt service routine (ISR) 'dataReadyISR' to the specified pin (BHI260_IRQ).
     attachInterrupt(BHI260_IRQ, dataReadyISR, RISING);
 }
 
@@ -262,6 +254,21 @@ void loop()
         isReadyFlag = false;
         bhy.update();
     }
+
+#ifdef USING_DATA_HELPER
+    if (euler.hasUpdated()) {
+        // Print the roll angle to the serial monitor.
+        Serial.print(euler.getRoll());
+        // Print a comma as a separator between the roll and pitch angles.
+        Serial.print(",");
+        // Print the pitch angle to the serial monitor.
+        Serial.print(euler.getPitch());
+        // Print a comma as a separator between the pitch and yaw angles.
+        Serial.print(",");
+        // Print the yaw angle to the serial monitor and start a new line.
+        Serial.println(euler.getHeading());
+    }
+#endif
     delay(50);
 }
 

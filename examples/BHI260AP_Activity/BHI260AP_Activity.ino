@@ -2,7 +2,7 @@
  *
  * @license MIT License
  *
- * Copyright (c) 2024 lewis he
+ * Copyright (c) 2025 lewis he
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,9 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      BHI260AP_aux_BMM150_quaternion.ino
+ * @file      BHI260AP_Activity .ino
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2024-07-23
+ * @date      2025-02-04
  * @note      Changed from Boschsensortec API https://github.com/boschsensortec/BHY2_SensorAPI
  */
 #include <Wire.h>
@@ -82,22 +82,11 @@
 #endif
 
 SensorBHI260AP bhy;
-
-/*
-* Define the USING_DATA_HELPER use of data assistants.
-* No callback function will be used. Data can be obtained directly through
-* the data assistant. Note that this method is not a thread-safe function.
-* Please pay attention to protecting data access security.
-* */
-#define USING_DATA_HELPER
-
-#ifdef USING_DATA_HELPER
-SensorQuaternion quaternion(bhy);
-#endif
+SensorActivity activity(bhy);
 
 // The firmware runs in RAM and will be lost if the power is off. The firmware will be loaded from RAM each time it is run.
-// #define BOSCH_APP30_SHUTTLE_BHI260_FW
-#define BOSCH_APP30_SHUTTLE_BHI260_AUX_BMM150FW
+#define BOSCH_APP30_SHUTTLE_BHI260_FW
+// #define BOSCH_APP30_SHUTTLE_BHI260_AUX_BMM150FW
 // #define BOSCH_APP30_SHUTTLE_BHI260_BME68X
 // #define BOSCH_APP30_SHUTTLE_BHI260_BMP390
 // #define BOSCH_APP30_SHUTTLE_BHI260_TURBO
@@ -133,27 +122,6 @@ void dataReadyISR()
     isReadyFlag = true;
 }
 
-#ifndef USING_DATA_HELPER
-void parse_quaternion(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
-{
-    struct bhy2_data_quaternion data;
-    uint32_t s, ns;
-    uint64_t tns;
-    // Function to parse FIFO frame data into orientation
-    bhy2_parse_quaternion(data_ptr, &data);
-    uint64_t _timestamp =  *timestamp;
-    time_to_s_ns(_timestamp, &s, &ns, &tns);
-    Serial.print("SID:"); Serial.print(sensor_id);
-    Serial.print(" T:"); Serial.print(s);
-    Serial.print("."); Serial.print(ns);
-    Serial.print(" x:"); Serial.print(data.x / 16384.0f);
-    Serial.print(" y:"); Serial.print(data.y / 16384.0f);
-    Serial.print(" x:"); Serial.print(data.z / 16384.0f);
-    Serial.print(" w:"); Serial.print(data.w / 16384.0f);
-    Serial.print(" acc:"); Serial.println(((data.accuracy * 180.0f) / 16384.0f) / 3.141592653589793f);
-}
-#endif
-
 // Firmware update progress callback
 void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
 {
@@ -186,6 +154,8 @@ void setup()
     // Set to load firmware from flash
     bhy.setBootFromFlash(bosch_firmware_type);
 
+    Serial.println("Initializing Sensors...");
+
 #ifdef USE_I2C_INTERFACE
     // Using I2C interface
     // BHI260AP_SLAVE_ADDRESS_L = 0x28
@@ -216,44 +186,86 @@ void setup()
     BoschSensorInfo info = bhy.getSensorInfo();
     info.printInfo(Serial);
 
-    float sample_rate = 100.0;      /* Read out data measured at 100Hz */
-    uint32_t report_latency_ms = 0; /* Report immediately */
 
-    /*
-    * Enable Quaternion function
-    * The Quaternion function depends on BMM150.
-    * If the hardware is not connected to BMM150, the Quaternion function cannot be used.
-    * * */
-#ifdef USING_DATA_HELPER
-    quaternion.enable(sample_rate, report_latency_ms);
-#else
-    bhy.configure(SensorBHI260AP::ROTATION_VECTOR, sample_rate, report_latency_ms);
-    // Register event callback function
-    bhy.onResultEvent(SensorBHI260AP::ROTATION_VECTOR, parse_quaternion);
-#endif
+    float sample_rate = 1.0;
+    uint32_t report_latency_ms = 0;
+    /**
+     * Configure the activity recognition sensor of the BHI260AP sensor.
+     *
+     * This function sets the sampling rate and report latency for the activity recognition sensor.
+     * The sampling rate determines how often the sensor takes measurements, and the report latency
+     * determines the delay between when a measurement is taken and when it is reported.
+     * The activity recognition sensor will only be triggered when there is a change.
+     * @param samplingRate The sampling rate of the sensor. A value greater than 1 enables the sensor,
+     *                     while a value of 0 disables it.
+     * @param latencyMs The report latency in milliseconds.
+     */
+    activity.enable(sample_rate, report_latency_ms);
+
     // Set the specified pin (BHI260_IRQ) as an input pin.
+    // This prepares the pin to receive external signals.
     pinMode(BHI260_IRQ, INPUT);
-    // Attach an interrupt service routine (ISR) 'dataReadyISR' to the specified pin (BHI260_IRQ).
+
+    // Attach an interrupt service routine (ISR) to the specified pin (BHI260_IRQ).
+    // The ISR 'dataReadyISR' will be called whenever a rising edge is detected on the pin.
     attachInterrupt(BHI260_IRQ, dataReadyISR, RISING);
 }
 
 
 void loop()
 {
+
+    if (activity.hasUpdated()) {
+
+        if (activity.isActivitySet(SensorActivity::STILL_ACTIVITY_ENDED)) {
+            Serial.println("Still activity ended is set.");
+        }
+        if (activity.isActivitySet(SensorActivity::WALKING_ACTIVITY_ENDED)) {
+            Serial.println("Walking activity ended is set.");
+        }
+        if (activity.isActivitySet(SensorActivity::RUNNING_ACTIVITY_ENDED)) {
+            Serial.println("Running activity ended is set.");
+        }
+        if (activity.isActivitySet(SensorActivity::ON_BICYCLE_ACTIVITY_ENDED)) {
+            Serial.println("On Bicycle activity ended is set.");
+        }
+        if (activity.isActivitySet(SensorActivity::IN_VEHICLE_ACTIVITY_ENDED)) {
+            Serial.println("In Vehicle activity ended is set.");
+        }
+        if (activity.isActivitySet(SensorActivity::TILTING_ACTIVITY_ENDED)) {
+            Serial.println("Tilting activity ended is set.");
+        }
+        if (activity.isActivitySet(SensorActivity::IN_VEHICLE_STILL_ENDED)) {
+            Serial.println("In Vehicle still ended is set.");
+        }
+        if (activity.isActivitySet(SensorActivity::STILL_ACTIVITY_STARTED)) {
+            Serial.println("Still activity started is set.");
+        }
+        if (activity.isActivitySet(SensorActivity::WALKING_ACTIVITY_STARTED)) {
+            Serial.println("Walking activity started is set.");
+        }
+        if (activity.isActivitySet(SensorActivity::RUNNING_ACTIVITY_STARTED)) {
+            Serial.println("Running activity started is set.");
+        }
+        if (activity.isActivitySet(SensorActivity::ON_BICYCLE_ACTIVITY_STARTED)) {
+            Serial.println("On Bicycle activity started is set.");
+        }
+        if (activity.isActivitySet(SensorActivity::IN_VEHICLE_ACTIVITY_STARTED)) {
+            Serial.println("In Vehicle activity started is set.");
+        }
+        if (activity.isActivitySet(SensorActivity::TILTING_ACTIVITY_STARTED)) {
+            Serial.println("Tilting activity started is set.");
+        }
+        if (activity.isActivitySet(SensorActivity::IN_VEHICLE_STILL_STARTED)) {
+            Serial.println("In Vehicle still started is set.");
+        }
+    }
+
     // Update sensor fifo
     if (isReadyFlag) {
         isReadyFlag = false;
         bhy.update();
     }
-#ifdef USING_DATA_HELPER
-    if (quaternion.hasUpdated()) {
-        uint32_t s;
-        uint32_t ns;
-        quaternion.getLastTime(s, ns);
-        Serial.printf("[T: %u.%09u] QX:%+7.2f QY:%+7.2f QZ:%+7.2f QW:%+7.2f\n",
-                      s, ns, quaternion.getX(), quaternion.getY(), quaternion.getZ(), quaternion.getW());
-    }
-#endif
     delay(50);
 }
 

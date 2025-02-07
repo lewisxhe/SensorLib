@@ -30,7 +30,8 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
-#include "SensorBHI260AP.hpp"
+#include <SensorBHI260AP.hpp>
+#include <bosch/BoschSensorDataHelper.hpp>
 
 
 // #define USE_I2C_INTERFACE        true
@@ -83,6 +84,20 @@
 
 SensorBHI260AP bhy;
 
+/*
+* Define the USING_DATA_HELPER use of data assistants.
+* No callback function will be used. Data can be obtained directly through
+* the data assistant. Note that this method is not a thread-safe function.
+* Please pay attention to protecting data access security.
+* */
+#define USING_DATA_HELPER
+
+#ifdef USING_DATA_HELPER
+SensorXYZ accel(SensorBHI260AP::ACCEL_PASSTHROUGH, bhy);
+SensorXYZ gyro(SensorBHI260AP::GYRO_PASSTHROUGH, bhy);
+SensorXYZ mag(SensorBHI260AP::MAGNETOMETER_PASSTHROUGH, bhy);
+#endif
+
 // The firmware runs in RAM and will be lost if the power is off. The firmware will be loaded from RAM each time it is run.
 // #define BOSCH_APP30_SHUTTLE_BHI260_FW
 #define BOSCH_APP30_SHUTTLE_BHI260_AUX_BMM150FW
@@ -121,10 +136,11 @@ void dataReadyISR()
     isReadyFlag = true;
 }
 
-void bhy_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
+#ifndef USING_DATA_HELPER
+void xyz_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
 {
     struct bhy2_data_xyz data;
-    float scaling_factor = get_sensor_default_scaling(sensor_id);
+    float scaling_factor = bhy.getScaling(sensor_id);
     bhy2_parse_xyz(data_ptr, &data);
     Serial.print(bhy.getSensorName(sensor_id));
     Serial.print(":");
@@ -134,6 +150,7 @@ void bhy_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, ui
                   data.z * scaling_factor
                  );
 }
+#endif
 
 // Firmware update progress callback
 void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
@@ -167,8 +184,6 @@ void setup()
     // Set to load firmware from flash
     bhy.setBootFromFlash(bosch_firmware_type);
 
-    Serial.println("Initializing Sensors...");
-
 #ifdef USE_I2C_INTERFACE
     // Using I2C interface
     // BHI260AP_SLAVE_ADDRESS_L = 0x28
@@ -199,32 +214,33 @@ void setup()
     BoschSensorInfo info = bhy.getSensorInfo();
     info.printInfo(Serial);
 
-    float sample_rate = 100.0;      /* Read out data measured at 100Hz */
+    float sample_rate = 10.0;      /* Read out data measured at 10Hz */
     uint32_t report_latency_ms = 0; /* 0 = report immediately */
 
+#ifdef USING_DATA_HELPER
     // Enable acceleration
-    report_latency_ms = 1000;   // Report once per second
-    bhy.configure(SensorBHI260AP::ACCEL_PASSTHROUGH, sample_rate, report_latency_ms);
-
+    accel.enable(sample_rate, report_latency_ms);
     // Enable gyroscope
-    report_latency_ms = 1000;   //Report once per second
-    bhy.configure(SensorBHI260AP::GYRO_PASSTHROUGH, sample_rate, report_latency_ms);
-
+    gyro.enable(sample_rate, report_latency_ms);
     // Enable magnetometer
-    report_latency_ms = 500;    //Report every 500 milliseconds
+    mag.enable(sample_rate, report_latency_ms);
+#else
+    // Enable acceleration
+    bhy.configure(SensorBHI260AP::ACCEL_PASSTHROUGH, sample_rate, report_latency_ms);
+    // Enable gyroscope
+    bhy.configure(SensorBHI260AP::GYRO_PASSTHROUGH, sample_rate, report_latency_ms);
+    // Enable magnetometer
     bhy.configure(SensorBHI260AP::MAGNETOMETER_PASSTHROUGH, sample_rate, report_latency_ms);
-
     // Set the acceleration sensor result callback function
-    bhy.onResultEvent(SensorBHI260AP::ACCEL_PASSTHROUGH, bhy_process_callback);
-
+    bhy.onResultEvent(SensorBHI260AP::ACCEL_PASSTHROUGH, xyz_process_callback);
     // Set the gyroscope sensor result callback function
-    bhy.onResultEvent(SensorBHI260AP::GYRO_PASSTHROUGH, bhy_process_callback);
-
+    bhy.onResultEvent(SensorBHI260AP::GYRO_PASSTHROUGH, xyz_process_callback);
     // Set the magnetometer sensor result callback function
-    bhy.onResultEvent(SensorBHI260AP::MAGNETOMETER_PASSTHROUGH, bhy_process_callback);
-
-    // Register interrupt function
+    bhy.onResultEvent(SensorBHI260AP::MAGNETOMETER_PASSTHROUGH, xyz_process_callback);
+#endif
+    // Set the specified pin (BHI260_IRQ) as an input pin.
     pinMode(BHI260_IRQ, INPUT);
+    // Attach an interrupt service routine (ISR) 'dataReadyISR' to the specified pin (BHI260_IRQ).
     attachInterrupt(BHI260_IRQ, dataReadyISR, RISING);
 }
 
@@ -236,6 +252,18 @@ void loop()
         isReadyFlag = false;
         bhy.update();
     }
+
+#ifdef USING_DATA_HELPER
+    if (accel.hasUpdated() && gyro.hasUpdated() && mag.hasUpdated()) {
+        uint32_t s;
+        uint32_t ns;
+        accel.getLastTime(s, ns);
+        Serial.printf("[T: %u.%09u] AX:%+7.2f AY:%+7.2f AZ:%+7.2f GX:%+7.2f GY:%+7.2f GZ:%+7.2f MX:%+7.2f MY:%+7.2f MZ:%+7.2f\n",
+                      s, ns, accel.getX(), accel.getY(), accel.getZ(),
+                      gyro.getX(), gyro.getY(), gyro.getZ(),
+                      mag.getX(), mag.getY(), mag.getZ());
+    }
+#endif
     delay(50);
 }
 

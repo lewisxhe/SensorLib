@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      BHI260AP_Quaternion_Euler_Remapping.ino
+ * @file      BHI260AP_Euler.ino
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2025-02-04
  * @note      Changed from Boschsensortec API https://github.com/boschsensortec/BHY2_SensorAPI
@@ -30,7 +30,8 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
-#include "SensorBHI260AP.hpp"
+#include <SensorBHI260AP.hpp>
+#include <bosch/BoschSensorDataHelper.hpp>
 
 // #define USE_I2C_INTERFACE        true
 // #define USE_SPI_INTERFACE        true
@@ -81,6 +82,18 @@
 #endif
 
 SensorBHI260AP bhy;
+
+/*
+* Define the USING_DATA_HELPER use of data assistants.
+* No callback function will be used. Data can be obtained directly through
+* the data assistant. Note that this method is not a thread-safe function.
+* Please pay attention to protecting data access security.
+* */
+#define USING_DATA_HELPER
+
+#ifdef USING_DATA_HELPER
+SensorQuaternion quaternion(bhy);
+#endif
 
 // The firmware runs in RAM and will be lost if the power is off. The firmware will be loaded from RAM each time it is run.
 #define BOSCH_APP30_SHUTTLE_BHI260_FW
@@ -140,8 +153,9 @@ void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
  * @param len The length of the data buffer, indicating the size of the quaternion data in bytes.
  * @param timestamp A pointer to a 64 - bit unsigned integer representing the timestamp when the sensor data was captured.
  *                  This can be used to correlate the data with a specific point in time.
- * @param user_data A generic pointer to user - defined data. 
+ * @param user_data A generic pointer to user - defined data.
  */
+#ifndef USING_DATA_HELPER
 void parse_quaternion(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
 {
     // Declare variables to store the Euler angles (roll, pitch, and yaw).
@@ -160,6 +174,7 @@ void parse_quaternion(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64
     // Print the yaw angle to the serial monitor and start a new line.
     Serial.println(yaw);
 }
+#endif
 
 void setup()
 {
@@ -255,6 +270,9 @@ void setup()
     // A value of 0 means the sensor will report the measured data immediately.
     uint32_t report_latency_ms = 0;
 
+#ifdef USING_DATA_HELPER
+    quaternion.enable(sample_rate, report_latency_ms);
+#else
     // GAME_ROTATION_VECTOR virtual sensor does not rely on external magnetometers, such as BMM150, BMM350
     // Configure the sensor to measure the game rotation vector.
     // Set the sample rate and report latency for this measurement.
@@ -262,6 +280,7 @@ void setup()
     // Register a callback function 'parse_quaternion' to handle the result events of the game rotation vector measurement.
     // When the sensor has new data for the game rotation vector, the 'parse_quaternion' function will be called.
     bhy.onResultEvent(SensorBHI260AP::GAME_ROTATION_VECTOR, parse_quaternion);
+#endif
 
     // Set the specified pin (BHI260_IRQ) as an input pin.
     pinMode(BHI260_IRQ, INPUT);
@@ -277,6 +296,24 @@ void loop()
         isReadyFlag = false;
         bhy.update();
     }
+
+#ifdef USING_DATA_HELPER
+    if (quaternion.hasUpdated()) {
+        // Convert rotation vector to Euler angles
+        quaternion.toEuler();
+        // Print the roll angle to the serial monitor.
+        Serial.print(quaternion.getRoll());
+        // Print a comma as a separator between the roll and pitch angles.
+        Serial.print(",");
+        // Print the pitch angle to the serial monitor.
+        Serial.print(quaternion.getPitch());
+        // Print a comma as a separator between the pitch and yaw angles.
+        Serial.print(",");
+        // Print the yaw angle to the serial monitor and start a new line.
+        Serial.println(quaternion.getHeading());
+    }
+#endif
+
     delay(50);
 }
 
