@@ -739,7 +739,7 @@ const uint8_t SensorBHI260AP::availableSensorNums()
 */
 bool SensorBHI260AP::setRemapAxes(SensorRemap remap)
 {
-    if (remap < TOP_LAYER_LEFT_CORNER || remap > BOTTOM_LAYER_BOTTOM_LEFT_CORNER) {
+    if (remap > BOTTOM_LAYER_BOTTOM_LEFT_CORNER) {
         log_e("Invalid SensorRemap value passed to setRemapAxes!");
         return false;
     }

@@ -360,7 +360,7 @@ SensorBHI260AP_Klio::KlioError SensorBHI260AP_Klio::getError() const
 
 const char *SensorBHI260AP_Klio::errorToString() const
 {
-    if (errorCode >= 0 && errorCode <= 8) {
+    if (errorCode <= 8) {
         return errorMessages[errorCode];
     }
     return "Unknown error code";
