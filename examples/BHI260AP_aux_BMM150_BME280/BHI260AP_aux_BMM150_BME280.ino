@@ -274,20 +274,20 @@ void loop()
 #ifdef USING_DATA_HELPER
     if (temperature.hasUpdated()) {
         temperature.getLastTime(s, ns);
-        Serial.printf("[T: %u.%09u] ", s, ns);
+        Serial.printf("[T: %" PRIu32 ".%09" PRIu32 "] ", s, ns);
         Serial.printf("Temperature: %.2f *C %.2f *F %.2f K\n",
                       temperature.getCelsius(), temperature.getFahrenheit(), temperature.getKelvin());
     }
 
     if (humidity.hasUpdated()) {
         humidity.getLastTime(s, ns);
-        Serial.printf("[T: %u.%09u] ", s, ns);
+        Serial.printf("[T: %" PRIu32 ".%09" PRIu32 "] ", s, ns);
         Serial.printf("Humidity: %.2f %%\n", humidity.getHumidity());
     }
 
     if (pressure.hasUpdated()) {
         pressure.getLastTime(s, ns);
-        Serial.printf("[T: %u.%09u] ", s, ns);
+        Serial.printf("[T: %" PRIu32 ".%09" PRIu32 "] ", s, ns);
         Serial.printf("Pressure: %.2f Pascal\n", pressure.getPressure());
     }
 #endif

@@ -251,13 +251,13 @@ void loop()
 #ifdef USING_DATA_HELPER
     if (stepCounter.hasUpdated()) {
         stepCounter.getLastTime(s, ns);
-        Serial.printf("[T: %u.%09u]: Step Count:", s, ns);
+        Serial.printf("[T: %" PRIu32 ".%09" PRIu32 "]: Step Count:", s, ns);
         Serial.println(stepCounter.getStepCount());
     }
     if (stepDetector.hasUpdated()) {
         if (stepDetector.isDetected()) {
             stepDetector.getLastTime(s, ns);
-            Serial.printf("[T: %u.%09u]:", s, ns);
+            Serial.printf("[T: %" PRIu32 ".%09" PRIu32 "]:", s, ns);
             Serial.println("Step detector detects steps");
         }
     }

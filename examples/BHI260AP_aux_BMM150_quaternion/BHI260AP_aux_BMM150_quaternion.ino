@@ -250,7 +250,7 @@ void loop()
         uint32_t s;
         uint32_t ns;
         quaternion.getLastTime(s, ns);
-        Serial.printf("[T: %u.%09u] QX:%+7.2f QY:%+7.2f QZ:%+7.2f QW:%+7.2f\n",
+        Serial.printf("[T: %" PRIu32 ".%09" PRIu32 "] QX:%+7.2f QY:%+7.2f QZ:%+7.2f QW:%+7.2f\n",
                       s, ns, quaternion.getX(), quaternion.getY(), quaternion.getZ(), quaternion.getW());
     }
 #endif

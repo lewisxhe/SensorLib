@@ -249,7 +249,7 @@ void loop()
         uint32_t s;
         uint32_t ns;
         accel.getLastTime(s, ns);
-        Serial.printf("[T: %u.%09u] AX:%+7.2f AY:%+7.2f AZ:%+7.2f GX:%+7.2f GY:%+7.2f GZ:%+7.2f \n",
+        Serial.printf("[T: %" PRIu32 ".%09" PRIu32 "] AX:%+7.2f AY:%+7.2f AZ:%+7.2f GX:%+7.2f GY:%+7.2f GZ:%+7.2f \n",
                       s, ns, accel.getX(), accel.getY(), accel.getZ(),
                       gyro.getX(), gyro.getY(), gyro.getZ());
     }
