@@ -722,7 +722,7 @@ void SensorBHI260AP::setUpdateProcessCallback(ProcessCallback callback, void *us
  * @note   Get the number of available sensors
  * @retval available sensors
  */
-const uint8_t SensorBHI260AP::availableSensorNums()
+uint8_t SensorBHI260AP::availableSensorNums()
 {
     return _sensor_available_nums;
 }

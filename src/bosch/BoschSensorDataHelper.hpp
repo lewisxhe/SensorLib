@@ -78,7 +78,7 @@ public:
         return _handle.getConfigure(_sensor_id);
     }
 
-    const float getScaling()
+    float getScaling()
     {
         return _scaling_factor;
     }

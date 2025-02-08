@@ -152,7 +152,7 @@ public:
      *
      * @return The maximum number of recognition patterns allowed, represented as an 8 - bit unsigned integer.
      */
-    const uint8_t getMaxPatterns();
+    uint8_t getMaxPatterns();
 
     /**
      * @brief Get a parameter from the KLIO sensor.

@@ -84,8 +84,8 @@ public:
     * to a specific corner or location of the chip, which can be used to remap the axes of the sensor
     * according to its physical placement.
     *
-    * Top view of the chip, where 'T' stands for top, 
-    * 'B' stands for bottom, 
+    * Top view of the chip, where 'T' stands for top,
+    * 'B' stands for bottom,
     * 'L' stands for left, and 'R' stands for right
     *  -------------
     * | TL         TR |
@@ -572,7 +572,7 @@ public:
      * @note   Get the number of available sensors
      * @retval available sensors
      */
-    const uint8_t availableSensorNums();
+    uint8_t availableSensorNums();
 
 
     /**

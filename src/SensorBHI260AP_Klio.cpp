@@ -207,7 +207,7 @@ bool SensorBHI260AP_Klio::getLearnPattern(uint8_t *pattern, uint16_t  *size)
     return KlioTemplate(bhy2_klio_read_pattern, 0, pattern, size);
 }
 
-const uint8_t SensorBHI260AP_Klio::getMaxPatterns()
+uint8_t SensorBHI260AP_Klio::getMaxPatterns()
 {
     return max_patterns;
 }
