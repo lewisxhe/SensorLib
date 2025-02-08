@@ -51,7 +51,7 @@ public:
         debuggingEnabled(true), faultEnabled(true), interruptIsActiveLow(false),
         interruptIsPulseTriggered(false), interruptPinDriveIsOpenDrain(false) {}
 
-#ifdef ARDUINO
+#if defined(ARDUINO) && !defined(__MBED__)
     void print(Stream &stream)
     {
         stream.printf("Host interrupt control\n");

@@ -149,7 +149,7 @@ public:
         return *this;
     }
 
-#ifdef ARDUINO
+#if defined(ARDUINO) && !defined(__MBED__)
     void printVirtualSensorList(Stream &stream)
     {
         if (!dev) {

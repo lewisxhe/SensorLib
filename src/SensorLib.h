@@ -41,19 +41,9 @@
 #include "SensorLib_Version.h"
 #include "DevicesPins.h"
 
-#ifdef ARDUINO_ARCH_MBED
-// Not supported at the moment
-#error The Arduino RP2040 MBED board package is not supported when PIO is used. Use the community package by Earle Philhower.
-#endif
-
-#ifndef I2C_BUFFER_LENGTH
-#define I2C_BUFFER_LENGTH               (32)
-#endif
-
-#if defined(ARDUINO_ARCH_RP2040)
+#if defined(ARDUINO_ARCH_RP2040) && !defined(ARDUINO_ARCH_MBED)
 #define SPIClass SPIClassRP2040
 #endif
-
 
 #ifdef _BV
 #undef _BV
@@ -95,7 +85,7 @@
 #define ATTR_NOT_IMPLEMENTED            __attribute__((error("Not implemented")))
 
 
-#if !defined(ARDUINO_ARCH_ESP32) && defined(LOG_PORT) && defined(ARDUINO)
+#if !defined(ARDUINO_ARCH_ESP32) && defined(LOG_PORT) && defined(ARDUINO) && !defined(__MBED__)
 
 #define LOG_FILE_LINE_INFO __FILE__, __LINE__
 
@@ -111,6 +101,21 @@
 #define log_d(fmt, ...)                 LOG_PORT.printf("[D][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
 #endif  /*log_d*/
 
+#elif defined(__MBED__)
+
+#define LOG_FILE_LINE_INFO __FILE__, __LINE__
+
+#ifndef log_e
+#define log_e(fmt, ...)                 printf("[E][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
+#endif  /*log_e*/
+
+#ifndef log_i
+#define log_i(fmt, ...)                 printf("[I][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
+#endif  /*log_i*/
+
+#ifndef log_d
+#define log_d(fmt, ...)                 printf("[D][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
+#endif  /*log_d*/
 
 #elif defined(ESP_PLATFORM) && !defined(ARDUINO)
 

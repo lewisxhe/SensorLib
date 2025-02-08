@@ -41,7 +41,7 @@ public:
         if (modeCallback) {
             modeCallback(pin, mode);
         } else {
-#ifdef ARDUINO_ARCH_RP2040
+#if defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_MBED)
             ::pinMode(pin, static_cast<PinMode>(mode));
 #else
             ::pinMode(pin, mode);
@@ -54,7 +54,7 @@ public:
         if (writeCallback) {
             writeCallback(pin, level);
         } else {
-#ifdef ARDUINO_ARCH_RP2040
+#if defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_MBED)
             ::digitalWrite(pin, static_cast<PinStatus>(level));
 #else
             ::digitalWrite(pin, level);

@@ -35,10 +35,12 @@
 #ifdef ARDUINO
 
 
-#if defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_STM32)
+#if (defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_STM32))  && !defined(ARDUINO_ARCH_MBED)
 #define  writeBytes(txBuf,size) spi.transfer(txBuf,nullptr,size)
 #elif defined(ARDUINO_ARCH_NRF52)
 #define  writeBytes(txBuf,size) spi.transfer(txBuf,nullptr,size)
+#elif defined(ARDUINO_ARCH_MBED)
+#define  writeBytes(txBuf,size) spi.transfer((void*)txBuf,size)
 #else
 #define  writeBytes(txBuf,size) spi.writeBytes(txBuf,size)
 #endif
@@ -65,9 +67,11 @@ public:
 #elif defined(ARDUINO_ARCH_ESP32)
             spi.begin(sck, miso, mosi);
 #elif defined(ARDUINO_ARCH_RP2040)
+#if !defined(ARDUINO_ARCH_MBED)
             spi.setSCK(sck);
             spi.setRX(miso);
             spi.setTX(mosi);
+#endif  /*ARDUINO_ARCH_MBED*/
             spi.begin();
 #elif defined(ARDUINO_ARCH_STM32)
             spi.setMISO(miso);

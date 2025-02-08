@@ -60,26 +60,34 @@ void SensorWireHelper::dumpDevices(TwoWire &w, Stream &serial, int first, int la
 {
     int i, j;
     int ret;
-    serial.printf("     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f\n");
+    serial.println("     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f");
     for (i = 0; i < 128; i += 16) {
-        serial.printf("%02x: ", i);
-
+        if (i < 16) {
+            serial.print("0");
+        }
+        serial.print(i, HEX);
+        serial.print(": ");
         for (j = 0; j < 16; j++) {
             /* Skip unwanted addresses */
             if (i + j < first || i + j > last) {
-                serial.printf("   ");
+                serial.print("   ");
                 continue;
             }
 
             w.beginTransmission(i + j);
             ret = w.endTransmission();
 
-            if (ret != 0)
-                serial.printf("-- ");
-            else
-                serial.printf("%02x ", i + j);
+            if (ret != 0) {
+                serial.print("-- ");
+            } else {
+                if (i < 16) {
+                    serial.print("0");
+                }
+                serial.print(i + j, HEX);
+                serial.print(" ");
+            }
         }
-        serial.printf("\n");
+        serial.println();
     }
 }
 

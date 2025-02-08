@@ -62,7 +62,7 @@ public:
         memset(orientation_matrix, 0, sizeof(orientation_matrix));
     }
 
-#ifdef ARDUINO
+#if defined(ARDUINO) && !defined(__MBED__)
     void print(Stream &stream)
     {
         const char *irq_status_str[2] = { "Disabled", "Enabled" };

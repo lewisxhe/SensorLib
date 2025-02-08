@@ -173,10 +173,15 @@ private:
         if (sda != -1 && scl != -1) {
 #if defined(ARDUINO_ARCH_NRF52) || defined(ARDUINO_ARCH_ESP32)
             wire.setPins(sda, scl);
-#elif defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_STM32)
+#elif (defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_STM32)) && !defined(ARDUINO_ARCH_MBED)
             wire.end();
+#if !defined(ARDUINO_ARCH_MBED)
             wire.setSDA(sda);
             wire.setSCL(scl);
+#endif  /*ARDUINO_ARCH_MBED*/
+
+#elif defined(ARDUINO_ARCH_MBED)
+            //No thing.
 #else
 #warring "Wire custom GPIO mapping function is not implemented"
 #endif
