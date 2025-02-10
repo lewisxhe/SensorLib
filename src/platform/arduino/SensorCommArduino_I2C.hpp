@@ -183,7 +183,7 @@ private:
 #elif defined(ARDUINO_ARCH_MBED)
             //No thing.
 #else
-#warring "Wire custom GPIO mapping function is not implemented"
+#warning "Wire custom GPIO mapping function is not implemented"
 #endif
         }
     }

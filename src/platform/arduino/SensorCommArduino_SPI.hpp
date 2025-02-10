@@ -79,7 +79,7 @@ public:
             spi.setSCLK(sck);
             spi.begin();
 #else
-#warring "SPI custom GPIO mapping function is not implemented"
+#warning "SPI custom GPIO mapping function is not implemented"
 #endif
         }
         hal->pinMode(csPin, OUTPUT);
