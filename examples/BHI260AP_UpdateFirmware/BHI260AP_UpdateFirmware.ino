@@ -132,6 +132,21 @@ void parse_bme280_sensor_data(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len
     }
 }
 
+void printResult(uint8_t sensor_id, float sample_rate, bool rlst)
+{
+    const char  *sensorName = bhy.getSensorName(sensor_id);
+    Serial.print("Configure ");
+    Serial.print(sensorName);
+    Serial.print(" sensor ");
+    Serial.print(sample_rate, 2);
+    Serial.print(" HZ ");
+    if (rlst) {
+        Serial.print("successfully");
+    } else {
+        Serial.print("failed");
+    }
+    Serial.println();
+}
 
 void setup()
 {
@@ -169,7 +184,7 @@ void setup()
     }
 
     size_t fw_size = firmware_file.size();
-    Serial.printf("Read firmware file successfully .");
+    Serial.println("Read firmware file successfully .");
 
     uint8_t *firmware = (uint8_t *)malloc(fw_size);
     if (!firmware) {
@@ -229,8 +244,11 @@ void setup()
 
     // Output all sensors info to Serial
     BoschSensorInfo info = bhy.getSensorInfo();
+#ifdef PLATFORM_HAS_PRINTF
     info.printInfo(Serial);
-
+#else
+    info.printInfo();
+#endif
 
     /*
     * Enable monitoring.
@@ -242,11 +260,11 @@ void setup()
     bool rlst = false;
 
     rlst = bhy.configure(SensorBHI260AP::TEMPERATURE, sample_rate, report_latency_ms);
-    Serial.printf("Configure temperature sensor %.2f HZ %s\n", sample_rate, rlst ? "successfully" : "failed");
+    printResult(SensorBHI260AP::TEMPERATURE, sample_rate, rlst);
     rlst = bhy.configure(SensorBHI260AP::BAROMETER, sample_rate, report_latency_ms);
-    Serial.printf("Configure pressure sensor %.2f HZ %s\n", sample_rate,  rlst ? "successfully" : "failed");
+    printResult(SensorBHI260AP::BAROMETER, sample_rate, rlst);
     rlst = bhy.configure(SensorBHI260AP::HUMIDITY, sample_rate, report_latency_ms);
-    Serial.printf("Configure humidity sensor %.2f HZ %s\n", sample_rate,  rlst ? "successfully" : "failed");
+    printResult(SensorBHI260AP::HUMIDITY, sample_rate, rlst);
 
     // Register BME280 data parse callback function
     Serial.println("Register sensor result callback function");

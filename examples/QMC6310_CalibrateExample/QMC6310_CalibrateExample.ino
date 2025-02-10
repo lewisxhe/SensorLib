@@ -160,9 +160,6 @@ void calibrate()
     Serial.print(z_offset);
 
 
-    // Serial.printf("x_min:%d x_max:%d y_min:%d y_max:%d z_min:%d z_max:%d\n", x_min, x_max, y_min, y_max, z_min, z_max);
-    // Serial.printf("x_offset:%.2f y_offset:%.2f z_offset:%.2f \n", x_offset, y_offset, z_offset);
-
     // Set the calibration value and the user calculates the deviation
     qmc.setOffset(x_offset, y_offset, z_offset);
 }

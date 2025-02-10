@@ -141,11 +141,14 @@ void xyz_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, ui
     float scaling_factor = bhy.getScaling(sensor_id);
     bhy2_parse_xyz(data_ptr, &data);
     Serial.print(bhy.getSensorName(sensor_id));
-    Serial.print(":");
-    Serial.printf("x: %f, y: %f, z: %f;\r\n",
-                  data.x * scaling_factor,
-                  data.y * scaling_factor,
-                  data.z * scaling_factor);
+    Serial.print(" ");
+    Serial.print("x: ");
+    Serial.print(data.x * scaling_factor);
+    Serial.print(", y: ");
+    Serial.print(data.y * scaling_factor);
+    Serial.print(", z: ");
+    Serial.print(data.z * scaling_factor);
+    Serial.println(";");
 }
 #endif
 
@@ -153,7 +156,9 @@ void xyz_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, ui
 void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
 {
     float progress = (float)transferred / total * 100;
-    Serial.printf("Upload progress: %.2f%%\n", progress);
+    Serial.print("Upload progress: ");
+    Serial.print(progress);
+    Serial.println("%");
 }
 
 
@@ -210,7 +215,11 @@ void setup()
 
     // Output all sensors info to Serial
     BoschSensorInfo info = bhy.getSensorInfo();
+#ifdef PLATFORM_HAS_PRINTF
     info.printInfo(Serial);
+#else
+    info.printInfo();
+#endif
 
     float sample_rate = 100.0;      /* Read out data measured at 100Hz */
     uint32_t report_latency_ms = 0; /* Report immediately */
@@ -249,11 +258,34 @@ void loop()
         uint32_t s;
         uint32_t ns;
         accel.getLastTime(s, ns);
+
+#ifdef PLATFORM_HAS_PRINTF
         Serial.printf("[T: %" PRIu32 ".%09" PRIu32 "] AX:%+7.2f AY:%+7.2f AZ:%+7.2f GX:%+7.2f GY:%+7.2f GZ:%+7.2f \n",
                       s, ns, accel.getX(), accel.getY(), accel.getZ(),
                       gyro.getX(), gyro.getY(), gyro.getZ());
-    }
+
+#else
+        Serial.print("[T: ");
+        Serial.print(s);
+        Serial.print(".");
+        Serial.print(ns);
+        Serial.print("] AX:");
+        Serial.print(accel.getX(), 2);
+        Serial.print(" AY:");
+        Serial.print(accel.getY(), 2);
+        Serial.print(" AZ:");
+        Serial.print(accel.getZ(), 2);
+        Serial.print(" GX:");
+        Serial.print(gyro.getX(), 2);
+        Serial.print(" GY:");
+        Serial.print(gyro.getY(), 2);
+        Serial.print(" GZ:");
+        Serial.print(gyro.getZ(), 2);
+        Serial.println();
 #endif
+
+    }
+#endif  /*USING_DATA_HELPER*/
     delay(50);
 }
 

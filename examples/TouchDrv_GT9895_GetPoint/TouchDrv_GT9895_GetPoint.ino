@@ -75,7 +75,9 @@ void setup()
 
     // int i = 10;
     // while (i--) {
-    //     Serial.printf("Wake up after %d seconds\n", i);
+    //     Serial.print("Wake up after ");
+    //     Serial.print(i);
+    //     Serial.println(" seconds");
     //     delay(1000);
     // }
 

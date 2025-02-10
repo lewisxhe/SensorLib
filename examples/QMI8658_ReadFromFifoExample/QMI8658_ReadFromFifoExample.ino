@@ -281,7 +281,11 @@ void loop()
         return;
     }
 
-    Serial.printf("-------------[%lu]:data size:%u--------------\n", millis(), samples_num);
+    Serial.print("--------------[");
+    Serial.print(millis());
+    Serial.print("]:data size:");
+    Serial.print(samples_num);
+    Serial.println("--------------");
 
     for (int i = 0; i < buffer_size; ++i) {
 

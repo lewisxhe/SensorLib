@@ -88,7 +88,10 @@ void setup()
 
     int16_t  width = 0, height = 0;
     touch.getResolution(&width, &height);
-    Serial.printf("Display Width:%d Height:%d\n", width, height);
+    Serial.print("Display Width:");
+    Serial.print(width);
+    Serial.print(" Height:");
+    Serial.println(height);
 }
 
 

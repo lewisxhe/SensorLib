@@ -161,13 +161,13 @@ void loop()
     if (interruptFlag) {
         interruptFlag = false;
         uint8_t status =  qmi.getStatusRegister();
-        Serial.printf("status:0x%X BIN:", status);
-        Serial.println(status, BIN);
+        Serial.print("STATUS:"); Serial.print(status);
+        Serial.print(" BIN:"); Serial.println(status, BIN);
 
         if (status & SensorQMI8658::EVENT_SIGNIFICANT_MOTION) {
             Serial.println("EVENT_SIGNIFICANT_MOTION");
         } else  if (status & SensorQMI8658::EVENT_NO_MOTION) {
-            Serial.println("EVENT_NO_MOITON");
+            Serial.println("EVENT_NO_MOTION");
         } else  if (status & SensorQMI8658::EVENT_ANY_MOTION) {
             Serial.println("EVENT_ANY_MOTION");
         } else  if (status & SensorQMI8658::EVENT_PEDOMETER_MOTION) {

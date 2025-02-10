@@ -161,7 +161,9 @@ void dataReadyISR()
 void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
 {
     float progress = (float)transferred / total * 100;
-    Serial.printf("Upload progress: %.2f%%\n", progress);
+    Serial.print("Upload progress: ");
+    Serial.print(progress);
+    Serial.println("%");
 }
 
 /**
@@ -183,7 +185,11 @@ void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
  */
 void recognition_event_callback(uint8_t pattern_id, float count, void *user_data)
 {
-    Serial.printf("<-Recognition[Id:%d Count:%f]\n", pattern_id, count);
+    Serial.print("<-Recognition[Id:");
+    Serial.print(pattern_id);
+    Serial.print(" Count:");
+    Serial.print(count);
+    Serial.print("]");
 
     // When the recognition counter is greater than 10 times, reset the recognition counter
     if (count > 10) {
@@ -294,7 +300,11 @@ void setup()
 
     // Output all sensors info to Serial
     BoschSensorInfo info = bhy.getSensorInfo();
+#ifdef PLATFORM_HAS_PRINTF
     info.printInfo(Serial);
+#else
+    info.printInfo();
+#endif
 
     // Try to initialize the KLIO sensor.
     if (!klio.begin()) {

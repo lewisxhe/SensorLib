@@ -151,15 +151,21 @@ void parse_bme280_sensor_data(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len
 void sensor_event_callback(uint8_t event, uint8_t sensor_id, uint8_t data)
 {
     Serial.print("Sensor Event:");
+    const char  *sensorName = bhy.getSensorName(sensor_id);
     switch (event) {
     case BHY2_META_EVENT_SAMPLE_RATE_CHANGED:
-        Serial.printf("Sample rate changed for %s sensor\n", bhy.getSensorName(sensor_id));
+        Serial.print("Sample rate changed for ");
+        Serial.print(sensorName);
+        Serial.println(" sensor");
         break;
     case BHY2_META_EVENT_POWER_MODE_CHANGED:
-        Serial.printf("Power mode changed for %s sensor\n", bhy.getSensorName(sensor_id));
+        Serial.print("Power mode changed for ");
+        Serial.print(sensorName);
+        Serial.println(" sensor");
         break;
     default:
-        Serial.printf("Other event : %u\n", event);
+        Serial.print("Other event : ");
+        Serial.println(event);
         break;
     }
 }
@@ -168,7 +174,9 @@ void sensor_event_callback(uint8_t event, uint8_t sensor_id, uint8_t data)
 void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
 {
     float progress = (float)transferred / total * 100;
-    Serial.printf("Upload progress: %.2f%%\n", progress);
+    Serial.print("Upload progress: ");
+    Serial.print(progress);
+    Serial.println("%");
 }
 
 void setup()
@@ -234,7 +242,11 @@ void setup()
 
     // Output all sensors info to Serial
     BoschSensorInfo info = bhy.getSensorInfo();
+#ifdef PLATFORM_HAS_PRINTF
     info.printInfo(Serial);
+#else
+    info.printInfo();
+#endif
 
     initialiseCommander();
 
@@ -362,7 +374,6 @@ bool setGpioLevel(Commander &Cmdr)
     }
     uint8_t pin = values[0];
     uint8_t level = values[1];
-    // Serial.printf("Set GPIO : %u to %u\n", pin, level);
     bhy.digitalWrite(pin, level);
     return 0;
 }
@@ -384,7 +395,8 @@ bool getGpioLevel(Commander &Cmdr)
         pullup = values[1];
     }
     uint8_t level = bhy.digitalRead(pin, pullup);
-    Serial.printf("Get GPIO : %u level is %u\n", pin, level);
+    Serial.print("Get GPIO : "); Serial.print(pin);
+    Serial.print(" level is "); Serial.println(level);
     return 0;
 }
 
@@ -397,7 +409,6 @@ bool disGpioMode(Commander &Cmdr)
     }
     Cmdr.getInt(values[0]);
     uint8_t pin = values[0];
-    // Serial.printf("Disable GPIO : %u\n", pin);
     bhy.disableGpio(pin);
     return 0;
 }

@@ -58,7 +58,8 @@ void setup()
 void loop()
 {
     // 16 dimming levels
-    Serial.printf("level:%u\n", level);
+    Serial.print("level:");
+    Serial.println(level);
     ledDriver.setBrightness(level);
     level++;
     level %= MAX_BRIGHTNESS_STEPS;

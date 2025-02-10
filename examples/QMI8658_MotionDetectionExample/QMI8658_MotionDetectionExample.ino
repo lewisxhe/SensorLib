@@ -198,8 +198,8 @@ void loop()
     if (interruptFlag) {
         interruptFlag = false;
         uint8_t status =  qmi.getStatusRegister();
-        Serial.printf("status:0x%X BIN:", status);
-        Serial.println(status, BIN);
+        Serial.print("STATUS:"); Serial.print(status);
+        Serial.print(" BIN:"); Serial.println(status, BIN);
 
         if (status & SensorQMI8658::EVENT_SIGNIFICANT_MOTION) {
             Serial.println("Significant motion");

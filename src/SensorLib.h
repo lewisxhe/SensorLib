@@ -41,6 +41,10 @@
 #include "SensorLib_Version.h"
 #include "DevicesPins.h"
 
+#if !defined(ARDUINO_ARCH_MBED) && !defined(ARDUINO_ARCH_ZEPHYR)
+#define PLATFORM_HAS_PRINTF
+#endif
+
 #if defined(ARDUINO_ARCH_RP2040) && !defined(ARDUINO_ARCH_MBED)
 #define SPIClass SPIClassRP2040
 #endif

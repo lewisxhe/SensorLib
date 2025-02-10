@@ -137,7 +137,9 @@ void dataReadyISR()
 void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
 {
     float progress = (float)transferred / total * 100;
-    Serial.printf("Upload progress: %.2f%%\n", progress);
+    Serial.print("Upload progress: ");
+    Serial.print(progress);
+    Serial.println("%");
 }
 
 /**
@@ -229,8 +231,11 @@ void setup()
 
     // Output all sensors info to Serial
     BoschSensorInfo info = bhy.getSensorInfo();
+#ifdef PLATFORM_HAS_PRINTF
     info.printInfo(Serial);
-
+#else
+    info.printInfo();
+#endif
 
     /**
     * @brief Set the axis remapping for the sensor based on the specified orientation.

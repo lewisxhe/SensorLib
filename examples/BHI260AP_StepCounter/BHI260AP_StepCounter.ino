@@ -153,7 +153,9 @@ void step_counter_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32
 void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
 {
     float progress = (float)transferred / total * 100;
-    Serial.printf("Upload progress: %.2f%%\n", progress);
+    Serial.print("Upload progress: ");
+    Serial.print(progress);
+    Serial.println("%");
 }
 
 void setup()
@@ -211,7 +213,11 @@ void setup()
 
     // Output all sensors info to Serial
     BoschSensorInfo info = bhy.getSensorInfo();
+#ifdef PLATFORM_HAS_PRINTF
     info.printInfo(Serial);
+#else
+    info.printInfo();
+#endif
 
     // The stepcount sensor will only report when it changes, so the value is 0 ~ 1
     float sample_rate = 1.0;
@@ -251,13 +257,29 @@ void loop()
 #ifdef USING_DATA_HELPER
     if (stepCounter.hasUpdated()) {
         stepCounter.getLastTime(s, ns);
+#ifdef PLATFORM_HAS_PRINTF
         Serial.printf("[T: %" PRIu32 ".%09" PRIu32 "]: Step Count:", s, ns);
+#else
+        Serial.print("[T: ");
+        Serial.print(s);
+        Serial.print(".");
+        Serial.print(ns);
+        Serial.print("]: Step Count:");
+#endif
         Serial.println(stepCounter.getStepCount());
     }
     if (stepDetector.hasUpdated()) {
         if (stepDetector.isDetected()) {
             stepDetector.getLastTime(s, ns);
+#ifdef PLATFORM_HAS_PRINTF
             Serial.printf("[T: %" PRIu32 ".%09" PRIu32 "]:", s, ns);
+#else
+            Serial.print("[T: ");
+            Serial.print(s);
+            Serial.print(".");
+            Serial.print(ns);
+            Serial.print("]:");
+#endif
             Serial.println("Step detector detects steps");
         }
     }

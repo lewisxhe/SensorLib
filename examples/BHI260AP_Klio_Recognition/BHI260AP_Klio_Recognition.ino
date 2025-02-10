@@ -136,7 +136,9 @@ void dataReadyISR()
 void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
 {
     float progress = (float)transferred / total * 100;
-    Serial.printf("Upload progress: %.2f%%\n", progress);
+    Serial.print("Upload progress: ");
+    Serial.print(progress);
+    Serial.println("%");
 }
 
 void setup()
@@ -192,8 +194,11 @@ void setup()
 
     // Output all sensors info to Serial
     BoschSensorInfo info = bhy.getSensorInfo();
+#ifdef PLATFORM_HAS_PRINTF
     info.printInfo(Serial);
-
+#else
+    info.printInfo();
+#endif
 
     // Attempt to initialize the KLIO sensor.
     if (!klio.begin()) {
@@ -206,7 +211,8 @@ void setup()
     // Call the getMaxPatterns() method of the klio object to get the maximum number of patterns allowed by the KLIO sensor.
     // This method returns a value of type uint8_t representing the maximum number of patterns and stores it in the variable max_patterns.
     uint8_t max_patterns = klio.getMaxPatterns();
-    Serial.printf("Klio sensor max patterns:%u\n", max_patterns);
+    Serial.print("Klio sensor max patterns:");
+    Serial.println(max_patterns);
 
     // Set the callback function for the recognition event of the KLIO sensor.
     // The callback function takes a pattern ID, a count value, and a pointer to user data as parameters.
@@ -215,7 +221,11 @@ void setup()
     // The user data pointer setting can be set to nullptr, or custom data can be passed in.
     // If the recognition action is successful, the pointer is passed to the callback function
     klio.setRecognitionCallback([](uint8_t pattern_id, float count, void *user_data) {
-        Serial.printf("<-Recognition[Id:%d Count:%f]\n", pattern_id, count);
+        Serial.print("<-Recognition[Id:");
+        Serial.print(pattern_id);
+        Serial.print(" Count:");
+        Serial.print(count);
+        Serial.print("]");
     }, nullptr);
 
     // Try to write a pattern to the KLIO sensor.

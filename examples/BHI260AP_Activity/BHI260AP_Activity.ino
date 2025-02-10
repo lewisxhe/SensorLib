@@ -126,7 +126,9 @@ void dataReadyISR()
 void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
 {
     float progress = (float)transferred / total * 100;
-    Serial.printf("Upload progress: %.2f%%\n", progress);
+    Serial.print("Upload progress: ");
+    Serial.print(progress);
+    Serial.println("%");
 }
 
 void setup()
@@ -184,8 +186,11 @@ void setup()
 
     // Output all sensors info to Serial
     BoschSensorInfo info = bhy.getSensorInfo();
+#ifdef PLATFORM_HAS_PRINTF
     info.printInfo(Serial);
-
+#else
+    info.printInfo();
+#endif
 
     float sample_rate = 1.0;
     uint32_t report_latency_ms = 0;

@@ -257,7 +257,6 @@ void loop()
             posX -= roll * 2;
             posY += pitch;
 
-            Serial.printf("x:%.2f y:%.2f \n", posX, posY);
             posX = constrain(posX, 0, display.width() - rectWidth);
             posY = constrain(posY, 0, display.height() - rectWidth);
 

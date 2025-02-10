@@ -151,14 +151,16 @@ void setup()
         }
         int i = 5;
         while (i--) {
-            Serial.printf("Calibration failed, please leave the sensor alone and keep quiet! , Will try again in %d seconds", i);
+            Serial.print("Calibration failed, please leave the sensor alone and keep quiet! , Will try again in ");
+            Serial.print(i);
+            Serial.println(" seconds");
         }
     }
 
 
     // Save the calibration data to EEPROM or flash, and then write the calibration value directly to the next run
     // Here only print
-    Serial.printf("Calibration data ->");
+    Serial.print("Calibration data ->");
     Serial.print("Gyro-X gain : "); Serial.println(gX_gain);
     Serial.print("Gyro-Y gain : "); Serial.println(gY_gain);
     Serial.print("Gyro-Z gain : "); Serial.println(gZ_gain);

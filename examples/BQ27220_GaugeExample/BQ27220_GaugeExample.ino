@@ -90,35 +90,32 @@ void loop()
     uint16_t designCapacity = gauge.getDesignCapacity();                // mAh
 
 
-    Serial.printf("getAtRate:%u mA\n", rate);
-    Serial.printf("getAtRateTimeToEmpty:%u minutes\n", atRateTimeToEmpty);
-    Serial.printf("getTemperature:%.2f ℃\n", ntcTemperature);
-    Serial.printf("getBatteryVoltage:%u mV\n", batteryVoltage);
-    Serial.printf("getBatteryStatusRaw:%u \n", batteryStatusRaw);
-    Serial.printf("getInstantaneousCurrent:%u mAh\n", instantaneousCurrent);
-    Serial.printf("getRemainingCapacity:%u mAh\n", remainingCapacity);
-    Serial.printf("getFullChargeCapacity:%u mAh\n", fullChargeCapacity);
-    Serial.printf("getTimeToEmpty:%u minutes\n", time2Empty);
-    Serial.printf("getTimeToFull:%u minutes\n", time2Full);
-    Serial.printf("getStandbyCurrent:%u mA\n", standbyCurrent);
-
-
-    Serial.printf("getStandbyTimeToEmpty:%u minutes\n", standbyTimeToEmpty);
-    Serial.printf("getMaxLoadCurrent:%d mA\n", maxLoadCurrent);
-    Serial.printf("getMaxLoadTimeToEmpty:%u minute\n", maxLoadTimeToEmpty);
-    Serial.printf("getRawCoulombCount:%u mAh\n", coulombCountRaw);
-    Serial.printf("getAveragePower:%u mW\n", averagePower);
-    Serial.printf("getInternalTemperature:%.2f ℃\n", internalTemperature);
-    Serial.printf("getCycleCount:%u \n", cycleCount);
-
-    Serial.printf("getStateOfCharge:%u %%\n", stateOfCharge);
-    Serial.printf("getStateOfHealth:%u %%\n", stateOfHealth);
-    Serial.printf("getChargingVoltage:%u mV\n", chargingVoltage);
-    Serial.printf("getChargingCurrent:%u mA\n", chargingCurrent);
-    Serial.printf("getBTPDischargeSet:%u mAh\n", BTPDischargeSet);
-    Serial.printf("getBTPChargeSet:%u mAh\n", BTPChargeSet);
-    Serial.printf("getOperationStatusRaw:%u \n", operationStatusRaw);
-    Serial.printf("getDesignCapacity:%u mAh\n", designCapacity);
+    Serial.print("getAtRate:"); Serial.print(rate); Serial.println(" mA");
+    Serial.print("getAtRateTimeToEmpty:"); Serial.print(atRateTimeToEmpty); Serial.println(" minutes");
+    Serial.print("getTemperature:"); Serial.print(ntcTemperature, 2); Serial.println(" ℃");
+    Serial.print("getBatteryVoltage:"); Serial.print(batteryVoltage); Serial.println(" mV");
+    Serial.print("getBatteryStatusRaw:"); Serial.println(batteryStatusRaw);
+    Serial.print("getInstantaneousCurrent:"); Serial.print(instantaneousCurrent); Serial.println(" mAh");
+    Serial.print("getRemainingCapacity:"); Serial.print(remainingCapacity); Serial.println(" mAh");
+    Serial.print("getFullChargeCapacity:"); Serial.print(fullChargeCapacity); Serial.println(" mAh");
+    Serial.print("getTimeToEmpty:"); Serial.print(time2Empty); Serial.println(" minutes");
+    Serial.print("getTimeToFull:"); Serial.print(time2Full); Serial.println(" minutes");
+    Serial.print("getStandbyCurrent:"); Serial.print(standbyCurrent); Serial.println(" mA");
+    Serial.print("getStandbyTimeToEmpty:"); Serial.print(standbyTimeToEmpty); Serial.println(" minutes");
+    Serial.print("getMaxLoadCurrent:"); Serial.print(maxLoadCurrent); Serial.println(" mA");
+    Serial.print("getMaxLoadTimeToEmpty:"); Serial.print(maxLoadTimeToEmpty); Serial.println(" minute");
+    Serial.print("getRawCoulombCount:"); Serial.print(coulombCountRaw); Serial.println(" mAh");
+    Serial.print("getAveragePower:"); Serial.print(averagePower); Serial.println(" mW");
+    Serial.print("getInternalTemperature:"); Serial.print(internalTemperature, 2); Serial.println(" ℃");
+    Serial.print("getCycleCount:"); Serial.println(cycleCount);
+    Serial.print("getStateOfCharge:"); Serial.print(stateOfCharge); Serial.println(" %");
+    Serial.print("getStateOfHealth:"); Serial.print(stateOfHealth); Serial.println(" %");
+    Serial.print("getChargingVoltage:"); Serial.print(chargingVoltage); Serial.println(" mV");
+    Serial.print("getChargingCurrent:"); Serial.print(chargingCurrent); Serial.println(" mA");
+    Serial.print("getBTPDischargeSet:"); Serial.print(BTPDischargeSet); Serial.println(" mAh");
+    Serial.print("getBTPChargeSet:"); Serial.print(BTPChargeSet); Serial.println(" mAh");
+    Serial.print("getOperationStatusRaw:"); Serial.println(operationStatusRaw);
+    Serial.print("getDesignCapacity:"); Serial.print(designCapacity); Serial.println(" mAh");
 
     BatteryStatus_t s = gauge.getBatteryStatus();
 

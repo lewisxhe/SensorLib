@@ -86,7 +86,7 @@ void setup()
 
     // uint8_t touchAddress = 0x1A;        // Other device addresses are determined by the touch firmware and are generally 0X5A by default.
     uint8_t touchAddress = 0x5A;     // The device address is determined according to the actual situation. Not all device addresses are 0X5A. There can also be other customized device addresses.
-    
+
 
     // Set to skip register check, used when the touch device address conflicts with other I2C device addresses [0x5A]
     // touch.jumpCheck();
@@ -111,11 +111,14 @@ void setup()
     // CST9217 sleep current = 3.4 uA
     touch.sleep();
 
-    int i = 10;
-    while (i--) {
-        Serial.printf("Wake up after %d seconds\n", i);
-        delay(1000);
-    }
+    // int i = 10;
+    // while (i--) {
+    //     Serial.print("Wake up after ");
+    //     Serial.print(i);
+    //     Serial.println(" seconds");
+    //     delay(1000);
+    // }
+
 
     // Wakeup touch
     touch.reset();

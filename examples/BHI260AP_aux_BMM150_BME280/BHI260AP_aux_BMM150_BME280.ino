@@ -165,8 +165,27 @@ void parse_bme280_sensor_data(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len
 void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
 {
     float progress = (float)transferred / total * 100;
-    Serial.printf("Upload progress: %.2f%%\n", progress);
+    Serial.print("Upload progress: ");
+    Serial.print(progress);
+    Serial.println("%");
 }
+
+void printResult(uint8_t sensor_id, float sample_rate, bool rlst)
+{
+    const char  *sensorName = bhy.getSensorName(sensor_id);
+    Serial.print("Configure ");
+    Serial.print(sensorName);
+    Serial.print(" sensor ");
+    Serial.print(sample_rate, 2);
+    Serial.print(" HZ ");
+    if (rlst) {
+        Serial.print("successfully");
+    } else {
+        Serial.print("failed");
+    }
+    Serial.println();
+}
+
 
 void setup()
 {
@@ -221,7 +240,11 @@ void setup()
 
     // Output all sensors info to Serial
     BoschSensorInfo info = bhy.getSensorInfo();
+#ifdef PLATFORM_HAS_PRINTF
     info.printInfo(Serial);
+#else
+    info.printInfo();
+#endif
 
     /*
     * Enable monitoring.
@@ -243,11 +266,11 @@ void setup()
 #else
     bool rlst = false;
     rlst = bhy.configure(SensorBHI260AP::TEMPERATURE, sample_rate, report_latency_ms);
-    Serial.printf("Configure temperature sensor %.2f HZ %s\n", sample_rate, rlst ? "successfully" : "failed");
+    printResult(SensorBHI260AP::TEMPERATURE, sample_rate, rlst);
     rlst = bhy.configure(SensorBHI260AP::BAROMETER, sample_rate, report_latency_ms);
-    Serial.printf("Configure pressure sensor %.2f HZ %s\n", sample_rate,  rlst ? "successfully" : "failed");
+    printResult(SensorBHI260AP::BAROMETER, sample_rate, rlst);
     rlst = bhy.configure(SensorBHI260AP::HUMIDITY, sample_rate, report_latency_ms);
-    Serial.printf("Configure humidity sensor %.2f HZ %s\n", sample_rate,  rlst ? "successfully" : "failed");
+    printResult(SensorBHI260AP::HUMIDITY, sample_rate, rlst);
     // Register BME280 data parse callback function
     Serial.println("Register sensor result callback function");
     bhy.onResultEvent(SensorBHI260AP::TEMPERATURE, parse_bme280_sensor_data);
@@ -274,21 +297,56 @@ void loop()
 #ifdef USING_DATA_HELPER
     if (temperature.hasUpdated()) {
         temperature.getLastTime(s, ns);
+#ifdef PLATFORM_HAS_PRINTF
         Serial.printf("[T: %" PRIu32 ".%09" PRIu32 "] ", s, ns);
         Serial.printf("Temperature: %.2f *C %.2f *F %.2f K\n",
                       temperature.getCelsius(), temperature.getFahrenheit(), temperature.getKelvin());
+#else
+        Serial.print("[T: ");
+        Serial.print(s);
+        Serial.print(".");
+        Serial.print(ns);
+        Serial.print("]:");
+        Serial.print("Temperature: ");
+        Serial.print(temperature.getCelsius()); Serial.print(" *C");
+        Serial.print(temperature.getFahrenheit()); Serial.print(" *F");
+        Serial.print(temperature.getKelvin()); Serial.print(" *F");
+        Serial.println();
+#endif
     }
 
     if (humidity.hasUpdated()) {
         humidity.getLastTime(s, ns);
+#ifdef PLATFORM_HAS_PRINTF
         Serial.printf("[T: %" PRIu32 ".%09" PRIu32 "] ", s, ns);
         Serial.printf("Humidity: %.2f %%\n", humidity.getHumidity());
+#else
+        Serial.print("[T: ");
+        Serial.print(s);
+        Serial.print(".");
+        Serial.print(ns);
+        Serial.print("]:");
+        Serial.print("Humidity: ");
+        Serial.print(humidity.getHumidity()); Serial.print(" %");
+        Serial.println();
+#endif
     }
 
     if (pressure.hasUpdated()) {
         pressure.getLastTime(s, ns);
+#ifdef PLATFORM_HAS_PRINTF
         Serial.printf("[T: %" PRIu32 ".%09" PRIu32 "] ", s, ns);
         Serial.printf("Pressure: %.2f Pascal\n", pressure.getPressure());
+#else
+        Serial.print("[T: ");
+        Serial.print(s);
+        Serial.print(".");
+        Serial.print(ns);
+        Serial.print("]:");
+        Serial.print("Humidity: ");
+        Serial.print(pressure.getPressure()); Serial.print(" Pascal");
+        Serial.println();
+#endif
     }
 #endif
     delay(50);

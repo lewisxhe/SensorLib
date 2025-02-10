@@ -78,12 +78,12 @@ void loop()
     if (millis() - intervalue > 1000) {
         intervalue = millis();
         RTC_DateTime datetime = rtc.getDateTime();
-        Serial.printf(" Year :"); Serial.print(datetime.year);
-        Serial.printf(" Month:"); Serial.print(datetime.month);
-        Serial.printf(" Day :"); Serial.print(datetime.day);
-        Serial.printf(" Hour:"); Serial.print(datetime.hour);
-        Serial.printf(" Minute:"); Serial.print(datetime.minute);
-        Serial.printf(" Sec :"); Serial.println(datetime.second);
+        Serial.print(" Year :"); Serial.print(datetime.year);
+        Serial.print(" Month:"); Serial.print(datetime.month);
+        Serial.print(" Day :"); Serial.print(datetime.day);
+        Serial.print(" Hour:"); Serial.print(datetime.hour);
+        Serial.print(" Minute:"); Serial.print(datetime.minute);
+        Serial.print(" Sec :"); Serial.println(datetime.second);
 
     }
 }

@@ -113,7 +113,8 @@ void setup()
     configTzTime(time_zone, ntpServer1, ntpServer2);
 
     //connect to WiFi
-    Serial.printf("Connecting to %s ", ssid);
+    Serial.print("Connecting to ");
+    Serial.println(ssid);
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);

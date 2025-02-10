@@ -158,7 +158,9 @@ void parse_quaternion(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64
 void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
 {
     float progress = (float)transferred / total * 100;
-    Serial.printf("Upload progress: %.2f%%\n", progress);
+    Serial.print("Upload progress: ");
+    Serial.print(progress);
+    Serial.println("%");
 }
 
 void setup()
@@ -214,7 +216,11 @@ void setup()
 
     // Output all sensors info to Serial
     BoschSensorInfo info = bhy.getSensorInfo();
+#ifdef PLATFORM_HAS_PRINTF
     info.printInfo(Serial);
+#else
+    info.printInfo();
+#endif
 
     float sample_rate = 100.0;      /* Read out data measured at 100Hz */
     uint32_t report_latency_ms = 0; /* Report immediately */
@@ -250,8 +256,25 @@ void loop()
         uint32_t s;
         uint32_t ns;
         quaternion.getLastTime(s, ns);
+#ifdef PLATFORM_HAS_PRINTF
         Serial.printf("[T: %" PRIu32 ".%09" PRIu32 "] QX:%+7.2f QY:%+7.2f QZ:%+7.2f QW:%+7.2f\n",
                       s, ns, quaternion.getX(), quaternion.getY(), quaternion.getZ(), quaternion.getW());
+#else
+        Serial.print("[T: ");
+        Serial.print(s);
+        Serial.print(".");
+        Serial.print(ns);
+        Serial.print("] ");
+        Serial.print("QX:");
+        Serial.print(quaternion.getX(), 2);
+        Serial.print(" QY:");
+        Serial.print(quaternion.getY(), 2);
+        Serial.print(" QZ:");
+        Serial.print(quaternion.getZ(), 2);
+        Serial.print(" QW:");
+        Serial.print(quaternion.getW(), 2);
+        Serial.println();
+#endif
     }
 #endif
     delay(50);

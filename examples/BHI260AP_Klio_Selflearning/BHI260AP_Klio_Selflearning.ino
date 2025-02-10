@@ -109,7 +109,9 @@ void dataReadyISR()
 void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
 {
     float progress = (float)transferred / total * 100;
-    Serial.printf("Upload progress: %.2f%%\n", progress);
+    Serial.print("Upload progress: ");
+    Serial.print(progress);
+    Serial.println("%");
 }
 
 /**
@@ -133,7 +135,11 @@ void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
  */
 void recognition_event_callback(uint8_t pattern_id, float count, void *user_data)
 {
-    Serial.printf("<-Recognition[Id:%d Count:%f]\n", pattern_id, count);
+    Serial.print("<-Recognition[Id:");
+    Serial.print(pattern_id);
+    Serial.print(" Count:");
+    Serial.print(count);
+    Serial.print("]");
 }
 
 /**
@@ -155,7 +161,13 @@ void recognition_event_callback(uint8_t pattern_id, float count, void *user_data
 void learning_event_callback(SensorBHI260AP_Klio::LeaningChangeReason reason, uint32_t progress, int learn_index, void *user_data)
 {
     // Print the learning event details to the serial monitor, including the progress, reason, and learned pattern index.
-    Serial.printf("->Learning [Progress:%u Reason:%u ID:%d]\n", progress, static_cast<uint8_t>(reason), learn_index);
+    Serial.print("->Learning [Progress:");
+    Serial.print(progress);
+    Serial.print(" Reason:");
+    Serial.print(static_cast<uint8_t>(reason));
+    Serial.print(" ID:");
+    Serial.print(learn_index);
+    Serial.println("]");
 
     // Check if the learning index is valid (not equal to INVALID_LEARNING_INDEX).
     if (learn_index != SensorBHI260AP_Klio::INVALID_LEARNING_INDEX) {
@@ -173,22 +185,22 @@ void learning_event_callback(SensorBHI260AP_Klio::LeaningChangeReason reason, ui
             Serial.println(klio.errorToString());
         } else {
             // If the retrieval is successful, print a success message and the details of the learned pattern.
-            Serial.printf("Learning the action successfully\n");
-            Serial.printf("PATTERN LEARNT: \n");
-            Serial.print("const uint8_t * learn_pattern = { \n");
+            Serial.println("Learning the action successfully");
+            Serial.println("PATTERN LEARNT: ");
+            Serial.print("const uint8_t * learn_pattern = { ");
             // Iterate through the buffer and print the pattern data in hexadecimal format.
             for (uint16_t i = 0; i < bufsize; i++) {
                 if (i > 0 && i % 8 == 0) {
                     // Print a new line every 8 bytes for better readability.
-                    Serial.printf("\n");
+                    Serial.println();
                 }
-                Serial.printf("0x%02x", tmp_buf[i]);
+                Serial.print("0x"); Serial.print(tmp_buf[i], HEX);
                 if (i < bufsize - 1) {
                     // Add a comma and a space after each byte except the last one.
-                    Serial.printf(", ");
+                    Serial.print(", ");
                 }
             }
-            Serial.printf(" \n};\n");
+            Serial.println(" \n};\n");
         }
         // Print a message indicating that the learned pattern will be written.
         Serial.println("Write the learning pattern.");
@@ -260,8 +272,11 @@ void setup()
 
     // Output all sensors info to Serial
     BoschSensorInfo info = bhy.getSensorInfo();
+#ifdef PLATFORM_HAS_PRINTF
     info.printInfo(Serial);
-
+#else
+    info.printInfo();
+#endif
 
     // Try to initialize the KLIO sensor.
     // The begin() method is called on the 'klio' object to set up the sensor.
@@ -275,7 +290,8 @@ void setup()
     // Call the getMaxPatterns() method of the klio object to get the maximum number of patterns allowed by the KLIO sensor.
     // This method returns a value of type uint8_t representing the maximum number of patterns and stores it in the variable max_patterns.
     uint8_t max_patterns = klio.getMaxPatterns();
-    Serial.printf("Klio sensor max patterns:%u\n", max_patterns);
+    Serial.print("Klio sensor max patterns:");
+    Serial.println(max_patterns);
 
     // Set the callback function for learning events.
     // The setLearningCallback() method is used to register a function that will be called

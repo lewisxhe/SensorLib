@@ -102,7 +102,8 @@ bool setupTouchDrv()
     result = touchDrv->begin(Wire, CST816_SLAVE_ADDRESS, TOUCH_SDA, TOUCH_SCL);
     if (result) {
         const char *model = touchDrv->getModelName();
-        Serial.printf("Successfully initialized %s, using %s Driver!\n", model, model);
+        Serial.print("Successfully initialized "); Serial.print(model);
+        Serial.print(",using "); Serial.print(model); Serial.println(" Driver!");
         return true;
     }
     delete touchDrv;
@@ -113,7 +114,8 @@ bool setupTouchDrv()
     result = touchDrv->begin(Wire, GT911_SLAVE_ADDRESS_L, TOUCH_SDA, TOUCH_SCL);
     if (result) {
         const char *model = touchDrv->getModelName();
-        Serial.printf("Successfully initialized %s, using %s Driver!\n", model, model);
+        Serial.print("Successfully initialized "); Serial.print(model);
+        Serial.print(",using "); Serial.print(model); Serial.println(" Driver!");
         return true;
     }
     delete touchDrv;
@@ -126,7 +128,8 @@ bool setupTouchDrv()
         TouchDrvFT6X36 *tmp = static_cast<TouchDrvFT6X36 *>(touchDrv);
         tmp->interruptTrigger();
         const char *model = touchDrv->getModelName();
-        Serial.printf("Successfully initialized %s, using %s Driver!\n", model, model);
+        Serial.print("Successfully initialized "); Serial.print(model);
+        Serial.print(",using "); Serial.print(model); Serial.println(" Driver!");
         return true;
     }
     delete touchDrv;

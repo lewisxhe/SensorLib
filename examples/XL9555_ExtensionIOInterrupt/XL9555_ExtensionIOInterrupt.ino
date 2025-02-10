@@ -140,7 +140,9 @@ void loop()
         int i = 15;
         for (; i >= 0; i--) {
             if (!(all_val & 1)) {
-                Serial.printf("GPIO %d is low\n", 15 - i);
+                Serial.print("GPIO: ");
+                Serial.print(15 - i);
+                Serial.println(" is low");
             }
             all_val >>= 1;
         }
