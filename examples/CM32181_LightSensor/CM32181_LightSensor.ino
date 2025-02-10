@@ -89,7 +89,6 @@ void loop()
     // Get conversion data , The manual does not provide information on how to obtain the
     //  calibration value, now use the calibration value 0.28 provided by the manual
     float lux = light.getLux();
-    Serial.print(" IRQ:"); Serial.print(pinVal);
     Serial.print(" RAW:"); Serial.print(raw);
     Serial.print(" Lux:"); Serial.println(lux);
     delay(500);
