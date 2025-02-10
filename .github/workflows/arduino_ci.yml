@@ -8,109 +8,120 @@ on:
       - "src/**"
       - "examples/**"
       - ".github/workflows/arduino_ci.yml"
+      
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
+  ArduinoLint:
+    name: ${{ matrix.board.fqbn }}
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
-        board: ["esp32:esp32:esp32s3"]
-        examples:
-        - examples/AW9364_LedDriver/AW9364_LedDriver.ino
-        - examples/BHI260AP_6DoF/BHI260AP_6DoF.ino
-        - examples/BHI260AP_aux_BMM150/BHI260AP_aux_BMM150.ino
-        - examples/BHI260AP_aux_BMM150_BME280/BHI260AP_aux_BMM150_BME280.ino
-        - examples/BHI260AP_aux_BMM150_BME280_Expand_GPIO/BHI260AP_aux_BMM150_BME280_Expand_GPIO.ino
-        - examples/BHI260AP_aux_BMM150_euler/BHI260AP_aux_BMM150_euler.ino
-        - examples/BHI260AP_aux_BMM150_quaternion/BHI260AP_aux_BMM150_quaternion.ino
-        - examples/BHI260AP_Expand_GPIO/BHI260AP_Expand_GPIO.ino
-        - examples/BHI260AP_Orientation/BHI260AP_Orientation.ino
-        - examples/BHI260AP_StepCounter/BHI260AP_StepCounter.ino
-        - examples/BHI260AP_UpdateFirmware/BHI260AP_UpdateFirmware.ino
-        - examples/BHI260AP_Klio_Recognition/BHI260AP_Klio_Recognition.ino
-        - examples/BHI260AP_Klio_RecognizeMultiple/BHI260AP_Klio_RecognizeMultiple.ino
-        - examples/BHI260AP_Klio_Selflearning/BHI260AP_Klio_Selflearning.ino
-        - examples/BHI260AP_Activity/BHI260AP_Activity.ino
-        - examples/BHI260AP_Euler/BHI260AP_Euler.ino
-        - examples/BMA423_Accelerometer/BMA423_Accelerometer.ino
-        - examples/BMA423_Feature/BMA423_Feature.ino
-        - examples/BMA423_Orientation/BMA423_Orientation.ino
-        - examples/BMA423_Temperature/BMA423_Temperature.ino
-        - examples/BMM150_GetDataExample/BMM150_GetDataExample.ino
-        - examples/CM32181_LightSensor/CM32181_LightSensor.ino
-        - examples/CM32181_LightSensorInterrupt/CM32181_LightSensorInterrupt.ino
-        - examples/CustomCallbackTouchDrvInterface/CustomCallbackTouchDrvInterface.ino
-        - examples/CustomCallbackUsageExamples/CustomCallbackUsageExamples.ino
-        - examples/DRV2605_Basic/DRV2605_Basic.ino
-        - examples/BQ27220_GaugeExample/BQ27220_GaugeExample.ino
-        - examples/LTR553ALS_Sensor/LTR553ALS_Sensor.ino
-        - examples/PCF85063_AlarmByUnits/PCF85063_AlarmByUnits.ino
-        - examples/PCF85063_ClockOutput/PCF85063_ClockOutput.ino
-        - examples/PCF85063_SimpleTime/PCF85063_SimpleTime.ino
-        - examples/PCF8563_AlarmByUnits/PCF8563_AlarmByUnits.ino
-        - examples/PCF8563_ClockOutput/PCF8563_ClockOutput.ino
-        - examples/PCF8563_SimpleTime/PCF8563_SimpleTime.ino
-        - examples/PCF8563_TimeLib/PCF8563_TimeLib.ino
-        - examples/PCF8563_TimeSynchronization/PCF8563_TimeSynchronization.ino
-        - examples/QMC6310_CalibrateExample/QMC6310_CalibrateExample.ino
-        - examples/QMC6310_CompassExample/QMC6310_CompassExample.ino
-        - examples/QMC6310_GetDataExample/QMC6310_GetDataExample.ino
-        - examples/QMC6310_GetPolarExample/QMC6310_GetPolarExample.ino
-        - examples/QMI8658_BlockExample/QMI8658_BlockExample.ino
-        - examples/QMI8658_CalibrationExample/QMI8658_CalibrationExample.ino
-        - examples/QMI8658_GetDataExample/QMI8658_GetDataExample.ino
-        - examples/QMI8658_InterruptBlockExample/QMI8658_InterruptBlockExample.ino
-        - examples/QMI8658_InterruptExample/QMI8658_InterruptExample.ino
-        - examples/QMI8658_LockingMechanismExample/QMI8658_LockingMechanismExample.ino
-        - examples/QMI8658_MadgwickAHRS/QMI8658_MadgwickAHRS.ino
-        - examples/QMI8658_MotionDetectionExample/QMI8658_MotionDetectionExample.ino
-        - examples/QMI8658_PedometerExample/QMI8658_PedometerExample.ino
-        - examples/QMI8658_ReadFromFifoExample/QMI8658_ReadFromFifoExample.ino
-        - examples/QMI8658_TapDetectionExample/QMI8658_TapDetectionExample.ino
-        - examples/QMI8658_WakeOnMotion/QMI8658_WakeOnMotion.ino
-        - examples/QMI8658_WakeOnMotionCallBackExample/QMI8658_WakeOnMotionCallBackExample.ino
-        - examples/SensorWireHelper/SensorWireHelper.ino
-        - examples/TouchDrvInterface_Example/TouchDrvInterface_Example.ino
-        - examples/TouchDrv_CHSC5816_GetPoint/TouchDrv_CHSC5816_GetPoint.ino
-        - examples/TouchDrv_CST9217_GetPoint/TouchDrv_CST9217_GetPoint.ino
-        - examples/TouchDrv_CSTxxx_GetPoint/TouchDrv_CSTxxx_GetPoint.ino
-        - examples/TouchDrv_FT6232_GetPoint/TouchDrv_FT6232_GetPoint.ino
-        - examples/TouchDrv_GT911_GetPoint/TouchDrv_GT911_GetPoint.ino
-        - examples/TouchDrv_GT9895_GetPoint/TouchDrv_GT9895_GetPoint.ino
-        - examples/XL9555_AdjustBacklight/XL9555_AdjustBacklight.ino
-        - examples/XL9555_ExtensionIOInterrupt/XL9555_ExtensionIOInterrupt.ino
-        - examples/XL9555_ExtensionIORead/XL9555_ExtensionIORead.ino
-        - examples/XL9555_ExtensionIOWrite/XL9555_ExtensionIOWrite.ino
-        - examples/XL9555_ioEvent/XL9555_ioEvent.ino
-    env:
-      BOARD: ${{ matrix.board }}
-      EXAMPLES: ${{matrix.examples}}
+        board:
+          - fqbn: esp32:esp32:esp32s3
+            platform: esp32:esp32
+            url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
+          - fqbn: rp2040:rp2040:rpipico
+            platform: rp2040:rp2040
+            url: https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json
+          - fqbn: adafruit:nrf52:pca10056
+            platform: adafruit:nrf52
+            url: https://adafruit.github.io/arduino-board-index/package_adafruit_index.json
+          - fqbn: STMicroelectronics:stm32:GenF4
+            platform: stmicroelectronics:stm32
+            url: https://github.com/stm32duino/BoardManagerFiles/raw/main/package_stmicroelectronics_index.json
+          - fqbn: arduino:mbed_rp2040:pico
+            platform: arduino:mbed_rp2040
+        include:
+          - example_file: examples.txt
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Install Arduino Ci
+      - name: Install Arduino CLI
         run: |
-          if [[ "$BOARD" =~ "esp32:esp32:" ]]; then
-            wget https://downloads.arduino.cc/arduino-cli/arduino-cli_latest_Linux_64bit.tar.gz -O arduino-cli.tar.gz ;
-            sudo tar xf arduino-cli.tar.gz -C /usr/local/bin arduino-cli ;
-            arduino-cli config init ;
-            arduino-cli config add board_manager.additional_urls https://espressif.github.io/arduino-esp32/package_esp32_index.json ;
-            arduino-cli core update-index ;
-            arduino-cli core install esp32:esp32 ;
+          echo "Installing Arduino CLI..."
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+          if [ $? -ne 0 ]; then
+            echo "Failed to install Arduino CLI."
+            exit 1
+          fi
+          echo "./bin" >> $GITHUB_PATH
+          echo "Arduino CLI installed successfully."
+
+      - name: Install board
+        run: |
+          echo "Initializing Arduino CLI configuration..."
+          arduino-cli config init
+          arduino-cli config set library.enable_unsafe_install true
+          if [ -n "${{ matrix.board.url }}" ]; then
+            echo "Adding additional board manager URL: ${{ matrix.board.url }}"
+            arduino-cli config add board_manager.additional_urls ${{ matrix.board.url }}
+          fi
+          echo "Updating board index..."
+          arduino-cli core update-index
+          if [ $? -ne 0 ]; then
+            echo "Failed to update board index."
+            exit 1
+          fi
+          echo "Installing board platform: ${{ matrix.board.platform }}"
+          arduino-cli core install ${{ matrix.board.platform }}
+          if [ $? -ne 0 ]; then
+            echo "Failed to install board platform."
+            exit 1
+          fi
+          echo "Board platform installed successfully."
+
+      - name: Install libraries
+        run: |
+          echo "Installing required libraries..."
+          arduino-cli lib install --git-url https://github.com/ThingPulse/esp8266-oled-ssd1306.git
+          arduino-cli lib install --git-url https://github.com/arduino-libraries/MadgwickAHRS.git
+          arduino-cli lib install --git-url https://github.com/CreativeRobotics/Commander.git
+          arduino-cli lib install --git-url https://github.com/adafruit/SdFat.git
+          if [ $? -ne 0 ]; then
+            echo "Failed to install libraries."
+            exit 1
+          fi
+          echo "Libraries installed successfully."
+
+      - name: Install adafruit-nrfutil
+        if: matrix.board.platform == 'adafruit:nrf52'
+        run: |
+          pip install adafruit-nrfutil
+          if [ $? -ne 0 ]; then
+            echo "Failed to install adafruit-nrfutil."
+            exit 1
+          fi
+          echo "adafruit-nrfutil installed successfully."
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Find .ino files in examples directory
+        id: find-examples
+        run: |
+          echo "Current working directory: $(pwd)"
+          if [ -d "./examples" ]; then
+            examples=$(find ./examples -name "*.ino" -print0 | tr '\0' ' ')
+            echo "Found examples: $examples"
+            echo "examples=$examples" >> $GITHUB_OUTPUT
+          else
+            echo "The './examples' directory does not exist."
+            exit 1
+          fi
+
+      - name: Run test
+        run: |
+          for example in ${{ steps.find-examples.outputs.examples }}; do
+            echo "Compiling example: $example"
+            arduino-cli compile --library . -b ${{ matrix.board.fqbn }} $example
+            if [ $? -ne 0 ]; then
+              echo "Compilation failed for example: $example"
+              exit 1
             fi
-
-      - name: Build examples
-        run: |
-          mkdir -p $HOME/Arduino/libraries ;
-          cd $HOME/Arduino/libraries ;
-          git clone https://github.com/ThingPulse/esp8266-oled-ssd1306 ;
-          git clone https://github.com/arduino-libraries/MadgwickAHRS ;
-          git clone https://github.com/CreativeRobotics/Commander ;
-          git clone https://github.com/adafruit/SdFat.git ;
-
-          cd $GITHUB_WORKSPACE ;
-          if [[ "$BOARD" =~ "esp32:esp32:"        ]]; then
-            arduino-cli compile -besp32:esp32:esp32s3 --library . $PWD/$EXAMPLES ;
-          fi ;
+            echo "Compilation succeeded for example: $example"
+          done
