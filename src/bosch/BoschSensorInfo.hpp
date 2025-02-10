@@ -149,7 +149,7 @@ public:
         return *this;
     }
 
-#if defined(ARDUINO) && !defined(__MBED__)
+#if defined(ARDUINO) && !defined(ARDUINO_ARCH_MBED) && !defined(ARDUINO_ARCH_ZEPHYR)
     void printVirtualSensorList(Stream &stream)
     {
         if (!dev) {

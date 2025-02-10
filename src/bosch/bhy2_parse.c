@@ -96,10 +96,6 @@ uint32_t bhy2_parse_step_counter(const uint8_t *data)
     return (uint32_t)(data[0] | ((uint32_t)data[1] << 8) | ((uint32_t)data[2] << 16) | ((uint32_t)data[3] << 24));
 }
 
-#ifndef M_PI
-#define M_PI        3.14159265358979323846
-#endif
-
 void bhy2_quaternion_to_euler(const uint8_t *data, float *roll, float *pitch, float *yaw)
 {
     float w,  x,  y,  z;

@@ -62,7 +62,7 @@ public:
         memset(orientation_matrix, 0, sizeof(orientation_matrix));
     }
 
-#if defined(ARDUINO) && !defined(__MBED__)
+#if defined(ARDUINO) && !defined(ARDUINO_ARCH_MBED) && !defined(ARDUINO_ARCH_ZEPHYR)
     void print(Stream &stream)
     {
         const char *irq_status_str[2] = { "Disabled", "Enabled" };

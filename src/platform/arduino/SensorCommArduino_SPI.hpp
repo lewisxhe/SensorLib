@@ -39,7 +39,7 @@
 #define  writeBytes(txBuf,size) spi.transfer(txBuf,nullptr,size)
 #elif defined(ARDUINO_ARCH_NRF52)
 #define  writeBytes(txBuf,size) spi.transfer(txBuf,nullptr,size)
-#elif defined(ARDUINO_ARCH_MBED)
+#elif defined(ARDUINO_ARCH_MBED) || defined(ARDUINO_ARCH_ZEPHYR)
 #define  writeBytes(txBuf,size) spi.transfer((void*)txBuf,size)
 #else
 #define  writeBytes(txBuf,size) spi.writeBytes(txBuf,size)

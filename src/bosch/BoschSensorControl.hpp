@@ -51,7 +51,7 @@ public:
         debuggingEnabled(true), faultEnabled(true), interruptIsActiveLow(false),
         interruptIsPulseTriggered(false), interruptPinDriveIsOpenDrain(false) {}
 
-#if defined(ARDUINO) && !defined(__MBED__)
+#if defined(ARDUINO) && !defined(ARDUINO_ARCH_MBED) && !defined(ARDUINO_ARCH_ZEPHYR)
     void print(Stream &stream)
     {
         stream.printf("Host interrupt control\n");

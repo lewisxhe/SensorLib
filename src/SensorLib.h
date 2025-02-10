@@ -85,7 +85,7 @@
 #define ATTR_NOT_IMPLEMENTED            __attribute__((error("Not implemented")))
 
 
-#if !defined(ARDUINO_ARCH_ESP32) && defined(LOG_PORT) && defined(ARDUINO) && !defined(__MBED__)
+#if !defined(ARDUINO_ARCH_ESP32) && defined(LOG_PORT) && defined(ARDUINO) && !defined(ARDUINO_ARCH_MBED) && !defined(ARDUINO_ARCH_ZEPHYR)
 
 #define LOG_FILE_LINE_INFO __FILE__, __LINE__
 
@@ -101,7 +101,7 @@
 #define log_d(fmt, ...)                 LOG_PORT.printf("[D][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
 #endif  /*log_d*/
 
-#elif defined(__MBED__)
+#elif defined(ARDUINO_ARCH_MBED) || defined(ARDUINO_ARCH_ZEPHYR)
 
 #define LOG_FILE_LINE_INFO __FILE__, __LINE__
 

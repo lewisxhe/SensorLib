@@ -41,7 +41,7 @@ public:
         if (modeCallback) {
             modeCallback(pin, mode);
         } else {
-#if defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_MBED)
+#if defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_MBED) || defined(ARDUINO_ARCH_ZEPHYR)
             ::pinMode(pin, static_cast<PinMode>(mode));
 #else
             ::pinMode(pin, mode);
@@ -54,7 +54,7 @@ public:
         if (writeCallback) {
             writeCallback(pin, level);
         } else {
-#if defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_MBED)
+#if defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_MBED) || defined(ARDUINO_ARCH_ZEPHYR)
             ::digitalWrite(pin, static_cast<PinStatus>(level));
 #else
             ::digitalWrite(pin, level);
