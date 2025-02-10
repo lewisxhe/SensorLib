@@ -128,7 +128,23 @@ bool dumpReg(Commander &Cmdr)
     reg = toInt(reg_str);
     request_read_len = toInt(request_read_len_str);
 
-    SerialMon.printf("Reg : 0x%02X - start:0x%02X end:0x%02X\n", dev_address, reg, request_read_len);
+    SerialMon.print("Reg : 0x");
+    if (dev_address < 16) {
+        SerialMon.print("0");
+    }
+    SerialMon.print(dev_address, HEX);
+    SerialMon.print(" - start:0x");
+    if (reg < 16) {
+        SerialMon.print("0");
+    }
+    SerialMon.print(reg, HEX);
+    SerialMon.print(" end:0x");
+    if (request_read_len < 16) {
+        SerialMon.print("0");
+    }
+    SerialMon.print(request_read_len, HEX);
+    SerialMon.println();
+
     int  ret = SensorWireHelper::regdump(Wire, SerialMon, dev_address, reg, request_read_len);
     if (ret == -1) {
         SerialMon.println("ERROR!");
