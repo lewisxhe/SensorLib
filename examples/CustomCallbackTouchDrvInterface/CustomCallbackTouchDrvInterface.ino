@@ -237,7 +237,7 @@ void setup()
     while (!Serial);
     Serial.println("Start!");
 
-#if defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_STM32)
+#if (defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_STM32)) && !defined(ARDUINO_ARCH_MBED)
     Wire.setSCL(TOUCH_SCL);
     Wire.setSDA(TOUCH_SDA);
     Wire.begin();
@@ -247,7 +247,7 @@ void setup()
 #elif defined(ARDUINO_ARCH_ESP32)
     Wire.begin(TOUCH_SDA, TOUCH_SCL);
 #else
-    Wire.being();
+    Wire.begin();
 #endif
 
     SensorWireHelper::dumpDevices(Wire);

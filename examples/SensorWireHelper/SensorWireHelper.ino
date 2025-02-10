@@ -71,15 +71,17 @@ void setup()
     while (!Serial);
     Serial.println("Start!");
 
-#if defined(ARDUINO_ARCH_RP2040)
+#if (defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_STM32)) && !defined(ARDUINO_ARCH_MBED)
     Wire.setSCL(SENSOR_SCL);
     Wire.setSDA(SENSOR_SDA);
     Wire.begin();
-#elif defined(NRF52840_XXAA) || defined(NRF52832_XXAA)
+#elif defined(ARDUINO_ARCH_NRF52)
     Wire.setPins(SENSOR_SDA, SENSOR_SCL);
     Wire.begin();
-#else
+#elif defined(ARDUINO_ARCH_ESP32)
     Wire.begin(SENSOR_SDA, SENSOR_SCL);
+#else
+    Wire.begin();
 #endif
 
     // Initialise Commander

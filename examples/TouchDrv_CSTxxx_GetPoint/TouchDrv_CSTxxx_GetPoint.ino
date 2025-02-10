@@ -93,7 +93,7 @@ void setup()
     // Search for known CSTxxx device addresses
     uint8_t address = 0xFF;
 
-#if defined(ARDUINO_ARCH_RP2040)
+#if (defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_STM32)) && !defined(ARDUINO_ARCH_MBED)
     Wire.setSCL(TOUCH_SCL);
     Wire.setSDA(TOUCH_SDA);
     Wire.begin();

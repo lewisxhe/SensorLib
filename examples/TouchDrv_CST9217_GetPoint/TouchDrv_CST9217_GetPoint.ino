@@ -69,15 +69,17 @@ void setup()
     delay(1000);
 #endif
 
-#if defined(ARDUINO_ARCH_RP2040)
+#if (defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_STM32)) && !defined(ARDUINO_ARCH_MBED)
     Wire.setSCL(TOUCH_SCL);
     Wire.setSDA(TOUCH_SDA);
     Wire.begin();
-#elif defined(NRF52840_XXAA) || defined(NRF52832_XXAA)
+#elif defined(ARDUINO_ARCH_NRF52)
     Wire.setPins(TOUCH_SDA, TOUCH_SCL);
     Wire.begin();
-#else
+#elif defined(ARDUINO_ARCH_ESP32)
     Wire.begin(TOUCH_SDA, TOUCH_SCL);
+#else
+    Wire.begin();
 #endif
 
     // Scan I2C devices

@@ -124,7 +124,7 @@ void setup()
     Serial.begin(115200);
     while (!Serial);
 
-#if defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_STM32)
+#if (defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_STM32)) && !defined(ARDUINO_ARCH_MBED)
     Wire.setSCL(SENSOR_SCL);
     Wire.setSDA(SENSOR_SDA);
     Wire.begin();
@@ -134,7 +134,7 @@ void setup()
 #elif defined(ARDUINO_ARCH_ESP32)
     Wire.begin(SENSOR_SDA, SENSOR_SCL);
 #else
-    Wire.being();
+    Wire.begin();
 #endif
 
     // Using SensorLib with callback functions
