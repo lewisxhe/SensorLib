@@ -1,4 +1,4 @@
-name: Build esp-idf
+name: Build with ESP-IDF
 
 on:
   workflow_dispatch:
@@ -11,7 +11,7 @@ on:
       - ".github/workflows/esp-idf.yml"
 
 jobs:
-  build:
+  esp-idf-build:
     strategy:
       matrix:
         idf_ver: ["latest"]

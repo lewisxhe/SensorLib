@@ -1,4 +1,4 @@
-name: Build Arduino
+name: Build with Arduino
 
 on:
   workflow_dispatch:

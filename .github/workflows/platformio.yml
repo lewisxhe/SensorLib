@@ -1,0 +1,67 @@
+name: Build with PlatformIO
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    paths:
+      - "src/**"
+      - "examples/**"
+      - ".github/workflows/platformio.yml"
+      - "platformio.ini"
+
+jobs:
+  platformio-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        example: ${{ fromJSON(needs.find-examples.outputs.examples) }}
+    needs: [find-examples]
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+
+      - name: Run PlatformIO
+        run: pio ci --lib="."  --board=esp32-s3-devkitm-1 --board=nrf52840_dk_adafruit
+        env:
+          PLATFORMIO_CI_SRC: ${{ matrix.example }}
+
+  find-examples:
+    runs-on: ubuntu-latest
+    outputs:
+      examples: ${{ steps.find.outputs.examples }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Create Python script
+        run: |
+          cat << 'EOF' > find_examples.py
+          import os
+          import json
+
+          examples_dir = 'examples'
+          ino_folders = []
+
+          for root, dirs, files in os.walk(examples_dir):
+              for file in files:
+                  if file.endswith('.ino'):
+                      ino_folders.append(root)
+                      break
+
+          unique_folders = sorted(set(ino_folders))
+          print(json.dumps(unique_folders))
+          EOF
+      - name: Run Python script
+        id: find
+        run: |
+          result=$(python find_examples.py)
+          echo "::set-output name=examples::$result"
