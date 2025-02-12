@@ -76,11 +76,13 @@ public:
         I2C_SET_ADDR,
         I2C_SET_FLAG,
         I2C_SET_CLOCK,
+        I2C_SET_WRITE_DELAY_US,
+        I2C_SET_READ_DELAY_US,
     };
 
-    I2CParam(I2CParamType type, uint8_t params) : type(type), params(params) {}
+    I2CParam(I2CParamType type, uint32_t params) : type(type), params(params) {}
 
-    uint8_t getParams() const
+    uint32_t getParams() const
     {
         return params;
     }

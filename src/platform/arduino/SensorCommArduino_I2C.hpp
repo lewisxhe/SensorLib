@@ -37,10 +37,12 @@
 class SensorCommI2C : public SensorCommBase
 {
 public:
-    SensorCommI2C(TwoWire &wire, uint8_t addr, int sda, int scl, SensorHal *ptr = nullptr) : wire(wire), addr(addr), sda(sda), scl(scl), sendStopFlag(true) {}
+    SensorCommI2C(TwoWire &wire, uint8_t addr, int sda, int scl, SensorHal *hal = nullptr) : hal(hal), wire(wire), addr(addr), sda(sda), scl(scl), sendStopFlag(true) {}
 
     bool init() override
     {
+        write_delay_us = 0;
+        read_delay_us = 0;
         setPins();
         wire.begin();
         return true;
@@ -77,6 +79,9 @@ public:
             wire.write(buf, len);
         }
         if (wire.endTransmission() == 0) {
+            if (hal && (write_delay_us != 0)) {
+                hal->delayMicroseconds(write_delay_us);
+            }
             return 0;
         } else {
             return -1;
@@ -89,6 +94,9 @@ public:
         wire.beginTransmission(addr);
         wire.write(buffer, len);
         if (wire.endTransmission() == 0) {
+            if (hal && (write_delay_us != 0)) {
+                hal->delayMicroseconds(write_delay_us);
+            }
             return 0;
         } else {
             return -1;
@@ -111,6 +119,12 @@ public:
         wire.beginTransmission(addr);
         wire.write(reg);
         wire.endTransmission(sendStopFlag);
+        if (hal && (write_delay_us != 0)) {
+            hal->delayMicroseconds(write_delay_us);
+        }
+        if (hal && (read_delay_us != 0)) {
+            hal->delayMicroseconds(read_delay_us);
+        }
         wire.requestFrom(addr, static_cast<uint8_t>(len));
         return wire.readBytes(buf, len) == len ? 0 : -1;
     }
@@ -121,6 +135,12 @@ public:
         wire.write(write_buffer, write_len);
         if (wire.endTransmission(sendStopFlag) != 0) {
             return -1;
+        }
+        if (hal && (write_delay_us != 0)) {
+            hal->delayMicroseconds(write_delay_us);
+        }
+        if (hal && (read_delay_us != 0)) {
+            hal->delayMicroseconds(read_delay_us);
         }
         wire.requestFrom(addr, read_len);
         return wire.readBytes(read_buffer, read_len) == read_len ? 0 : -1;
@@ -161,6 +181,12 @@ public:
         case I2CParam::I2C_SET_FLAG:
             sendStopFlag = pdat->getParams();
             break;
+        case I2CParam::I2C_SET_WRITE_DELAY_US:
+            write_delay_us = pdat->getParams();
+            break;
+        case I2CParam::I2C_SET_READ_DELAY_US:
+            read_delay_us = pdat->getParams();
+            break;
         default:
             break;
         }
@@ -187,12 +213,14 @@ private:
 #endif
         }
     }
-
+    SensorHal *hal;
     TwoWire &wire;
     uint8_t addr;
     int sda;
     int scl;
     bool sendStopFlag;
+    uint32_t write_delay_us;
+    uint32_t read_delay_us;
 };
 
 #endif  //*ARDUINO
