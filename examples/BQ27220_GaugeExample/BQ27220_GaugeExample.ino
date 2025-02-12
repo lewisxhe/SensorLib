@@ -30,7 +30,7 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
-#include "GaugeBQ27220.hpp"
+#include <GaugeBQ27220.hpp>
 
 #ifndef SENSOR_SDA
 #define SENSOR_SDA  2
@@ -54,6 +54,28 @@ void setup()
         }
     }
     Serial.println("Init BQ27220 Sensor success!");
+
+
+
+    /**
+    * @brief Set the new design capacity and full charge capacity of the battery.
+    *
+    * This function is responsible for updating the design capacity and full charge capacity of the battery.
+    * It first checks the device's access settings, enters the configuration update mode, writes the new capacity values
+    * and checksums, and finally exits the configuration update mode. If the device was previously in a sealed state,
+    * it will be restored to the sealed mode after the operation is completed.
+    * For new devices, use the default key for access. If it is an encrypted device, use setAccessKey(uint32_t key) to set the key.
+    * @param newDesignCapacity The new design capacity to be set, of type uint16_t.
+    * @param newFullChargeCapacity The new full charge capacity to be set, of type uint16_t.
+    * @return bool Returns true if the setting is successful, false otherwise.
+    */
+
+    // uint32_t key = 0x12345678;
+    // gauge.setAccessKey(key)
+        
+    uint16_t newDesignCapacity = 4000;
+    uint16_t newFullChargeCapacity = 4000;
+    gauge.setNewCapacity(newDesignCapacity, newFullChargeCapacity);
 }
 
 
@@ -117,56 +139,55 @@ void loop()
     Serial.print("getOperationStatusRaw:"); Serial.println(operationStatusRaw);
     Serial.print("getDesignCapacity:"); Serial.print(designCapacity); Serial.println(" mAh");
 
-    BatteryStatus_t s = gauge.getBatteryStatus();
-
-    if (s.FD) {
+    BatteryStatus s = gauge.getBatteryStatus();
+    Serial.println("Battery Status:");
+    if (s.isFullDischargeDetected()) {
         Serial.println("1.Full discharge detected.");
     }
-    if (s.OCVCOMP) {
+    if (s.isOcvMeasurementUpdateComplete()) {
         Serial.println("2.OCV measurement update is complete.");
     }
-    if (s.OCVFAIL) {
+    if (s.isOcvReadFailedDueToCurrent()) {
         Serial.println("3.Status bit indicating that an OCV read failed due to current.");
         Serial.println("\tThis bit can only be set if a battery is present after receiving an OCV_CMD().");
     }
-    if (s.SLEEP) {
+    if (s.isInSleepMode()) {
         Serial.println("4.The device operates in SLEEP mode");
     }
-    if (s.OTC) {
+    if (s.isOverTemperatureDuringCharging()) {
         Serial.println("5.Over-temperature is detected during charging.");
     }
-    if (s.OTD) {
+    if (s.isOverTemperatureDuringDischarge()) {
         Serial.println("6.Over-temperature detected during discharge condition.");
     }
-    if (s.FC) {
+    if (s.isFullChargeDetected()) {
         Serial.println("7.Full charge detected.");
     }
-    if (s.CHGINH) {
+    if (s.isChargeInhibited()) {
         Serial.println("8.Charge Inhibit: If set, indicates that charging should not begin because the Temperature() is outside the range");
         Serial.println("\t[Charge Inhibit Temp Low, Charge Inhibit Temp High]. ");
     }
-    if (s.TCA) {
+    if (s.isChargingTerminationAlarm()) {
         Serial.println("9.Termination of charging alarm. This flag is set and cleared based on the selected SOC Flag Config A option.");
     }
-    if (s.OCVGD) {
+    if (s.isGoodOcvMeasurement()) {
         Serial.println("10.A good OCV measurement was made.");
     }
-    if (s.AUTH_GD) {
+    if (s.isBatteryInserted()) {
         Serial.println("11.Detects inserted battery.");
     }
-    if (s.BATTPRES) {
+    if (s.isBatteryPresent()) {
         Serial.println("12.Battery presence detected.");
     }
-    if (s.TDA) {
+    if (s.isDischargeTerminationAlarm()) {
         Serial.println("13.Termination discharge alarm. This flag is set and cleared according to the selected SOC Flag Config A option.");
     }
-    if (s.SYSDWN) {
+    if (s.isSystemShutdownRequired()) {
         Serial.println("14.System shutdown bit indicating that the system should be shut down. True when set. If set, the SOC_INT pin toggles once.");
     }
-    if (s.DSG) {
+    if (s.isInDischargeMode()) {
         Serial.println("15.When set, the device is in DISCHARGE mode; when cleared, the device is in CHARGING or RELAXATION mode.");
     }
-
     Serial.println("===============================================");
     delay(3000);
 }
