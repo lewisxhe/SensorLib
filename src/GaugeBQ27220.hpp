@@ -322,7 +322,7 @@ public:
     // The average power during battery charging and discharging.
     // Values ​​are negative during discharging and positive during charging.
     // A value of 0 means the battery is not discharging. This value is reported in mW.
-    uint16_t getAveragePower()
+    int16_t getAveragePower()
     {
         return getHalfWord(BQ27220_REG_STA_AVG_POWER);
     }
@@ -621,6 +621,7 @@ public:
             log_e("Failed to set design capacity!");
             return false;
         }
+        hal->delay(10);
 
         // Set full charge capacity
         constexpr uint8_t FullChargeCapacityMSB = 0x9D;
@@ -629,9 +630,11 @@ public:
             log_e("Failed to set full charge capacity!");
             return false;
         }
+        hal->delay(10);
 
         // Exit CFUPDATE mode by sending the EXIT_CFG_UPDATE_REINIT (0x0091) or EXIT_CFG_UPDATE (0x0092) command
         sendSubCommand(BQ27220_SUB_CMD_EXIT_CFG_UPDATE_REINIT);
+        hal->delay(10);
 
         // Confirm that CFUPDATE mode has been exited by polling the OperationStatus() register until bit 2 is cleared
         timeout = hal->millis() + 3000UL;
