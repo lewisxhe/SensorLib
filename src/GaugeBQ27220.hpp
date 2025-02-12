@@ -64,84 +64,84 @@ typedef struct  {
 } OperationStatus_t;
 
 class BatteryStatus {
-protected:
-    struct {
-        //* Full discharge detected. This flag is set and cleared based on the SOC
-        //* Flag Config B option selected.
-        bool fullDischargeDetected;
-        //* OCV measurement update is complete. True when set
-        bool ocvMeasurementUpdateComplete;
-        //* Status bit indicating that an OCV read failed due to current.
-        //* This bit can only be set if a battery is present after receiving an OCV_CMD(). True when set
-        bool ocvReadFailedDueToCurrent;
-        //* The device operates in SLEEP mode when set.
-        //* This bit will be temporarily cleared during AD measurements in SLEEP mode.
-        bool inSleepMode;
-        //* Over-temperature is detected during charging. If Operation Config B [INT_OT] bit = 1,
-        //* the SOC_INT pin toggles once when the [OTC] bit is set.
-        bool overTemperatureDuringCharging;
-        //* Over-temperature detected during discharge condition. True when set. If Operation Config B [INT_OT] bit = 1,
-        //* the SOC_INT pin toggles once when the [OTD] bit is set.
-        bool overTemperatureDuringDischarge;
-        //* Full charge detected. This flag is set and cleared based on the SOC Flag Config A and SOC Flag Config B options selected.
-        bool fullChargeDetected;
-        //* Charge Inhibit: If set, indicates that charging should not begin because the Temperature() is outside the range
-        //* [Charge Inhibit Temp Low, Charge Inhibit Temp High]. True when set
-        bool chargeInhibited;
-        //* Termination of charging alarm. This flag is set and cleared based on the selected SOC Flag Config A option.
-        bool chargingTerminationAlarm;
-        //* A good OCV measurement was made. True when set
-        bool goodOcvMeasurement;
-        //* Detects inserted battery. True when set.
-        bool batteryInserted;
-        //* Battery presence detected. True when set.
-        bool batteryPresent;
-        //* Termination discharge alarm. This flag is set and cleared according to the selected SOC Flag Config A option.
-        bool dischargeTerminationAlarm;
-        //* System shutdown bit indicating that the system should be shut down. True when set. If set, the SOC_INT pin toggles once.
-        bool systemShutdownRequired;
-        //* When set, the device is in DISCHARGE mode; when cleared, the device is in CHARGING or RELAXATION mode.
-        bool inDischargeMode;
-    } status;
-public:
-    BatteryStatus(uint16_t bitmaps){
-        uint8_t hsb = (bitmaps >> 8) & 0xFF;
-        uint8_t lsb = bitmaps & 0xFF;
-        status.fullDischargeDetected = (hsb & _BV(7)) != 0;
-        status.ocvMeasurementUpdateComplete = (hsb & _BV(6)) != 0;
-        status.ocvReadFailedDueToCurrent = (hsb & _BV(5)) != 0;
-        status.inSleepMode = (hsb & _BV(4)) != 0;
-        status.overTemperatureDuringCharging = (hsb & _BV(3)) != 0;
-        status.overTemperatureDuringDischarge = (hsb & _BV(2)) != 0;
-        status.fullChargeDetected = (hsb & _BV(1)) != 0;
-        status.chargeInhibited = (hsb & _BV(0)) != 0;
-
-        // status.RSVD = (lsb & (1 << 7))!= 0;
-        status.chargingTerminationAlarm = (lsb & _BV(6)) != 0;
-        status.goodOcvMeasurement = (lsb & _BV(5)) != 0;
-        status.batteryInserted = (lsb & _BV(4)) != 0;
-        status.batteryPresent = (lsb & _BV(3)) != 0;
-        status.dischargeTerminationAlarm = (lsb & _BV(2)) != 0;
-        status.systemShutdownRequired = (lsb & _BV(1)) != 0;
-        status.inDischargeMode = (lsb & _BV(0)) != 0;
+    protected:
+        struct {
+            //* Full discharge detected. This flag is set and cleared based on the SOC
+            //* Flag Config B option selected.
+            bool fullDischargeDetected;
+            //* OCV measurement update is complete. True when set
+            bool ocvMeasurementUpdateComplete;
+            //* Status bit indicating that an OCV read failed due to current.
+            //* This bit can only be set if a battery is present after receiving an OCV_CMD(). True when set
+            bool ocvReadFailedDueToCurrent;
+            //* The device operates in SLEEP mode when set.
+            //* This bit will be temporarily cleared during AD measurements in SLEEP mode.
+            bool inSleepMode;
+            //* Over-temperature is detected during charging. If Operation Config B [INT_OT] bit = 1,
+            //* the SOC_INT pin toggles once when the [OTC] bit is set.
+            bool overTemperatureDuringCharging;
+            //* Over-temperature detected during discharge condition. True when set. If Operation Config B [INT_OT] bit = 1,
+            //* the SOC_INT pin toggles once when the [OTD] bit is set.
+            bool overTemperatureDuringDischarge;
+            //* Full charge detected. This flag is set and cleared based on the SOC Flag Config A and SOC Flag Config B options selected.
+            bool fullChargeDetected;
+            //* Charge Inhibit: If set, indicates that charging should not begin because the Temperature() is outside the range
+            //* [Charge Inhibit Temp Low, Charge Inhibit Temp High]. True when set
+            bool chargeInhibited;
+            //* Termination of charging alarm. This flag is set and cleared based on the selected SOC Flag Config A option.
+            bool chargingTerminationAlarm;
+            //* A good OCV measurement was made. True when set
+            bool goodOcvMeasurement;
+            //* Detects inserted battery. True when set.
+            bool batteryInserted;
+            //* Battery presence detected. True when set.
+            bool batteryPresent;
+            //* Termination discharge alarm. This flag is set and cleared according to the selected SOC Flag Config A option.
+            bool dischargeTerminationAlarm;
+            //* System shutdown bit indicating that the system should be shut down. True when set. If set, the SOC_INT pin toggles once.
+            bool systemShutdownRequired;
+            //* When set, the device is in DISCHARGE mode; when cleared, the device is in CHARGING or RELAXATION mode.
+            bool inDischargeMode;
+        } status;
+    public:
+        BatteryStatus(uint16_t bitmaps){
+            uint8_t hsb = (bitmaps >> 8) & 0xFF;
+            uint8_t lsb = bitmaps & 0xFF;
+            status.fullDischargeDetected = (hsb & _BV(7)) != 0;
+            status.ocvMeasurementUpdateComplete = (hsb & _BV(6)) != 0;
+            status.ocvReadFailedDueToCurrent = (hsb & _BV(5)) != 0;
+            status.inSleepMode = (hsb & _BV(4)) != 0;
+            status.overTemperatureDuringCharging = (hsb & _BV(3)) != 0;
+            status.overTemperatureDuringDischarge = (hsb & _BV(2)) != 0;
+            status.fullChargeDetected = (hsb & _BV(1)) != 0;
+            status.chargeInhibited = (hsb & _BV(0)) != 0;
+    
+            // status.RSVD = (lsb & (1 << 7))!= 0;
+            status.chargingTerminationAlarm = (lsb & _BV(6)) != 0;
+            status.goodOcvMeasurement = (lsb & _BV(5)) != 0;
+            status.batteryInserted = (lsb & _BV(4)) != 0;
+            status.batteryPresent = (lsb & _BV(3)) != 0;
+            status.dischargeTerminationAlarm = (lsb & _BV(2)) != 0;
+            status.systemShutdownRequired = (lsb & _BV(1)) != 0;
+            status.inDischargeMode = (lsb & _BV(0)) != 0;
+        };
+    
+        bool isFullDischargeDetected() const { return status.fullDischargeDetected; }
+        bool isOcvMeasurementUpdateComplete() const { return status.ocvMeasurementUpdateComplete; }
+        bool isOcvReadFailedDueToCurrent() const { return status.ocvReadFailedDueToCurrent; }
+        bool isInSleepMode() const { return status.inSleepMode; }
+        bool isOverTemperatureDuringCharging() const { return status.overTemperatureDuringCharging; }
+        bool isOverTemperatureDuringDischarge() const { return status.overTemperatureDuringDischarge; }
+        bool isFullChargeDetected() const { return status.fullChargeDetected; }
+        bool isChargeInhibited() const { return status.chargeInhibited; }
+        bool isChargingTerminationAlarm() const { return status.chargingTerminationAlarm; }
+        bool isGoodOcvMeasurement() const { return status.goodOcvMeasurement; }
+        bool isBatteryInserted() const { return status.batteryInserted; }
+        bool isBatteryPresent() const { return status.batteryPresent; }
+        bool isDischargeTerminationAlarm() const { return status.dischargeTerminationAlarm; }
+        bool isSystemShutdownRequired() const { return status.systemShutdownRequired; }
+        bool isInDischargeMode() const { return status.inDischargeMode; }
     };
-
-    bool isFullDischargeDetected() const { return status.fullDischargeDetected; }
-    bool isOcvMeasurementUpdateComplete() const { return status.ocvMeasurementUpdateComplete; }
-    bool isOcvReadFailedDueToCurrent() const { return status.ocvReadFailedDueToCurrent; }
-    bool isInSleepMode() const { return status.inSleepMode; }
-    bool isOverTemperatureDuringCharging() const { return status.overTemperatureDuringCharging; }
-    bool isOverTemperatureDuringDischarge() const { return status.overTemperatureDuringDischarge; }
-    bool isFullChargeDetected() const { return status.fullChargeDetected; }
-    bool isChargeInhibited() const { return status.chargeInhibited; }
-    bool isChargingTerminationAlarm() const { return status.chargingTerminationAlarm; }
-    bool isGoodOcvMeasurement() const { return status.goodOcvMeasurement; }
-    bool isBatteryInserted() const { return status.batteryInserted; }
-    bool isBatteryPresent() const { return status.batteryPresent; }
-    bool isDischargeTerminationAlarm() const { return status.dischargeTerminationAlarm; }
-    bool isSystemShutdownRequired() const { return status.systemShutdownRequired; }
-    bool isInDischargeMode() const { return status.inDischargeMode; }
-};
 
 class GaugeBQ27220 : public BQ27220Constants
 {
@@ -503,11 +503,12 @@ public:
             return -1;
         }
         if (!waitConfirm) {
+            hal->delay(10);
             return 0;
         }
         constexpr uint8_t statusReg = 0x00;
         int waitCount = 20;
-        hal->delay(200);
+        hal->delay(10);
         while (waitCount--) {
             comm->writeThenRead(&statusReg, 1, buffer, 2);
             uint16_t *value = reinterpret_cast<uint16_t *>(buffer);
@@ -527,10 +528,12 @@ public:
         if (comm->writeBuffer(cmd1, arraySize(cmd1)) < 0) {
             return -1;
         }
+        hal->delay(10);
         uint8_t cmd2[] = {0x00, 0x72, 0x36};
         if (comm->writeBuffer(cmd2, arraySize(cmd2)) < 0) {
             return -1;
         }
+        hal->delay(10);
         return 0;
     }
 
@@ -550,11 +553,13 @@ public:
         if (comm->writeBuffer(buffer, arraySize(buffer)) < 0) {
             return -1;
         }
+        hal->delay(10);
         buffer[1] = lowByte((accessKey >> 8));
         buffer[2] = lowByte((accessKey));
         if (comm->writeBuffer(buffer, arraySize(buffer)) < 0) {
             return -1;
         }
+        hal->delay(10);
         return 0;
     }
 
@@ -720,9 +725,11 @@ private:
 
         // Write to access the MSB of Capacity
         comm->writeRegister(BQ27220_REG_STA_DESIGN_CAPACITY_MSB, msbAccessValue);
+        hal->delay(10);
 
         // Write to access the LSB of Capacity
         comm->writeRegister(BQ27220_REG_STA_DESIGN_CAPACITY_LSB, lsbAccessValue);
+        hal->delay(10);
 
         // Write two Capacity bytes starting from 0x40
         uint8_t newCapacityMsb = highByte(newCapacity);
@@ -754,10 +761,6 @@ private:
 
     bool initImpl()
     {
-        // BQ27220 Technical Reference Manual , 5.3 I2C command waiting time
-        comm->setParams(I2CParam(I2CParam::I2C_SET_WRITE_DELAY_US, 500));
-        comm->setParams(I2CParam(I2CParam::I2C_SET_READ_DELAY_US, 100000));
-
         int chipID = getChipID();
         if (chipID != BQ27220_CHIP_ID) {
             log_e("Chip id not match : %02X\n", chipID);
