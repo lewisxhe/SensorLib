@@ -2,9 +2,9 @@
 <center><img src="extras/images/SensroLib.jpg" width="80%" height="30%"></center>
 
 
-[![Build esp-idf](https://github.com/lewisxhe/SensorLib/actions/workflows/esp-idf.yml/badge.svg)](https://github.com/lewisxhe/SensorLib/actions/workflows/esp-idf.yml)
-[![Arduino CI](https://github.com/lewisxhe/SensorLib/actions/workflows/arduino_ci.yml/badge.svg)](https://github.com/lewisxhe/SensorLib/actions/workflows/arduino_ci.yml)
-[![PlatformIO CI](https://github.com/lewisxhe/SensorLib/actions/workflows/pio.yml/badge.svg)](https://github.com/lewisxhe/SensorLib/actions/workflows/pio.yml)
+[![Build with ESP-IDF](https://github.com/lewisxhe/SensorLib/actions/workflows/esp-idf.yml/badge.svg)](https://github.com/lewisxhe/SensorLib/actions/workflows/esp-idf.yml)
+[![Build with Arduino](https://github.com/lewisxhe/SensorLib/actions/workflows/arduino_ci.yml/badge.svg)](https://github.com/lewisxhe/SensorLib/actions/workflows/arduino_ci.yml)
+[![Build with PlatformIO](https://github.com/lewisxhe/SensorLib/actions/workflows/platformio.yml/badge.svg)](https://github.com/lewisxhe/SensorLib/actions/workflows/platformio.yml)
 [![arduino-library-badge](https://www.ardu-badge.com/badge/SensorLib.svg?)](https://www.ardu-badge.com/SensorLib)
 [![PlatformIO Registry](https://badges.registry.platformio.org/packages/lewisxhe/library/SensorLib.svg)](https://registry.platformio.org/libraries/lewisxhe/SensorLib)
 
