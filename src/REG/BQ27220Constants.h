@@ -36,7 +36,6 @@
 class BQ27220Constants
 {
 protected:
-    static constexpr uint8_t BQ27220_SLAVE_ADDRESS                       = (0x55);
 
     //* Sub command
     static constexpr uint16_t BQ27220_SUB_CMD_CTRL_STATUS                = (0x0000);

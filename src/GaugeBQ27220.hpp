@@ -32,6 +32,9 @@
 #include "REG/BQ27220Constants.h"
 #include "SensorPlatform.hpp"
 
+// BQ27220 Unique device address
+static constexpr uint8_t BQ27220_SLAVE_ADDRESS  = (0x55);
+
 typedef struct  {
     //* Reserved bits
     // bool RSV[6];
