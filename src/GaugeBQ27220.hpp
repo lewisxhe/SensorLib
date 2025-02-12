@@ -60,48 +60,85 @@ typedef struct  {
     bool CALMD;
 } OperationStatus_t;
 
-typedef struct  {
-    //* Full discharge detected. This flag is set and cleared based on the SOC
-    //* Flag Config B option selected.
-    bool FD;
-    //* OCV measurement update is complete. True when set
-    bool OCVCOMP;
-    //* Status bit indicating that an OCV read failed due to current.
-    //* This bit can only be set if a battery is present after receiving an OCV_CMD(). True when set
-    bool OCVFAIL;
-    //* The device operates in SLEEP mode when set.
-    //* This bit will be temporarily cleared during AD measurements in SLEEP mode.
-    bool SLEEP;
-    //* Over-temperature is detected during charging. If Operation Config B [INT_OT] bit = 1,
-    //* the SOC_INT pin toggles once when the [OTC] bit is set.
-    bool OTC;
-    //* Over-temperature detected during discharge condition. True when set. If Operation Config B [INT_OT] bit = 1,
-    //* the SOC_INT pin toggles once when the [OTD] bit is set.
-    bool OTD;
-    //* Full charge detected. This flag is set and cleared based on the SOC Flag Config A and SOC Flag Config B options selected.
-    bool FC;
-    //* Charge Inhibit: If set, indicates that charging should not begin because the Temperature() is outside the range
-    //* [Charge Inhibit Temp Low, Charge Inhibit Temp High]. True when set
-    bool CHGINH;
-    //* Reserve
-    // bool RSVD;
-    //* Termination of charging alarm. This flag is set and cleared based on the selected SOC Flag Config A option.
-    bool TCA;
-    //* A good OCV measurement was made. True when set
-    bool OCVGD;
-    //* Detects inserted battery. True when set.
-    bool AUTH_GD;
-    //* Battery presence detected. True when set.
-    bool BATTPRES;
-    //* Termination discharge alarm. This flag is set and cleared according to the selected SOC Flag Config A option.
-    bool TDA;
-    //* System shutdown bit indicating that the system should be shut down. True when set. If set, the SOC_INT pin toggles once.
-    bool SYSDWN;
-    //* When set, the device is in DISCHARGE mode; when cleared, the device is in CHARGING or RELAXATION mode.
-    bool DSG;
-} BatteryStatus_t;
+class BatteryStatus {
+protected:
+    struct {
+        //* Full discharge detected. This flag is set and cleared based on the SOC
+        //* Flag Config B option selected.
+        bool fullDischargeDetected;
+        //* OCV measurement update is complete. True when set
+        bool ocvMeasurementUpdateComplete;
+        //* Status bit indicating that an OCV read failed due to current.
+        //* This bit can only be set if a battery is present after receiving an OCV_CMD(). True when set
+        bool ocvReadFailedDueToCurrent;
+        //* The device operates in SLEEP mode when set.
+        //* This bit will be temporarily cleared during AD measurements in SLEEP mode.
+        bool inSleepMode;
+        //* Over-temperature is detected during charging. If Operation Config B [INT_OT] bit = 1,
+        //* the SOC_INT pin toggles once when the [OTC] bit is set.
+        bool overTemperatureDuringCharging;
+        //* Over-temperature detected during discharge condition. True when set. If Operation Config B [INT_OT] bit = 1,
+        //* the SOC_INT pin toggles once when the [OTD] bit is set.
+        bool overTemperatureDuringDischarge;
+        //* Full charge detected. This flag is set and cleared based on the SOC Flag Config A and SOC Flag Config B options selected.
+        bool fullChargeDetected;
+        //* Charge Inhibit: If set, indicates that charging should not begin because the Temperature() is outside the range
+        //* [Charge Inhibit Temp Low, Charge Inhibit Temp High]. True when set
+        bool chargeInhibited;
+        //* Termination of charging alarm. This flag is set and cleared based on the selected SOC Flag Config A option.
+        bool chargingTerminationAlarm;
+        //* A good OCV measurement was made. True when set
+        bool goodOcvMeasurement;
+        //* Detects inserted battery. True when set.
+        bool batteryInserted;
+        //* Battery presence detected. True when set.
+        bool batteryPresent;
+        //* Termination discharge alarm. This flag is set and cleared according to the selected SOC Flag Config A option.
+        bool dischargeTerminationAlarm;
+        //* System shutdown bit indicating that the system should be shut down. True when set. If set, the SOC_INT pin toggles once.
+        bool systemShutdownRequired;
+        //* When set, the device is in DISCHARGE mode; when cleared, the device is in CHARGING or RELAXATION mode.
+        bool inDischargeMode;
+    } status;
+public:
+    BatteryStatus(uint16_t bitmaps){
+        uint8_t hsb = (bitmaps >> 8) & 0xFF;
+        uint8_t lsb = bitmaps & 0xFF;
+        status.fullDischargeDetected = (hsb & _BV(7)) != 0;
+        status.ocvMeasurementUpdateComplete = (hsb & _BV(6)) != 0;
+        status.ocvReadFailedDueToCurrent = (hsb & _BV(5)) != 0;
+        status.inSleepMode = (hsb & _BV(4)) != 0;
+        status.overTemperatureDuringCharging = (hsb & _BV(3)) != 0;
+        status.overTemperatureDuringDischarge = (hsb & _BV(2)) != 0;
+        status.fullChargeDetected = (hsb & _BV(1)) != 0;
+        status.chargeInhibited = (hsb & _BV(0)) != 0;
 
+        // status.RSVD = (lsb & (1 << 7))!= 0;
+        status.chargingTerminationAlarm = (lsb & _BV(6)) != 0;
+        status.goodOcvMeasurement = (lsb & _BV(5)) != 0;
+        status.batteryInserted = (lsb & _BV(4)) != 0;
+        status.batteryPresent = (lsb & _BV(3)) != 0;
+        status.dischargeTerminationAlarm = (lsb & _BV(2)) != 0;
+        status.systemShutdownRequired = (lsb & _BV(1)) != 0;
+        status.inDischargeMode = (lsb & _BV(0)) != 0;
+    };
 
+    bool isFullDischargeDetected() const { return status.fullDischargeDetected; }
+    bool isOcvMeasurementUpdateComplete() const { return status.ocvMeasurementUpdateComplete; }
+    bool isOcvReadFailedDueToCurrent() const { return status.ocvReadFailedDueToCurrent; }
+    bool isInSleepMode() const { return status.inSleepMode; }
+    bool isOverTemperatureDuringCharging() const { return status.overTemperatureDuringCharging; }
+    bool isOverTemperatureDuringDischarge() const { return status.overTemperatureDuringDischarge; }
+    bool isFullChargeDetected() const { return status.fullChargeDetected; }
+    bool isChargeInhibited() const { return status.chargeInhibited; }
+    bool isChargingTerminationAlarm() const { return status.chargingTerminationAlarm; }
+    bool isGoodOcvMeasurement() const { return status.goodOcvMeasurement; }
+    bool isBatteryInserted() const { return status.batteryInserted; }
+    bool isBatteryPresent() const { return status.batteryPresent; }
+    bool isDischargeTerminationAlarm() const { return status.dischargeTerminationAlarm; }
+    bool isSystemShutdownRequired() const { return status.systemShutdownRequired; }
+    bool isInDischargeMode() const { return status.inDischargeMode; }
+};
 
 class GaugeBQ27220 : public BQ27220Constants
 {
@@ -113,7 +150,7 @@ public:
         SEALED_ACCESS,
     };
 
-    GaugeBQ27220() : comm(nullptr), hal(nullptr) {}
+    GaugeBQ27220() : comm(nullptr), hal(nullptr), accessKey(0xFFFFFFFF) {}
 
     ~GaugeBQ27220()
     {
@@ -198,31 +235,10 @@ public:
         return getHalfWord(BQ27220_REG_STA_BAT_STATUS);
     }
 
-    BatteryStatus_t getBatteryStatus()
+    BatteryStatus getBatteryStatus()
     {
-        BatteryStatus_t status;
         uint16_t value = getHalfWord(BQ27220_REG_STA_BAT_STATUS);
-        uint8_t highByte = (value >> 8) & 0xFF;
-        uint8_t lowByte = value & 0xFF;
-
-        status.FD = (highByte & _BV(7)) != 0;
-        status.OCVCOMP = (highByte & _BV(6)) != 0;
-        status.OCVFAIL = (highByte & _BV(5)) != 0;
-        status.SLEEP = (highByte & _BV(4)) != 0;
-        status.OTC = (highByte & _BV(3)) != 0;
-        status.OTD = (highByte & _BV(2)) != 0;
-        status.FC = (highByte & _BV(1)) != 0;
-        status.CHGINH = (highByte & _BV(0)) != 0;
-
-        // status.RSVD = (lowByte & (1 << 7))!= 0;
-        status.TCA = (lowByte & _BV(6)) != 0;
-        status.OCVGD = (lowByte & _BV(5)) != 0;
-        status.AUTH_GD = (lowByte & _BV(4)) != 0;
-        status.BATTPRES = (lowByte & _BV(3)) != 0;
-        status.TDA = (lowByte & _BV(2)) != 0;
-        status.SYSDWN = (lowByte & _BV(1)) != 0;
-        status.DSG = (lowByte & _BV(0)) != 0;
-        return status;
+        return BatteryStatus(value);
     }
 
     // The instantaneous current in the sense resistor.
@@ -389,21 +405,19 @@ public:
     OperationStatus_t getOperationStatus()
     {
         OperationStatus_t status;
-        uint16_t value = comm->readRegister(BQ27220_REG_STA_OPERATION_STATUS);
-        uint8_t highByte = (value >> 8) & 0xFF;
-        uint8_t lowByte = value & 0xFF;
+        uint16_t value = getOperationStatusRaw();
+        uint8_t hsb = (value >> 8) & 0xFF;
+        uint8_t lsb = value & 0xFF;
         // HIGH BYTE
-        status.CFGUPDATE = (highByte & _BV(1)) != 0;
-
+        status.CFGUPDATE = (hsb & _BV(2)) != 0;
         // LOW BYTE
-        status.BTPINT = (lowByte & _BV(7)) != 0;
-        status.SMTH = (lowByte & _BV(6)) != 0;
-        status.INITCOMP = (lowByte & _BV(5)) != 0;
-        status.VDQ = (lowByte & _BV(4)) != 0;
-        status.EDV2 = (lowByte & _BV(3)) != 0;
-        status.SEC = (lowByte >> 1) & 0x03;
-        status.CALMD = (lowByte & _BV(0)) != 0;
-
+        status.BTPINT = (lsb & _BV(7)) != 0;
+        status.SMTH = (lsb & _BV(6)) != 0;
+        status.INITCOMP = (lsb & _BV(5)) != 0;
+        status.VDQ = (lsb & _BV(4)) != 0;
+        status.EDV2 = (lsb & _BV(3)) != 0;
+        status.SEC = (lsb >> 1) & 0x03;
+        status.CALMD = (lsb & _BV(0)) != 0;
         return status;
     }
 
@@ -475,31 +489,35 @@ public:
         return getHalfWord(BQ27220_REG_RAW_VOLTAGE);
     }
 
-    //* Subcommands
-
-    int sendSubCommand(uint16_t subCmd)
+    // Subcommands
+    int sendSubCommand(uint16_t subCmd, bool waitConfirm = false)
     {
         uint8_t buffer[3];
         buffer[0] = 0x00;
         buffer[1] = lowByte(subCmd);
         buffer[2] = highByte(subCmd);
-        comm->writeBuffer(buffer, arraySize(buffer));
+        if (comm->writeBuffer(buffer, arraySize(buffer)) < 0) {
+            return -1;
+        }
+        if (!waitConfirm) {
+            return 0;
+        }
         constexpr uint8_t statusReg = 0x00;
         int waitCount = 20;
-        hal->delay(10);
+        hal->delay(200);
         while (waitCount--) {
             comm->writeThenRead(&statusReg, 1, buffer, 2);
             uint16_t *value = reinterpret_cast<uint16_t *>(buffer);
             if (*value == 0xFFA5) {
                 return 0;
             }
-            hal->delay(1);
+            hal->delay(100);
         }
         log_e("Subcommand failed!");
         return -1;
     }
 
-    // UNSEAL
+    // Unlock Safe Mode
     int unsealDevice()
     {
         uint8_t cmd1[] = {0x00, 0x14, 0x04};
@@ -513,17 +531,25 @@ public:
         return 0;
     }
 
-    // UNSEAL FULL ACCESS
+    // Set the access key. If not set, it is 0xFFFFFFFF
+    void setAccessKey(uint32_t key)
+    {
+        accessKey = key;
+    }
+
+    // Full access key, 0xFFFFFFFF if not set
     int unsealFullAccess()
     {
-        if (unsealDevice() < 0) {
+        uint8_t buffer[3];
+        buffer[0] = 0x00;
+        buffer[1] = lowByte((accessKey >> 24));
+        buffer[2] = lowByte((accessKey >> 16));
+        if (comm->writeBuffer(buffer, arraySize(buffer)) < 0) {
             return -1;
         }
-        uint8_t cmd1[] = {0x00, 0xFF, 0xFF};
-        if (comm->writeBuffer(cmd1, arraySize(cmd1)) < 0) {
-            return -1;
-        }
-        if (comm->writeBuffer(cmd1, arraySize(cmd1)) < 0) {
+        buffer[1] = lowByte((accessKey >> 8));
+        buffer[2] = lowByte((accessKey));
+        if (comm->writeBuffer(buffer, arraySize(buffer)) < 0) {
             return -1;
         }
         return 0;
@@ -534,96 +560,91 @@ public:
         return  sendSubCommand(BQ27220_SUB_CMD_SEALED);
     }
 
-    bool setDesignCapacity(uint16_t newDesignCapacity)
+
+    /**
+    * @brief Set the new design capacity and full charge capacity of the battery.
+    *
+    * This function is responsible for updating the design capacity and full charge capacity of the battery.
+    * It first checks the device's access settings, enters the configuration update mode, writes the new capacity values
+    * and checksums, and finally exits the configuration update mode. If the device was previously in a sealed state,
+    * it will be restored to the sealed mode after the operation is completed.
+    * For new devices, use the default key for access. If it is an encrypted device, use setAccessKey(uint32_t key) to set the key.
+    * @param newDesignCapacity The new design capacity to be set, of type uint16_t.
+    * @param newFullChargeCapacity The new full charge capacity to be set, of type uint16_t.
+    * @return bool Returns true if the setting is successful, false otherwise.
+    */
+    bool setNewCapacity(uint16_t newDesignCapacity, uint16_t newFullChargeCapacity)
     {
-        //* 1.Check access settings
-        OperationStatus_t s;
-        s = getOperationStatus();
-        if (s.SEC == SEALED_ACCESS) {
+        bool isSealed = false;
+
+        // Check access settings
+        OperationStatus_t operationStatus = getOperationStatus();
+        if (operationStatus.SEC == SEALED_ACCESS) {
+            isSealed = true;
             unsealDevice();
         }
-        if (s.SEC != FULL_ACCESS) {
+        if (operationStatus.SEC != FULL_ACCESS) {
             unsealFullAccess();
         }
 
-        //* 3.Send ENTER_CFG_UPDATE command (0x0090)
+        // Send ENTER_CFG_UPDATE command (0x0090)
         sendSubCommand(BQ27220_SUB_CMD_ENTER_CFG_UPDATE);
 
-        //* 4.Confirm CFUPDATE mode by polling the OperationStatus() register until Bit 2 is set.
+        // Confirm CFUPDATE mode by polling the OperationStatus() register until Bit 2 is set.
         bool isConfigUpdate = false;
-        uint32_t timeout = hal->millis() + 3000UL;
-        while (true && timeout > hal->millis()) {
-            s = getOperationStatus();
-            if (s.CFGUPDATE) {
+        uint32_t timeout = hal->millis() + 1500UL;
+        while (timeout > hal->millis()) {
+            operationStatus = getOperationStatus();
+            if (operationStatus.CFGUPDATE) {
                 isConfigUpdate = true;
                 break;
             }
             hal->delay(100);
         }
         if (!isConfigUpdate) {
-            log_e("Enter to CFUPDATE mode failed!");
+            log_e("The update mode has timed out. It may also be that the access key for full permissions is invalid!");
             return false;
         }
 
-        //* 5.Write 0x9F to 0x3E to access the MSB of Design Capacity
+        // Set the design capacity
         constexpr uint8_t DesignCapacityMSB = 0x9F;
-        comm->writeRegister(BQ27220_REG_STA_DESIGN_CAPACITY_MSB, DesignCapacityMSB);
-
-        //* 6.Write 0x92 to 0x3F to access the LSB of Design Capacity
         constexpr uint8_t DesignCapacityLSB = 0x92;
-        comm->writeRegister(BQ27220_REG_STA_DESIGN_CAPACITY_LSB, DesignCapacityLSB);
+        if (!setCapacity(newDesignCapacity, DesignCapacityMSB, DesignCapacityLSB)) {
+            log_e("Failed to set design capacity!");
+            return false;
+        }
 
-        //* 7.Use the MACDataSum() command (0x60) to read the 1-byte checksum
-        uint8_t oldChksum = getMACDataSum();
+        // Set full charge capacity
+        constexpr uint8_t FullChargeCapacityMSB = 0x9D;
+        constexpr uint8_t FullChargeCapacityLSB = 0x92;
+        if (!setCapacity(newFullChargeCapacity, FullChargeCapacityMSB, FullChargeCapacityLSB)) {
+            log_e("Failed to set full charge capacity!");
+            return false;
+        }
 
-        //* 8.Use the MACDataLen() command (0x61) to read the 1-byte block length
-        uint8_t dataLen = getMACDataLen();
-
-        //* 9.Read two Design Capacity bytes starting from 0x40
-        uint8_t buffer[2];
-        getMACData(buffer, arraySize(buffer));
-        uint8_t oldDcMsb = buffer[0];
-        uint8_t oldDcLsb = buffer[1];
-
-        //* 10.Read and write two Design Capacity bytes starting from 0x40
-        uint8_t newDcMsb = lowByte(newDesignCapacity);
-        uint8_t newDcLsb = highByte(newDesignCapacity);
-
-        //* 11.Calculate new checksum
-        int temp = (255 - oldChksum - oldDcMsb - oldDcLsb + newDcMsb + newDcLsb) % 256;
-        uint8_t newChksum = 255 - temp;
-
-        //* 12.Write new checksum
-        comm->writeRegister(BQ27220_REG_MAC_DATA_SUM, newChksum);
-
-        //* 13.Write the block length, in this example, Data_Len is 0x24
-        uint8_t dataLength = 0x24;
-        comm->writeRegister(BQ27220_REG_MAC_DATA_LEN, dataLength);
-
-        //* 13.1.Write new Design Capacity bytes
-        comm->writeRegister(BQ27220_REG_STA_DESIGN_CAPACITY_MSB, newDcMsb);
-        comm->writeRegister(BQ27220_REG_STA_DESIGN_CAPACITY_LSB, newDcLsb);
-
-        //* 14.Exit CFUPDATE mode by sending the EXIT_CFG_UPDATE_REINIT (0x0091) or EXIT_CFG_UPDATE (0x0092) command
+        // Exit CFUPDATE mode by sending the EXIT_CFG_UPDATE_REINIT (0x0091) or EXIT_CFG_UPDATE (0x0092) command
         sendSubCommand(BQ27220_SUB_CMD_EXIT_CFG_UPDATE_REINIT);
 
-        //* 15.Confirm that CFUPDATE mode has been exited by polling the
-        //* OperationStatus() register until bit 2 is cleared
+        // Confirm that CFUPDATE mode has been exited by polling the OperationStatus() register until bit 2 is cleared
         timeout = hal->millis() + 3000UL;
-        while (true && timeout > hal->millis()) {
-            s = getOperationStatus();
-            if (s.CFGUPDATE == 0x00) {
+        while (timeout > hal->millis()) {
+            operationStatus = getOperationStatus();
+            if (operationStatus.CFGUPDATE == 0x00) {
                 timeout = hal->millis() + 1000;
                 break;
             }
             hal->delay(100);
         }
         if (hal->millis() > timeout) {
-            log_e("Wait CFUPDATE exit timeout");
+            log_e("Timed out waiting to exit update mode.");
+            return false;
         }
-        //* 16.If the device was previously in SEALED state, return
-        //* to SEALED mode by sending the Control(0x0030) subcommand
-        exitSealMode();
+
+        // 13. If the device was previously in SEALED state, return to SEALED mode by sending the Control(0x0030) subcommand
+        if (isSealed) {
+            log_d("Restore Safe Mode!");
+            exitSealMode();
+        }
 
         return true;
     }
@@ -649,7 +670,7 @@ public:
     uint16_t getChipID()
     {
         uint8_t buffer[2] = {0};
-        if (sendSubCommand(BQ27220_SUB_CMD_DEVICE_NUMBER) < 0) {
+        if (sendSubCommand(BQ27220_SUB_CMD_DEVICE_NUMBER, true) < 0) {
             return 0;
         }
         if (this->getMACData(buffer, arraySize(buffer)) < 0) {
@@ -672,7 +693,7 @@ public:
     int getFirmwareVersion()
     {
         uint8_t buffer[4];
-        if (sendSubCommand(BQ27220_SUB_CMD_FW_VERSION) < 0) {
+        if (sendSubCommand(BQ27220_SUB_CMD_FW_VERSION, true) < 0) {
             return -1;
         }
         if (this->getMACData(buffer, arraySize(buffer)) < 0) {
@@ -689,20 +710,50 @@ public:
 
 private:
 
+
+    bool setCapacity(uint16_t newCapacity, uint8_t msbAccessValue, uint8_t lsbAccessValue)
+    {
+        constexpr uint8_t fixedDataLength = 0x06;
+
+        // Write to access the MSB of Capacity
+        comm->writeRegister(BQ27220_REG_STA_DESIGN_CAPACITY_MSB, msbAccessValue);
+
+        // Write to access the LSB of Capacity
+        comm->writeRegister(BQ27220_REG_STA_DESIGN_CAPACITY_LSB, lsbAccessValue);
+
+        // Write two Capacity bytes starting from 0x40
+        uint8_t newCapacityMsb = highByte(newCapacity);
+        uint8_t newCapacityLsb = lowByte(newCapacity);
+        uint8_t capacityRaw[] = {newCapacityMsb, newCapacityLsb};
+        comm->writeRegister(BQ27220_REG_MAC_BUFFER_START, capacityRaw, 2);
+
+        // Calculate new checksum
+        uint8_t newChksum = 0xFF - ((msbAccessValue + lsbAccessValue + newCapacityMsb + newCapacityLsb) & 0xFF);
+
+        // Write new checksum (0x60)
+        comm->writeRegister(BQ27220_REG_MAC_DATA_SUM, newChksum);
+
+        // Write the block length
+        comm->writeRegister(BQ27220_REG_MAC_DATA_LEN, fixedDataLength);
+
+        return true;
+    }
+
     int getHalfWord(uint8_t reg)
     {
         uint8_t buffer[2] = {0};
         if (comm->writeThenRead(&reg, 1, buffer, arraySize(buffer)) < 0) {
-            return 0xFFFF;
+            log_e("Read register %02X failed!", reg);
+            return UINT16_MAX;
         }
         return (buffer[1] << 8) | buffer[0];
     }
 
     bool initImpl()
     {
-        reset();
-
-        hal->delay(10);
+        // BQ27220 Technical Reference Manual , 5.3 I2C command waiting time
+        comm->setParams(I2CParam(I2CParam::I2C_SET_WRITE_DELAY_US, 500));
+        comm->setParams(I2CParam(I2CParam::I2C_SET_READ_DELAY_US, 100000));
 
         int chipID = getChipID();
         if (chipID != BQ27220_CHIP_ID) {
@@ -730,5 +781,6 @@ private:
 protected:
     std::unique_ptr<SensorCommBase> comm;
     std::unique_ptr<SensorHal> hal;
+    uint32_t accessKey;
 };
 
