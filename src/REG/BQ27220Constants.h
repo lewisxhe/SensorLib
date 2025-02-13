@@ -102,6 +102,12 @@ protected:
     static constexpr uint8_t BQ27220_REG_ANALOG_COUNT                    = (0x79);
     static constexpr uint8_t BQ27220_REG_RAW_CURRENT                     = (0x7A);
     static constexpr uint8_t BQ27220_REG_RAW_VOLTAGE                     = (0x7C);
+    static constexpr uint8_t BQ27220_REG_ROM_START                       = (0x3E);
 
     static constexpr uint16_t  BQ27220_CHIP_ID                           = (0x0220);
+
+    static constexpr uint16_t BQ27220_ROM_FULL_CHARGE_CAPACITY           = (0x929D);
+    static constexpr uint16_t BQ27220_ROM_DESIGN_CAPACITY                = (0x929F);
+    static constexpr uint16_t BQ27220_ROM_OPERATION_CONFIG_A             = (0x9206);
+    static constexpr uint16_t BQ27220_ROM_OPERATION_CONFIG_B             = (0x9208);
 };
