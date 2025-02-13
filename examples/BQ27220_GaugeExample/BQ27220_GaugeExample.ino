@@ -24,7 +24,7 @@
  *
  * @file      BQ27220_GaugeExample.ino
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2025-01-16
+ * @date      2025-02-13
  *
  */
 #include <Wire.h>
@@ -72,123 +72,187 @@ void setup()
 
     // uint32_t key = 0x12345678;
     // gauge.setAccessKey(key)
-        
-    uint16_t newDesignCapacity = 4000;
-    uint16_t newFullChargeCapacity = 4000;
+
+    uint16_t newDesignCapacity = 3500;
+    uint16_t newFullChargeCapacity = 3500;
     gauge.setNewCapacity(newDesignCapacity, newFullChargeCapacity);
+
+    OperationConfig config = gauge.getOperationConfig();
+
+    //* OperationConfig A *//
+    Serial.print("OperationConfigA Values:0x");
+    Serial.println(config.getConfigA(), HEX);
+
+    Serial.print("External Thermistor Selected: ");
+    Serial.println(config.isTempsSet() ? "YES" : "NO");
+
+    Serial.print("BATT_GD Pin Polarity High: ");
+    Serial.println(config.isBatgPolHigh() ? "YES" : "NO");
+
+    Serial.print("BATT_GD Function Enabled: ");
+    Serial.println(config.isBatgEnEnabled() ? "YES" : "NO");
+
+    Serial.print("Can Enter SLEEP State: ");
+    Serial.println(config.canEnterSleep() ? "YES" : "NO");
+
+    Serial.print("slpwakechg Function Enabled: ");
+    Serial.println(config.isSlpwakechgEnabled() ? "YES" : "NO");
+
+    Serial.print("Write Temperature Function Enabled: ");
+    Serial.println(config.isWrtempEnabled() ? "YES" : "NO");
+
+    Serial.print("Battery Insertion Detection Enabled: ");
+    Serial.println(config.isBienableEnabled() ? "YES" : "NO");
+
+    Serial.print("Battery Insertion Pin Pull - Up Enabled: ");
+    Serial.println(config.isBlPupEnEnabled() ? "YES" : "NO");
+
+    Serial.print("Pin Function Code (PFC) Mode: ");
+    Serial.println(config.getPfcCfg());
+
+    Serial.print("Wake - Up Function Enabled: ");
+    Serial.println(config.isWakeEnEnabled() ? "YES" : "NO");
+
+    Serial.print("Wake - Up Threshold 1: ");
+    Serial.println(config.getWkTh1());
+
+    Serial.print("Wake - Up Threshold 0: ");
+    Serial.println(config.getWkTh0());
+
+    //* OperationConfig B *//
+    Serial.print("\nOperationConfigB Values:0x");
+    Serial.println(config.getConfigB(), HEX);
+
+    Serial.print("Default Seal Option Enabled: ");
+    Serial.println(config.isDefaultSealEnabled() ? "YES" : "NO");
+
+    Serial.print("Non - Removable Option Set: ");
+    Serial.println(config.isNonRemovableSet() ? "YES" : "NO");
+
+    Serial.print("INT_BREM Function Enabled: ");
+    Serial.println(config.isIntBremEnabled() ? "YES" : "NO");
+
+    Serial.print("INT_BATL Function Enabled: ");
+    Serial.println(config.isIntBatLEnabled() ? "YES" : "NO");
+
+    Serial.print("INT_STATE Function Enabled: ");
+    Serial.println(config.isIntStateEnabled() ? "YES" : "NO");
+
+    Serial.print("INT_OCV Function Enabled: ");
+    Serial.println(config.isIntOcvEnabled() ? "YES" : "NO");
+
+    Serial.print("INT_OT Function Enabled: ");
+    Serial.println(config.isIntOtEnabled() ? "YES" : "NO");
+
+    Serial.print("INT_POL Function Enabled (High - Level Polarity): ");
+    Serial.println(config.isIntPolHigh() ? "YES" : "NO");
+
+    Serial.print("INT_FOCV Function Enabled: ");
+    Serial.println(config.isIntFocvEnabled() ? "YES" : "NO");
+
+    delay(10000);
 }
 
 
 void loop()
 {
-    int rate = gauge.getAtRate();                                       // mA
-    uint16_t atRateTimeToEmpty = gauge.getAtRateTimeToEmpty();          // minutes
-    float ntcTemperature = gauge.getTemperature();                      // Celsius
-    uint16_t batteryVoltage = gauge.getBatteryVoltage();                // mV
-    uint16_t batteryStatusRaw = gauge.getBatteryStatusRaw();            // N.A
-    int instantaneousCurrent = gauge.getInstantaneousCurrent();         // mAh
-    uint16_t remainingCapacity = gauge.getRemainingCapacity();          // mAh
-    uint16_t fullChargeCapacity = gauge.getFullChargeCapacity();        // mAh
-    uint16_t time2Empty = gauge.getTimeToEmpty();                       // minutes
-    uint16_t time2Full = gauge.getTimeToFull();                         // minutes
-    uint16_t standbyCurrent = gauge.getStandbyCurrent();                // mA
+    uint32_t startMeasTime = millis();
 
+    if (gauge.refresh()) {
 
-    uint16_t standbyTimeToEmpty = gauge.getStandbyTimeToEmpty();        // minutes
-    int maxLoadCurrent = gauge.getMaxLoadCurrent();                     // mA
-    uint16_t maxLoadTimeToEmpty = gauge.getMaxLoadTimeToEmpty();        // minutes
-    uint16_t coulombCountRaw = gauge.getRawCoulombCount();              // mAh
-    uint16_t averagePower = gauge.getAveragePower();                    // mW
-    float internalTemperature = gauge.getInternalTemperature();         // Celsius
-    uint16_t cycleCount = gauge.getCycleCount();                        // Number
+        uint32_t endMesTime = millis();
 
-    uint16_t stateOfCharge = gauge.getStateOfCharge();                  // %
-    uint16_t stateOfHealth = gauge.getStateOfHealth();                  // %
-    uint16_t chargingVoltage = gauge.getChargingVoltage();              // mV
-    uint16_t chargingCurrent = gauge.getChargingCurrent();              // mA
-    uint16_t BTPDischargeSet = gauge.getBTPDischargeSet();              // mAh
-    uint16_t BTPChargeSet = gauge.getBTPChargeSet();                    // mAh
-    uint16_t operationStatusRaw = gauge.getOperationStatusRaw();        // N.A
-    uint16_t designCapacity = gauge.getDesignCapacity();                // mAh
+        Serial.print("Polling time: "); Serial.print(endMesTime - startMeasTime); Serial.println(" ms");
 
+        Serial.println("\nStandard query:");
+        Serial.print("\t- AtRate:"); Serial.print(gauge.getAtRate()); Serial.println(" mA");
+        Serial.print("\t- AtRateTimeToEmpty:"); Serial.print(gauge.getAtRateTimeToEmpty()); Serial.println(" minutes");
+        Serial.print("\t- Temperature:"); Serial.print(gauge.getTemperature() ); Serial.println(" ℃");
+        Serial.print("\t- BatteryVoltage:"); Serial.print(gauge.getVoltage()); Serial.println(" mV");
+        Serial.print("\t- InstantaneousCurrent:"); Serial.print(gauge.getCurrent()); Serial.println(" mAh");
+        Serial.print("\t- RemainingCapacity:"); Serial.print(gauge.getRemainingCapacity()); Serial.println(" mAh");
+        Serial.print("\t- FullChargeCapacity:"); Serial.print(gauge.getFullChargeCapacity()); Serial.println(" mAh");
+        Serial.print("\t- DesignCapacity:"); Serial.print(gauge.getDesignCapacity()); Serial.println(" mAh");
+        Serial.print("\t- TimeToEmpty:"); Serial.print(gauge.getTimeToEmpty()); Serial.println(" minutes");
+        Serial.print("\t- TimeToFull:"); Serial.print(gauge.getTimeToFull()); Serial.println(" minutes");
+        Serial.print("\t- StandbyCurrent:"); Serial.print(gauge.getStandbyCurrent()); Serial.println(" mA");
+        Serial.print("\t- StandbyTimeToEmpty:"); Serial.print(gauge.getStandbyTimeToEmpty()); Serial.println(" minutes");
+        Serial.print("\t- MaxLoadCurrent:"); Serial.print(gauge.getMaxLoadCurrent()); Serial.println(" mA");
+        Serial.print("\t- MaxLoadTimeToEmpty:"); Serial.print(gauge.getMaxLoadTimeToEmpty()); Serial.println(" minute");
+        Serial.print("\t- RawCoulombCount:"); Serial.print(gauge.getRawCoulombCount()); Serial.println(" mAh");
+        Serial.print("\t- AveragePower:"); Serial.print(gauge.getAveragePower()); Serial.println(" mW");
+        Serial.print("\t- InternalTemperature:"); Serial.print(gauge.getInternalTemperature()); Serial.println(" ℃");
+        Serial.print("\t- CycleCount:"); Serial.println(gauge.getCycleCount());
+        Serial.print("\t- StateOfCharge:"); Serial.print(gauge.getStateOfCharge()); Serial.println(" %");
+        Serial.print("\t- StateOfHealth:"); Serial.print(gauge.getStateOfHealth()); Serial.println(" %");
+        Serial.print("\t- RequestChargingVoltage:"); Serial.print(gauge.getRequestChargingVoltage()); Serial.println(" mV");
+        Serial.print("\t- RequestChargingCurrent:"); Serial.print(gauge.getRequestChargingCurrent()); Serial.println(" mA");
+        Serial.print("\t- BTPDischargeSet:"); Serial.print(gauge.getBTPDischargeSet()); Serial.println(" mAh");
+        Serial.print("\t- BTPChargeSet:"); Serial.print(gauge.getBTPChargeSet()); Serial.println(" mAh");
+        FuelGaugeOperationStatus status = gauge.getOperationStatus();
+        BatteryStatus batteryStatus = gauge.getBatteryStatus();
 
-    Serial.print("getAtRate:"); Serial.print(rate); Serial.println(" mA");
-    Serial.print("getAtRateTimeToEmpty:"); Serial.print(atRateTimeToEmpty); Serial.println(" minutes");
-    Serial.print("getTemperature:"); Serial.print(ntcTemperature, 2); Serial.println(" ℃");
-    Serial.print("getBatteryVoltage:"); Serial.print(batteryVoltage); Serial.println(" mV");
-    Serial.print("getBatteryStatusRaw:"); Serial.println(batteryStatusRaw);
-    Serial.print("getInstantaneousCurrent:"); Serial.print(instantaneousCurrent); Serial.println(" mAh");
-    Serial.print("getRemainingCapacity:"); Serial.print(remainingCapacity); Serial.println(" mAh");
-    Serial.print("getFullChargeCapacity:"); Serial.print(fullChargeCapacity); Serial.println(" mAh");
-    Serial.print("getTimeToEmpty:"); Serial.print(time2Empty); Serial.println(" minutes");
-    Serial.print("getTimeToFull:"); Serial.print(time2Full); Serial.println(" minutes");
-    Serial.print("getStandbyCurrent:"); Serial.print(standbyCurrent); Serial.println(" mA");
-    Serial.print("getStandbyTimeToEmpty:"); Serial.print(standbyTimeToEmpty); Serial.println(" minutes");
-    Serial.print("getMaxLoadCurrent:"); Serial.print(maxLoadCurrent); Serial.println(" mA");
-    Serial.print("getMaxLoadTimeToEmpty:"); Serial.print(maxLoadTimeToEmpty); Serial.println(" minute");
-    Serial.print("getRawCoulombCount:"); Serial.print(coulombCountRaw); Serial.println(" mAh");
-    Serial.print("getAveragePower:"); Serial.print(averagePower); Serial.println(" mW");
-    Serial.print("getInternalTemperature:"); Serial.print(internalTemperature, 2); Serial.println(" ℃");
-    Serial.print("getCycleCount:"); Serial.println(cycleCount);
-    Serial.print("getStateOfCharge:"); Serial.print(stateOfCharge); Serial.println(" %");
-    Serial.print("getStateOfHealth:"); Serial.print(stateOfHealth); Serial.println(" %");
-    Serial.print("getChargingVoltage:"); Serial.print(chargingVoltage); Serial.println(" mV");
-    Serial.print("getChargingCurrent:"); Serial.print(chargingCurrent); Serial.println(" mA");
-    Serial.print("getBTPDischargeSet:"); Serial.print(BTPDischargeSet); Serial.println(" mAh");
-    Serial.print("getBTPChargeSet:"); Serial.print(BTPChargeSet); Serial.println(" mAh");
-    Serial.print("getOperationStatusRaw:"); Serial.println(operationStatusRaw);
-    Serial.print("getDesignCapacity:"); Serial.print(designCapacity); Serial.println(" mAh");
+        Serial.println("\nOperation Status:");
+        Serial.print("\t- getIsConfigUpdateMode:"); Serial.println(status.getIsConfigUpdateMode() ? "YES" : "NO");
+        Serial.print("\t- getIsBtpThresholdExceeded:"); Serial.println(status.getIsBtpThresholdExceeded() ? "YES" : "NO");
+        Serial.print("\t- getIsCapacityAccumulationThrottled:"); Serial.println(status.getIsCapacityAccumulationThrottled() ? "YES" : "NO");
+        Serial.print("\t- getIsInitializationComplete:"); Serial.println(status.getIsInitializationComplete() ? "YES" : "NO");
+        Serial.print("\t- getIsDischargeCycleCompliant:"); Serial.println(status.getIsDischargeCycleCompliant() ? "YES" : "NO");
+        Serial.print("\t- getIsBatteryVoltageBelowEdv2:"); Serial.println(status.getIsBatteryVoltageBelowEdv2() ? "YES" : "NO");
+        Serial.print("\t- getSecurityAccessLevel:"); Serial.println(status.getSecurityAccessLevel());
+        Serial.print("\t- getIsCalibrationModeEnabled:"); Serial.println(status.getIsCalibrationModeEnabled() ? "YES" : "NO");
 
-    BatteryStatus s = gauge.getBatteryStatus();
-    Serial.println("Battery Status:");
-    if (s.isFullDischargeDetected()) {
-        Serial.println("1.Full discharge detected.");
+        Serial.println("\nBattery Status:");
+        if (batteryStatus.isFullDischargeDetected()) {
+            Serial.println("\t- Full discharge detected.");
+        }
+        if (batteryStatus.isOcvMeasurementUpdateComplete()) {
+            Serial.println("\t- OCV measurement update is complete.");
+        }
+        if (batteryStatus.isOcvReadFailedDueToCurrent()) {
+            Serial.println("\t- Status bit indicating that an OCV read failed due to current.");
+            Serial.println("\tThis bit can only be set if a battery is present after receiving an OCV_CMD().");
+        }
+        if (batteryStatus.isInSleepMode()) {
+            Serial.println("\t- The device operates in SLEEP mode");
+        }
+        if (batteryStatus.isOverTemperatureDuringCharging()) {
+            Serial.println("\t- Over-temperature is detected during charging.");
+        }
+        if (batteryStatus.isOverTemperatureDuringDischarge()) {
+            Serial.println("\t- Over-temperature detected during discharge condition.");
+        }
+        if (batteryStatus.isFullChargeDetected()) {
+            Serial.println("\t- Full charge detected.");
+        }
+        if (batteryStatus.isChargeInhibited()) {
+            Serial.println("\t- Charge Inhibit: If set, indicates that charging should not begin because the Temperature() is outside the range");
+            Serial.println("\t[Charge Inhibit Temp Low, Charge Inhibit Temp High]. ");
+        }
+        if (batteryStatus.isChargingTerminationAlarm()) {
+            Serial.println("\t- Termination of charging alarm. This flag is set and cleared based on the selected SOC Flag Config A option.");
+        }
+        if (batteryStatus.isGoodOcvMeasurement()) {
+            Serial.println("\t- A good OCV measurement was made.");
+        }
+        if (batteryStatus.isBatteryInserted()) {
+            Serial.println("\t- Detects inserted battery.");
+        }
+        if (batteryStatus.isBatteryPresent()) {
+            Serial.println("\t- Battery presence detected.");
+        }
+        if (batteryStatus.isDischargeTerminationAlarm()) {
+            Serial.println("\t- Termination discharge alarm. This flag is set and cleared according to the selected SOC Flag Config A option.");
+        }
+        if (batteryStatus.isSystemShutdownRequired()) {
+            Serial.println("\t- System shutdown bit indicating that the system should be shut down. True when set. If set, the SOC_INT pin toggles once.");
+        }
+        if (batteryStatus.isInDischargeMode()) {
+            Serial.println("\t- When set, the device is in DISCHARGE mode; when cleared, the device is in CHARGING or RELAXATION mode.");
+        }
+        Serial.println("===============================================");
+
     }
-    if (s.isOcvMeasurementUpdateComplete()) {
-        Serial.println("2.OCV measurement update is complete.");
-    }
-    if (s.isOcvReadFailedDueToCurrent()) {
-        Serial.println("3.Status bit indicating that an OCV read failed due to current.");
-        Serial.println("\tThis bit can only be set if a battery is present after receiving an OCV_CMD().");
-    }
-    if (s.isInSleepMode()) {
-        Serial.println("4.The device operates in SLEEP mode");
-    }
-    if (s.isOverTemperatureDuringCharging()) {
-        Serial.println("5.Over-temperature is detected during charging.");
-    }
-    if (s.isOverTemperatureDuringDischarge()) {
-        Serial.println("6.Over-temperature detected during discharge condition.");
-    }
-    if (s.isFullChargeDetected()) {
-        Serial.println("7.Full charge detected.");
-    }
-    if (s.isChargeInhibited()) {
-        Serial.println("8.Charge Inhibit: If set, indicates that charging should not begin because the Temperature() is outside the range");
-        Serial.println("\t[Charge Inhibit Temp Low, Charge Inhibit Temp High]. ");
-    }
-    if (s.isChargingTerminationAlarm()) {
-        Serial.println("9.Termination of charging alarm. This flag is set and cleared based on the selected SOC Flag Config A option.");
-    }
-    if (s.isGoodOcvMeasurement()) {
-        Serial.println("10.A good OCV measurement was made.");
-    }
-    if (s.isBatteryInserted()) {
-        Serial.println("11.Detects inserted battery.");
-    }
-    if (s.isBatteryPresent()) {
-        Serial.println("12.Battery presence detected.");
-    }
-    if (s.isDischargeTerminationAlarm()) {
-        Serial.println("13.Termination discharge alarm. This flag is set and cleared according to the selected SOC Flag Config A option.");
-    }
-    if (s.isSystemShutdownRequired()) {
-        Serial.println("14.System shutdown bit indicating that the system should be shut down. True when set. If set, the SOC_INT pin toggles once.");
-    }
-    if (s.isInDischargeMode()) {
-        Serial.println("15.When set, the device is in DISCHARGE mode; when cleared, the device is in CHARGING or RELAXATION mode.");
-    }
-    Serial.println("===============================================");
     delay(3000);
 }
 
