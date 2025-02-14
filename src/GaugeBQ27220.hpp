@@ -1315,6 +1315,5 @@ protected:
     BatteryData data;
     const uint8_t START_REGISTER  = 0x02;
     const uint8_t REGISTER_COUNT  = 54;
-    friend class GaugeBQ27220Helper;
 };
 
