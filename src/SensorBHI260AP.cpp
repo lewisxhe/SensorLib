@@ -1154,8 +1154,18 @@ bool SensorBHI260AP::initImpl(bhy2_intf interface)
     }
 
     //Set process buffer
-#if defined(ARDUINO_ARCH_ESP32) && defined(BOARD_HAS_PSRAM)
-    _processBuffer = (uint8_t *)ps_malloc(_processBufferSize);
+#if defined(ARDUINO_ARCH_ESP32)
+    if (psramFound()) {
+        _processBuffer = (uint8_t *)ps_malloc(_processBufferSize);
+        // In older versions of esp-core, even if psramFound returns true, it may not initialize psram correctly.
+        // This situation is common when OPI type SPI-RAM is selected as QSPI, or QSPI is selected as OPI.
+        if (!_processBuffer) {
+            log_e("malloc psram buffer failed,try to alloc sram buffer!");
+            _processBuffer = (uint8_t *)malloc(_processBufferSize);
+        }
+    } else {
+        _processBuffer = (uint8_t *)malloc(_processBufferSize);
+    }
 #else
     _processBuffer = (uint8_t *)malloc(_processBufferSize);
 #endif
