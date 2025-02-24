@@ -30,11 +30,8 @@
  *            between the two. This class is added to facilitate switching between different chips without
  *            having to worry about the specific model used.
  */
-#include <Wire.h>
-#include <SPI.h>
-#include <Arduino.h>
-#include <SensorPCF8563.hpp>
-#include <SensorPCF85063.hpp>
+#include "SensorPCF8563.hpp"
+#include "SensorPCF85063.hpp"
 
 /**
  * @brief Enumeration of different RTC (Real-Time Clock) driver types.
