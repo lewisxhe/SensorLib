@@ -85,13 +85,13 @@ void printDateTime()
         /**
         /// Format output time*
         Option:
-            DATETIME_FORMAT_HM
-            DATETIME_FORMAT_HMS
-            DATETIME_FORMAT_YYYY_MM_DD
-            DATETIME_FORMAT_MM_DD_YYYY
-            DATETIME_FORMAT_DD_MM_YYYY
-            DATETIME_FORMAT_YYYY_MM_DD_H_M_S
-        default:   DATETIME_FORMAT_YYYY_MM_DD_H_M_S_WEEK
+            DT_FMT_HM,          // Format Style : Hour:Minute
+            DT_FMT_HMS,         // Format Style : Hour:Minute:Second
+            DT_FMT_YMD,         // Format Style : Year-Month-Day
+            DT_FMT_MDY,         // Format Style : Month-Day-Year
+            DT_FMT_DMY,         // Format Style : Day-Month-Year
+            DT_FMT_YMD_HMS,     // Format Style : Year-Month-Day/Hour:Minute:Second
+            Default : DT_FMT_YMD_HMS_WEEK // Format Style : Year-Month-Day/Hour:Minute:Second - Weekday
         */
         Serial.println(rtc.strftime());
 

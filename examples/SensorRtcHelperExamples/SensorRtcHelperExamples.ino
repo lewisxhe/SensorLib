@@ -2,7 +2,7 @@
  *
  * @license MIT License
  *
- * Copyright (c) 2022 lewis he
+ * Copyright (c) 2025 lewis he
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,15 +22,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      PCF8563_SimpleTime.ino
+ * @file      SensorRtcHelperExamples.ino
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2022-12-12
- *
+ * @date      2025-02-24
+ * @note      The SensorRtcHelper class supports automatic determination of the commonly 
+ *            used PCF8563 and PCF8503 real-time clock chips. There are some differences in the registers 
+ *            between the two. This class is added to facilitate switching between different chips without 
+ *            having to worry about the specific model used.
  */
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
-#include <SensorPCF8563.hpp>
+#include <SensorRtcHelper.hpp>
 
 #ifndef SENSOR_SDA
 #define SENSOR_SDA  17
@@ -44,7 +47,8 @@
 #define SENSOR_IRQ  7
 #endif
 
-SensorPCF8563 rtc;
+SensorRtcHelper rtc;
+
 uint32_t interval = 0;
 uint32_t loopCount = 0;
 
@@ -66,7 +70,7 @@ void setup()
 
     // Try to initialize the RTC module using I2C with specified SDA and SCL pins
     if (!rtc.begin(Wire, SENSOR_SDA, SENSOR_SCL)) {
-        Serial.println("Failed to find PCF85063 - check your wiring!");
+        Serial.println("Failed to find PCF8XXX - check your wiring!");
         // Enter an infinite loop to halt the program
         while (1) {
             delay(1000);
@@ -83,9 +87,8 @@ void setup()
     // Set the defined date and time on the RTC
     rtc.setDateTime(year, month, day, hour, minute, second);
 
-    if (!rtc.isClockIntegrityGuaranteed()) {
-        Serial.println("[ERROR]:Clock integrity is not guaranteed; oscillator has stopped or has been interrupted");
-    }
+    Serial.print("RTC Model:");
+    Serial.println(rtc.getChipName());
 }
 
 void loop()
