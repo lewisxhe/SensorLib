@@ -33,12 +33,11 @@
 #include "SensorRTC.h"
 #include "SensorPlatform.hpp"
 
-class SensorPCF8563 :
-    public RTCCommon<SensorPCF8563>,
-    public PCF8563Constants
+class SensorPCF8563 : public SensorRTC, public PCF8563Constants
 {
-    friend class RTCCommon<SensorPCF8563>;
 public:
+    using SensorRTC::setDateTime;
+    using SensorRTC::getDateTime;
 
     enum ClockHz {
         CLK_32768HZ,
@@ -104,31 +103,16 @@ public:
 
     void setDateTime(RTC_DateTime datetime)
     {
-        setDateTime(datetime.year, datetime.month, datetime.day, datetime.hour, datetime.minute, datetime.second);
-    }
-
-    void setDateTime(struct tm timeinfo)
-    {
-        setDateTime(timeinfo.tm_yday + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
-    }
-
-    void setDateTime(uint16_t year,
-                     uint8_t month,
-                     uint8_t day,
-                     uint8_t hour,
-                     uint8_t minute,
-                     uint8_t second)
-    {
         uint8_t buffer[7];
-        buffer[0] = DEC2BCD(second) & 0x7F;
-        buffer[1] = DEC2BCD(minute);
-        buffer[2] = DEC2BCD(hour);
-        buffer[3] = DEC2BCD(day);
-        buffer[4] = getDayOfWeek(day, month, year);
-        buffer[5] = DEC2BCD(month);
-        buffer[6] = DEC2BCD(year % 100);
+        buffer[0] = DEC2BCD(datetime.getSecond()) & 0x7F;
+        buffer[1] = DEC2BCD(datetime.getMinute());
+        buffer[2] = DEC2BCD(datetime.getHour());
+        buffer[3] = DEC2BCD(datetime.getDay());
+        buffer[4] = getDayOfWeek(datetime.getDay(), datetime.getMonth(), datetime.getYear());
+        buffer[5] = DEC2BCD(datetime.getMonth());
+        buffer[6] = DEC2BCD(datetime.getYear() % 100);
 
-        if ((2000 % year) == 2000) {
+        if ((2000 % datetime.getYear()) == 2000) {
             buffer[5] &= 0x7F;
         } else {
             buffer[5] |= 0x80;
@@ -138,27 +122,26 @@ public:
 
     RTC_DateTime getDateTime()
     {
-        RTC_DateTime datetime;
         uint8_t buffer[7];
         comm->readRegister(SEC_REG, buffer, 7);
-        datetime.available = ((buffer[0] & 0x80) == 0x80) ? false : true;
-        datetime.second = BCD2DEC(buffer[0] & 0x7F);
-        datetime.minute = BCD2DEC(buffer[1] & 0x7F);
-        datetime.hour   = BCD2DEC(buffer[2] & 0x3F);
-        datetime.day    = BCD2DEC(buffer[3] & 0x3F);
-        datetime.week   = BCD2DEC(buffer[4] & 0x07);
-        datetime.month  = BCD2DEC(buffer[5] & 0x1F);
-        datetime.year   = BCD2DEC(buffer[6]);
+        uint8_t second = BCD2DEC(buffer[0] & 0x7F);
+        uint8_t minute = BCD2DEC(buffer[1] & 0x7F);
+        uint8_t hour   = BCD2DEC(buffer[2] & 0x3F);
+        uint8_t day    = BCD2DEC(buffer[3] & 0x3F);
+        uint8_t week   = BCD2DEC(buffer[4] & 0x07);
+        uint8_t month  = BCD2DEC(buffer[5] & 0x1F);
+        uint16_t year   = BCD2DEC(buffer[6]);
         //century :  0 = 1900 , 1 = 2000
-        datetime.year += (buffer[5] & CENTURY_MASK) ?  1900 : 2000;
-        return datetime;
+        year += (buffer[5] & CENTURY_MASK) ?  1900 : 2000;
+        return RTC_DateTime(year, month, day, hour, minute, second, week);
     }
 
-    void getDateTime(struct tm *timeinfo)
+
+    bool isClockIntegrityGuaranteed()
     {
-        if (!timeinfo)return;
-        *timeinfo = conversionUnixTime(getDateTime());
+        return comm->getRegisterBit(SEC_REG, 7) == 0;
     }
+
 
     RTC_Alarm getAlarm()
     {
@@ -194,7 +177,7 @@ public:
 
     void setAlarm(RTC_Alarm alarm)
     {
-        setAlarm( alarm.hour, alarm.minute, alarm.day, alarm.week);
+        setAlarm( alarm.getHour(), alarm.getMinute(), alarm.getDay(), alarm.getWeek());
     }
 
     void setAlarm(uint8_t hour, uint8_t minute, uint8_t day, uint8_t week)
@@ -203,7 +186,7 @@ public:
 
         RTC_DateTime datetime =  getDateTime();
 
-        uint8_t daysInMonth =  getDaysInMonth(datetime.month, datetime.year);
+        uint8_t daysInMonth =  getDaysInMonth(datetime.getMonth(), datetime.getYear());
 
         if (minute != NO_ALARM) {
             if (minute > 59) {
@@ -313,6 +296,12 @@ public:
             comm->writeRegister(SQW_REG,  freq | CLK_ENABLE);
         }
     }
+
+    const char *getChipName()
+    {
+        return "PCF8563";
+    }
+
 private:
 
     bool initImpl()

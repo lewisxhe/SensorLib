@@ -31,14 +31,11 @@
 #include "REG/PCF85063Constants.h"
 #include "SensorRTC.h"
 #include "SensorPlatform.hpp"
-
-
-class SensorPCF85063 :
-    public RTCCommon<SensorPCF85063>,
-    public PCF85063Constants
+class SensorPCF85063 : public SensorRTC, public PCF85063Constants
 {
-    friend class RTCCommon<SensorPCF85063>;
 public:
+    using SensorRTC::setDateTime;
+    using SensorRTC::getDateTime;
 
     enum ClockHz {
         CLK_32768HZ = 0,
@@ -107,29 +104,14 @@ public:
 
     void setDateTime(RTC_DateTime datetime)
     {
-        setDateTime(datetime.year, datetime.month, datetime.day, datetime.hour, datetime.minute, datetime.second);
-    }
-
-    void setDateTime(struct tm timeinfo)
-    {
-        setDateTime(timeinfo.tm_yday + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
-    }
-
-    void setDateTime(uint16_t year,
-                     uint8_t month,
-                     uint8_t day,
-                     uint8_t hour,
-                     uint8_t minute,
-                     uint8_t second)
-    {
         uint8_t buffer[7];
-        buffer[0] = DEC2BCD(second) & 0x7F;
-        buffer[1] = DEC2BCD(minute);
-        buffer[2] = DEC2BCD(hour);
-        buffer[3] = DEC2BCD(day);
-        buffer[4] = getDayOfWeek(day, month, year);
-        buffer[5] = DEC2BCD(month);
-        buffer[6] = DEC2BCD(year % 100);
+        buffer[0] = DEC2BCD(datetime.getSecond()) & 0x7F;
+        buffer[1] = DEC2BCD(datetime.getMinute());
+        buffer[2] = DEC2BCD(datetime.getHour());
+        buffer[3] = DEC2BCD(datetime.getDay());
+        buffer[4] = getDayOfWeek(datetime.getDay(), datetime.getMonth(), datetime.getYear());
+        buffer[5] = DEC2BCD(datetime.getMonth());
+        buffer[6] = DEC2BCD(datetime.getYear() % 100);
 
         comm->writeRegister(PCF85063_SEC_REG, buffer, 7);
     }
@@ -139,27 +121,26 @@ public:
     {
         RTC_DateTime datetime;
         uint8_t buffer[7];
+        uint8_t hour = 0;
         comm->readRegister(PCF85063_SEC_REG, buffer, 7);
-        datetime.available = ((buffer[0] & 0x80) == 0x80) ? false : true;
-        datetime.second = BCD2DEC(buffer[0] & 0x7F);
-        datetime.minute = BCD2DEC(buffer[1] & 0x7F);
+        uint8_t second = BCD2DEC(buffer[0] & 0x7F);
+        uint8_t minute = BCD2DEC(buffer[1] & 0x7F);
         if (is24Hour) {
-            datetime.hour   = BCD2DEC(buffer[2] & 0x3F);    // 24-hour mode
+            hour   = BCD2DEC(buffer[2] & 0x3F);    // 24-hour mode
         } else {
-            datetime.AMPM = (buffer[2] & 0x20) == 0x20 ? 'A' : 'P';
-            datetime.hour   = BCD2DEC(buffer[2] & 0x1F);    // 12-hour mode
+            // datetime.AMPM = (buffer[2] & 0x20) == 0x20 ? 'A' : 'P';
+            hour   = BCD2DEC(buffer[2] & 0x1F);    // 12-hour mode
         }
-        datetime.day    = BCD2DEC(buffer[3] & 0x3F);
-        datetime.week   = BCD2DEC(buffer[4] & 0x07);
-        datetime.month  = BCD2DEC(buffer[5] & 0x1F);
-        datetime.year   = BCD2DEC(buffer[6]) + 2000;
-        return datetime;
+        uint8_t day    = BCD2DEC(buffer[3] & 0x3F);
+        uint8_t week   = BCD2DEC(buffer[4] & 0x07);
+        uint8_t month  = BCD2DEC(buffer[5] & 0x1F);
+        uint16_t year   = BCD2DEC(buffer[6]) + 2000;
+        return RTC_DateTime(year, month, day, hour, minute, second, week);
     }
 
-    void getDateTime(struct tm *timeinfo)
+    bool isClockIntegrityGuaranteed()
     {
-        if (!timeinfo)return;
-        *timeinfo = conversionUnixTime(getDateTime());
+        return comm->getRegisterBit(PCF85063_SEC_REG, 7) == 0;
     }
 
     /*
@@ -231,30 +212,22 @@ public:
         buffer[2] = BCD2DEC(buffer[2] & 0x40);  //hour
         buffer[3] = BCD2DEC(buffer[3] & 0x08);  //day
         buffer[4] = BCD2DEC(buffer[4] & 0x08);  //weekday
-        // RTC_Alarm(uint8_t hour, uint8_t minute, uint8_t second, uint8_t day, uint8_t week)
         return RTC_Alarm(buffer[2], buffer[1], buffer[0], buffer[3], buffer[4]);
     }
 
     void setAlarm(RTC_Alarm alarm)
     {
-        setAlarm(alarm.hour,
-                 alarm.minute,
-                 alarm.second,
-                 alarm.day,
-                 alarm.week);
+        setAlarm(alarm.getHour(), alarm.getMinute(), alarm.getSecond(),
+                 alarm.getDay(), alarm.getWeek());
     }
 
-    void setAlarm(uint8_t hour,
-                  uint8_t minute,
-                  uint8_t second,
-                  uint8_t day,
-                  uint8_t week)
+    void setAlarm(uint8_t hour, uint8_t minute, uint8_t second, uint8_t day, uint8_t week)
     {
         uint8_t buffer[5] = {0};
 
         RTC_DateTime datetime =  getDateTime();
 
-        uint8_t daysInMonth =  getDaysInMonth(datetime.month, datetime.year);
+        uint8_t daysInMonth =  getDaysInMonth(datetime.getMonth(), datetime.getYear());
 
         if (second != PCF85063_NO_ALARM) {
             if (second > 59) {
@@ -367,27 +340,51 @@ public:
         comm->writeRegister(PCF85063_CTRL2_REG, val);
     }
 
+    const char *getChipName()
+    {
+        return "PCF85063";
+    }
+
 private:
 
     bool initImpl()
     {
-        // 230704:Does not use power-off judgment, if the RTC backup battery is not installed,
-        //    it will return failure. Here only to judge whether the device communication is normal
-
         //Check device is online
-        int ret = comm->readRegister(PCF85063_SEC_REG);
-        if (ret == -1) {
+        int val =  comm->readRegister(PCF85063_RAM_REG);
+        if (val < 0) {
+            log_e("Device is offline!");
             return false;
         }
-        if (BCD2DEC(ret & 0x7F) > 59) {
+        // Read the contents of a RAM register
+        uint8_t tmp = comm->readRegister(PCF85063_RAM_REG);
+
+        bool rlst = false;
+        // By judging whether the highest bit of the RAM register can be changed,
+        // it can be judged whether it belongs to PCF85063
+        comm->writeRegister(PCF85063_RAM_REG, val | _BV(7));
+        val =  comm->readRegister(PCF85063_RAM_REG);
+        if (val & 0x80) {
+            comm->writeRegister(PCF85063_RAM_REG, val & ~_BV(7));
+            val =  comm->readRegister(PCF85063_RAM_REG);
+            if ((val & 0x80) == 0) {
+                rlst = true;
+            }
+        }
+
+        if (!rlst) {
+            log_e("Failed to write to RAM memory register. Maybe this chip is pcf8563.");
             return false;
         }
+
+        // Restore the contents of the RAM registers
+        comm->writeRegister(PCF85063_RAM_REG, tmp);
 
         //Default use 24-hour mode
         is24Hour = !comm->getRegisterBit(PCF85063_CTRL1_REG, 1);
         if (!is24Hour) {
             // Set 24H Mode
             comm->clrRegisterBit(PCF85063_CTRL1_REG, 1);
+            is24Hour = true;
         }
 
         //Turn on RTC
@@ -397,8 +394,8 @@ private:
     }
 
 protected:
-    bool is24Hour = true;
     std::unique_ptr<SensorCommBase> comm;
+    bool is24Hour;
 };
 
 
