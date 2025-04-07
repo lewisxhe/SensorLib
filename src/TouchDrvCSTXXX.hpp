@@ -38,10 +38,10 @@
 #define CST328_SLAVE_ADDRESS        (0x1A)
 
 enum TouchDrvType {
-    TouchDrv_UNKOWN,
-    TouchDrv_CST8XX,
     TouchDrv_CST226,
+    TouchDrv_CST8XX,
     TouchDrv_CST92XX,
+    TouchDrv_UNKOWN,
 };
 
 class TouchDrvCSTXXX : public TouchDrvInterface
