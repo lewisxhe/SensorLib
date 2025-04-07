@@ -33,6 +33,7 @@
 #include <SensorBHI260AP.hpp>
 #include <bosch/BoschSensorDataHelper.hpp>
 
+#ifdef ARDUINO_ARCH_ESP32
 
 #ifndef BHI260_SDA1
 #define BHI260_SDA1  3
@@ -320,5 +321,15 @@ void loop()
     delay(50);
 }
 
+#else
+void setup()
+{
+    Serial.begin(115200);
+}
 
+void loop()
+{
+    Serial.println("The example only support your esp32 platform"); delay(1000);
+}
+#endif /*ARDUINO_ARCH_ESP32*/
 
