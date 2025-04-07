@@ -36,13 +36,13 @@
 
 
 #if (defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_STM32))  && !defined(ARDUINO_ARCH_MBED)
-#define  writeBytes(txBuf,size) spi.transfer(txBuf,nullptr,size)
+#define  __writeBytes(txBuf,size) spi.transfer(txBuf,nullptr,size)
 #elif defined(ARDUINO_ARCH_NRF52)
-#define  writeBytes(txBuf,size) spi.transfer(txBuf,nullptr,size)
+#define  __writeBytes(txBuf,size) spi.transfer(txBuf,nullptr,size)
 #elif defined(ARDUINO_ARCH_MBED) || defined(ARDUINO_ARCH_ZEPHYR)
-#define  writeBytes(txBuf,size) spi.transfer((void*)txBuf,size)
+#define  __writeBytes(txBuf,size) spi.transfer((void*)txBuf,size)
 #else
-#define  writeBytes(txBuf,size) spi.writeBytes(txBuf,size)
+#define  __writeBytes(txBuf,size) spi.writeBytes(txBuf,size)
 #endif
 
 
@@ -137,7 +137,7 @@ public:
         spi.beginTransaction(setting);
         if (buffer && len > 0) {
             // spi.writeBytes(buffer, len);
-            writeBytes(buffer, len);
+            __writeBytes(buffer, len);
         }
         spi.endTransaction();
         hal->digitalWrite(csPin, HIGH);
@@ -167,7 +167,7 @@ public:
         spi.beginTransaction(setting);
 
         // spi.writeBytes(write_buffer, write_len);
-        writeBytes(write_buffer, write_len);
+        __writeBytes(write_buffer, write_len);
 
         spi.endTransaction();
 
@@ -217,6 +217,8 @@ private:
     SPISettings setting;
     int mosi, miso, sck;
 };
+
+#undef __writeBytes
 
 #endif  //*ARDUINO
 
