@@ -54,6 +54,7 @@
 #define SPI_SCK     35
 #endif
 
+// If BHI260_IRQ is set to -1, sensor interrupts are not used and the sensor polling method is used instead.
 #ifndef BHI260_IRQ
 #define BHI260_IRQ  37
 #endif
@@ -72,6 +73,7 @@
 #define BHI260_SCL  3
 #endif
 
+// If BHI260_IRQ is set to -1, sensor interrupts are not used and the sensor polling method is used instead.
 #ifndef BHI260_IRQ
 #define BHI260_IRQ  8
 #endif
@@ -127,12 +129,18 @@ SensorStepDetector stepDetector(bhy);
 // After uploading firmware once, you can change this to false to speed up boot time.
 bool force_update_flash_firmware = true;
 
+#if BHI260_IRQ > 0
+#define USING_SENSOR_IRQ_METHOD
+#endif
+
+#ifdef USING_SENSOR_IRQ_METHOD
 bool isReadyFlag = false;
 
 void dataReadyISR()
 {
     isReadyFlag = true;
 }
+#endif /*USING_SENSOR_IRQ_METHOD*/
 
 #ifndef USING_DATA_HELPER
 void step_detector_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
@@ -236,10 +244,16 @@ void setup()
     bhy.onResultEvent(SensorBHI260AP::STEP_COUNTER, step_counter_process_callback);
 #endif
 
-    // Set the specified pin (BHI260_IRQ) as an input pin.
+#ifdef USING_SENSOR_IRQ_METHOD
+    // Set the specified pin (BHI260_IRQ) ​​to an input pin.
+    // This makes the pin ready to receive external signals.
+    // If the interrupt is already connected, if BHI260_IRQ is equal to -1 then the polling method will be used
     pinMode(BHI260_IRQ, INPUT);
-    // Attach an interrupt service routine (ISR) 'dataReadyISR' to the specified pin (BHI260_IRQ).
+
+    // Attach an interrupt service routine (ISR) to the specified pin (BHI260_IRQ).
+    // The ISR 'dataReadyISR' will be called whenever a rising edge is detected on the pin.
     attachInterrupt(BHI260_IRQ, dataReadyISR, RISING);
+#endif
 }
 
 
@@ -248,11 +262,19 @@ void loop()
     uint32_t s;
     uint32_t ns;
 
-    // Update sensor fifo
+#ifdef USING_SENSOR_IRQ_METHOD
     if (isReadyFlag) {
         isReadyFlag = false;
+#endif /*USING_SENSOR_IRQ_METHOD*/
+
+        /* If the interrupt is connected to the sensor and BHI260_IRQ is not equal to -1,
+         * the interrupt function will be enabled, otherwise the method of polling the sensor is used
+         */
         bhy.update();
+
+#ifdef USING_SENSOR_IRQ_METHOD
     }
+#endif /*USING_SENSOR_IRQ_METHOD*/
 
 #ifdef USING_DATA_HELPER
     if (stepCounter.hasUpdated()) {

@@ -54,6 +54,7 @@
 #define SPI_SCK     35
 #endif
 
+// If BHI260_IRQ is set to -1, sensor interrupts are not used and the sensor polling method is used instead.
 #ifndef BHI260_IRQ
 #define BHI260_IRQ  37
 #endif
@@ -72,6 +73,7 @@
 #define BHI260_SCL  3
 #endif
 
+// If BHI260_IRQ is set to -1, sensor interrupts are not used and the sensor polling method is used instead.
 #ifndef BHI260_IRQ
 #define BHI260_IRQ  8
 #endif
@@ -98,7 +100,6 @@ SensorBHI260AP_Klio klio(bhy);
 // After uploading firmware once, you can change this to false to speed up boot time.
 bool force_update_flash_firmware = true;
 
-bool isReadyFlag = false;
 
 /* Action 1 mode, BHI260 should point upwards, for action instructions,
 see action1.gif in the example directory */
@@ -126,11 +127,18 @@ uint8_t action1_pattern[] = {
     0x3d, 0xf7, 0x5b, 0x21, 0x3c
 };
 
+#if BHI260_IRQ > 0
+#define USING_SENSOR_IRQ_METHOD
+#endif
+
+#ifdef USING_SENSOR_IRQ_METHOD
+bool isReadyFlag = false;
 
 void dataReadyISR()
 {
     isReadyFlag = true;
 }
+#endif /*USING_SENSOR_IRQ_METHOD*/
 
 // Firmware update progress callback
 void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
@@ -255,22 +263,33 @@ void setup()
     // Once enabled, the sensor will start collecting and reporting data according to these settings.
     klio.enable(sample_rate, report_latency_ms);
 
-    // Set the specified pin (BHI260_IRQ) as an input pin.
-    // This prepares the pin to receive external signals.
+#ifdef USING_SENSOR_IRQ_METHOD
+    // Set the specified pin (BHI260_IRQ) ​​to an input pin.
+    // This makes the pin ready to receive external signals.
+    // If the interrupt is already connected, if BHI260_IRQ is equal to -1 then the polling method will be used
     pinMode(BHI260_IRQ, INPUT);
 
     // Attach an interrupt service routine (ISR) to the specified pin (BHI260_IRQ).
     // The ISR 'dataReadyISR' will be called whenever a rising edge is detected on the pin.
     attachInterrupt(BHI260_IRQ, dataReadyISR, RISING);
+#endif
 }
 
 
 void loop()
 {
-    // Update sensor fifo
+#ifdef USING_SENSOR_IRQ_METHOD
     if (isReadyFlag) {
         isReadyFlag = false;
+#endif /*USING_SENSOR_IRQ_METHOD*/
+
+        /* If the interrupt is connected to the sensor and BHI260_IRQ is not equal to -1,
+         * the interrupt function will be enabled, otherwise the method of polling the sensor is used
+         */
         bhy.update();
+
+#ifdef USING_SENSOR_IRQ_METHOD
     }
+#endif /*USING_SENSOR_IRQ_METHOD*/
     delay(50);
 }
