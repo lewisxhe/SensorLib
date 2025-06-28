@@ -34,8 +34,36 @@
 #include "driver/spi_master.h"
 #include "driver/gpio.h"
 #include "SensorBHI260AP.hpp"
+#include <bosch/BoschSensorDataHelper.hpp>
 
 #if CONFIG_BHI260
+
+
+// The firmware runs in RAM and will be lost if the power is off. The firmware will be loaded from RAM each time it is run.
+#define BOSCH_APP30_SHUTTLE_BHI260_FW
+// #define BOSCH_APP30_SHUTTLE_BHI260_AUX_BMM150FW
+// #define BOSCH_APP30_SHUTTLE_BHI260_BME68X
+// #define BOSCH_APP30_SHUTTLE_BHI260_BMP390
+// #define BOSCH_APP30_SHUTTLE_BHI260_TURBO
+// #define BOSCH_BHI260_AUX_BEM280
+// #define BOSCH_BHI260_AUX_BMM150_BEM280
+// #define BOSCH_BHI260_AUX_BMM150_BEM280_GPIO
+// #define BOSCH_BHI260_AUX_BMM150_GPIO
+// #define BOSCH_BHI260_GPIO
+
+// Firmware is stored in flash and booted from flash,Depends on BHI260 hardware connected to SPI Flash
+// #define BOSCH_APP30_SHUTTLE_BHI260_AUX_BMM150_FLASH
+// #define BOSCH_APP30_SHUTTLE_BHI260_BME68X_FLASH
+// #define BOSCH_APP30_SHUTTLE_BHI260_BMP390_FLASH
+// #define BOSCH_APP30_SHUTTLE_BHI260_FLASH
+// #define BOSCH_APP30_SHUTTLE_BHI260_TURBO_FLASH
+// #define BOSCH_BHI260_AUX_BEM280_FLASH
+// #define BOSCH_BHI260_AUX_BMM150_BEM280_FLASH
+// #define BOSCH_BHI260_AUX_BMM150_BEM280_GPIO_FLASH
+// #define BOSCH_BHI260_AUX_BMM150_GPIO_FLASH
+// #define BOSCH_BHI260_GPIO_FLASH
+
+#include <BoschFirmware.h>
 
 static const char *TAG = "BHI";
 
@@ -47,13 +75,16 @@ static volatile bool dataReady = false;
 
 static bool init_done = false;
 
+#if CONFIG_SENSOR_IRQ != -1
 static void IRAM_ATTR bhi260_set_flag(void *arg)
 {
     dataReady = true;
 }
+#endif
 
 static void bhi260_isr_init()
 {
+#if CONFIG_SENSOR_IRQ != -1
     gpio_config_t io_conf;
     io_conf.intr_type = GPIO_INTR_NEGEDGE;
     io_conf.mode = GPIO_MODE_INPUT;
@@ -66,7 +97,7 @@ static void bhi260_isr_init()
     gpio_install_isr_service(0);
     //hook isr handler for specific gpio pin
     gpio_isr_handler_add((gpio_num_t)CONFIG_SENSOR_IRQ, bhi260_set_flag, NULL);
-
+#endif
 }
 
 static void accel_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
@@ -97,9 +128,6 @@ esp_err_t bhi260_init()
 
     // Set the reset pin
     bhy.setPins(CONFIG_SENSOR_RST);
-
-    /*Set the default firmware, only 6 axes, no other functions*/
-    bhy.setFirmware(bhy2_firmware_image, sizeof(bhy2_firmware_image));
 
 #if CONFIG_USE_I2C_INTERFACE
     // BHI260AP_SLAVE_ADDRESS_L = 0x28
@@ -196,10 +224,14 @@ void bhi260_loop()
     if (!init_done) {
         return;
     }
+#if CONFIG_SENSOR_IRQ != -1
     if (dataReady) {
         dataReady = false;
+#endif
         bhy.update();
+#if CONFIG_SENSOR_IRQ != -1
     }
+#endif
 }
 
 #endif
