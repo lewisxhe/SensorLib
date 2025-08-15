@@ -42,7 +42,7 @@ jobs:
         run: pio pkg install --library "creativerobotics/Commander @ ^4.3.0" -g
 
       - name: Install SdFat
-        run: pio pkg install --library "adafruit/SdFat - Adafruit Fork @ ^2.2.3" -g
+        run: pio pkg install --library "adafruit/SdFat - Adafruit Fork @ 2.2.3" -g
 
       - name: Run PlatformIO
         run: pio ci --lib="."  --board=esp32-s3-devkitm-1 --board=nrf52840_dk_adafruit
