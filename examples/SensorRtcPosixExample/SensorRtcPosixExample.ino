@@ -30,6 +30,9 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
+
+#if defined(ARDUINO_ARCH_ESP32)
+
 #include <SensorRTC_POSIX.hpp>
 
 
@@ -161,3 +164,15 @@ void loop()
         ++loopCount;
     }
 }
+#else
+void setup()
+{
+    Serial.begin(115200);
+}
+
+void loop()
+{
+    Serial.println("Only supported on the esp32 platform");
+    delay(1000);
+}
+#endif
