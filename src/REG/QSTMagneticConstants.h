@@ -2,7 +2,7 @@
  *
  * @license MIT License
  *
- * Copyright (c) 2022 lewis he
+ * Copyright (c) 2025 lewis he
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,9 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      QMC6310Constants.h
+ * @file      QSTMagneticConstants.h
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2022-10-16
+ * @date      2025-08-16
  *
  */
 
@@ -32,13 +32,9 @@
 
 #include <stdint.h>
 
-
-
-class QMC6310Constants
+class QSTMagneticConstants
 {
 protected:
-
-
     // Register addresses
     static constexpr uint8_t REG_CHIP_ID = 0x00;
     static constexpr uint8_t REG_LSB_DX = 0x01;
@@ -52,6 +48,7 @@ protected:
     static constexpr uint8_t REG_CMD2 = 0x0B;
     static constexpr uint8_t REG_SIGN = 0x29;
     static constexpr uint8_t QMC6310_CHIP_ID = 0x80;
+    static constexpr uint8_t QMC5883P_CHIP_ID = 0x80;
 };
 
 
