@@ -22,7 +22,8 @@ Support list:
 | PCF85063        | Real-time clock          | ✔️   | ❌   |
 | QMI8658         | IMU                      | ✔️   | ✔️   |
 | BHI260AP        | IMU                      | ✔️   | ✔️   |
-| QMC6310         | Magnetic Sensor          | ✔️   | ❌   |
+| QMC6310U/N      | Magnetic Sensor          | ✔️   | ❌   |
+| QMC5883P        | Magnetic Sensor          | ✔️   | ❌   |
 | BMM150          | Magnetic Sensor          | ✔️   | ❌   |
 | XL9555          | I/O expander             | ✔️   | ❌   |
 | BMA423          | Accelerometer            | ✔️   | ❌   |
