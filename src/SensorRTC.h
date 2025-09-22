@@ -649,7 +649,7 @@ public:
      * @param val A uint8_t value representing a BCD number.
      * @return The decimal equivalent of the input BCD number.
      */
-    uint8_t BCD2DEC(uint8_t val)
+    static uint8_t BCD2DEC(uint8_t val)
     {
         return ((val >> 4) * 10) + (val & 0x0F);
     }
@@ -659,7 +659,7 @@ public:
      * @param val A uint8_t value representing a decimal number.
      * @return The BCD equivalent of the input decimal number.
      */
-    uint8_t DEC2BCD(uint8_t val)
+    static uint8_t DEC2BCD(uint8_t val)
     {
         return ((val / 10) << 4) | (val % 10);
     }
