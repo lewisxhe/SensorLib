@@ -36,7 +36,7 @@ class PCF85063Constants
 {
 protected:
     // Unique I2C device address
-    static constexpr uint8_t PCF85063_SLAVE_ADDRESS = 0x51;
+    const uint8_t PCF85063_SLAVE_ADDRESS = 0x51;
 
     // Register addresses
     static constexpr uint8_t PCF85063_CTRL1_REG = 0x00;

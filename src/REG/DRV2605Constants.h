@@ -36,7 +36,7 @@ class DRV2605Constants
 {
 protected:
 
-    static constexpr uint8_t DRV2605_SLAVE_ADDRESS = 0x5A;               
+    const uint8_t DRV2605_SLAVE_ADDRESS = 0x5A;               
 
     // Chip IDs
     static constexpr uint8_t DRV2604_CHIP_ID = 0x04;                //* DRV2604  (contains RAM, does not contain licensed ROM library)

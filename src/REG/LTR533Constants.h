@@ -35,7 +35,7 @@ class LTR553Constants
 {
 protected:
     // Unique I2C device address
-    static constexpr uint8_t LTR553_SLAVE_ADDRESS = 0x23;   
+    const uint8_t LTR553_SLAVE_ADDRESS = 0x23;   
 
     // Registers
     static constexpr uint8_t REG_ALS_CONTR = 0x80;
