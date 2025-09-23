@@ -180,18 +180,16 @@ public:
         return (buffer[0] << 8) | buffer[1];
     }
 
-    // The interrupt is triggered only if a touch is detected during the scan cycle
+    // The interrupt pin is pulled down when a touch is detected until the touch is released
     void interruptPolling(void)
     {
-        //datasheet this bit is 0,Actually, it's wrong
-        comm->writeRegister(FT6X36_REG_INT_STATUS, 1);
+        comm->writeRegister(FT6X36_REG_INT_STATUS, 0x00);
     }
 
-    // Triggers an interrupt whenever a touch is detected
+    // The interrupt pin will continue to output pulse once the touch is detected until released
     void interruptTrigger(void)
     {
-        //datasheet this bit is 1,Actually, it's wrong
-        comm->writeRegister(FT6X36_REG_INT_STATUS, (uint8_t)0);
+        comm->writeRegister(FT6X36_REG_INT_STATUS, 0x01);
     }
 
     uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t size = 1)

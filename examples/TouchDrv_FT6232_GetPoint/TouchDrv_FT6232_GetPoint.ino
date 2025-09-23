@@ -60,7 +60,7 @@ void setup()
             delay(1000);
         }
     }
-    touch.interruptTrigger();
+    touch.interruptPolling();
 
     Serial.println("Init FT6X36 Sensor success!");
 }
