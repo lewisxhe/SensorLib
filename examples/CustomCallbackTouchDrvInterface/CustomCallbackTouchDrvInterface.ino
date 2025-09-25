@@ -216,7 +216,7 @@ bool setupTouchDrv()
     result = touchDrv->begin(i2c_wr_function, hal_callback, FT3267_SLAVE_ADDRESS);
     if (result) {
         TouchDrvFT6X36 *tmp = static_cast<TouchDrvFT6X36 *>(touchDrv);
-        tmp->interruptTrigger();
+        tmp->interruptPolling();
         const char *model = touchDrv->getModelName();
         Serial.print("Successfully initialized "); Serial.print(model);
         Serial.print(",using "); Serial.print(model); Serial.println(" Driver!");
