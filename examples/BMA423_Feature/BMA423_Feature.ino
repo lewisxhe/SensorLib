@@ -36,9 +36,9 @@ void setup() {
 
   // --- Force board orientation (preset 7 = bottom layer, top-left corner) ---
   accel.setRemapAxes(SensorBMA423::REMAP_BOTTOM_LAYER_TOP_RIGHT_CORNER);
-  uint8_t r0, r1;
+  //uint8_t r0, r1;
   //if (accel.getRemapAxesRaw(r0, r1)) {
-   // Serial.printf("Remap bytes (expect 0x81 0x01): 0x%02X 0x%02X\n", r0, r1);
+  //  Serial.printf("Remap bytes (expect 0xA8 0x01): 0x%02X 0x%02X\n", r0, r1);
   //}
 
   // --- HARD RESET THE FEATURE ENGINE STATE / IRQ MAPS ---
@@ -47,7 +47,7 @@ void setup() {
   accel.disableActivityIRQ();
   accel.disableAnyNoMotionIRQ();
   accel.disableWakeupIRQ();
-  accel.disableTiltIRQ();
+  accel.disableTiltIRQ();    // start clean; we’ll re-enable below
 
   // Disable features you don’t want
   accel.enableFeature(SensorBMA423::FEATURE_STEP_CNTR, false);
@@ -58,13 +58,13 @@ void setup() {
   // Clear any latched status from the blob defaults
   accel.readIrqStatus();
 
-  // --- Configure the INT pin and enable ONLY ANY-MOTION ---
+  // --- Configure the INT pin and enable ONLY TILT ---
   // edge_ctrl=0(level), level=1(active-high), od=0(push-pull),
   // output_en=1, input_en=0, int_line=0 (INT1)
   accel.configInterrupt(/*edge*/0, /*level*/1, /*od*/0, /*out_en*/1, /*in_en*/0, /*INT1*/0);
 
-  accel.enableFeature(SensorBMA423::FEATURE_ANY_MOTION, true);
-  accel.enableAnyNoMotionIRQ();  // map any-motion to INT1
+  accel.enableFeature(SensorBMA423::FEATURE_TILT, true);
+  accel.enableTiltIRQ();  // map tilt to INT1
 
   // Attach ISR (if your MCU requires digitalPinToInterrupt, use it)
 #if defined(ESP_PLATFORM)
@@ -73,7 +73,7 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(SENSOR_IRQ), setFlag, RISING);
 #endif
 
-  Serial.println("Any-motion IRQ armed. Move the device to trigger events...");
+  Serial.println("Tilt IRQ armed. Tilt the device to trigger events...");
 }
 
 void loop() {
@@ -84,14 +84,14 @@ void loop() {
     uint16_t status = accel.readIrqStatus();
     Serial.printf("INT_STATUS: 0x%04X\n", status);
 
-    if (accel.isAnyNoMotion()) {
-      Serial.println("ANY MOTION!");
+    if (accel.isTilt()) {
+      Serial.println("TILT!");
     }
     // Optional: debug—if you still see other bits, uncomment to inspect
     // if (accel.isPedometer())   Serial.println("Step INT (unexpected)");
     // if (accel.isActivity())    Serial.println("Activity INT (unexpected)");
     // if (accel.isDoubleTap())   Serial.println("Wakeup/DoubleTap INT (unexpected)");
-    // if (accel.isTilt())        Serial.println("Tilt INT (unexpected)");
+    // if (accel.isAnyNoMotion()) Serial.println("Any/No motion INT (unexpected)");
   }
 
   delay(10);

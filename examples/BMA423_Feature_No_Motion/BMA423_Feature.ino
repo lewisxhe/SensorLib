@@ -37,9 +37,9 @@ void setup() {
   // --- Force board orientation (preset 7 = bottom layer, top-left corner) ---
   accel.setRemapAxes(SensorBMA423::REMAP_BOTTOM_LAYER_TOP_RIGHT_CORNER);
   uint8_t r0, r1;
-  if (accel.getRemapAxesRaw(r0, r1)) {
-    Serial.printf("Remap bytes (expect 0x81 0x01): 0x%02X 0x%02X\n", r0, r1);
-  }
+  //if (accel.getRemapAxesRaw(r0, r1)) {
+   // Serial.printf("Remap bytes (expect 0x81 0x01): 0x%02X 0x%02X\n", r0, r1);
+ // }
 
   // --- HARD RESET THE FEATURE ENGINE STATE / IRQ MAPS ---
   // Unmap all feature IRQs (public helpers)
@@ -58,24 +58,13 @@ void setup() {
   // Clear any latched status from the blob defaults
   accel.readIrqStatus();
 
-  // --- Configure INT1 for level-high push-pull output ---
+  // --- Configure the INT pin and enable ONLY NO-MOTION ---
   // edge_ctrl=0(level), level=1(active-high), od=0(push-pull),
   // output_en=1, input_en=0, int_line=0 (INT1)
   accel.configInterrupt(/*edge*/0, /*level*/1, /*od*/0, /*out_en*/1, /*in_en*/0, /*INT1*/0);
 
-  // Enable and map multiple features
-  accel.enableFeature(SensorBMA423::FEATURE_STEP_CNTR, true);
-  accel.enablePedometer(true);
-  accel.enablePedometerIRQ();
-
-  accel.enableFeature(SensorBMA423::FEATURE_TILT, true);
-  accel.enableTiltIRQ();
-
-  accel.enableFeature(SensorBMA423::FEATURE_WAKEUP, true);
-  accel.enableWakeupIRQ();
-
-  accel.enableFeature(SensorBMA423::FEATURE_ANY_MOTION, true);
-  accel.enableAnyNoMotionIRQ();
+  accel.enableFeature(SensorBMA423::FEATURE_NO_MOTION, true);
+  accel.enableAnyNoMotionIRQ();  // map no-motion to INT1
 
   // Attach ISR (if your MCU requires digitalPinToInterrupt, use it)
 #if defined(ESP_PLATFORM)
@@ -84,7 +73,7 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(SENSOR_IRQ), setFlag, RISING);
 #endif
 
-  Serial.println("Multi-feature IRQ armed. Move, tilt, walk, or double-tap to trigger events...");
+  Serial.println("No-motion IRQ armed. Keep the device still to trigger events...");
 }
 
 void loop() {
@@ -95,22 +84,14 @@ void loop() {
     uint16_t status = accel.readIrqStatus();
     Serial.printf("INT_STATUS: 0x%04X\n", status);
 
-    if (accel.isPedometer()) {
-      uint32_t steps = accel.getPedometerCounter();
-      Serial.printf("STEP COUNTER IRQ. Steps: %u\n", static_cast<unsigned>(steps));
-    }
-    if (accel.isTilt()) {
-      Serial.println("TILT EVENT!");
-    }
-    if (accel.isDoubleTap()) {
-      Serial.println("DOUBLE TAP / WAKEUP!");
-    }
     if (accel.isAnyNoMotion()) {
-      Serial.println("ANY-MOTION EVENT!");
+      Serial.println("NO MOTION!");
     }
-    if (accel.isActivity()) {
-      Serial.println("ACTIVITY EVENT!");
-    }
+    // Optional: debug—if you still see other bits, uncomment to inspect
+    // if (accel.isPedometer())   Serial.println("Step INT (unexpected)");
+    // if (accel.isActivity())    Serial.println("Activity INT (unexpected)");
+    // if (accel.isDoubleTap())   Serial.println("Wakeup/DoubleTap INT (unexpected)");
+    // if (accel.isTilt())        Serial.println("Tilt INT (unexpected)");
   }
 
   delay(10);
