@@ -1,98 +1,145 @@
+/**
+ *
+ * @license MIT License
+ *
+ * Copyright (c) 2022 lewis he
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ * @file      BMA423_Feature.ino
+ * @author    Lewis He (lewishe@outlook.com)
+ * @date      2023-04-03
+ *
+ */
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
 #include "SensorBMA423.hpp"
 
 #ifndef SENSOR_SDA
-#define SENSOR_SDA 10
+#define SENSOR_SDA  21
 #endif
+
 #ifndef SENSOR_SCL
-#define SENSOR_SCL 11
+#define SENSOR_SCL  22
 #endif
+
 #ifndef SENSOR_IRQ
-#define SENSOR_IRQ 14
+#define SENSOR_IRQ  39
 #endif
 
 SensorBMA423 accel;
-volatile bool sensorIRQ = false;
-void IRAM_ATTR setFlag() { sensorIRQ = true; }   // IRAM_ATTR ok on ESP; harmless elsewhere
+uint32_t intervalue;
+bool sensorIRQ = false;
 
-void setup() {
-  Serial.begin(115200);
-  while (!Serial) {}
 
-  pinMode(SENSOR_IRQ, INPUT);
-
-  // Many watch boards use the "secondary" address 0x19
-  if (!accel.begin(Wire, BMA423_I2C_ADDR_SECONDARY, SENSOR_SDA, SENSOR_SCL)) {
-    Serial.println("Failed to find BMA423 - check wiring!");
-    for(;;) delay(1000);
-  }
-  Serial.println("Init BMA423 Sensor success!");
-
-  // --- Accel running (ODR is fine with lib default) ---
-  accel.configAccelerometer();        // lib’s default: 4G, ~200 Hz
-  accel.enableAccelerometer();
-
-  // --- Force board orientation (preset 7 = bottom layer, top-left corner) ---
-  accel.setRemapAxes(SensorBMA423::REMAP_BOTTOM_LAYER_TOP_RIGHT_CORNER);
-  //uint8_t r0, r1;
-  //if (accel.getRemapAxesRaw(r0, r1)) {
-  //  Serial.printf("Remap bytes (expect 0xA8 0x01): 0x%02X 0x%02X\n", r0, r1);
-  //}
-
-  // --- HARD RESET THE FEATURE ENGINE STATE / IRQ MAPS ---
-  // Unmap all feature IRQs (public helpers)
-  accel.disablePedometerIRQ();
-  accel.disableActivityIRQ();
-  accel.disableAnyNoMotionIRQ();
-  accel.disableWakeupIRQ();
-  accel.disableTiltIRQ();    // start clean; we’ll re-enable below
-
-  // Disable features you don’t want
-  accel.enableFeature(SensorBMA423::FEATURE_STEP_CNTR, false);
-  accel.enableFeature(SensorBMA423::FEATURE_ACTIVITY,  false);
-  accel.enableFeature(SensorBMA423::FEATURE_ANY_MOTION,false);
-  accel.enableFeature(SensorBMA423::FEATURE_NO_MOTION, false);
-  accel.enableFeature(SensorBMA423::FEATURE_WAKEUP,    false);
-  // Clear any latched status from the blob defaults
-  accel.readIrqStatus();
-
-  // --- Configure the INT pin and enable ONLY TILT ---
-  // edge_ctrl=0(level), level=1(active-high), od=0(push-pull),
-  // output_en=1, input_en=0, int_line=0 (INT1)
-  accel.configInterrupt(/*edge*/0, /*level*/1, /*od*/0, /*out_en*/1, /*in_en*/0, /*INT1*/0);
-
-  accel.enableFeature(SensorBMA423::FEATURE_TILT, true);
-  accel.enableTiltIRQ();  // map tilt to INT1
-
-  // Attach ISR (if your MCU requires digitalPinToInterrupt, use it)
-#if defined(ESP_PLATFORM)
-  attachInterrupt(SENSOR_IRQ, setFlag, RISING);
-#else
-  attachInterrupt(digitalPinToInterrupt(SENSOR_IRQ), setFlag, RISING);
-#endif
-
-  Serial.println("Tilt IRQ armed. Tilt the device to trigger events...");
+void setFlag()
+{
+    sensorIRQ = true;
 }
 
-void loop() {
-  if (sensorIRQ) {
-    sensorIRQ = false;
+void setup()
+{
+    Serial.begin(115200);
+    while (!Serial);
 
-    // Reading status clears the event (and releases the pin if latched by default)
-    uint16_t status = accel.readIrqStatus();
-    Serial.printf("INT_STATUS: 0x%04X\n", status);
+    pinMode(SENSOR_IRQ, INPUT);
+    attachInterrupt(SENSOR_IRQ, setFlag, RISING);
 
-    if (accel.isTilt()) {
-      Serial.println("TILT!");
+    /*
+    * BMA423_I2C_ADDR_PRIMARY   = 0x18
+    * BMA423_I2C_ADDR_SECONDARY = 0x19
+    * * */
+    if (!accel.begin(Wire, BMA423_I2C_ADDR_SECONDARY, SENSOR_SDA, SENSOR_SCL)) {
+        Serial.println("Failed to find BMA423 - check your wiring!");
+        while (1) {
+            delay(1000);
+        }
     }
-    // Optional: debug—if you still see other bits, uncomment to inspect
-    // if (accel.isPedometer())   Serial.println("Step INT (unexpected)");
-    // if (accel.isActivity())    Serial.println("Activity INT (unexpected)");
-    // if (accel.isDoubleTap())   Serial.println("Wakeup/DoubleTap INT (unexpected)");
-    // if (accel.isAnyNoMotion()) Serial.println("Any/No motion INT (unexpected)");
-  }
 
-  delay(10);
+    Serial.println("Init BAM423 Sensor success!");
+
+    //Default 4G ,200HZ
+    accel.configAccelerometer();
+
+    // Enable acceleration sensor
+    accel.enableAccelerometer();
+
+    // Enable pedometer steps
+    accel.enablePedometer();
+
+    // Emptying the pedometer steps
+    accel.resetPedometer();
+
+    // Enable sensor features
+    accel.enableFeature(SensorBMA423::FEATURE_STEP_CNTR |
+                        SensorBMA423::FEATURE_ANY_MOTION |
+                        SensorBMA423::FEATURE_ACTIVITY |
+                        SensorBMA423::FEATURE_TILT |
+                        SensorBMA423::FEATURE_WAKEUP,
+                        true);
+
+    // Pedometer interrupt enable
+    accel.enablePedometerIRQ();
+    // Tilt interrupt enable
+    accel.enableTiltIRQ();
+    // DoubleTap interrupt enable
+    accel.enableWakeupIRQ();
+    // Any  motion / no motion interrupt enable
+    accel.enableAnyNoMotionIRQ();
+    // Activity interruption enable
+    accel.enableActivityIRQ();
+    // Chip interrupt function enable
+    accel.configInterrupt();
+
 }
+
+
+void loop()
+{
+    if (sensorIRQ) {
+        sensorIRQ = false;
+        // The interrupt status must be read after an interrupt is detected
+        uint16_t status =   accel.readIrqStatus();
+        Serial.print("Accelerometer interrupt mask : 0x");
+        Serial.println(status, HEX);
+
+        if (accel.isPedometer()) {
+            uint32_t stepCounter = accel.getPedometerCounter();
+            Serial.print("Step count interrupt,step Counter:");
+            Serial.println(stepCounter);
+        }
+        if (accel.isActivity()) {
+            Serial.println("Activity interrupt");
+        }
+        if (accel.isTilt()) {
+            Serial.println("Tilt interrupt");
+        }
+        if (accel.isDoubleTap()) {
+            Serial.println("DoubleTap interrupt");
+        }
+        if (accel.isAnyNoMotion()) {
+            Serial.println("Any motion / no motion interrupt");
+        }
+    }
+    delay(50);
+}
+
+
+
