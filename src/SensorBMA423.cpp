@@ -1,7 +1,7 @@
 /**
  *
  * @license MIT License
- *
+ *Z_Altered
  * Copyright (c) 2022 lewis he
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
