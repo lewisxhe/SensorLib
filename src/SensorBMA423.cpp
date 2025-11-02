@@ -281,7 +281,7 @@ bool SensorBMA423::setRemapAxes(SensorRemap remap)
         return false;
     }
     buffer[index] = configReg0[remap];
-    buffer[index + 1] = remap >= 4 ? 0x00 : 0x01;
+    buffer[index + 1] = remap >= 4 ? 0x01 : 0x00;
     return comm->writeRegister(FEATURE_CONFIG_ADDR,  buffer, FEATURE_SIZE) != -1;
 }
 
@@ -492,7 +492,7 @@ bool SensorBMA423::isDoubleTap()
 
 bool SensorBMA423::isAnyNoMotion()
 {
-    return (int_status & ACTIVITY_INT);
+    return (int_status & ANY_NO_MOTION_INT);
 }
 
 bool SensorBMA423::isPedometer()

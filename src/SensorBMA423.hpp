@@ -1,5 +1,7 @@
 /**
- *
+ *----Tilt---
+
+ 
  * @license MIT License
  *
  * Copyright (c) 2022 lewis he
@@ -127,7 +129,7 @@ public:
     enum FeatureInterrupt {
         INT_STEP_CNTR     = 0x02,
         INT_ACTIVITY      = 0x04,
-        INT_TILT          = 0x05,
+        INT_TILT          = 0x08,
         INT_WAKEUP        = 0x20,
         INT_ANY_NO_MOTION = 0x40,
     };
