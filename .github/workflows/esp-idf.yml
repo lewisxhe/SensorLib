@@ -14,7 +14,7 @@ jobs:
   esp-idf-build:
     strategy:
       matrix:
-        idf_ver: ["latest"]
+        idf_ver: ["v5.5"]
     runs-on: ubuntu-latest
 
     container: espressif/idf:${{ matrix.idf_ver }}
