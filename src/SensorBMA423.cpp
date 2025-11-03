@@ -1,7 +1,7 @@
 /**
  *
  * @license MIT License
- *
+ *Z_Altered
  * Copyright (c) 2022 lewis he
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -281,7 +281,7 @@ bool SensorBMA423::setRemapAxes(SensorRemap remap)
         return false;
     }
     buffer[index] = configReg0[remap];
-    buffer[index + 1] = remap >= 4 ? 0x00 : 0x01;
+    buffer[index + 1] = remap >= 4 ? 0x01 : 0x00;
     return comm->writeRegister(FEATURE_CONFIG_ADDR,  buffer, FEATURE_SIZE) != -1;
 }
 
@@ -492,7 +492,7 @@ bool SensorBMA423::isDoubleTap()
 
 bool SensorBMA423::isAnyNoMotion()
 {
-    return (int_status & ACTIVITY_INT);
+    return (int_status & ANY_NO_MOTION_INT);
 }
 
 bool SensorBMA423::isPedometer()
@@ -646,6 +646,9 @@ int SensorBMA423::feature_enable(uint8_t feature, uint8_t len, uint8_t *buffer)
             /* Enable nomotion */
             buffer[index] = buffer[index] | ANY_NO_MOTION_SEL_MSK;
         }
+        /* Ensure XYZ axes participate when enabling any/no-motion */
+        index = 3;
+        buffer[index] = buffer[index] | ANY_NO_MOTION_AXIS_EN_MSK;
     }
 
     /* Write the feature enable settings in the sensor */
@@ -657,17 +660,8 @@ void SensorBMA423::update_len(uint8_t *len, uint8_t feature, uint8_t enable)
     uint8_t length = FEATURE_SIZE;
 
     if ((feature == FEATURE_ANY_MOTION) || (feature == FEATURE_NO_MOTION)) {
-        /* Change the feature length to 2 for reading and writing of 2 bytes for
-        any/no-motion enable */
-        length = ANYMOTION_EN_LEN;
-
-        /* Read and write 4 byte to disable the any/no motion completely along with
-        all axis */
-        if (!enable) {
-            /*Change the feature length to 4 for reading and writing
-            of 4 bytes for any/no-motion enable */
-            length = length + 2;
-        }
+        /* Always read/write the axis-enable byte (base+3) when updating any/no-motion */
+        length = ANYMOTION_EN_LEN + 2;
     }
     *len = length;
 }
