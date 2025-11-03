@@ -43,13 +43,16 @@
 #ifndef SENSOR_IRQ
 #define SENSOR_IRQ  39
 #endif
+#ifndef IRAM_ATTR
+#define IRAM_ATTR
+#endif
 
 SensorBMA423 accel;
 uint32_t intervalue;
 bool sensorIRQ = false;
 
 
-void setFlag()
+void IRAM_ATTR setFlag()
 {
     sensorIRQ = true;
 }

@@ -12,6 +12,9 @@
 #ifndef SENSOR_IRQ
 #define SENSOR_IRQ 14
 #endif
+#ifndef IRAM_ATTR
+#define IRAM_ATTR
+#endif
 
 SensorBMA423 accel;
 volatile bool sensorIRQ = false;
@@ -39,10 +42,7 @@ void setup() {
 
   // --- Force board orientation (preset 7 = bottom layer, top-left corner) ---
   accel.setRemapAxes(SensorBMA423::REMAP_BOTTOM_LAYER_TOP_RIGHT_CORNER);
-  // uint8_t r0, r1;
-  // if (accel.getRemapAxesRaw(r0, r1)) {
-  //   Serial.printf("Remap bytes (expect 0xA8 0x01): 0x%02X 0x%02X\n", r0, r1);
-  // }
+
 
   // --- HARD RESET THE FEATURE ENGINE STATE / IRQ MAPS ---
   // Unmap all feature IRQs (public helpers)
@@ -85,7 +85,8 @@ void loop() {
 
     // Reading status clears the event (and releases the pin if latched by default)
     uint16_t status = accel.readIrqStatus();
-    Serial.printf("INT_STATUS: 0x%04X\n", status);
+    Serial.print("INT_STATUS: 0x");
+    Serial.println(status,HEX);
 
     if (accel.isTilt()) {
       Serial.println("TILT!");

@@ -12,6 +12,9 @@
 #ifndef SENSOR_IRQ
 #define SENSOR_IRQ 14
 #endif
+#ifndef IRAM_ATTR
+#define IRAM_ATTR
+#endif
 
 SensorBMA423 accel;
 static uint32_t lastStepCount = 0;
@@ -64,7 +67,8 @@ void setup() {
 void loop() {
   uint32_t steps = accel.getPedometerCounter();
   if (steps != lastStepCount) {
-    Serial.printf("Steps: %lu\n", static_cast<unsigned long>(steps));
+    Serial.print("Steps: ");
+    Serial.println(steps);
     lastStepCount = steps;
   }
   delay(200);
