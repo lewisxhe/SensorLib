@@ -37,8 +37,9 @@
 class BMA423Constants
 {
 protected:
-    static constexpr uint8_t BAM423_SENSOR_RESOLUTION   = (12)  ;     //*
+    static constexpr uint8_t BMA423_SENSOR_RESOLUTION   = (12);       //*
     static constexpr uint8_t RESET_REG                  = (0x7E);     //*
+    static constexpr uint8_t SOFT_RESET_CMD             = (0xB6);     /**\name Value to trigger soft-reset per datasheet */
     static constexpr uint8_t CHIP_ID_ADDR               = (0x00);     /**\name CHIP ID ADDRESS*/
     static constexpr uint8_t CHIP_ID                    = (0x13);     /**\name Chip ID of BMA423 sensor */
     static constexpr uint8_t POWER_CONF_ADDR            = (0x7C);     /**\name POWER_CTRL REGISTER*/
@@ -64,6 +65,9 @@ protected:
     static constexpr uint8_t DATA_8_ADDR                = (0X12);     /**\name AUX/ACCEL DATA BASE ADDRESS REGISTERS*/
     static constexpr uint8_t ACCEL_CONFIG_ADDR          = (0X40);     /**\name AUX/ACCEL DATA BASE ADDRESS REGISTERS*/
     static constexpr uint8_t TEMPERATURE_ADDR           = (0X22);     /**\name AUX/ACCEL DATA BASE ADDRESS REGISTERS*/
+    static constexpr uint8_t TEMPERATURE_INVALID_MARKER = (0x80);     /**\name Datasheet flag for invalid temp sample */
+    static constexpr int32_t TEMPERATURE_LSB_MILLIC     = (500);      /**\name 0.5 °C resolution expressed in milli-degrees */
+    static constexpr int32_t TEMPERATURE_OFFSET_MILLIC  = (23000);    /**\name Offset of 23 °C expressed in milli-degrees */
     static constexpr uint8_t INT1_IO_CTRL_ADDR          = (0X53);     /**\name INTERRUPT ENABLE REGISTERS*/
     static constexpr uint8_t INT2_IO_CTRL_ADDR          = (0X54);     /**\name INTERRUPT ENABLE REGISTERS*/
     static constexpr uint8_t INTR_LATCH_ADDR            = (0X55);     /**\name LATCH DURATION REGISTERS*/
