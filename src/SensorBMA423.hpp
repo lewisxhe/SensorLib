@@ -74,8 +74,8 @@ public:
     };
 
     enum PerformanceMode {
-        PERF_CIC_AVG_MODE,
-        PERF_CONTINUOUS_MODE,
+        PERF_CIC_AVG_MODE    = 0,
+        PERF_CONTINUOUS_MODE = 1,
     };
 
     enum TemperatureUnit {
