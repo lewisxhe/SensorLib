@@ -84,7 +84,7 @@ bool SensorBMA423::begin(SensorCommCustom::CustomCallback callback,
 
 void SensorBMA423::reset()
 {
-    comm->writeRegister(RESET_REG, 0xB6);
+    comm->writeRegister(RESET_REG, SOFT_RESET_CMD);
     hal->delay(20);
 }
 
@@ -140,12 +140,15 @@ bool SensorBMA423::configAccelerometer(AccelRange range, AccelODR odr,
 
 {
     uint8_t buffer[2] = {0, 0};
+    if ((range < RANGE_2G) || (range > RANGE_16G)) {
+        return false;
+    }
     if (perfMode == PERF_CONTINUOUS_MODE) {
         if (bw > BW_NORMAL_AVG4) {
             return false;
         }
     } else if (perfMode == PERF_CIC_AVG_MODE) {
-        if (bw > BW_RES_AVG128) {
+        if ((bw < BW_CIC_AVG8) || (bw > BW_RES_AVG128)) {
             return false;
         }
     } else {
@@ -201,6 +204,10 @@ bool SensorBMA423::getAccelerometer(int16_t &x, int16_t &y, int16_t &z)
 float SensorBMA423::getTemperature(TemperatureUnit unit)
 {
     int32_t raw = comm->readRegister(TEMPERATURE_ADDR);
+    // If the raw read from register is 0x80, it means no valid temperature
+    if (raw == TEMPERATURE_INVALID_MARKER) {
+        return 0;
+    }
     /* '0' value read from the register corresponds to 23 degree C */
     raw = (raw * 1000) + (23 * 1000);
     switch (unit) {
@@ -218,9 +225,6 @@ float SensorBMA423::getTemperature(TemperatureUnit unit)
         break;
     }
     float res = (float)raw / (float)1000.0;
-    /* 0x80 - raw read from the register and 23 is the ambient raw added.
-     * If the raw read from register is 0x80, it means no valid
-     * information is available */
     if (((raw - 23) / 1000) == 0x80) {
         return 0;
     }
@@ -272,7 +276,7 @@ bool SensorBMA423::setRemapAxes(SensorRemap remap)
     // No.8 REG: 0x3e -> 0xa8   REG: 0x3f -> 0x1
 
     uint8_t configReg0[] = {0x88, 0xAC, 0x85, 0xA1, 0x81, 0xA5, 0x8C, 0xA8};
-    if (remap > sizeof(configReg0) / sizeof(configReg0[0])) {
+    if (remap >= sizeof(configReg0) / sizeof(configReg0[0])) {
         return false;
     }
     uint8_t buffer[FEATURE_SIZE] = {0};
