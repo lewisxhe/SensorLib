@@ -213,7 +213,7 @@ public:
      * @note   This function retrieves the battery health status from the AXP2602 chip.
      * @retval The battery health status as an 8-bit unsigned integer.
      */
-    uint8_t getBatteryHealthStatus()
+    uint8_t getBatteryStatus()
     {
         return comm->readRegister(REG_SOH);
     }
@@ -224,7 +224,7 @@ public:
      * @retval The battery percentage as an 8-bit unsigned integer.
      * @note   Battery meter result, remaining battery percentage, 1 LSB = 1%
      */
-    uint8_t getBatteryPercentage()
+    uint8_t getStateOfCharge()
     {
         return comm->readRegister(REG_SOC);
     }
@@ -235,7 +235,7 @@ public:
      * @retval The battery time to empty in minutes.
      * @note   The remaining time calculated by the fuel meter is the lower 8 bits, where 1 LSB = 1 minute.
      */
-    uint16_t getBatteryTimeToEmpty()
+    uint16_t getTimeToEmpty()
     {
         int high = comm->readRegister(REG_TIME_TO_EMPTY_HIGH);
         int low = comm->readRegister(REG_TIME_TO_EMPTY_LOW);
@@ -251,7 +251,7 @@ public:
      * @retval The battery time to full in minutes.
      * @note   The remaining time calculated by the fuel meter is the lower 8 bits, where 1 LSB = 1 minute.
      */
-    uint16_t getBatteryTimeToFull()
+    uint16_t getTimeToFull()
     {
         int high = comm->readRegister(REG_TIME_TO_FULL_HIGH);
         int low = comm->readRegister(REG_TIME_TO_FULL_LOW);
@@ -410,7 +410,7 @@ public:
      * @note   This function reads the battery voltage from the AXP2602 registers.
      * @retval The battery voltage in millivolts (mV).
      */
-    uint16_t getBatteryVoltage()
+    uint16_t getVoltage()
     {
         int high = comm->readRegister(REG_VBAT_ADC_HIGH);
         int low = comm->readRegister(REG_VBAT_ADC_LOW);
@@ -425,7 +425,7 @@ public:
      * @note   This function reads the battery current from the AXP2602 registers.
      * @retval The battery current in milliamperes (mA).
      */
-    uint16_t getBatteryCurrent()
+    uint16_t getCurrent()
     {
         int high = comm->readRegister(REG_IBAT_ADC_HIGH);
         int low = comm->readRegister(REG_IBAT_ADC_LOW);
