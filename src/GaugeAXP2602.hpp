@@ -435,19 +435,6 @@ public:
         return ((high << 8) | low);
     }
 
-    /**
-     * @brief  Get the IRQ status.
-     * @note   This function reads the IRQ status from the AXP2602 registers.
-     * @retval The IRQ status,see enum IRQStatus.
-     */
-    IRQStatus getIRQStatus()
-    {
-        int val = comm->readRegister(REG_IRQ_STATUS);
-        if (val < 0) {
-            return IRQ_ERROR;
-        }
-        return static_cast<IRQStatus>(val & 0x0F);
-    }
 
     /**
      * @brief  Enable or disable specific IRQs.
