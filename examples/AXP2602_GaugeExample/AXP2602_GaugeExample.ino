@@ -47,8 +47,6 @@ void setup()
     Serial.begin(115200);
     // while (!Serial);
 
-    Wire.begin(SENSOR_SDA, SENSOR_SCL);
-
     if (!gauge.begin(Wire, SENSOR_SDA, SENSOR_SCL)) {
         Serial.println("Failed to AXP2602 - check your wiring!");
         while (1) {

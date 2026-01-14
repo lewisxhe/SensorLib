@@ -61,7 +61,6 @@ void setup()
     Serial.begin(115200);
     // while (!Serial);
 
-    Wire.begin(SENSOR_SDA, SENSOR_SCL);
 
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED) {
