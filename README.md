@@ -1,7 +1,6 @@
 
 <center><img src="extras/images/SensroLib.jpg" width="80%" height="30%"></center>
 
-
 [![Build with ESP-IDF](https://github.com/lewisxhe/SensorLib/actions/workflows/esp-idf.yml/badge.svg)](https://github.com/lewisxhe/SensorLib/actions/workflows/esp-idf.yml)
 [![Build with Arduino](https://github.com/lewisxhe/SensorLib/actions/workflows/arduino_ci.yml/badge.svg)](https://github.com/lewisxhe/SensorLib/actions/workflows/arduino_ci.yml)
 [![Build with PlatformIO](https://github.com/lewisxhe/SensorLib/actions/workflows/platformio.yml/badge.svg)](https://github.com/lewisxhe/SensorLib/actions/workflows/platformio.yml)
@@ -43,3 +42,5 @@ Support list:
 | CST9220         | Capacitive touch         | ✔️   | ❌   |
 | GT9895          | Capacitive touch         | ✔️   | ❌   |
 | AW9364          | Led Driver (GPIO)        | ❌   | ❌   |
+| BQ27220         | Gauge Meter              | ✔️   | ❌   |
+| AXP2602         | Gauge Meter              | ✔️   | ❌   |
