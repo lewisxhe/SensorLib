@@ -86,12 +86,12 @@ void setup()
 
     Serial.println("Init CHSC5816 Touch device success!");
 
-    int16_t  width = 0, height = 0;
-    touch.getResolution(&width, &height);
-    Serial.print("Display Width:");
-    Serial.print(width);
-    Serial.print(" Height:");
-    Serial.println(height);
+    Serial.println("Touch Info:");
+    Serial.print("Model: "); Serial.println(touch.getModelName());
+    Serial.print("ID: 0x"); Serial.println(touch.getChipID(),HEX);
+    Serial.print("Max Touch Points: "); Serial.println(touch.getSupportTouchPoint());
+    Serial.print("Resolution: "); Serial.print(touch.getResolutionX()); Serial.print("x"); Serial.println(touch.getResolutionY());
+    delay(3000);
 }
 
 

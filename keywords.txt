@@ -346,6 +346,8 @@ wakeup  KEYWORD2
 idle    KEYWORD2
 getSupportTouchPoint    KEYWORD2
 getResolution   KEYWORD2
+getResolutionX   KEYWORD2
+getResolutionY   KEYWORD2
 setGpioCallback KEYWORD2
 
 ### TouchDrvCST92xx Coloring Map ###
