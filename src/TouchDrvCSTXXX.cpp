@@ -30,23 +30,20 @@
  */
 #include "TouchDrvCSTXXX.hpp"
 
-#define CSTXXX_SLAVE_ADDRESS        (0x15)
-#define CST328_SLAVE_ADDRESS        (0x1A)
-
 TouchDrvCSTXXX::DriverCreator TouchDrvCSTXXX::driverCreators[TouchDrvCSTXXX::driverCreatorMaxNum] = {
     []() -> std::unique_ptr<TouchDrvInterface> { return std::make_unique<TouchDrvCST226>(); },
     []() -> std::unique_ptr<TouchDrvInterface> { return std::make_unique<TouchDrvCST816>(); },
-    []() -> std::unique_ptr<TouchDrvInterface> { return std::make_unique<TouchDrvCST92xx>(); }
+    []() -> std::unique_ptr<TouchDrvInterface> { return std::make_unique<TouchDrvCST92xx>(); },
+    []() -> std::unique_ptr<TouchDrvInterface> { return std::make_unique<TouchDrvCST3530>(); }
 };
 
 TouchDrvCSTXXX::TouchDrvCSTXXX():
     _writePtr(nullptr),
     _readPtr(nullptr),
     _modePtr(nullptr),
-    _touchType(TouchDrv_UNKOWN),
+    _touchType(TouchDrv_UNKNOWN),
     _drv(nullptr) {}
 
-TouchDrvCSTXXX::~TouchDrvCSTXXX() {}
 
 void TouchDrvCSTXXX::setTouchDrvModel(TouchDrvType model)
 {
@@ -67,7 +64,7 @@ void TouchDrvCSTXXX::setupDriver()
 bool TouchDrvCSTXXX::begin(TwoWire &wire, uint8_t addr, int sda, int scl)
 {
     bool success = false;
-    for (int i = (_touchType == TouchDrv_UNKOWN) ? 0 : _touchType; i < driverCreatorMaxNum; ++i) {
+    for (int i = (_touchType == TouchDrv_UNKNOWN) ? 0 : _touchType; i < driverCreatorMaxNum; ++i) {
         _drv = createDriver(static_cast<TouchDrvType>(i));
         setupDriver();
         if (_drv && _drv->begin(wire, addr, sda, scl)) {
@@ -77,7 +74,7 @@ bool TouchDrvCSTXXX::begin(TwoWire &wire, uint8_t addr, int sda, int scl)
         }
     }
     if (!success) {
-        _touchType = TouchDrv_UNKOWN;
+        _touchType = TouchDrv_UNKNOWN;
     }
     return success;
 }
@@ -135,7 +132,7 @@ bool TouchDrvCSTXXX::begin(SensorCommCustom::CustomCallback callback,
                            uint8_t addr)
 {
     bool success = false;
-    for (int i = (_touchType == TouchDrv_UNKOWN) ? 0 : _touchType; i < driverCreatorMaxNum; ++i) {
+    for (int i = (_touchType == TouchDrv_UNKNOWN) ? 0 : _touchType; i < driverCreatorMaxNum; ++i) {
         _drv = createDriver(static_cast<TouchDrvType>(i));
         setupDriver();
         if (_drv && _drv->begin(callback, hal_callback, addr)) {
@@ -145,7 +142,7 @@ bool TouchDrvCSTXXX::begin(SensorCommCustom::CustomCallback callback,
         }
     }
     if (!success) {
-        _touchType = TouchDrv_UNKOWN;
+        _touchType = TouchDrv_UNKNOWN;
     }
     return success;
 }
@@ -175,6 +172,12 @@ const char *TouchDrvCSTXXX::getModelName()
     return _drv->getModelName();
 }
 
+uint32_t TouchDrvCSTXXX::getChipID()
+{
+    if (!_drv)return 0;
+    return _drv->getChipID();
+}
+
 void TouchDrvCSTXXX::sleep()
 {
     if (!_drv)return;
@@ -187,25 +190,33 @@ void TouchDrvCSTXXX::wakeup()
     _drv->reset();
 }
 
-void TouchDrvCSTXXX::idle()
-{
-    if (!_drv)return;
-    _drv->idle();
-}
-
 uint8_t TouchDrvCSTXXX::getSupportTouchPoint()
 {
     if (!_drv)return 0;
     return _drv->getSupportTouchPoint();
 }
 
-bool TouchDrvCSTXXX::getResolution(int16_t *x, int16_t *y)
+void TouchDrvCSTXXX::getResolution(int16_t &x, int16_t &y)
 {
-    if (!_drv)return false;
-    return _drv->getResolution(x, y);
+    if (!_drv)return;
+    _drv->getResolution(x, y);
 }
 
-void TouchDrvCSTXXX::setCenterButtonCoordinate(uint16_t x, uint16_t y)
+
+int16_t TouchDrvCSTXXX::getResolutionY()
+{
+    if (!_drv)return 0;
+    return _drv->getResolutionY();
+}
+
+int16_t TouchDrvCSTXXX::getResolutionX()
+{
+    if (!_drv)return 0;
+    return _drv->getResolutionX();
+}
+
+
+void TouchDrvCSTXXX::setCenterButtonCoordinate(int16_t x, int16_t y)
 {
     if (!_drv)return ;
     const char *model = _drv->getModelName();
@@ -266,4 +277,3 @@ void TouchDrvCSTXXX::setMaxCoordinates(uint16_t x, uint16_t y)
     if (!_drv)return ;
     _drv->setMaxCoordinates(x, y);
 }
-

@@ -60,139 +60,69 @@ public:
 
     EventFlag event;
 
-    TouchDrvFT6X36() : comm(nullptr), hal(nullptr) {}
-
-    ~TouchDrvFT6X36()
-    {
-        if (comm) {
-            comm->deinit();
-        }
-    }
-
-#if defined(ARDUINO)
-    bool begin(TwoWire &wire, uint8_t addr = FT6X36_SLAVE_ADDRESS, int sda = -1, int scl = -1)
-    {
-        if (!beginCommon<SensorCommI2C, HalArduino>(comm, hal, wire, addr, sda, scl)) {
-            return false;
-        }
-        return initImpl();
-    }
-
-#elif defined(ESP_PLATFORM)
-
-#if defined(USEING_I2C_LEGACY)
-    bool begin(i2c_port_t port_num, uint8_t addr = FT6X36_SLAVE_ADDRESS, int sda = -1, int scl = -1)
-    {
-        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, port_num, addr, sda, scl)) {
-            return false;
-        }
-        return initImpl();
-    }
-#else
-    bool begin(i2c_master_bus_handle_t handle, uint8_t addr = FT6X36_SLAVE_ADDRESS)
-    {
-        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, handle, addr)) {
-            return false;
-        }
-        return initImpl();
-    }
-#endif  //ESP_PLATFORM
-#endif  //ARDUINO
-
-    bool begin(SensorCommCustom::CustomCallback callback,
-               SensorCommCustomHal::CustomHalCallback hal_callback,
-               uint8_t addr)
-    {
-        if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(COMM_CUSTOM,
-                callback, hal_callback, addr, comm, hal)) {
-            return false;
-        }
-        return initImpl();
-    }
-
-    uint8_t getDeviceMode(void)
-    {
-        return comm->readRegister(FT6X36_REG_MODE) & 0x03;
-    }
-
-    // Obtaining gestures depends on whether the built-in firmware of the chip has this function
-    uint8_t getGesture()
-    {
-        int val = comm->readRegister(FT6X36_REG_GEST);
-        switch (val) {
-        case 0x10:
-            return MOVE_UP;
-        case 0x14:
-            return MOVE_RIGHT;
-        case 0x18:
-            return MOVE_DOWN;
-        case 0x1C:
-            return MOVE_LEFT;
-        case 0x48:
-            return ZOOM_IN;
-        case 0x49:
-            return ZOOM_OUT;
-        default:
-            break;
-        }
-        return NO_GESTURE;
-    }
-
-    void setThreshold(uint8_t value)
-    {
-        comm->writeRegister(FT6X36_REG_THRESHOLD, value);
-    }
-
-    uint8_t getThreshold(void)
-    {
-        return comm->readRegister(FT6X36_REG_THRESHOLD);
-    }
-
-    uint8_t getMonitorTime(void)
-    {
-        return comm->readRegister(FT6X36_REG_MONITOR_TIME);
-    }
-
-    void setMonitorTime(uint8_t sec)
-    {
-        comm->writeRegister(FT6X36_REG_MONITOR_TIME, sec);
-    }
-
-    // Calibration useless actually,
-    // any value  set will not be valid,
-    // depending on the internal firmware of the chip.
-    /*
-    void enableAutoCalibration(void)
-    {
-        comm->writeRegister(FT6X36_REG_AUTO_CLB_MODE, 0x00);
-    }
-
-    void disableAutoCalibration(void)
-    {
-        comm->writeRegister(FT6X36_REG_AUTO_CLB_MODE, 0xFF);
-    }
+    /**
+    * @brief  Constructor for the touch driver
+    * @retval None
     */
+    TouchDrvFT6X36() = default;
 
-    uint16_t getLibraryVersion()
+    /**
+    * @brief  Destructor for the touch driver
+    * @retval None
+    */
+    ~TouchDrvFT6X36() = default;
+
+    /**
+    * @brief  Reset the touch driver
+    * @note   This function will reset the touch driver by toggling the reset pin.
+    * @retval None
+    */
+    void reset() override
     {
-        uint8_t buffer[2];
-        comm->readRegister(FT6X36_REG_LIB_VERSION_H, buffer, 2);
-        return (buffer[0] << 8) | buffer[1];
+        if (_rst != -1) {
+            hal->pinMode(_rst, OUTPUT);
+            hal->digitalWrite(_rst, HIGH);
+            hal->delay(10);
+            hal->digitalWrite(_rst, LOW);
+            hal->delay(30);
+            hal->digitalWrite(_rst, HIGH);
+            // For the variant of GPIO extended RST,
+            // communication and hal->delay are carried out simultaneously, and 160ms is measured in T-RGB esp-idf new api
+            hal->delay(160);
+        }
     }
 
-    // The interrupt pin is pulled down when a touch is detected until the touch is released
-    void interruptPolling(void)
+    /**
+    * @brief Puts the touch driver to sleep
+    * @note This function puts the touch driver into sleep mode.
+    *       If the device does not have a reset pin connected, it cannot be woken up after being put
+    *       into sleep mode and must be powered on again.
+    * @retval None
+    */
+    void sleep() override
     {
-        comm->writeRegister(FT6X36_REG_INT_STATUS, 0x00);
+        comm->writeRegister(FT6X36_REG_POWER_MODE, PMODE_DEEP_SLEEP);
     }
 
-    // The interrupt pin will continue to output pulse once the touch is detected until released
-    void interruptTrigger(void)
+    /**
+    * @brief  Wake up the touch driver
+    * @note   This function will wake up the touch driver from sleep mode.
+    * @retval None
+    */
+    void wakeup() override
     {
-        comm->writeRegister(FT6X36_REG_INT_STATUS, 0x01);
+        reset();
     }
 
-    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t size = 1)
+    /**
+    * @brief  Get the touch point coordinates
+    * @note   This function will retrieve the touch point coordinates from the touch driver.
+    * @param  *x_array: Pointer to the array to store the X coordinates
+    * @param  *y_array: Pointer to the array to store the Y coordinates
+    * @param  size: Number of touch points to retrieve
+    * @retval Return the number of touch points retrieved
+    */
+    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t size = 1) override
     {
         uint8_t buffer[16];
 
@@ -238,7 +168,12 @@ public:
         return numPoints;
     }
 
-    bool isPressed()
+    /**
+    * @brief  Check if the touch point is pressed
+    * @note   This function will check if the touch point is currently pressed.
+    * @retval True if the touch point is pressed, false otherwise.
+    */
+    bool isPressed() override
     {
         if (_irq != -1) {
             return hal->digitalRead(_irq) == LOW;
@@ -246,47 +181,12 @@ public:
         return comm->readRegister(FT6X36_REG_STATUS) & 0x0F;
     }
 
-    void setPowerMode(PowerMode mode)
-    {
-        comm->writeRegister(FT6X36_REG_POWER_MODE, mode);
-    }
-
-    void sleep()
-    {
-        comm->writeRegister(FT6X36_REG_POWER_MODE, PMODE_DEEP_SLEEP);
-    }
-
-    void wakeup()
-    {
-        reset();
-    }
-
-    void idle()
-    {
-
-    }
-
-    uint8_t getSupportTouchPoint()
-    {
-        return 1;
-    }
-
-    uint32_t getChipID(void)
-    {
-        return comm->readRegister(FT6X36_REG_CHIP_ID);
-    }
-
-    uint8_t getVendorID(void)
-    {
-        return comm->readRegister(FT6X36_REG_VENDOR1_ID);
-    }
-
-    uint8_t getErrorCode(void)
-    {
-        return comm->readRegister(FT6X36_REG_ERROR_STATUS);
-    }
-
-    const char *getModelName()
+    /**
+    * @brief  Get the model name
+    * @note   This function will retrieve the model name from the touch driver.
+    * @retval The model name.
+    */
+    const char *getModelName() override
     {
         switch (_chipID) {
         case FT6206_CHIP_ID: return "FT6206";
@@ -297,39 +197,155 @@ public:
         }
     }
 
-
-    bool getResolution(int16_t *x, int16_t *y)
+    /**
+     * @brief  Get the device mode
+     * @note   This function will retrieve the current device mode from the touch driver.
+     * @retval The device mode.
+     */
+    uint8_t getDeviceMode(void)
     {
-        return false;
+        return comm->readRegister(FT6X36_REG_MODE) & 0x03;
     }
 
-    void reset()
+    // Obtaining gestures depends on whether the built-in firmware of the chip has this function
+    uint8_t getGesture()
     {
-        if (_rst != -1) {
-            hal->pinMode(_rst, OUTPUT);
-            hal->digitalWrite(_rst, HIGH);
-            hal->delay(10);
-            hal->digitalWrite(_rst, LOW);
-            hal->delay(30);
-            hal->digitalWrite(_rst, HIGH);
-            // For the variant of GPIO extended RST,
-            // communication and hal->delay are carried out simultaneously, and 160ms is measured in T-RGB esp-idf new api
-            hal->delay(160);
+        int val = comm->readRegister(FT6X36_REG_GEST);
+        switch (val) {
+        case 0x10: return MOVE_UP;
+        case 0x14: return MOVE_RIGHT;
+        case 0x18: return MOVE_DOWN;
+        case 0x1C: return MOVE_LEFT;
+        case 0x48: return ZOOM_IN;
+        case 0x49: return ZOOM_OUT;
+        default: break;
         }
+        return NO_GESTURE;
     }
 
 
-    void  setGpioCallback(CustomMode mode_cb,
-                          CustomWrite write_cb,
-                          CustomRead read_cb)
+    /**
+     * @brief  Set the device mode
+     * @note   This function will set the current device mode for the touch driver.
+     * @param  value: The device mode to set.
+     * @retval None
+     */
+    void setDeviceMode(uint8_t value)
     {
-        SensorHalCustom::setCustomMode(mode_cb);
-        SensorHalCustom::setCustomWrite(write_cb);
-        SensorHalCustom::setCustomRead(read_cb);
+        comm->writeRegister(FT6X36_REG_THRESHOLD, value);
+    }
+
+    /**
+     * @brief  Get the touch threshold
+     * @note   This function will retrieve the current touch threshold from the touch driver.
+     * @retval The touch threshold.
+     */
+    uint8_t getThreshold(void)
+    {
+        return comm->readRegister(FT6X36_REG_THRESHOLD);
+    }
+
+    /**
+     * @brief  Get the monitor time
+     * @note   This function will retrieve the current monitor time from the touch driver.
+     * @retval The monitor time.
+     */
+    uint8_t getMonitorTime(void)
+    {
+        return comm->readRegister(FT6X36_REG_MONITOR_TIME);
+    }
+
+    /**
+     * @brief  Set the monitor time
+     * @note   This function will set the monitor time for the touch driver.
+     * @param  sec: The monitor time to set.
+     * @retval None
+     */
+    void setMonitorTime(uint8_t sec)
+    {
+        comm->writeRegister(FT6X36_REG_MONITOR_TIME, sec);
+    }
+
+    // Calibration useless actually,
+    // any value  set will not be valid,
+    // depending on the internal firmware of the chip.
+    /*
+    void enableAutoCalibration(void)
+    {
+        comm->writeRegister(FT6X36_REG_AUTO_CLB_MODE, 0x00);
+    }
+
+    void disableAutoCalibration(void)
+    {
+        comm->writeRegister(FT6X36_REG_AUTO_CLB_MODE, 0xFF);
+    }
+    */
+
+    /**
+     * @brief  Get the library version
+     * @note   This function will retrieve the current library version from the touch driver.
+     * @retval The library version.
+     */
+    uint16_t getLibraryVersion()
+    {
+        uint8_t buffer[2];
+        comm->readRegister(FT6X36_REG_LIB_VERSION_H, buffer, 2);
+        return (buffer[0] << 8) | buffer[1];
+    }
+
+    /**
+     * @brief  Polling mode for touch interrupt
+     * @note   This function will configure the touch driver to use polling mode for touch interrupts.
+     * @retval None
+     */
+    void interruptPolling(void)
+    {
+        comm->writeRegister(FT6X36_REG_INT_STATUS, 0x00);
+    }
+
+    /**
+     * @brief  Trigger mode for touch interrupt
+     * @note   This function will configure the touch driver to use trigger mode for touch interrupts.
+     * @retval None
+     */
+    void interruptTrigger(void)
+    {
+        comm->writeRegister(FT6X36_REG_INT_STATUS, 0x01);
+    }
+
+    /**
+     * @brief  Set the touch interrupt mode
+     * @note   This function will configure the touch driver to use the specified interrupt mode.
+     * @param  mode: The interrupt mode to set.
+     * @retval None
+     */
+    void setPowerMode(PowerMode mode)
+    {
+        comm->writeRegister(FT6X36_REG_POWER_MODE, mode);
+    }
+
+    /**
+     * @brief  Get the vendor ID
+     * @note   This function will retrieve the current vendor ID from the touch driver.
+     * @retval The vendor ID.
+     */
+    uint8_t getVendorID(void)
+    {
+        return comm->readRegister(FT6X36_REG_VENDOR1_ID);
+    }
+
+    /**
+     * @brief  Get the error code
+     * @note   This function will retrieve the current error code from the touch driver.
+     * @retval The error code.
+     */
+    uint8_t getErrorCode(void)
+    {
+        return comm->readRegister(FT6X36_REG_ERROR_STATUS);
     }
 
 private:
-    bool initImpl()
+    bool initImpl(uint8_t addr) override
     {
         if (_irq != -1) {
             hal->pinMode(_irq, INPUT);
@@ -338,7 +354,6 @@ private:
         reset();
 
         uint8_t vendId = comm->readRegister(FT6X36_REG_VENDOR1_ID);
-
 
         if (vendId != FT6X36_VEND_ID) {
             log_e("Vendor id is 0x%X not match!", vendId);
@@ -350,8 +365,7 @@ private:
         if ((_chipID != FT6206_CHIP_ID) &&
                 (_chipID != FT6236_CHIP_ID) &&
                 (_chipID != FT6236U_CHIP_ID)  &&
-                (_chipID != FT3267_CHIP_ID)
-           ) {
+                (_chipID != FT3267_CHIP_ID)) {
             log_e("Vendor id is not match!");
             log_e("ChipID:0x%lx should be 0x06 or 0x36 or 0x64", _chipID);
             return false;
@@ -373,13 +387,11 @@ private:
 
         // This register describes the period of active status, it should not less than 12
 
+        _maxTouchPoints = 1;
 
         return true;
     }
 
-protected:
-    std::unique_ptr<SensorCommBase> comm;
-    std::unique_ptr<SensorHal> hal;
 };
 
 

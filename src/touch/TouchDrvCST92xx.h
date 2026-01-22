@@ -36,7 +36,6 @@
 class TouchDrvCST92xx : public TouchDrvInterface, public CST92xxConstants
 {
 public:
-
     enum CST92_RunMode {
         CST92_MODE_NORMAL = (0x00),
         CST92_MODE_LOW_POWER = (0X01),
@@ -53,59 +52,87 @@ public:
         CST92_MODE_LPSCAN = (0x13),
     };
 
+    /**
+    * @brief  Constructor for the touch driver
+    * @retval None
+    */
     TouchDrvCST92xx();
 
-    ~TouchDrvCST92xx();
+    /**
+    * @brief  Destructor for the touch driver
+    * @retval None
+    */
+    ~TouchDrvCST92xx() = default;
 
-#if defined(ARDUINO)
-    bool begin(TwoWire &wire, uint8_t address = CST92XX_SLAVE_ADDRESS, int sda = -1, int scl = -1);
-#elif defined(ESP_PLATFORM)
-#if defined(USEING_I2C_LEGACY)
-    bool begin(i2c_port_t port_num, uint8_t addr = CST92XX_SLAVE_ADDRESS, int sda = -1, int scl = -1);
-#else
-    bool begin(i2c_master_bus_handle_t handle, uint8_t addr = CST92XX_SLAVE_ADDRESS);
-#endif
-#endif
+    /**
+    * @brief  Reset the touch driver
+    * @note   This function will reset the touch driver by toggling the reset pin.
+    * @retval None
+    */
+    void reset() override;
 
-    bool begin(SensorCommCustom::CustomCallback callback,
-               SensorCommCustomHal::CustomHalCallback hal_callback,
-               uint8_t addr = CST92XX_SLAVE_ADDRESS);
+    /**
+    * @brief Puts the touch driver to sleep
+    * @note This function puts the touch driver into sleep mode.
+    *       If the device does not have a reset pin connected, it cannot be woken up after being put
+    *       into sleep mode and must be powered on again.
+    * @retval None
+    */
+    void sleep() override;
 
-    void reset();
+    /**
+     * @brief  Wake up the touch driver
+     * @note   This function will wake up the touch driver from sleep mode.
+     * @retval None
+     */
+    void wakeup() override;
 
-    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point);
+    /**
+     * @brief  Get the touch point coordinates
+     * @note   This function will retrieve the touch point coordinates from the touch driver.
+     * @param  *x_array: Pointer to the array to store the X coordinates
+     * @param  *y_array: Pointer to the array to store the Y coordinates
+     * @param  size: Number of touch points to retrieve
+     * @retval Return the number of touch points retrieved
+     */
+    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point = 1) override;
 
-    bool isPressed();
+    /**
+    * @brief  Check if the touch point is pressed
+    * @note   This function will check if the touch point is currently pressed.
+    * @retval True if the touch point is pressed, false otherwise.
+    */
+    bool isPressed() override;
 
-    const char *getModelName();
+    /**
+    * @brief  Get the model name
+    * @note   This function will retrieve the model name from the touch driver.
+    * @retval The model name.
+    */
+    const char *getModelName() override;
 
-    void sleep();
-
-    void wakeup();
-
-    void idle();
-
-    uint8_t getSupportTouchPoint();
-
-    bool getResolution(int16_t *x, int16_t *y);
-
+    /**
+     * @brief  Set the cover screen callback
+     * @note   This function will set the callback function for the cover screen.
+     * @param  cb: The callback function to be set
+     * @param  *user_data: Pointer to user data to be passed to the callback function
+     * @retval None
+     */
     void setCoverScreenCallback(HomeButtonCallback cb, void *user_data = NULL);
 
-    void setGpioCallback(CustomMode mode_cb,
-                         CustomWrite write_cb,
-                         CustomRead read_cb);
-
 private:
-
-
-
+    bool initImpl(uint8_t addr) override;
     bool setMode(uint8_t mode);
     bool enterBootloader();
     bool getAttribute();
-    uint32_t readWordFromMem(uint8_t type, uint16_t mem_addr);
     void parseFingerData(uint8_t *data,  cst9xx_point_t *point);
+    uint32_t readWordFromMem(uint8_t type, uint16_t mem_addr);
     uint32_t get_u32_from_ptr(const void *ptr);
+    uint32_t getChipType();
 
+protected:
+    int _slave_addr;
+    uint16_t chipType;
 
 #if 0  /*DISABLE UPDATE FIRMWARE*/
 
@@ -143,25 +170,4 @@ private:
     int16_t getFirmwareAddress(uint8_t data_seq, uint16_t data_len) ;
     int16_t updateFirmware(void);
 #endif
-
-
-    uint32_t getChipType();
-    bool initImpl();
-
-    uint16_t chipType;
-
-protected:
-    std::unique_ptr<SensorCommBase> comm;
-    std::unique_ptr<SensorHal> hal;
-
-    int _slave_addr;
-    int16_t _center_btn_x;
-    int16_t _center_btn_y;
 };
-
-
-
-
-
-
-

@@ -55,7 +55,7 @@ protected:
     static constexpr uint16_t  CST92XX_REG_RAW_MODE                = (0xD10A);
     static constexpr uint16_t  CST92XX_REG_DIFF_MODE               = (0xD10D);
     static constexpr uint16_t  CST92XX_REG_BASE_LINE_MODE          = (0xD10E);
-    static constexpr uint16_t  CST92XX_REG_LOWPOWER_MODE           = (0xD10F);
+    static constexpr uint16_t  CST92XX_REG_LOW_POWER_MODE          = (0xD10F);
     static constexpr uint16_t  CST92XX_REG_FACTORY_MODE            = (0xD114);
     static constexpr uint8_t   CST92XX_ACK                         = (0xAB);
     static constexpr uint8_t   CST92XX_MAX_FINGER_NUM              = (2);
@@ -2785,4 +2785,3 @@ const unsigned char cst92xx_firmware[] = {
     0x06, 0x00, 0x00, 0x01, 0x2D, 0x11, 0x65, 0x57, 0xFF, 0xFF, 0xFF, 0xFF,
     0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x32, 0xEB, 0x8B, 0xB3,
 };
-

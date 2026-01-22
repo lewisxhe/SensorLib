@@ -51,59 +51,24 @@ class TouchDrvGT911 :  public TouchDrvInterface, public GT911Constants
     } PointReg;
 
 public:
+    /**
+    * @brief  Constructor for the touch driver
+    * @retval None
+    */
+    TouchDrvGT911() = default;
 
-    TouchDrvGT911() : comm(nullptr), hal(nullptr) {}
+    /**
+    * @brief  Destructor for the touch driver
+    * @retval None
+    */
+    ~TouchDrvGT911() = default;
 
-    ~TouchDrvGT911()
-    {
-        if (comm) {
-            comm->deinit();
-        }
-    }
-
-#if defined(ARDUINO)
-    bool begin(TwoWire &wire, uint8_t addr = GT911_SLAVE_ADDRESS_H, int sda = -1, int scl = -1)
-    {
-        if (!beginCommon<SensorCommI2C, HalArduino>(comm, hal, wire, addr, sda, scl)) {
-            return false;
-        }
-        return initImpl(addr);
-    }
-
-#elif defined(ESP_PLATFORM)
-
-#if defined(USEING_I2C_LEGACY)
-    bool begin(i2c_port_t port_num, uint8_t addr = GT911_SLAVE_ADDRESS_H, int sda = -1, int scl = -1)
-    {
-        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, port_num, addr, sda, scl)) {
-            return false;
-        }
-        return initImpl(addr);
-    }
-#else
-    bool begin(i2c_master_bus_handle_t handle, uint8_t addr = GT911_SLAVE_ADDRESS_H)
-    {
-        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, handle, addr)) {
-            return false;
-        }
-        return initImpl(addr);
-    }
-#endif  //ESP_PLATFORM
-#endif  //ARDUINO
-
-
-    bool begin(SensorCommCustom::CustomCallback callback,
-               SensorCommCustomHal::CustomHalCallback hal_callback,
-               uint8_t addr)
-    {
-        if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(COMM_CUSTOM,
-                callback, hal_callback, addr, comm, hal)) {
-            return false;
-        }
-        return initImpl(addr);
-    }
-
-    void reset()
+    /**
+    * @brief  Reset the touch driver
+    * @note   This function will reset the touch driver by toggling the reset pin.
+    * @retval None
+    */
+    void reset() override
     {
         if (_rst != -1) {
             hal->pinMode(_rst, OUTPUT);
@@ -123,7 +88,14 @@ public:
         // writeCommand(0x02);
     }
 
-    void sleep()
+    /**
+    * @brief Puts the touch driver to sleep
+    * @note This function puts the touch driver into sleep mode.
+    *       If the device does not have a reset pin connected, it cannot be woken up after being put
+    *       into sleep mode and must be powered on again.
+    * @retval None
+    */
+    void sleep() override
     {
         if (_irq != -1) {
             hal->pinMode(_irq, OUTPUT);
@@ -142,9 +114,12 @@ public:
         // }
     }
 
-
-
-    void wakeup()
+    /**
+    * @brief  Wake up the touch driver
+    * @note   This function will wake up the touch driver from sleep mode.
+    * @retval None
+    */
+    void wakeup() override
     {
         if (_irq != -1) {
             hal->pinMode(_irq, OUTPUT);
@@ -156,17 +131,15 @@ public:
         }
     }
 
-    void idle()
-    {
-
-    }
-
-    uint8_t getSupportTouchPoint()
-    {
-        return 5;
-    }
-
-    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t size = 1)
+    /**
+    * @brief  Get the touch point coordinates
+    * @note   This function will retrieve the touch point coordinates from the touch driver.
+    * @param  *x_array: Pointer to the array to store the X coordinates
+    * @param  *y_array: Pointer to the array to store the Y coordinates
+    * @param  size: Number of touch points to retrieve
+    * @retval Return the number of touch points retrieved
+    */
+    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t size = 1) override
     {
         uint8_t buffer[39];
         uint8_t touchPoint = 0;
@@ -217,8 +190,12 @@ public:
         return touchPoint;
     }
 
-
-    bool isPressed()
+    /**
+    * @brief  Check if the touch point is pressed
+    * @note   This function will check if the touch point is currently pressed.
+    * @retval True if the touch point is pressed, false otherwise.
+    */
+    bool isPressed() override
     {
         if (_irq != -1) {
             if (_irq_mode == FALLING) {
@@ -234,6 +211,22 @@ public:
         return getPoint();
     }
 
+    /**
+    * @brief  Get the model name
+    * @note   This function will retrieve the model name from the touch driver.
+    * @retval The model name.
+    */
+    const char *getModelName()
+    {
+        return "GT911";
+    }
+
+    /**
+    * @brief  Set the interrupt mode
+    * @note   This function will set the interrupt mode for the touch driver.
+    * @param  mode: The interrupt mode to set.
+    * @retval True if the operation was successful, false otherwise.
+    */
     bool setInterruptMode(uint8_t mode)
     {
         // GT911_MODULE_SWITCH_1 0x804D
@@ -254,11 +247,13 @@ public:
     }
 
     /**
-     * @retval
-     *  * 0x0: Rising edge trigger
-     *  * 0x1: Falling edge trigger
-     *  * 0x2: Low level query
-     *  * 0x3: High level query
+     * @brief  Get the interrupt mode
+     * @note   This function will retrieve the current interrupt mode from the touch driver.
+     * @retval The interrupt mode.
+     *          0x0: Rising edge trigger
+     *          0x1: Falling edge trigger
+     *          0x2: Low level query
+     *          0x3: High level query
      */
     uint8_t getInterruptMode()
     {
@@ -277,7 +272,11 @@ public:
         return val;
     }
 
-
+    /**
+     * @brief  Get the touch point information
+     * @note   This function will retrieve the touch point information from the touch driver.
+     * @retval The touch point information.
+     */
     uint8_t getPoint()
     {
         // GT911_POINT_INFO 0X814E
@@ -287,7 +286,12 @@ public:
     }
 
 
-    uint32_t getChipID()
+    /**
+     * @brief  Get the chip ID
+     * @note   This function will retrieve the chip ID from the touch driver.
+     * @retval The chip ID.
+     */
+    uint32_t getChipID() override
     {
         char product_id[4] = {0};
         // GT911_PRODUCT_ID 0x8140
@@ -297,6 +301,11 @@ public:
         return atoi(product_id);
     }
 
+    /**
+     * @brief  Get the firmware version
+     * @note   This function will retrieve the firmware version from the touch driver.
+     * @retval The firmware version.
+     */
     uint16_t getFwVersion()
     {
         uint8_t fw_ver[2] = {0};
@@ -307,29 +316,22 @@ public:
         return fw_ver[0] | (fw_ver[1] << 8);
     }
 
+    /**
+     * @brief  Get the configuration version
+     * @note   This function will retrieve the configuration version from the touch driver.
+     * @retval The configuration version.
+     */
     uint8_t getConfigVersion()
     {
         return readGT911(GT911_CONFIG_VERSION);
     }
 
-
-    bool getResolution(int16_t *x, int16_t *y)
-    {
-        uint8_t x_resolution[2] = {0}, y_resolution[2] = {0};
-
-        for (int i = 0; i < 2; ++i) {
-            x_resolution[i] = readGT911(GT911_X_RESOLUTION + i);
-        }
-        for (int i = 0; i < 2; ++i) {
-            y_resolution[i] = readGT911(GT911_Y_RESOLUTION + i);
-        }
-
-        *x = x_resolution[0] | (x_resolution[1] << 8);
-        *y = y_resolution[0] | (y_resolution[1] << 8);
-        return true;
-    }
-
-    //Range : 5 ~ 15 ms
+    /**
+     * @brief  Get the refresh rate
+     * @note   This function will retrieve the current refresh rate from the touch driver.
+     * @param  rate_ms: Pointer to store the refresh rate in milliseconds , 5 ~ 15 ms.
+     * @retval None
+     */
     void updateRefreshRate(uint8_t rate_ms)
     {
         if ((rate_ms - 5) < 5) {
@@ -343,39 +345,34 @@ public:
         reloadConfig();
     }
 
+    /**
+     * @brief  Get the refresh rate
+     * @note   This function will retrieve the current refresh rate from the touch driver.
+     * @retval The refresh rate in milliseconds.
+     */
     uint8_t getRefreshRate()
     {
         uint8_t rate_ms  = readGT911(GT911_REFRESH_RATE);
         return rate_ms + GT911_BASE_REF_RATE ;
     }
 
-
+    /**
+     * @brief  Get the vendor ID
+     * @note   This function will retrieve the vendor ID from the touch driver.
+     * @retval The vendor ID.
+     */
     int getVendorID()
     {
         return readGT911(GT911_VENDOR_ID);
     }
 
-
-    const char *getModelName()
-    {
-        return "GT911";
-    }
-
-    void  setGpioCallback(CustomMode mode_cb,
-                          CustomWrite write_cb,
-                          CustomRead read_cb)
-    {
-        SensorHalCustom::setCustomMode(mode_cb);
-        SensorHalCustom::setCustomWrite(write_cb);
-        SensorHalCustom::setCustomRead(read_cb);
-    }
-
-    void setHomeButtonCallback(HomeButtonCallback cb, void *user_data)
-    {
-        _HButtonCallback = cb;
-        _userData = user_data;
-    }
-
+    /**
+     * @brief  Set the home button callback
+     * @note   This function will set the callback function for the home button.
+     * @param  *config_buffer: Pointer to the configuration buffer.
+     * @param  buffer_size: Size of the configuration buffer.
+     * @retval None
+     */
     bool writeConfig(const uint8_t *config_buffer, size_t buffer_size)
     {
 #if 0   //TODO:
@@ -404,6 +401,13 @@ public:
         return false;
     }
 
+    /**
+     * @brief  Load the configuration data
+     * @note   This function will load the configuration data from the touch driver.
+     * @param  *output_size: Pointer to store the size of the output data.
+     * @param  print_out: Flag to indicate whether to print the output.
+     * @retval The pointer to the configuration data buffer.
+     */
     uint8_t *loadConfig(size_t *output_size, bool print_out = false)
     {
         *output_size = 0;
@@ -431,6 +435,11 @@ public:
         return buffer;
     }
 
+    /**
+     * @brief  Reload the configuration data
+     * @note   This function will reload the configuration data from the touch driver.
+     * @retval True if the operation was successful, false otherwise.
+     */
     bool reloadConfig()
     {
         uint8_t buffer[GT911_REG_LENGTH] = {highByte(GT911_CONFIG_VERSION), lowByte(GT911_CONFIG_VERSION)};
@@ -449,6 +458,11 @@ public:
         return true;
     }
 
+    /**
+     * @brief  Dump the register values
+     * @note   This function will print the current register values.
+     * @retval None
+     */
     void dumpRegister()
     {
         size_t output_size = 0;
@@ -465,7 +479,12 @@ public:
         free(buffer);
     }
 
-    // Range : 1~5
+    /**
+     * @brief  Set the maximum touch points
+     * @note   This function will set the maximum number of touch points.
+     * @param  num: The maximum number of touch points (1-5).
+     * @retval None
+     */
     void setMaxTouchPoint(uint8_t num)
     {
         if (num < 1)num = 1;
@@ -474,12 +493,13 @@ public:
         reloadConfig();
     }
 
-    uint8_t getMaxTouchPoint()
-    {
-        uint8_t num = readGT911(GT911_TOUCH_NUMBER);
-        return num & 0x0F;
-    }
-
+    /**
+     * @brief  Set the configuration data
+     * @note   This function will set the configuration data for the touch driver.
+     * @param  *data: Pointer to the configuration data buffer.
+     * @param  length: The length of the configuration data.
+     * @retval None
+     */
     void setConfigData(uint8_t *data, uint16_t length)
     {
         _config = data;
@@ -487,7 +507,12 @@ public:
     }
 
 private:
-
+    /**
+     * @brief  Read a register from the GT911 touch driver
+     * @note   This function will read a register from the touch driver.
+     * @param  cmd: The register address to read.
+     * @retval The value read from the register.
+     */
     uint8_t readGT911(uint16_t cmd)
     {
         uint8_t value = 0x00;
@@ -497,13 +522,25 @@ private:
         return value;
     }
 
+    /**
+     * @brief  Write a register to the GT911 touch driver
+     * @note   This function will write a register to the touch driver.
+     * @param  cmd: The register address to write.
+     * @param  value: The value to write to the register.
+     * @retval None
+     */
     int writeGT911(uint16_t cmd, uint8_t value)
     {
         uint8_t write_buffer[3] = {highByte(cmd), lowByte(cmd), value};
         return comm->writeBuffer(write_buffer, arraySize(write_buffer));
     }
 
-
+    /**
+     * @brief  Write a command to the GT911 touch driver
+     * @note   This function will write a command to the touch driver.
+     * @param  command: The command to write.
+     * @retval None
+     */
     void writeCommand(uint8_t command)
     {
         // GT911_COMMAND 0x8040
@@ -511,11 +548,21 @@ private:
         comm->writeBuffer(write_buffer, arraySize(write_buffer));
     }
 
+    /**
+     * @brief  Clear the touch buffer
+     * @note   This function will clear the touch buffer.
+     * @retval None
+     */
     void inline clearBuffer()
     {
         writeGT911(GT911_POINT_INFO, 0x00);
     }
 
+    /**
+     * @brief  Probe the I2C address of the GT911 touch driver
+     * @note   This function will try to communicate with the touch driver at the specified I2C address.
+     * @retval True if the device is found, false otherwise.
+     */
     bool probeAddress()
     {
         const uint8_t device_address[2]  = {GT911_SLAVE_ADDRESS_L, GT911_SLAVE_ADDRESS_H};
@@ -533,7 +580,6 @@ private:
         log_e("GT911 not found, touch device 7-bit address should be 0x5D or 0x14");
         return false;
     }
-
 
     bool initImpl(uint8_t addr)
     {
@@ -615,7 +661,6 @@ private:
             }
         }
 
-        log_i("Product id:%ld", _chipID);
 
 #if 0
         /*If the configuration is not written, the touch screen may be damaged. */
@@ -635,34 +680,48 @@ private:
         }
 #endif
 
+        uint8_t x_resolution[2] = {0}, y_resolution[2] = {0};
+        for (int i = 0; i < 2; ++i) {
+            x_resolution[i] = readGT911(GT911_X_RESOLUTION + i);
+        }
+        for (int i = 0; i < 2; ++i) {
+            y_resolution[i] = readGT911(GT911_Y_RESOLUTION + i);
+        }
 
-        log_i("Firmware version: 0x%x", getFwVersion());
-        getResolution(&x, &y);
-        log_i("Resolution : X = %d Y = %d", x, y);
-        log_i("Vendor id:%d", getVendorID());
-        log_i("Refresh Rate:%d ms", getRefreshRate());
-        log_i("MaxTouchPoint:%d", getMaxTouchPoint());
+        _resX = x_resolution[0] | (x_resolution[1] << 8);
+        _resY = y_resolution[0] | (y_resolution[1] << 8);
+        log_d("Model:CST3530");
+        log_d("RST Pin:%d", _rst);
+        log_d("IRQ Pin:%d", _irq);
+        log_i("Product id:%ld", _chipID);
+        log_d("Firmware version: 0x%x", getFwVersion());
+        log_d("Resolution : X = %d Y = %d", _resX, _resY);
+        log_d("Vendor id:%d", getVendorID());
+        log_d("Refresh Rate:%d ms", getRefreshRate());
+        _maxTouchPoints = readGT911(GT911_TOUCH_NUMBER) & 0x0F;
+        log_d("MaxTouchPoint:%d", _maxTouchPoints);
 
 
         // Get the default interrupt trigger mode of the current screen
         getInterruptMode();
 
         if ( _irq_mode == RISING) {
-            log_i("Interrupt Mode:  RISING");
+            log_d("Interrupt Mode:  RISING");
         } else if (_irq_mode == FALLING) {
-            log_i("Interrupt Mode:  FALLING");
+            log_d("Interrupt Mode:  FALLING");
         } else if (_irq_mode == LOW_LEVEL_QUERY) {
-            log_i("Interrupt Mode:  LOW_LEVEL_QUERY");
+            log_d("Interrupt Mode:  LOW_LEVEL_QUERY");
         } else if (_irq_mode == HIGH_LEVEL_QUERY) {
-            log_i("Interrupt Mode:  HIGH_LEVEL_QUERY");
+            log_d("Interrupt Mode:  HIGH_LEVEL_QUERY");
         } else {
-            log_e("UNKOWN");
+            log_e("UNKNOWN");
         }
 
         if (x == -1 || y == -1) {
             log_e("The screen configuration is lost, please update the configuration file again !");
             return false;
         }
+
 
         return true;
     }
@@ -695,9 +754,6 @@ private:
     static constexpr uint8_t HIGH_LEVEL_QUERY = 0x04;
 
 protected:
-    std::unique_ptr<SensorCommBase> comm;
-    std::unique_ptr<SensorHal> hal;
-
     int _irq_mode;
     uint8_t *_config = NULL;
     uint16_t _config_size = 0;

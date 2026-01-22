@@ -28,59 +28,6 @@
  */
 #include "TouchDrvCST816.h"
 
-TouchDrvCST816::TouchDrvCST816() : comm(nullptr), hal(nullptr),
-    _center_btn_x(0),
-    _center_btn_y(0)
-{
-}
-
-TouchDrvCST816::~TouchDrvCST816()
-{
-    if (comm) {
-        comm->deinit();
-    }
-}
-
-#if defined(ARDUINO)
-bool TouchDrvCST816::begin(TwoWire &wire, uint8_t addr, int sda, int scl)
-{
-    if (!beginCommon<SensorCommI2C, HalArduino>(comm, hal, wire, addr, sda, scl)) {
-        return false;
-    }
-    return initImpl();
-}
-#elif defined(ESP_PLATFORM)
-
-#if defined(USEING_I2C_LEGACY)
-bool TouchDrvCST816::begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
-{
-    if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, port_num, addr, sda, scl)) {
-        return false;
-    }
-    return true;
-}
-#else
-bool TouchDrvCST816::begin(i2c_master_bus_handle_t handle, uint8_t addr)
-{
-    if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, handle, addr)) {
-        return false;
-    }
-    return true;
-}
-#endif  //USEING_I2C_LEGACY
-#endif //ARDUINO
-
-bool TouchDrvCST816::begin(SensorCommCustom::CustomCallback callback,
-                           SensorCommCustomHal::CustomHalCallback hal_callback,
-                           uint8_t addr)
-{
-    if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(COMM_CUSTOM,
-            callback, hal_callback, addr, comm, hal)) {
-        return false;
-    }
-    return initImpl();
-}
-
 void TouchDrvCST816::reset()
 {
     if (_rst != -1) {
@@ -167,7 +114,7 @@ const char *TouchDrvCST816::getModelName()
     default:
         break;
     }
-    return "UNKNOW";
+    return "UNKNOWN";
 }
 
 void TouchDrvCST816::sleep()
@@ -186,33 +133,6 @@ void TouchDrvCST816::sleep()
 void TouchDrvCST816::wakeup()
 {
     reset();
-}
-
-void TouchDrvCST816::idle()
-{
-
-}
-
-uint8_t TouchDrvCST816::getSupportTouchPoint()
-{
-    return 1;
-}
-
-bool TouchDrvCST816::getResolution(int16_t *x, int16_t *y)
-{
-    return false;
-}
-
-void TouchDrvCST816::setHomeButtonCallback(HomeButtonCallback cb, void *user_data)
-{
-    _HButtonCallback = cb;
-    _userData = user_data;
-}
-
-void TouchDrvCST816::setCenterButtonCoordinate(int16_t x, int16_t y)
-{
-    _center_btn_x = x;
-    _center_btn_y = y;
 }
 
 
@@ -250,16 +170,7 @@ void TouchDrvCST816::enableAutoSleep()
     }
 }
 
-void TouchDrvCST816::setGpioCallback(CustomMode mode_cb,
-                                     CustomWrite write_cb,
-                                     CustomRead read_cb)
-{
-    SensorHalCustom::setCustomMode(mode_cb);
-    SensorHalCustom::setCustomWrite(write_cb);
-    SensorHalCustom::setCustomRead(read_cb);
-}
-
-bool TouchDrvCST816::initImpl()
+bool TouchDrvCST816::initImpl(uint8_t addr)
 {
 
     if (_rst != -1) {
@@ -297,9 +208,7 @@ bool TouchDrvCST816::initImpl()
 
     log_i("Touch type:%s", getModelName());
 
+    _maxTouchPoints = 1;
+
     return true;
 }
-
-
-
-

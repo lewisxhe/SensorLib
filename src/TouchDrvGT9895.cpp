@@ -29,61 +29,6 @@
  */
 #include "TouchDrvGT9895.hpp"
 
-TouchDrvGT9895::TouchDrvGT9895() : comm(nullptr), hal(nullptr) {}
-
-TouchDrvGT9895::~TouchDrvGT9895()
-{
-    if (comm) {
-        comm->deinit();
-    }
-}
-
-#if defined(ARDUINO)
-bool TouchDrvGT9895::begin(TwoWire &wire, uint8_t addr, int sda, int scl)
-{
-    if (!beginCommon<SensorCommI2C, HalArduino>(comm, hal, wire, addr, sda, scl)) {
-        return false;
-    }
-    return initImpl();
-}
-
-#elif defined(ESP_PLATFORM)
-
-#if defined(USEING_I2C_LEGACY)
-bool TouchDrvGT9895::begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
-{
-    if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, port_num, addr, sda, scl)) {
-        return false;
-    }
-    return initImpl();
-}
-#else
-bool TouchDrvGT9895::begin(i2c_master_bus_handle_t handle, uint8_t addr)
-{
-    if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, handle, addr)) {
-        return false;
-    }
-    return initImpl();
-}
-#endif  //ESP_PLATFORM
-#endif  //ARDUINO
-
-bool TouchDrvGT9895::begin(SensorCommCustom::CustomCallback callback,
-                           SensorCommCustomHal::CustomHalCallback hal_callback,
-                           uint8_t addr)
-{
-    if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(COMM_CUSTOM,
-            callback, hal_callback, addr, comm, hal)) {
-        return false;
-    }
-    return initImpl();
-}
-
-void TouchDrvGT9895::deinit()
-{
-
-}
-
 void TouchDrvGT9895::reset()
 {
     if (_rst != -1) {
@@ -125,16 +70,6 @@ void TouchDrvGT9895::wakeup()
         hal->delay(8);
     }
     reset();
-}
-
-void TouchDrvGT9895::idle()
-{
-
-}
-
-uint8_t TouchDrvGT9895::getSupportTouchPoint()
-{
-    return GT9895_MAX_TOUCH;
 }
 
 uint8_t TouchDrvGT9895::getPoint(int16_t *x_array, int16_t *y_array, uint8_t size)
@@ -215,29 +150,9 @@ bool TouchDrvGT9895::isPressed()
     return false;
 }
 
-uint32_t TouchDrvGT9895::getChipID()
-{
-    return (uint32_t)strtol((const char *)_version.patch_pid, NULL, 16);
-}
-
-
-bool TouchDrvGT9895::getResolution(int16_t *x, int16_t *y)
-{
-    return 0;
-}
-
 const char *TouchDrvGT9895::getModelName()
 {
     return "GT9895";
-}
-
-void  TouchDrvGT9895::setGpioCallback(CustomMode mode_cb,
-                                      CustomWrite write_cb,
-                                      CustomRead read_cb)
-{
-    SensorHalCustom::setCustomMode(mode_cb);
-    SensorHalCustom::setCustomWrite(write_cb);
-    SensorHalCustom::setCustomRead(read_cb);
 }
 
 int TouchDrvGT9895::is_risk_data(const uint8_t *data, int size)
@@ -570,7 +485,7 @@ int TouchDrvGT9895::getTouchData(uint8_t *pre_buf, uint32_t pre_buf_len)
     return touch_num;
 }
 
-bool TouchDrvGT9895::initImpl()
+bool TouchDrvGT9895::initImpl(uint8_t addr)
 {
     if (_irq != -1) {
         hal->pinMode(_irq, INPUT);
@@ -583,7 +498,8 @@ bool TouchDrvGT9895::initImpl()
     }
 
     readChipInfo(&_ic_info);
-
+    _maxTouchPoints = GT9895_MAX_TOUCH;
+    _chipID = (uint32_t)strtol((const char *)_version.patch_pid, NULL, 16);
     return true;
 }
 

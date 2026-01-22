@@ -35,61 +35,77 @@
 class TouchDrvGT9895 :  public TouchDrvInterface, public GT9895Constants
 {
 public:
-    TouchDrvGT9895();
-    ~TouchDrvGT9895();
+    /**
+     * @brief  Constructor for the touch driver
+     * @retval None
+     */
+    TouchDrvGT9895() = default;
 
-#if defined(ARDUINO)
-    bool begin(TwoWire &wire, uint8_t address = GT9895_SLAVE_ADDRESS_L, int sda = -1, int scl = -1);
-#elif defined(ESP_PLATFORM)
-#if defined(USEING_I2C_LEGACY)
-    bool begin(i2c_port_t port_num, uint8_t addr = GT9895_SLAVE_ADDRESS_L, int sda = -1, int scl = -1);
-#else
-    bool begin(i2c_master_bus_handle_t handle, uint8_t addr = GT9895_SLAVE_ADDRESS_L);
-#endif  //ESP_PLATFORM
-#endif  //ARDUINO
+    /**
+     * @brief  Destructor for the touch driver
+     * @retval None
+     */
+    ~TouchDrvGT9895() = default;
 
-    bool begin(SensorCommCustom::CustomCallback callback,
-               SensorCommCustomHal::CustomHalCallback hal_callback,
-               uint8_t addr = GT9895_SLAVE_ADDRESS_L);
+    /**
+     * @brief  Reset the touch driver
+     * @note   This function will reset the touch driver by toggling the reset pin.
+     * @retval None
+     */
+    void reset() override;
 
-    void deinit();
-    void reset();
-    void sleep();
-    void wakeup();
-    void idle();
+    /**
+    * @brief Puts the touch driver to sleep
+    * @note This function puts the touch driver into sleep mode. 
+    *       If the device does not have a reset pin connected, it cannot be woken up after being put 
+    *       into sleep mode and must be powered on again.
+    * @retval None
+    */
+    void sleep() override;
 
-    uint8_t getSupportTouchPoint();
-    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t size = 1);
-    bool isPressed();
+    /**
+     * @brief  Wake up the touch driver
+     * @note   This function will wake up the touch driver from sleep mode.
+     * @retval None
+     */
+    void wakeup() override;
 
-    uint32_t getChipID();
-    bool getResolution(int16_t *x, int16_t *y);
+    /**
+     * @brief  Get the touch point coordinates
+     * @note   This function will retrieve the touch point coordinates from the touch driver.
+     * @param  *x_array: Pointer to the array to store the X coordinates
+     * @param  *y_array: Pointer to the array to store the Y coordinates
+     * @param  size: Number of touch points to retrieve
+     * @retval None
+     */
+    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t size = 1) override;
 
-    const char *getModelName();
+    /**
+     * @brief  Check if the touch point is pressed
+     * @note   This function will check if the touch point is currently pressed.
+     * @retval True if the touch point is pressed, false otherwise.
+     */
+    bool isPressed() override;
 
-    void setGpioCallback(CustomMode mode_cb,
-                         CustomWrite write_cb,
-                         CustomRead read_cb);
+    /**
+     * @brief  Get the model name
+     * @note   This function will retrieve the model name from the touch driver.
+     * @retval The model name.
+     */
+    const char *getModelName() override;
 
 private:
-
+    bool initImpl(uint8_t addr) override;
     int is_risk_data(const uint8_t *data, int size);
     int checksum_cmp(const uint8_t *data, int size, int mode);
-
     int readVersion(ChipFirmwareVersion *version);
     int convertChipInfo(ChipInfo *info, const uint8_t *data);
     void printChipInfo(ChipInfo *ic_info);
     int readChipInfo(ChipInfo *ic_info);
-
     void clearStatus();
     int getTouchData( uint8_t *pre_buf, uint32_t pre_buf_len);
 
-    bool initImpl();
-
 protected:
-    std::unique_ptr<SensorCommBase> comm;
-    std::unique_ptr<SensorHal> hal;
-
     ChipTsEvent          _ts_event;
     ChipFirmwareVersion  _version;
     ChipInfo             _ic_info;

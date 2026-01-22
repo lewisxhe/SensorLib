@@ -105,7 +105,6 @@ void loop()
     * 2. Use polling registers instead of interrupts, but this will consume CPU
     */
     if (touch.isPressed()) {        //IRQ Trigger
-
         uint8_t touched = touch.getPoint(x, y, touch.getSupportTouchPoint());
         if (touched > 0) {
             for (int i = 0; i < touched; ++i) {
@@ -122,8 +121,5 @@ void loop()
             }
             Serial.println();
         }
-
     }
-
 }
-

@@ -34,7 +34,7 @@
 
 #define GT911_SLAVE_ADDRESS_H               (0x14)
 #define GT911_SLAVE_ADDRESS_L               (0x5D)
-#define GT911_SLAVE_ADDRESS_UNKOWN          (0xFF)
+#define GT911_SLAVE_ADDRESS_UNKNOWN          (0xFF)
 
 class GT911Constants
 {
@@ -166,7 +166,3 @@ protected:
     static constexpr uint8_t   GT911_REG_LENGTH                =  (186);
 
 };
-
-
-
-

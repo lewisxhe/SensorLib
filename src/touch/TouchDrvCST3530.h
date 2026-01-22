@@ -22,37 +22,48 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      TouchDrvCST816.h
+ * @file      TouchDrvCST3530.h
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2023-10-06
+ * @date      2026-01-21
  */
 #pragma once
 
 #include "TouchDrvInterface.hpp"
 
-#define CST816_SLAVE_ADDRESS    (0x15)
+// The device address is not fixed and is determined by the manufacturer.
+#define CS3530_SLAVE_ADDRESS      (0x1A)
 
-class TouchDrvCST816 : public TouchDrvInterface
+
+class TouchDrvCST3530 : public TouchDrvInterface
 {
+private:
+    static constexpr uint32_t  READ_COMMAND                = (0xD0070000);
+    static constexpr uint32_t  INFO_COMMAND                = (0xD0030000);
+    static constexpr uint32_t  SLEEP_COMMAND               = (0xD00022AB);
+    static constexpr uint32_t  CLEAR_COMMAND               = (0xD00002AB);
+    static constexpr uint8_t   MAX_FINGER_NUM              = (5);
+    static constexpr uint8_t   MAX_READ_BYTES              = (32);
+
 public:
+
     /**
-     * @brief  Constructor for the touch driver
-     * @retval None
-     */
-    TouchDrvCST816() = default;
+    * @brief  Constructor for the touch driver
+    * @retval None
+    */
+    TouchDrvCST3530() = default;
 
     /**
      * @brief  Destructor for the touch driver
      * @retval None
      */
-    ~TouchDrvCST816() = default;
+    ~TouchDrvCST3530() = default;
 
     /**
     * @brief  Reset the touch driver
     * @note   This function will reset the touch driver by toggling the reset pin.
     * @retval None
     */
-    void reset();
+    void reset() override;
 
     /**
     * @brief Puts the touch driver to sleep
@@ -61,31 +72,31 @@ public:
     *       into sleep mode and must be powered on again.
     * @retval None
     */
-    void sleep();
+    void sleep() override;
 
     /**
      * @brief  Wake up the touch driver
      * @note   This function will wake up the touch driver from sleep mode.
      * @retval None
      */
-    void wakeup();
+    void wakeup() override;
 
     /**
-     * @brief  Get the touch point coordinates
-     * @note   This function will retrieve the touch point coordinates from the touch driver.
-     * @param  *x_array: Pointer to the array to store the X coordinates
-     * @param  *y_array: Pointer to the array to store the Y coordinates
-     * @param  size: Number of touch points to retrieve
-     * @retval None
-     */
-    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point);
+    * @brief  Get the touch point coordinates
+    * @note   This function will retrieve the touch point coordinates from the touch driver.
+    * @param  *x_array: Pointer to the array to store the X coordinates
+    * @param  *y_array: Pointer to the array to store the Y coordinates
+    * @param  size: Number of touch points to retrieve
+    * @retval None
+    */
+    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point) override;
 
     /**
     * @brief  Check if the touch point is pressed
     * @note   This function will check if the touch point is currently pressed.
     * @retval True if the touch point is pressed, false otherwise.
     */
-    bool isPressed();
+    bool isPressed() override;
 
     /**
     * @brief  Get the model name
@@ -94,37 +105,23 @@ public:
     */
     const char *getModelName();
 
-    /**
-     * @brief  Disable auto sleep mode
-     * @note   This function will disable the auto sleep mode of the touch driver.
-     *          
-     * @retval None
-     */
-    void disableAutoSleep();
-
-    /**
-     * @brief  Enable auto sleep mode
-     * @note   This function will enable the auto sleep mode of the touch driver.
-     * @retval None
-     */
-    void enableAutoSleep();
-
 private:
-    bool initImpl(uint8_t addr);
 
-protected:
-    static constexpr uint8_t  CST8xx_REG_STATUS         = (0x00);
-    static constexpr uint8_t  CST8xx_REG_XPOS_HIGH      = (0x03);
-    static constexpr uint8_t  CST8xx_REG_XPOS_LOW       = (0x04);
-    static constexpr uint8_t  CST8xx_REG_YPOS_HIGH      = (0x05);
-    static constexpr uint8_t  CST8xx_REG_YPOS_LOW       = (0x06);
-    static constexpr uint8_t  CST8xx_REG_DIS_AUTOSLEEP  = (0xFE);
-    static constexpr uint8_t  CST8xx_REG_CHIP_ID        = (0xA7);
-    static constexpr uint8_t  CST8xx_REG_FW_VERSION     = (0xA9);
-    static constexpr uint8_t  CST8xx_REG_SLEEP          = (0xE5);
-    static constexpr uint8_t  CST816S_CHIP_ID           = (0xB4);
-    static constexpr uint8_t  CST816T_CHIP_ID           = (0xB5);
-    static constexpr uint8_t  CST716_CHIP_ID            = (0x20);
-    static constexpr uint8_t  CST820_CHIP_ID            = (0xB7);
-    static constexpr uint8_t  CST816D_CHIP_ID           = (0xB6);
+    bool initImpl(uint8_t addr) override;
+
+    bool writeCommand(uint32_t cmd, uint8_t *read_buffer = nullptr, size_t read_size = 0)
+    {
+        uint8_t write_buffer[4];
+        write_buffer[0] = (cmd >> 24) & 0xFF;
+        write_buffer[1] = (cmd >> 16) & 0xFF;
+        write_buffer[2] = (cmd >> 8) & 0xFF;
+        write_buffer[3] = (cmd >> 0) & 0xFF;
+        if (read_buffer) {
+            return 0 == comm->writeThenRead(write_buffer, arraySize(write_buffer), read_buffer, read_size);
+        } else {
+            return 0 == comm->writeBuffer(write_buffer, arraySize(write_buffer));
+        }
+    }
+
+    uint16_t check_sum_16(int val, uint8_t* buf, uint16_t len);
 };

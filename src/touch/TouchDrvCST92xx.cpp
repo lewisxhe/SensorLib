@@ -28,60 +28,8 @@
  */
 #include "TouchDrvCST92xx.h"
 
-TouchDrvCST92xx::TouchDrvCST92xx() : comm(nullptr), hal(nullptr),
-    _slave_addr(-1),
-    _center_btn_x(0),
-    _center_btn_y(0)
+TouchDrvCST92xx::TouchDrvCST92xx(): _slave_addr(-1)
 {
-}
-
-TouchDrvCST92xx::~TouchDrvCST92xx()
-{
-    if (comm) {
-        comm->deinit();
-    }
-}
-
-
-#if defined(ARDUINO)
-bool TouchDrvCST92xx::begin(TwoWire &wire, uint8_t addr, int sda, int scl)
-{
-    if (!beginCommon<SensorCommI2C, HalArduino>(comm, hal, wire, addr, sda, scl)) {
-        return false;
-    }
-    return initImpl();
-}
-
-#elif defined(ESP_PLATFORM)
-
-#if defined(USEING_I2C_LEGACY)
-bool TouchDrvCST92xx::begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
-{
-    if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, port_num, addr, sda, scl)) {
-        return false;
-    }
-    return true;
-}
-#else
-bool TouchDrvCST92xx::begin(i2c_master_bus_handle_t handle, uint8_t addr)
-{
-    if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, handle, addr)) {
-        return false;
-    }
-    return true;
-}
-#endif  //USEING_I2C_LEGACY
-#endif  //ARDUINO
-
-bool TouchDrvCST92xx::begin(SensorCommCustom::CustomCallback callback,
-                            SensorCommCustomHal::CustomHalCallback hal_callback,
-                            uint8_t addr)
-{
-    if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(COMM_CUSTOM,
-            callback, hal_callback, addr, comm, hal)) {
-        return false;
-    }
-    return initImpl();
 }
 
 void TouchDrvCST92xx::reset()
@@ -214,7 +162,7 @@ const char *TouchDrvCST92xx::getModelName()
     default:
         break;
     }
-    return "UNKNOW";
+    return "UNKNOWN";
 }
 
 void TouchDrvCST92xx::sleep()
@@ -240,22 +188,6 @@ void TouchDrvCST92xx::sleep()
 void TouchDrvCST92xx::wakeup()
 {
     reset();
-}
-
-void TouchDrvCST92xx::idle()
-{
-}
-
-uint8_t TouchDrvCST92xx::getSupportTouchPoint()
-{
-    return CST92XX_MAX_FINGER_NUM;
-}
-
-bool TouchDrvCST92xx::getResolution(int16_t *x, int16_t *y)
-{
-    *x = _resX;
-    *y = _resY;
-    return true;
 }
 
 void TouchDrvCST92xx::setCoverScreenCallback(HomeButtonCallback cb, void *user_data)
@@ -380,7 +312,6 @@ uint32_t TouchDrvCST92xx::get_u32_from_ptr(const void *ptr)
 {
     return *reinterpret_cast<const uint32_t *>(ptr);
 }
-
 
 /**
  * @note   Only when the device address is equal to 0X5A can it be accessed. If the device address is not equal to 0X5A, it can only be accessed after reset.
@@ -681,18 +612,7 @@ bool TouchDrvCST92xx::setMode(uint8_t mode)
     return true;
 }
 
-
-
-void TouchDrvCST92xx::setGpioCallback(CustomMode mode_cb,
-                                      CustomWrite write_cb,
-                                      CustomRead read_cb)
-{
-    SensorHalCustom::setCustomMode(mode_cb);
-    SensorHalCustom::setCustomWrite(write_cb);
-    SensorHalCustom::setCustomRead(read_cb);
-}
-
-bool TouchDrvCST92xx::initImpl()
+bool TouchDrvCST92xx::initImpl(uint8_t addr)
 {
 
     if (_rst != -1) {
@@ -710,6 +630,8 @@ bool TouchDrvCST92xx::initImpl()
     _chipID = chipType;
 
     log_d("Touch type:%s", getModelName());
+
+    _maxTouchPoints = CST92XX_MAX_FINGER_NUM;
 
     return true;
 }
@@ -1269,9 +1191,3 @@ END_UPGRADE:
 }
 
 #endif /*DISABLE UPDATE FIRMWARE*/
-
-
-
-
-
-

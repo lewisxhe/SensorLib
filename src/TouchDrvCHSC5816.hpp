@@ -62,57 +62,24 @@ class TouchDrvCHSC5816 :  public TouchDrvInterface
     };
 
 public:
+    /**
+    * @brief  Constructor for the touch driver
+    * @retval None
+    */
+    TouchDrvCHSC5816() {}
 
-    TouchDrvCHSC5816() : comm(nullptr), hal(nullptr) {}
+    /**
+    * @brief  Destructor for the touch driver
+    * @retval None
+    */
+    ~TouchDrvCHSC5816() = default;
 
-    ~TouchDrvCHSC5816()
-    {
-        if (comm) {
-            comm->deinit();
-        }
-    }
-
-#if defined(ARDUINO)
-    bool begin(TwoWire &wire, uint8_t addr = CHSC5816_SLAVE_ADDRESS, int sda = -1, int scl = -1)
-    {
-        if (!beginCommon<SensorCommI2C, HalArduino>(comm, hal, wire, addr, sda, scl)) {
-            return false;
-        }
-        return initImpl();
-    }
-#elif defined(ESP_PLATFORM)
-
-#if defined(USEING_I2C_LEGACY)
-    bool begin(i2c_port_t port_num, uint8_t addr = CHSC5816_SLAVE_ADDRESS, int sda = -1, int scl = -1)
-    {
-        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, port_num, addr, sda, scl)) {
-            return false;
-        }
-        return initImpl();
-    }
-#else
-    bool begin(i2c_master_bus_handle_t handle, uint8_t addr = CHSC5816_SLAVE_ADDRESS)
-    {
-        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, handle, addr)) {
-            return false;
-        }
-        return initImpl();
-    }
-#endif  //ESP_PLATFORM
-#endif  //ARDUINO
-
-    bool begin(SensorCommCustom::CustomCallback callback,
-               SensorCommCustomHal::CustomHalCallback hal_callback,
-               uint8_t addr = CHSC5816_SLAVE_ADDRESS)
-    {
-        if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(COMM_CUSTOM,
-                callback, hal_callback, addr, comm, hal)) {
-            return false;
-        }
-        return initImpl();
-    }
-
-    void reset()
+    /**
+    * @brief  Reset the touch driver
+    * @note   This function will reset the touch driver by toggling the reset pin.
+    * @retval None
+    */
+    void reset() override
     {
         if (_rst != -1) {
             hal->digitalWrite(_rst, LOW);
@@ -122,7 +89,42 @@ public:
         }
     }
 
-    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point = 1)
+    /**
+    * @brief Puts the touch driver to sleep
+    * @note This function puts the touch driver into sleep mode.
+    *       If the device does not have a reset pin connected, it cannot be woken up after being put
+    *       into sleep mode and must be powered on again.
+    * @retval None
+    */
+    void sleep() override
+    {
+        uint8_t CHSC5816_REG_SLEEP[] = {
+            0x20, 0x00, 0x00, 0x00, // CHSC5816_REG_CMD_BUFF
+            0xF8, 0x16, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0xE9
+        };
+        comm->writeBuffer(CHSC5816_REG_SLEEP, arraySize(CHSC5816_REG_SLEEP));
+    }
+
+    /**
+     * @brief  Wake up the touch driver
+     * @note   This function will wake up the touch driver from sleep mode.
+     * @retval None
+     */
+    void wakeup() override
+    {
+        reset();
+    }
+
+    /**
+    * @brief  Get the touch point coordinates
+    * @note   This function will retrieve the touch point coordinates from the touch driver.
+    * @param  *x_array: Pointer to the array to store the X coordinates
+    * @param  *y_array: Pointer to the array to store the Y coordinates
+    * @param  size: Number of touch points to retrieve
+    * @retval Return the number of touch points retrieved
+    */
+    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point = 1) override
     {
         PointReg touch;
         uint8_t CHSC5816_REG_POINT[] = {0x20, 0x00, 0x00, 0x2c};
@@ -142,91 +144,31 @@ public:
         return 1;
     }
 
-    bool isPressed()
+    /**
+    * @brief  Check if the touch point is pressed
+    * @note   This function will check if the touch point is currently pressed.
+    * @retval True if the touch point is pressed, false otherwise.
+    */
+    bool isPressed() override
     {
         if (_irq != -1) {
             return hal->digitalRead(_irq) == LOW;
         }
-        return getPoint(NULL, NULL);
+        return getPoint(NULL, NULL, 1);
     }
 
-    const char *getModelName()
+    /**
+    * @brief  Get the model name
+    * @note   This function will retrieve the model name from the touch driver.
+    * @retval The model name.
+    */
+    const char *getModelName() override
     {
         return "CHSC5816";
     }
 
-    //2uA
-    void sleep()
-    {
-        uint8_t CHSC5816_REG_SLEEP[] = {
-            0x20, 0x00, 0x00, 0x00, // CHSC5816_REG_CMD_BUFF
-            0xF8, 0x16, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0xE9
-        };
-        comm->writeBuffer(CHSC5816_REG_SLEEP, arraySize(CHSC5816_REG_SLEEP));
-    }
-
-    void wakeup()
-    {
-        reset();
-    }
-
-    void idle()
-    {
-        uint8_t CHSC5816_REG_IDEL[] = {
-            0x20, 0x00, 0x00, 0x00, // CHSC5816_REG_CMD_BUFF
-            0x20, 0x16, 0x02, 0x00, 0xDB, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0xE9
-        };
-        comm->writeBuffer(CHSC5816_REG_IDEL, arraySize(CHSC5816_REG_IDEL));
-    }
-
-    uint8_t getSupportTouchPoint()
-    {
-        return 1;
-    }
-
-    bool getResolution(int16_t *width, int16_t *height)
-    {
-#if 0
-        //TODO: NEED TEST
-        uint8_t CHSC5816_REG_FW[] = {
-            0x20, 0x00, 0x00, 0x00, // CHSC5816_REG_CMD_BUFF
-            0xFC, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0xe9
-        };
-        if (comm->writeThenRead(CHSC5816_REG_FW,
-                                arraySize(CHSC5816_REG_FW),
-                                CHSC5816_REG_FW,
-                                arraySize(CHSC5816_REG_FW)) < 0) {
-            return false;
-        }
-
-        SensorLibDumpBuffer(CHSC5816_REG_FW, arraySize(CHSC5816_REG_FW));
-
-        int16_t res_w =  (CHSC5816_REG_FW[2] << 8) | CHSC5816_REG_FW[3];
-        int16_t res_h =  (CHSC5816_REG_FW[4] << 8) | CHSC5816_REG_FW[5];
-        if (width) {
-            *width = res_w;
-        }
-        if (height) {
-            *height = res_h;
-        }
-        return true;
-#endif
-        return false;
-    }
-
-    void  setGpioCallback(CustomMode mode_cb,
-                          CustomWrite write_cb,
-                          CustomRead read_cb)
-    {
-        SensorHalCustom::setCustomMode(mode_cb);
-        SensorHalCustom::setCustomWrite(write_cb);
-        SensorHalCustom::setCustomRead(read_cb);
-    }
-
 private:
+
     bool checkOnline()
     {
         Header_t first;
@@ -272,7 +214,7 @@ private:
         return false;
     }
 
-    bool initImpl()
+    bool initImpl(uint8_t addr) override
     {
 
         if (_irq != -1) {
@@ -287,6 +229,7 @@ private:
 
         if (checkOnline()) {
             reset();
+            _maxTouchPoints = 1;
             return true;
         }
 
@@ -295,9 +238,6 @@ private:
 
 
 protected:
-    std::unique_ptr<SensorCommBase> comm;
-    std::unique_ptr<SensorHal> hal;
-
     static constexpr uint32_t CHSC5816_SIG_VALUE            = (0x43534843U);
 };
 

@@ -2,7 +2,7 @@
  *
  * @license MIT License
  *
- * Copyright (c) 2022 lewis he
+ * Copyright (c) 2026 lewis he
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,93 +22,123 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      GT911_GetPoint.ino
+ * @file      TouchDrv_CST9217_GetPoint.ino
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2023-04-12
+ * @date      2026-01-22
  *
  */
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
-#include "TouchDrvGT911.hpp"
+#include "touch/TouchDrvCST3530.h"
+#include "SensorWireHelper.h"
+
 
 #ifndef TOUCH_SDA
-#define TOUCH_SDA  18
+#define TOUCH_SDA  13
 #endif
 
 #ifndef TOUCH_SCL
-#define TOUCH_SCL  8
+#define TOUCH_SCL  14
 #endif
 
 #ifndef TOUCH_IRQ
-#define TOUCH_IRQ  16
+#define TOUCH_IRQ  12
 #endif
 
 #ifndef TOUCH_RST
-#define TOUCH_RST  -1
+#define TOUCH_RST  38
 #endif
 
-TouchDrvGT911 touch;
+TouchDrvCST3530 touch;
 int16_t x[5], y[5];
-
-
+volatile bool isPressed = false;
 
 void setup()
 {
     Serial.begin(115200);
     while (!Serial);
 
-    // If the reset pin and interrupt pin can be controlled by GPIO, the device address can be set arbitrarily
-    // If the interrupt and reset pins are not connected, you can pass in the -1 parameter and the library will automatically determine the address.
+#if TOUCH_RST != -1
+    pinMode(TOUCH_RST, OUTPUT);
+    digitalWrite(TOUCH_RST, LOW);
+    delay(30);
+    digitalWrite(TOUCH_RST, HIGH);
+    delay(50);
+#endif
+
+#if (defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_STM32)) && !defined(ARDUINO_ARCH_MBED)
+    Wire.setSCL(TOUCH_SCL);
+    Wire.setSDA(TOUCH_SDA);
+    Wire.begin();
+#elif defined(ARDUINO_ARCH_NRF52)
+    Wire.setPins(TOUCH_SDA, TOUCH_SCL);
+    Wire.begin();
+#elif defined(ARDUINO_ARCH_ESP32)
+    Wire.begin(TOUCH_SDA, TOUCH_SCL);
+#else
+    Wire.begin();
+#endif
+
+    // Scan I2C devices
+    SensorWireHelper::dumpDevices(Wire);
+
+
+    uint8_t touchAddress = 0x1A;        // Other device addresses are determined by the touch firmware and are generally 0X5A by default.
+    // uint8_t touchAddress = 0x5A;     // The device address is determined according to the actual situation. Not all device addresses are 0X5A. There can also be other customized device addresses.
+
     touch.setPins(TOUCH_RST, TOUCH_IRQ);
-    if (!touch.begin(Wire, GT911_SLAVE_ADDRESS_UNKNOWN, TOUCH_SDA, TOUCH_SCL)) {
-        while (1) {
-            Serial.println("Failed to find GT911 - check your wiring!");
-            delay(1000);
-        }
+    bool result = touch.begin(Wire, touchAddress, TOUCH_SDA, TOUCH_SCL);
+    if (result == false) {
+        Serial.println("touch is not online...");
+        while (1)delay(1000);
+    }
+    Serial.print("Model :"); Serial.println(touch.getModelName());
+
+
+    Serial.println("Enter touch sleep mode.");
+    touch.sleep();
+
+    int i = 10;
+    while (i--) {
+        Serial.print("Wake up after ");
+        Serial.print(i);
+        Serial.println(" seconds");
+        delay(1000);
     }
 
-    Serial.println("Init GT911 Sensor success!");
 
-    // Set the center button to trigger the callback , Only for specific devices, e.g LilyGo-EPD47 S3 GT911
-    touch.setHomeButtonCallback([](void *user_data) {
-        Serial.println("Home button pressed!");
-    }, NULL);
+    Serial.println("Wakeup touch");
+    touch.wakeup();
 
+    // Set touch max xy
+    // touch.setMaxCoordinates(240, 296);
 
-    /*
-    *   GT911 Interrupt mode ,It is not recommended to modify any touch settings
-    *   Please do not modify the touch interrupt mode without a touch screen configuration file,
-    *   otherwise the touch screen may become unusable.
-    * * */
-    // Low level when idle, converts to high level when touched
-    // touch.setInterruptMode(HIGH_LEVEL_QUERY);
+    // Set swap xy
+    // touch.setSwapXY(true);
 
-    // Keep low level when idle, and trigger on the falling edge after touching, trigger once at a frequency of 100HZ, and keep high level for 10ms
-    // touch.setInterruptMode(RISING);
+    // Set mirror xy
+    // touch.setMirrorXY(true, true);
 
-    // Keep high level when idle, and switch to low level when touched
-    // touch.setInterruptMode(LOW_LEVEL_QUERY);
-
-    // Maintains high level when idle, and is triggered by the falling edge after being touched. The frequency is 100HZ and is triggered once. Maintains 10ms in the low level interval
-    // touch.setInterruptMode(FALLING);
+    //Register touch plane interrupt pin
+    attachInterrupt(TOUCH_IRQ, []() {
+        isPressed = true;
+    }, FALLING);
 
     Serial.println("Touch Info:");
     Serial.print("Model: "); Serial.println(touch.getModelName());
-    Serial.print("ID: 0x"); Serial.println(touch.getChipID(), HEX);
+    Serial.print("ID: 0x"); Serial.println(touch.getChipID(),HEX);
     Serial.print("Max Touch Points: "); Serial.println(touch.getSupportTouchPoint());
     Serial.print("Resolution: "); Serial.print(touch.getResolutionX()); Serial.print("x"); Serial.println(touch.getResolutionY());
     delay(3000);
 }
 
-
 void loop()
 {
-    if (touch.isPressed()) {
+    if (isPressed) {
+        isPressed = false;
         uint8_t touched = touch.getPoint(x, y, touch.getSupportTouchPoint());
-        if (touched > 0) {
-            Serial.print(millis());
-            Serial.print("ms ");
+        if (touched) {
             for (int i = 0; i < touched; ++i) {
                 Serial.print("X[");
                 Serial.print(i);
@@ -124,5 +154,5 @@ void loop()
             Serial.println();
         }
     }
-    delay(100);
+    delay(30);
 }

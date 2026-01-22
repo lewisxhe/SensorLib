@@ -28,58 +28,6 @@
  */
 #include "TouchDrvCST226.h"
 
-TouchDrvCST226::TouchDrvCST226() : comm(nullptr), hal(nullptr)
-{
-
-}
-
-TouchDrvCST226::~TouchDrvCST226()
-{
-    if (comm) {
-        comm->deinit();
-    }
-}
-
-#if defined(ARDUINO)
-bool TouchDrvCST226::begin(TwoWire &wire, uint8_t addr, int sda, int scl)
-{
-    if (!beginCommon<SensorCommI2C, HalArduino>(comm, hal, wire, addr, sda, scl)) {
-        return false;
-    }
-    return initImpl();
-}
-#elif defined(ESP_PLATFORM)
-
-#if defined(USEING_I2C_LEGACY)
-bool TouchDrvCST226::begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
-{
-    if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, port_num, addr, sda, scl)) {
-        return false;
-    }
-    return true;
-}
-#else
-bool TouchDrvCST226::begin(i2c_master_bus_handle_t handle, uint8_t addr)
-{
-    if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, handle, addr)) {
-        return false;
-    }
-    return true;
-}
-#endif  //USEING_I2C_LEGACY
-#endif //ARDUINO
-
-bool TouchDrvCST226::begin(SensorCommCustom::CustomCallback callback,
-                           SensorCommCustomHal::CustomHalCallback hal_callback,
-                           uint8_t addr)
-{
-    if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(COMM_CUSTOM,
-            callback, hal_callback, addr, comm, hal)) {
-        return false;
-    }
-    return initImpl();
-}
-
 void TouchDrvCST226::reset()
 {
     if (_rst != -1) {
@@ -163,7 +111,17 @@ bool TouchDrvCST226::isPressed()
 
 const char *TouchDrvCST226::getModelName()
 {
-    return "CST226SE";
+    switch (_chipID) {
+    case CST226SE_CHIPTYPE:
+        return "CST226SE";
+        break;
+    case CST328_CHIPTYPE:
+        return "CST328";
+        break;
+    default:
+        break;
+    }
+    return "Unknown";
 }
 
 void TouchDrvCST226::sleep()
@@ -184,39 +142,7 @@ void TouchDrvCST226::wakeup()
     reset();
 }
 
-void TouchDrvCST226::idle()
-{
-
-}
-
-uint8_t TouchDrvCST226::getSupportTouchPoint()
-{
-    return 5;
-}
-
-bool TouchDrvCST226::getResolution(int16_t *x, int16_t *y)
-{
-    *x = _resX;
-    *y = _resY;
-    return true;
-}
-
-void TouchDrvCST226::setHomeButtonCallback(HomeButtonCallback cb, void *user_data)
-{
-    _HButtonCallback = cb;
-    _userData = user_data;
-}
-
-void TouchDrvCST226::setGpioCallback(CustomMode mode_cb,
-                                     CustomWrite write_cb,
-                                     CustomRead read_cb)
-{
-    SensorHalCustom::setCustomMode(mode_cb);
-    SensorHalCustom::setCustomWrite(write_cb);
-    SensorHalCustom::setCustomRead(read_cb);
-}
-
-bool TouchDrvCST226::initImpl()
+bool TouchDrvCST226::initImpl(uint8_t addr)
 {
 
     if (_rst != -1) {
@@ -256,17 +182,17 @@ bool TouchDrvCST226::initImpl()
     write_buffer[0] = {0xD2};
     write_buffer[1] = {0x04};
     comm->writeThenRead(write_buffer, 2, buffer, 4);
-    uint32_t chipType = buffer[3];
-    chipType <<= 8;
-    chipType |= buffer[2];
-
+    // uint32_t chipType = buffer[3];
+    // chipType <<= 8;
+    // chipType |= buffer[2];
+    uint32_t chipType = buffer[2];
+    // log_i("Chip ID high byte:0x%lx. low byte:0x%lx", buffer[3], buffer[2]);
 
     uint32_t ProjectID = buffer[1];
     ProjectID <<= 8;
     ProjectID |= buffer[0];
     log_i("Chip type :0x%lx, ProjectID:0X%lx",
           chipType, ProjectID);
-
 
 
     write_buffer[0] = {0xD2};
@@ -301,8 +227,8 @@ bool TouchDrvCST226::initImpl()
         return false;
     }
 
-    if (chipType != CST226SE_CHIPTYPE) {
-        log_e("Chip ID does not match, should be 0x%2X", CST226SE_CHIPTYPE);
+    if (chipType != CST226SE_CHIPTYPE && chipType != CST328_CHIPTYPE) {
+        log_e("Chip ID does not match, should be 0x%2X ,but is 0x%2X", CST226SE_CHIPTYPE, chipType);
         return false;
     }
 
@@ -311,21 +237,7 @@ bool TouchDrvCST226::initImpl()
     // Exit Command mode
     comm->writeRegister(0xD1, 0x09);
 
+    _maxTouchPoints = 5;
+
     return true;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

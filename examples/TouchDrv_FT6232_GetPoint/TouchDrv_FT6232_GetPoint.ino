@@ -62,7 +62,13 @@ void setup()
     }
     touch.interruptPolling();
 
-    Serial.println("Init FT6X36 Sensor success!");
+
+    Serial.println("Touch Info:");
+    Serial.print("Model: "); Serial.println(touch.getModelName());
+    Serial.print("ID: 0x"); Serial.println(touch.getChipID(), HEX);
+    Serial.print("Max Touch Points: "); Serial.println(touch.getSupportTouchPoint());
+    Serial.print("Resolution: "); Serial.print(touch.getResolutionX()); Serial.print("x"); Serial.println(touch.getResolutionY());
+    delay(3000);
 }
 
 
@@ -87,6 +93,3 @@ void loop()
     }
     delay(50);
 }
-
-
-
