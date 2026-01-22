@@ -43,6 +43,7 @@ protected:
     static constexpr uint8_t DRV2605_CHIP_ID = 0x03;                //* DRV2605  (contains licensed ROM library, does not contain RAM)
     static constexpr uint8_t DRV2604L_CHIP_ID = 0x06;               //* DRV2604L (low-voltage version of the DRV2604 device)
     static constexpr uint8_t DRV2605L_CHIP_ID = 0x07;               //* DRV2605L (low-voltage version of the DRV2605 device)
+    static constexpr uint8_t DRV2605X_CHIP_ID = 0x05;               //* It may be a counterfeit of DRV2605. https://github.com/lewisxhe/SensorLib/issues/32
 
     // Registers
     static constexpr uint8_t DRV2605_REG_STATUS = 0x00;              //* Status register
