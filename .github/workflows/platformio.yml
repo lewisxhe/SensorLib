@@ -12,6 +12,14 @@ on:
 
 jobs:
   platformio-build:
+    if: |
+      !(
+        (github.event_name == 'push' && contains(github.event.head_commit.message, '[skip-pio]')) ||
+        (github.event_name == 'pull_request' && (
+          contains(github.event.pull_request.title, '[skip-pio]') ||
+          contains(github.event.pull_request.body, '[skip-pio]')
+        ))
+      )
     runs-on: ubuntu-latest
     strategy:
       matrix:
