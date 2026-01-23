@@ -83,7 +83,7 @@ bool TouchDrvCSTXXX::begin(TwoWire &wire, uint8_t addr, int sda, int scl)
 bool TouchDrvCSTXXX::begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
 {
     bool success = false;
-    for (int i = (_touchType == TouchDrv_UNKOWN) ? 0 : _touchType; i < driverCreatorMaxNum; ++i) {
+    for (int i = (_touchType == TouchDrv_UNKNOWN) ? 0 : _touchType; i < driverCreatorMaxNum; ++i) {
         _drv = createDriver(static_cast<TouchDrvType>(i));
         setupDriver();
         if (_drv && _drv->begin(port_num, addr, sda, scl)) {
@@ -93,7 +93,7 @@ bool TouchDrvCSTXXX::begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
         }
     }
     if (!success) {
-        _touchType = TouchDrv_UNKOWN;
+        _touchType = TouchDrv_UNKNOWN;
     }
     return success;
 }
@@ -101,7 +101,7 @@ bool TouchDrvCSTXXX::begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
 bool TouchDrvCSTXXX::begin(i2c_master_bus_handle_t handle, uint8_t addr)
 {
     bool success = false;
-    for (int i = (_touchType == TouchDrv_UNKOWN) ? 0 : _touchType; i < driverCreatorMaxNum; ++i) {
+    for (int i = (_touchType == TouchDrv_UNKNOWN) ? 0 : _touchType; i < driverCreatorMaxNum; ++i) {
         _drv = createDriver(static_cast<TouchDrvType>(i));
         setupDriver();
         if (_drv && _drv->begin(handle, addr)) {
@@ -111,7 +111,7 @@ bool TouchDrvCSTXXX::begin(i2c_master_bus_handle_t handle, uint8_t addr)
         }
     }
     if (!success) {
-        _touchType = TouchDrv_UNKOWN;
+        _touchType = TouchDrv_UNKNOWN;
     }
     return success;
 }

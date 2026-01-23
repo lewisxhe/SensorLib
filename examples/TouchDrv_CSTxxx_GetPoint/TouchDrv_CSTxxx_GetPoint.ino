@@ -129,7 +129,7 @@ void setup()
 
     /*
     * Support type.
-    * TouchDrv_UNKOWN       : Judging by identification ID
+    * TouchDrv_UNKNOWN      : Judging by identification ID
     * TouchDrv_CST8XX       : CST816X,CST716,CST820
     * TouchDrv_CST226       : CST226X,CST328
     * TouchDrv_CST92XX      : CST9217,CST9220
