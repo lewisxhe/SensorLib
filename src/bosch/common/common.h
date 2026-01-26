@@ -38,13 +38,13 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
-#include "bosch/bhy2.h"
-#include "bosch/bhi3.h"
-#include "bosch/bhi3_multi_tap.h"
-#include "bosch/bhy2_klio.h"
-#include "bosch/bhy2_swim.h"
-#include "bosch/bhy2_bsec.h"
-#include "bosch/bhy2_head_tracker.h"
+#include "bosch/bhi260x/bhy2.h"
+#include "bosch/bhi260x/bhi3.h"
+#include "bosch/bhi260x/bhi3_multi_tap.h"
+#include "bosch/bhi260x/bhy2_klio.h"
+#include "bosch/bhi260x/bhy2_swim.h"
+#include "bosch/bhi260x/bhy2_bsec.h"
+#include "bosch/bhi260x/bhy2_head_tracker.h"
 
 
 void time_to_s_ns(uint64_t time_ticks, uint32_t *s, uint32_t *ns, uint64_t *tns);

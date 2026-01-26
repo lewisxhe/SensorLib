@@ -31,8 +31,8 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include "bhy2_parse.h"
-#include "bhy2_defs.h"
+#include "bhi260x/bhy2_parse.h"
+#include "bhi260x/bhy2_defs.h"
 #include "common/common.h"
 #ifdef ARDUINO
 #include <Stream.h>

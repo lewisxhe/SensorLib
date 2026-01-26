@@ -29,7 +29,7 @@
  */
 #pragma once
 
-#include "bhy2_defs.h"
+#include "bhi260x/bhy2_defs.h"
 
 class BoschParseBase
 {

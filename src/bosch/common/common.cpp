@@ -36,8 +36,8 @@
  */
 
 #include "common.h"
-#include "bosch/bhy2_parse.h"
-#include "bosch/bhy2.h"
+#include "bosch/bhi260x/bhy2_parse.h"
+#include "bosch/bhi260x/bhy2.h"
 
 
 void time_to_s_ns(uint64_t time_ticks, uint32_t *s, uint32_t *ns, uint64_t *tns)

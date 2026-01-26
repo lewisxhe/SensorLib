@@ -29,7 +29,7 @@
  */
 #pragma once
 #include "../SensorBHI260AP.hpp"
-#include "bhy2_defs.h"
+#include "bhi260x/bhy2_defs.h"
 #include <math.h>
 
 class BoschSensorDataHelperBase

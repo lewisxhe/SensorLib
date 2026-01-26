@@ -30,52 +30,53 @@
 
 
 
+// BHI260 Firmwares
 #if defined(BOSCH_APP30_SHUTTLE_BHI260_FW)
-    #include "bosch/firmware/bosch_app30_shuttle_bhi260.h"
+    #include "bosch/firmware/bhi260/bosch_app30_shuttle_bhi260.h"
 #elif defined(BOSCH_APP30_SHUTTLE_BHI260_AUX_BMM150FW)
-    #include "bosch/firmware/bosch_app30_shuttle_bhi260_aux_bmm150.h"
+    #include "bosch/firmware/bhi260/bosch_app30_shuttle_bhi260_aux_bmm150.h"
 #elif defined(BOSCH_APP30_SHUTTLE_BHI260_BME68X)
-    #include "bosch/firmware/bosch_app30_shuttle_bhi260_bme68x.h"
+    #include "bosch/firmware/bhi260/bosch_app30_shuttle_bhi260_bme68x.h"
 #elif defined(BOSCH_APP30_SHUTTLE_BHI260_BMP390)
-    #include "bosch/firmware/bosch_app30_shuttle_bhi260_bmp390.h"
+    #include "bosch/firmware/bhi260/bosch_app30_shuttle_bhi260_bmp390.h"
 #elif defined(BOSCH_APP30_SHUTTLE_BHI260_TURBO)
-    #include "bosch/firmware/bosch_app30_shuttle_bhi260_turbo.h"
+    #include "bosch/firmware/bhi260/bosch_app30_shuttle_bhi260_turbo.h"
 #elif defined(BOSCH_BHI260_AUX_BEM280)
-    #include "bosch/firmware/bosch_bhi260_aux_bem280.h"
+    #include "bosch/firmware/bhi260/bosch_bhi260_aux_bem280.h"
 #elif defined(BOSCH_BHI260_AUX_BMM150_BEM280)
-    #include "bosch/firmware/bosch_bhi260_aux_bmm150_bem280.h"
+    #include "bosch/firmware/bhi260/bosch_bhi260_aux_bmm150_bem280.h"
 #elif defined(BOSCH_BHI260_AUX_BMM150_BEM280_GPIO)
-    #include "bosch/firmware/bosch_bhi260_aux_bmm150_bem280_gpio.h"
+    #include "bosch/firmware/bhi260/bosch_bhi260_aux_bmm150_bem280_gpio.h"
 #elif defined(BOSCH_BHI260_AUX_BMM150_GPIO)
-    #include "bosch/firmware/bosch_bhi260_aux_bmm150_gpio.h"
+    #include "bosch/firmware/bhi260/bosch_bhi260_aux_bmm150_gpio.h"
 #elif defined(BOSCH_BHI260_GPIO)
-    #include "bosch/firmware/bosch_bhi260_gpio.h"
+    #include "bosch/firmware/bhi260/bosch_bhi260_gpio.h"
 #elif defined(BOSCH_BHI260_KLIO)
-    #include "bosch/firmware/bosch_bhi260_klio.h"
+    #include "bosch/firmware/bhi260/bosch_bhi260_klio.h"
 #elif defined(BOSCH_APP30_SHUTTLE_BHI260_AUX_BMM150_FLASH)
-    #include "bosch/firmware/bosch_app30_shuttle_bhi260_aux_bmm150_flash.h"
+    #include "bosch/firmware/bhi260/bosch_app30_shuttle_bhi260_aux_bmm150_flash.h"
 #elif defined(BOSCH_APP30_SHUTTLE_BHI260_BME68X_FLASH)
-    #include "bosch/firmware/bosch_app30_shuttle_bhi260_bme68x_flash.h"
+    #include "bosch/firmware/bhi260/bosch_app30_shuttle_bhi260_bme68x_flash.h"
 #elif defined(BOSCH_APP30_SHUTTLE_BHI260_BMP390_FLASH)
-    #include "bosch/firmware/bosch_app30_shuttle_bhi260_bmp390_flash.h"
+    #include "bosch/firmware/bhi260/bosch_app30_shuttle_bhi260_bmp390_flash.h"
 #elif defined(BOSCH_APP30_SHUTTLE_BHI260_FLASH)
-    #include "bosch/firmware/bosch_app30_shuttle_bhi260_flash.h"
+    #include "bosch/firmware/bhi260/bosch_app30_shuttle_bhi260_flash.h"
 #elif defined(BOSCH_APP30_SHUTTLE_BHI260_TURBO_FLASH)
-    #include "bosch/firmware/bosch_app30_shuttle_bhi260_turbo_flash.h"
+    #include "bosch/firmware/bhi260/bosch_app30_shuttle_bhi260_turbo_flash.h"
 #elif defined(BOSCH_BHI260_AUX_BEM280_FLASH)
-    #include "bosch/firmware/bosch_bhi260_aux_bem280_flash.h"
+    #include "bosch/firmware/bhi260/bosch_bhi260_aux_bem280_flash.h"
 #elif defined(BOSCH_BHI260_AUX_BMM150_BEM280_FLASH)
-    #include "bosch/firmware/bosch_bhi260_aux_bmm150_bem280_flash.h"
+    #include "bosch/firmware/bhi260/bosch_bhi260_aux_bmm150_bem280_flash.h"
 #elif defined(BOSCH_BHI260_AUX_BMM150_BEM280_GPIO_FLASH)
-    #include "bosch/firmware/bosch_bhi260_aux_bmm150_bem280_gpio_flash.h"
+    #include "bosch/firmware/bhi260/bosch_bhi260_aux_bmm150_bem280_gpio_flash.h"
 #elif defined(BOSCH_BHI260_AUX_BMM150_GPIO_FLASH)
-    #include "bosch/firmware/bosch_bhi260_aux_bmm150_gpio_flash.h"
+    #include "bosch/firmware/bhi260/bosch_bhi260_aux_bmm150_gpio_flash.h"
 #elif defined(BOSCH_BHI260_GPIO_FLASH)
-    #include "bosch/firmware/bosch_bhi260_gpio_flash.h"
+    #include "bosch/firmware/bhi260/bosch_bhi260_gpio_flash.h"
 #elif defined(BOSCH_BHI260_KLIO_FLASH)
-    #include "bosch/firmware/bosch_bhi260_klio_flash.h"
+    #include "bosch/firmware/bhi260/bosch_bhi260_klio_flash.h"
 #elif defined(BOSCH_BHI260_KLIO_TURBO_FLASH)
-    #include "bosch/firmware/bosch_bhi260_klio_turbo_flash.h"
+    #include "bosch/firmware/bhi260/bosch_bhi260_klio_turbo_flash.h"
 #else
     #warning "None of the defined conditions were met, so no firmware will be included".
 #endif
