@@ -74,14 +74,14 @@ public:
         // OVL (Overflow)
         if (isBitSet(status, 1)) {
             data.overflow = true;
-            log_w("Data overflow detected");
+            log_e("Data overflow detected");
         } else {
             data.overflow = false;
         }
 
         // DOR (Data Skip)
         if (isBitSet(status, 2)) {
-            log_w("Data skip detected");
+            log_e("Data skip detected");
             data.skip_data = true;
         } else {
             data.skip_data = false;

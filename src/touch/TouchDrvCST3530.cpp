@@ -107,7 +107,7 @@ uint8_t TouchDrvCST3530::getPoint(int16_t *x_array, int16_t *y_array, uint8_t ge
             x_array[i] = points[i].pos_x;
             y_array[i] = points[i].pos_y;
             numPoints++;
-            log_d("ID=%d, X=%d, Y=%d, press=%d", i + 1, points[i].pos_id, points[i].pos_x, points[i].pos_y, points[i].pres_z);
+            log_d("ID=%d , X=%d, Y=%d, press=%d", points[i].pos_id, points[i].pos_x, points[i].pos_y, points[i].pres_z);
         }
     }
 
@@ -176,7 +176,7 @@ bool TouchDrvCST3530::initImpl(uint8_t addr)
                 log_d("Key Number:%d", buffer[27]);
                 log_d("Resolution: %d x %d", _resX, _resY);
                 log_d("Project ID:%04X", buffer[39] << 24 | buffer[38] << 16 | buffer[37] << 8 | buffer[36]);
-                log_d("Chip Type:%04X", _chipID);
+                log_d("Chip Type:%04" PRIX32, _chipID);
                 log_d("Firmware Version:%04X", buffer[35] << 24 | buffer[34] << 16 | buffer[33] << 8 | buffer[32]);
                 return true;
             }

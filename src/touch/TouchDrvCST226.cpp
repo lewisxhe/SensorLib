@@ -228,7 +228,7 @@ bool TouchDrvCST226::initImpl(uint8_t addr)
     }
 
     if (chipType != CST226SE_CHIPTYPE && chipType != CST328_CHIPTYPE) {
-        log_e("Chip ID does not match, should be 0x%2X ,but is 0x%2X", CST226SE_CHIPTYPE, chipType);
+        log_e("Chip ID does not match, should be 0x%02" PRIX8 " ,but is 0x%02" PRIX32, CST226SE_CHIPTYPE, chipType);
         return false;
     }
 
