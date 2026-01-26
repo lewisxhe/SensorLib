@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      QMC6310_GetDataExample.ino
+ * @file      QMC5883L_GetDataExample.ino
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2026-01-26
  *
@@ -30,56 +30,27 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
-#include "SensorQMC6310.hpp"
-#ifdef ARDUINO_T_BEAM_S3_SUPREME
-#include <XPowersAXP2101.tpp>   //PMU Library https://github.com/lewisxhe/XPowersLib.git
-#endif
+#include "SensorQMC5883L.hpp"
+
 
 #ifndef SENSOR_SDA
-#define SENSOR_SDA  17
+#define SENSOR_SDA  27
 #endif
 
 #ifndef SENSOR_SCL
-#define SENSOR_SCL  18
+#define SENSOR_SCL  26
 #endif
 
-SensorQMC6310 magnetometer;
-
-void beginPower()
-{
-#if defined(ARDUINO_T_BEAM_S3_SUPREME)
-    XPowersAXP2101 power;
-    power.begin(Wire1, AXP2101_SLAVE_ADDRESS, 42, 41);
-    power.disableALDO1();
-    power.disableALDO2();
-    delay(250);
-    power.setALDO1Voltage(3300);
-    power.enableALDO1();
-    power.setALDO2Voltage(3300);
-    power.enableALDO2();
-#endif
-}
+SensorQMC5883L magnetometer;
 
 void setup()
 {
     Serial.begin(115200);
     while (!Serial);
 
-    // LilyGo T-Beam-Supreme sensor requires a power source to function.
-    beginPower();
-
-    /**
-    * Supports QMC6310U and QMC6310N; simply pass the corresponding device address
-    * during initialization.
-    * - QMC6310U_SLAVE_ADDRESS
-    * - QMC6310N_SLAVE_ADDRESS
-    */
-    uint8_t address = QMC6310U_SLAVE_ADDRESS;
-    //  uint8_t address = QMC6310N_SLAVE_ADDRESS;
-
-    if (!magnetometer.begin(Wire, address, SENSOR_SDA, SENSOR_SCL)) {
+    if (!magnetometer.begin(Wire, QMC5883L_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
         while (1) {
-            Serial.println("Failed to find QMC6310 - check your wiring!");
+            Serial.println("Failed to find QMC5883L - check your wiring!");
             delay(1000);
         }
     }
@@ -88,20 +59,17 @@ void setup()
     float data_rate_hz = 200.0f;
     // op_mode: Allowed values are SUSPEND, NORMAL, SINGLE_MEASUREMENT, CONTINUOUS_MEASUREMENT
     MagOperationMode op_mode = MagOperationMode::CONTINUOUS_MEASUREMENT;
-    // full_scale: Allowed values are FS_2G, FS_8G, FS_12G ,FS_30G
-    MagFullScaleRange full_scale = MagFullScaleRange::FS_8G;
+    // full_scale: Allowed values are FS_2G, FS_8G
+    MagFullScaleRange full_scale = MagFullScaleRange::FS_2G;
     // over_sample_ratio: Allowed values are OSR_1, OSR_2, OSR_4, OSR_8
     MagOverSampleRatio over_sample_ratio = MagOverSampleRatio::OSR_1;
-    // down_sample_ratio: Allowed values are DSR_1, DSR_2, DSR_4, DSR_8
-    MagDownSampleRatio down_sample_ratio = MagDownSampleRatio::DSR_1;
 
     /* Config Magnetometer */
     if (magnetometer.configMagnetometer(
                 op_mode,
                 full_scale,
                 data_rate_hz,
-                over_sample_ratio,
-                down_sample_ratio)) {
+                over_sample_ratio)) {
         Serial.println("Magnetometer configured successfully.");
     } else {
         Serial.println("Magnetometer configuration failed.");
@@ -123,6 +91,7 @@ void setup()
             Serial.print(", ");
         }
     }
+
     SensorConfig cfg = magnetometer.getConfig();
     Serial.print("DataRate: "); Serial.println(cfg.data_rate_hz);
     Serial.print("FullScaleRange: "); Serial.println(cfg.full_scale_range);
@@ -150,9 +119,9 @@ void setup()
     Serial.println("Read data now...");
 }
 
+
 void loop()
 {
-
     MagnetometerData data;
 
     if (magnetometer.readData(data)) {
@@ -167,6 +136,10 @@ void loop()
         Serial.print(" Y:"); Serial.print(y);
         Serial.print(" Z:"); Serial.print(z);
         Serial.print(" μT");
+
+        Serial.print(" Sensitivity: ");
+        Serial.print(magnetometer.getSensitivity(), 6);
+        Serial.print(" Gauss/LSB");
 
         Serial.print(" Metadata:");
         Serial.print(" X:");
@@ -192,9 +165,9 @@ void loop()
         if (data.overflow) {
             Serial.println("\tWarning: Data Overflow occurred!");
         }
+        if (data.skip_data) {
+            Serial.println("\tWarning: Data Skip occurred!");
+        }
     }
-    delay(10);
+    delay(50);
 }
-
-
-
