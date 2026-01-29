@@ -208,7 +208,6 @@ public:
             log_e("Invalid magnetometer range");
             return false;
         }
-        Serial.println("Set Full Scale Range reg to " + String(range_value, HEX));
         if (comm->writeRegister(REG_0x09_CMD1, 0xCF, range_value) > 0) {
             log_e("Failed to set full scale range");
             return false;
@@ -347,7 +346,7 @@ public:
         uint8_t buffer[2] = {0};
 
         if (comm->readRegister(REG_0x07_TOUT_LOW, buffer, 2) < 0) {
-            Serial.println("Failed to read temperature registers");
+            log_e("Failed to read temperature registers");
             return false;
         }
         raw_temp = (int16_t)((buffer[1] << 8) | buffer[0]);
