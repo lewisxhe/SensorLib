@@ -190,19 +190,19 @@ public:
      */
     bool setFullScaleRange(MagFullScaleRange range) override
     {
-        uint32_t full_scale = 0;
+        float full_scale = 0;
         float sensitivity = 0.0f;
         uint8_t range_value = 0;
         switch (range) {
         case MagFullScaleRange::FS_8G:
             sensitivity = 0.00033333f; // 3000 LSB/Gauss
             range_value = 0x01 << 4;
-            full_scale = 8;
+            full_scale = 8.0f;
             break;
         case MagFullScaleRange::FS_2G:
             sensitivity = 0.00008333f; // 12000 LSB/Gauss
             range_value = 0x00 << 4;
-            full_scale = 2;
+            full_scale = 2.0f;
             break;
         default:
             log_e("Invalid magnetometer range");

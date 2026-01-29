@@ -56,16 +56,16 @@ enum class SensorType {
 };
 
 struct SensorConfig {
-    uint8_t mode;                   // Operation mode
     float data_rate_hz;             // Data output rate (Hz)
-    uint8_t full_scale_range;       // Full-scale range
+    float full_scale_range;         // Full-scale range
+    float sensitivity;              // Sensitivity
     int16_t x_offset;               // X-axis offset
     int16_t y_offset;               // Y-axis offset
     int16_t z_offset;               // Z-axis offset
-    float sensitivity;              // Sensitivity
+    uint16_t fifo_size;             // FIFO size
+    uint8_t mode;                   // Operation mode
     bool interrupt_enabled;         // Interrupt enabled
     bool fifo_enabled;              // FIFO enabled
-    uint16_t fifo_size;             // FIFO size
 };
 
 struct SensorInfo {

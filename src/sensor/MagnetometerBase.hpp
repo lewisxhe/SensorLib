@@ -182,10 +182,10 @@ public:
     /**
      * @brief  Gets the full-scale range for the magnetometer.
      * @note   This function should be called to retrieve the sensor's measurement range.
-     * @retval The current full-scale range.
+     * @retval The current full-scale range (e.g., 2.0, 4.0, 8.0, 16.0).
      */
-    virtual MagFullScaleRange getFullScaleRange() const { 
-        return static_cast<MagFullScaleRange>(_config.full_scale_range); 
+    virtual float getFullScaleRange() const { 
+        return _config.full_scale_range;
     }
 
     /**
