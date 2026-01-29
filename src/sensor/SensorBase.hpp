@@ -139,15 +139,6 @@ public:
         }
     }
 
-    /**
-     * @brief  Virtual function for sensor-specific initialization.
-     * @note   This function is called during the initialization process to perform
-     *         any sensor-specific setup.
-     * @param  addr: The I2C address of the sensor.
-     * @retval True if initialization is successful, false otherwise.
-     */
-    virtual bool initImpl(uint8_t addr) = 0;
-
 #if defined(ARDUINO)
     /**
       * @brief Initialization function for the Arduino platform. Sets up the sensor over I2C.
@@ -353,6 +344,15 @@ public:
     {
         return true;
     }
+private:
+    /**
+     * @brief  Virtual function for sensor-specific initialization.
+     * @note   This function is called during the initialization process to perform
+     *         any sensor-specific setup.
+     * @param  addr: The I2C address of the sensor.
+     * @retval True if initialization is successful, false otherwise.
+     */
+    virtual bool initImpl(uint8_t addr) = 0;
 
 protected:
     std::unique_ptr<SensorCommBase> comm;
