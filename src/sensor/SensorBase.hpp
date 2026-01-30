@@ -25,102 +25,136 @@
  * @file      SensorBase.hpp
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2026-01-22
+ *
+ * @brief Abstract base class template for all sensors
+ * @note This class cannot be instantiated directly. Use derived classes such as:
+ *       - AccelerometerBase for accelerometers
+ *       - GyroscopeBase for gyroscopes
+ *       - MagnetometerBase for magnetometers
  */
 #pragma once
 
 #include "../SensorPlatform.hpp"
 #include <functional>
 #include <vector>
+#include <cstring>
 
+/**
+ * @brief Structure representing a 3D vector with floating-point components
+ */
 struct SensorVector {
-    float x;
-    float y;
-    float z;
+    float x;  ///< X-axis component
+    float y;  ///< Y-axis component
+    float z;  ///< Z-axis component
 };
 
+/**
+ * @brief Structure representing a raw 3D vector with 16-bit integer components
+ */
 struct RawVector {
-    int16_t x;
-    int16_t y;
-    int16_t z;
+    int16_t x;  ///< X-axis raw value
+    int16_t y;  ///< Y-axis raw value
+    int16_t z;  ///< Z-axis raw value
 };
 
+/**
+ * @brief Enumeration of sensor types
+ */
 enum class SensorType {
-    UNKNOWN = 0,
-    ACCELEROMETER,
-    GYROSCOPE,
-    MAGNETOMETER,
-    PRESSURE,
-    TEMPERATURE,
-    HUMIDITY,
-    MULTI_AXIS
+    UNKNOWN = 0,     ///< Unknown sensor type
+    ACCELEROMETER,   ///< Accelerometer sensor
+    GYROSCOPE,       ///< Gyroscope sensor
+    MAGNETOMETER,    ///< Magnetometer sensor
+    PRESSURE,        ///< Pressure sensor
+    TEMPERATURE,     ///< Temperature sensor
+    HUMIDITY,        ///< Humidity sensor
+    MULTI_AXIS       ///< Multi-axis sensor
 };
 
+/**
+ * @brief Structure containing sensor configuration parameters
+ */
 struct SensorConfig {
-    float data_rate_hz;             // Data output rate (Hz)
-    float full_scale_range;         // Full-scale range
-    float sensitivity;              // Sensitivity
-    int16_t x_offset;               // X-axis offset
-    int16_t y_offset;               // Y-axis offset
-    int16_t z_offset;               // Z-axis offset
-    uint16_t fifo_size;             // FIFO size
-    uint8_t mode;                   // Operation mode
-    bool interrupt_enabled;         // Interrupt enabled
-    bool fifo_enabled;              // FIFO enabled
+    float data_rate_hz;      ///< Data output rate in Hertz
+    float full_scale_range;  ///< Full-scale range in appropriate units
+    float sensitivity;       ///< Sensitivity (units per LSB)
+    int16_t x_offset;        ///< X-axis calibration offset
+    int16_t y_offset;        ///< Y-axis calibration offset
+    int16_t z_offset;        ///< Z-axis calibration offset
+    uint16_t fifo_size;      ///< FIFO buffer size (if available)
+    uint8_t mode;            ///< Operation mode
+    bool interrupt_enabled;  ///< Interrupt enable flag
+    bool fifo_enabled;       ///< FIFO enable flag
 };
 
+/**
+ * @brief Structure containing sensor identification information
+ */
 struct SensorInfo {
-    const char *manufacturer;       // Manufacturer
-    const char *model;              // Model
-    uint8_t i2c_address;            // I2C address
-    uint8_t version;                // Version
-    uint32_t uid;                   // Unique ID
-    SensorType type;                // Sensor type
-    uint8_t address_count;          // Supported address count
-    uint8_t *alternate_addresses;   // Alternate address list
+    const char *manufacturer;       ///< Manufacturer name
+    const char *model;              ///< Model name/identifier
+    uint8_t i2c_address;            ///< Default I2C address
+    uint8_t version;                ///< Hardware/firmware version
+    uint32_t uid;                   ///< Unique identifier
+    SensorType type;                ///< Sensor type
+    uint8_t address_count;          ///< Number of supported I2C addresses
+    uint8_t *alternate_addresses;   ///< List of alternate I2C addresses
 };
 
-// *INDENT-OFF*
+/**
+ * @brief Utility class providing static sensor-related helper functions
+ */
 class SensorUtils
 {
 public:
     /**
-     * @brief  Convert sensor type to string
-     * @note   This function converts the sensor type enumeration to a string representation.
-     * @param  type: The sensor type enumeration value.
-     * @retval A string representation of the sensor type.
+     * @brief Convert sensor type enumeration to string representation
+     *
+     * @param type Sensor type enumeration value
+     * @return const char* String representation of the sensor type
      */
     static const char *typeToString(SensorType type)
     {
         switch (type) {
         case SensorType::ACCELEROMETER: return "ACCELEROMETER";
-        case SensorType::GYROSCOPE: return "GYROSCOPE";
-        case SensorType::MAGNETOMETER: return "MAGNETOMETER";
-        case SensorType::PRESSURE: return "PRESSURE";
-        case SensorType::TEMPERATURE: return "TEMPERATURE";
-        case SensorType::HUMIDITY: return "HUMIDITY";
-        case SensorType::MULTI_AXIS: return "MULTI_AXIS";
-        default: return "UNKNOWN";
+        case SensorType::GYROSCOPE:     return "GYROSCOPE";
+        case SensorType::MAGNETOMETER:  return "MAGNETOMETER";
+        case SensorType::PRESSURE:      return "PRESSURE";
+        case SensorType::TEMPERATURE:   return "TEMPERATURE";
+        case SensorType::HUMIDITY:      return "HUMIDITY";
+        case SensorType::MULTI_AXIS:    return "MULTI_AXIS";
+        default:                        return "UNKNOWN";
         }
     }
 };
-// *INDENT-ON*
 
-
+/**
+ * @brief Template base class for all sensor implementations
+ *
+ * @tparam T Sensor data type (e.g., AccelerometerData, GyroscopeData)
+ *
+ * @note This is an abstract base class and cannot be instantiated directly.
+ *       Derived classes must implement the pure virtual functions.
+ *
+ * @warning Constructor is protected to prevent direct instantiation
+ */
 template<typename T>
 class SensorBase
 {
-public:
-
     using DataReadyCallback = std::function<void(const T &)>;
 
+protected:
     /**
-     * @brief  SensorBase constructor.
-     * @note   This function initializes the sensor base class.
-     * @param  sensor_type: The type of the sensor.
-     * @retval None
+     * @brief Construct a new SensorBase object
+     *
+     * @param sensor_type Type of sensor (default: UNKNOWN)
+     *
+     * @note Constructor is protected to prevent direct instantiation of abstract base class
      */
-    SensorBase(SensorType sensor_type = SensorType::UNKNOWN) :  comm(nullptr), hal(nullptr),
-        _data_ready_callback(nullptr)
+    SensorBase(SensorType sensor_type = SensorType::UNKNOWN)
+        : comm(nullptr),
+          hal(nullptr),
+          _data_ready_callback(nullptr)
     {
         memset(&_config, 0, sizeof(SensorConfig));
         memset(&_info, 0, sizeof(SensorInfo));
@@ -128,9 +162,7 @@ public:
     }
 
     /**
-     * @brief  Virtual destructor for sensor base class.
-     * @note   This function is called when the sensor object is destroyed.
-     * @retval None
+     * @brief Virtual destructor for proper polymorphic cleanup
      */
     virtual ~SensorBase()
     {
@@ -139,36 +171,43 @@ public:
         }
     }
 
+public:
+    // Delete copy operations to prevent slicing
+    SensorBase(const SensorBase &) = delete;
+    SensorBase &operator=(const SensorBase &) = delete;
+
 #if defined(ARDUINO)
     /**
-      * @brief Initialization function for the Arduino platform. Sets up the sensor over I2C.
-      *
-      * @param wire Reference to a TwoWire object (typically Wire) for I2C communication.
-      * @param addr I2C slave address of the sensor.
-      * @param sda I2C SDA pin number. Defaults to -1 (use board's default pin).
-      * @param scl I2C SCL pin number. Defaults to -1 (use board's default pin).
-      * @return true if initialization is successful, false otherwise.
-      */
-    virtual bool begin(TwoWire &wire, uint8_t addr, int sda, int scl)
+     * @brief Initialize sensor for Arduino platform using I2C
+     *
+     * @param wire    TwoWire I2C interface instance
+     * @param addr    I2C device address
+     * @param sda     SDA pin number (-1 for default)
+     * @param scl     SCL pin number (-1 for default)
+     * @return true   Initialization successful
+     * @return false  Initialization failed
+     */
+    virtual bool begin(TwoWire &wire, uint8_t addr, int sda = -1, int scl = -1)
     {
         if (!beginCommon<SensorCommI2C, HalArduino>(comm, hal, wire, addr, sda, scl)) {
             return false;
         }
         return initImpl(addr);
     }
-#elif defined(ESP_PLATFORM)
 
+#elif defined(ESP_PLATFORM)
 #if defined(USEING_I2C_LEGACY)
     /**
-     * @brief Initialization function for ESP32 platform (legacy I2C mode).
+     * @brief Initialize sensor for ESP-IDF platform (legacy I2C driver)
      *
-     * @param port_num I2C port number to use for communication.
-     * @param addr I2C slave address of the sensor.
-     * @param sda I2C SDA pin number. Defaults to -1 (use default pin).
-     * @param scl I2C SCL pin number. Defaults to -1 (use default pin).
-     * @return true if initialization is successful, false otherwise.
+     * @param port_num I2C port number
+     * @param addr     I2C device address
+     * @param sda      SDA pin number (-1 for default)
+     * @param scl      SCL pin number (-1 for default)
+     * @return true    Initialization successful
+     * @return false   Initialization failed
      */
-    virtual bool begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
+    virtual bool begin(i2c_port_t port_num, uint8_t addr, int sda = -1, int scl = -1)
     {
         if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, port_num, addr, sda, scl)) {
             return false;
@@ -177,17 +216,17 @@ public:
     }
 #else
     /**
-     * @brief Initialization function for ESP32 platform (new I2C master mode).
+     * @brief Initialize sensor for ESP-IDF platform (I2C master driver)
      *
-     * @param handle I2C master bus handle for communication.
-     * @param addr I2C slave address of the sensor.
-     * @return true if initialization is successful, false otherwise.
-     *
-     * @note Assumes `sda` and `scl` are handled via the bus handle configuration.
+     * @param handle   I2C master bus handle
+     * @param addr     I2C device address
+     * @return true    Initialization successful
+     * @return false   Initialization failed
      */
     virtual bool begin(i2c_master_bus_handle_t handle, uint8_t addr)
     {
-        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, handle, addr, sda, scl)) {
+        // Note: sda and scl parameters removed as they're configured in the handle
+        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, handle, addr, -1, -1)) {
             return false;
         }
         return initImpl(addr);
@@ -196,90 +235,98 @@ public:
 #endif
 
     /**
-     * @brief Initialization function for custom communication with callback support.
+     * @brief Initialize sensor using custom communication callbacks
      *
-     * @param callback Custom communication callback function for read/write operations.
-     * @param hal_callback Custom hardware abstraction callback function (e.g., delays).
-     * @param addr I2C slave address of the sensor.
-     * @return true if initialization is successful, false otherwise.
+     * @param callback     Custom read/write callback function
+     * @param hal_callback Custom hardware abstraction callback
+     * @param addr         I2C device address
+     * @return true        Initialization successful
+     * @return false       Initialization failed
      */
     virtual bool begin(SensorCommCustom::CustomCallback callback,
                        SensorCommCustomHal::CustomHalCallback hal_callback,
                        uint8_t addr)
     {
-        if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(COMM_CUSTOM,
-                callback, hal_callback, addr, comm, hal)) {
+        if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(
+                    COMM_CUSTOM, callback, hal_callback, addr, comm, hal)) {
             return false;
         }
         return initImpl(addr);
     }
 
     /**
-     * @brief  Set the sensor offset values.
-     * @note   This function sets the offset values for the X, Y, and Z axes.
-     * @param  x: Offset value for the X axis.
-     * @param  y: Offset value for the Y axis.
-     * @param  z: Offset value for the Z axis.
-     * @retval None
+     * @brief Set sensor calibration offsets
+     *
+     * @param x X-axis offset
+     * @param y Y-axis offset
+     * @param z Z-axis offset
      */
-    void setOffset(int16_t  x, int16_t  y, int16_t  z)
+    void setOffset(int16_t x, int16_t y, int16_t z)
     {
-        _config.x_offset = x; _config.y_offset = y; _config.z_offset = z;
+        _config.x_offset = x;
+        _config.y_offset = y;
+        _config.z_offset = z;
     }
 
     /**
-     * @brief  Get the sensor offset values.
-     * @note   This function retrieves the offset values for the X, Y, and Z axes.
-     * @retval None
+     * @brief Get sensor sensitivity
+     *
+     * @return float Sensitivity value
      */
-    float getSensitivity()
+    float getSensitivity() const
     {
         return _config.sensitivity;
     }
 
     /**
-     * @brief  Get the sensor sensitivity.
-     * @note   This function retrieves the sensitivity value for the sensor.
-     * @retval Sensor sensitivity in Gauss/LSB.
+     * @brief Get sensor information
+     *
+     * @return SensorInfo Sensor information structure
      */
-    SensorInfo getSensorInfo()
+    SensorInfo getSensorInfo() const
     {
         return _info;
     }
 
+    // Pure virtual interface functions
+
     /**
-     * @brief  Read data from the sensor.
-     * @note   This function reads data from the sensor and stores it in the provided reference.
-     * @param  &data: Reference to the variable where the read data will be stored.
-     * @retval True if the read operation is successful, false otherwise.
+     * @brief Read data from sensor
+     *
+     * @param data Reference to store read data
+     * @return true  Read successful
+     * @return false Read failed
      */
     virtual bool readData(T &data) = 0;
 
     /**
-     * @brief  Virtual function to check if new data is available.
-     * @note   This function checks the sensor's data ready status.
-     * @retval True if new data is available, false otherwise.
+     * @brief Check if new data is available
+     *
+     * @return true  New data available
+     * @return false No new data
      */
     virtual bool isDataReady() = 0;
 
     /**
-     * @brief  Virtual function to reset the sensor.
-     * @note   This function resets the sensor to its initial state.
-     * @retval True if reset is successful, false otherwise.
+     * @brief Reset sensor to default state
+     *
+     * @return true  Reset successful
+     * @return false Reset failed
      */
     virtual bool reset() = 0;
 
     /**
-     * @brief  Virtual function to perform a self-test on the sensor.
-     * @note   This function checks the sensor's functionality and returns the test result.
-     * @retval True if self-test is successful, false otherwise.
+     * @brief Perform sensor self-test
+     *
+     * @return true  Self-test passed
+     * @return false Self-test failed
      */
     virtual bool selfTest() = 0;
 
     /**
-     * @brief  Virtual function to get the sensor configuration.
-     * @note   This function retrieves the current configuration of the sensor.
-     * @retval The current sensor configuration.
+     * @brief Get current sensor configuration
+     *
+     * @return SensorConfig Current configuration
      */
     virtual SensorConfig getConfig() const
     {
@@ -287,91 +334,91 @@ public:
     }
 
     /**
-    * @brief  Sets a callback function to be called when new data is available.
-    * @note   This function allows the user to register a callback that will be
-    *         invoked whenever the magnetometer has new data ready for processing.
-    * @param  callback: A callback function to be called when data is ready.
-    * @retval None
-    */
+     * @brief Set callback for data ready events
+     *
+     * @param callback Callback function
+     */
     void setDataReadyCallback(DataReadyCallback callback)
     {
-        _data_ready_callback = callback;
+        _data_ready_callback = std::move(callback);
     }
 
     /**
-     * @brief  Enable or disable data ready interrupt.
-     * @note   This function enables or disables the data ready interrupt for the sensor.
-     * @param  enable: True to enable, false to disable.
-     * @retval True if the operation was successful, false otherwise.
+     * @brief Enable/disable data ready interrupt
+     *
+     * @param enable true to enable, false to disable
+     * @return true  Operation successful
+     * @return false Operation failed
      */
     virtual bool enableDataReadyInterrupt(bool enable = true)
     {
-        // TODO: Implement enabling/disabling data ready interrupt
+        // Default implementation - should be overridden by derived classes
         return false;
     }
 
     /**
-     * @brief  Enable or disable FIFO.
-     * @note   This function enables or disables the FIFO (First In First Out) feature for the sensor.
-     * @param  enable: True to enable, false to disable.
-     * @retval True if the operation was successful, false otherwise.
+     * @brief Enable/disable FIFO
+     *
+     * @param enable true to enable, false to disable
+     * @return true  Operation successful
+     * @return false Operation failed
      */
     virtual bool enableFifo(bool enable = true)
     {
-        // TODO: Implement enabling/disabling FIFO
+        // Default implementation - should be overridden by derived classes
         return true;
     }
 
     /**
-     * @brief  Read FIFO data.
-     * @note   This function reads data from the FIFO buffer.
-     * @param  &data_list: Output list of sensor data.
-     * @param  max_count: Maximum number of samples to read.
-     * @retval The actual number of samples read.
+     * @brief Read data from FIFO buffer
+     *
+     * @param data_list Output vector for FIFO data
+     * @param max_count Maximum number of samples to read
+     * @return uint16_t Actual number of samples read
      */
     virtual uint16_t readFifoData(std::vector<T> &data_list, uint16_t max_count)
     {
-        // TODO: Implement reading FIFO data
+        // Default implementation - should be overridden by derived classes
         return 0;
     }
 
     /**
-     * @brief  Clear FIFO buffer.
-     * @note   This function clears the FIFO buffer.
-     * @retval True if the operation was successful, false otherwise.
+     * @brief Clear FIFO buffer
+     *
+     * @return true  Operation successful
+     * @return false Operation failed
      */
     virtual bool clearFifo()
     {
         return true;
     }
+
 private:
     /**
-     * @brief  Virtual function for sensor-specific initialization.
-     * @note   This function is called during the initialization process to perform
-     *         any sensor-specific setup.
-     * @param  addr: The I2C address of the sensor.
-     * @retval True if initialization is successful, false otherwise.
+     * @brief Sensor-specific initialization implementation
+     *
+     * @param addr I2C address
+     * @return true  Initialization successful
+     * @return false Initialization failed
      */
     virtual bool initImpl(uint8_t addr) = 0;
 
 protected:
-    std::unique_ptr<SensorCommBase> comm;
-    std::unique_ptr<SensorHal> hal;
-    DataReadyCallback _data_ready_callback;
-    SensorConfig _config;
-    SensorInfo _info;
+    std::unique_ptr<SensorCommBase> comm;   ///< Communication interface
+    std::unique_ptr<SensorHal> hal;         ///< Hardware abstraction layer
+    DataReadyCallback _data_ready_callback; ///< Data ready callback function
+    SensorConfig _config;                   ///< Current configuration
+    SensorInfo _info;                       ///< Sensor information
 
     /**
-    * @brief  Triggers the data ready callback.
-    * @note   This function is called when new magnetometer data is available.
-    * @param  data: The magnetometer data.
-    * @retval None
-    */
+     * @brief Trigger data ready callback
+     *
+     * @param data Sensor data to pass to callback
+     */
     virtual void triggerDataReady(const T& data)
     {
         if (_data_ready_callback) {
             _data_ready_callback(data);
         }
     }
-
 };

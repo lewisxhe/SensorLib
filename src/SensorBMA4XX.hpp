@@ -39,7 +39,7 @@
  */
 static constexpr uint8_t BMA4XX_I2C_ADDR_SDO_LOW = (0x18);
 /**
- * @note   This address is used when the SDO pin is connected to GND.
+ * @note   This address is used when the SDO pin is connected to VDD.
  */
 static constexpr uint8_t BMA4XX_I2C_ADDR_SDO_HIGH = (0x19);
 
@@ -67,6 +67,30 @@ enum class AccelBandwidth : uint8_t {
 enum class AccelPerfMode : uint8_t {
     CIC_AVG_MODE     = 0,  ///< Averaging filter mode: samples are averaged based on configured bandwidth and ODR
     CONTINUOUS_MODE  = 1   ///< Continuous mode: no averaging, raw samples with lower latency
+};
+
+/**
+ * @brief  Tap detection type
+ * @note   This enum defines the different types of tap events that can be detected by the sensor.
+ * @note   Whether or not such attributes exist depends on the specific sensor or the different feature configurations.
+ */
+enum class TapType {
+    NO_TAP = 0,
+    SINGLE_TAP = 1,
+    DOUBLE_TAP = 2,
+    TRIPLE_TAP = 3,
+};
+
+/**
+ * @brief  Activity detection type
+ * @note   This enum defines the different types of activity events that can be detected by the sensor.
+ * @note   Whether or not such attributes exist depends on the specific sensor or the different feature configurations.
+ */
+enum class ActivityType {
+    STATIONARY = 0,
+    WALKING = 1,
+    RUNNING = 2,
+    UNKNOWN = 3,
 };
 
 /**
@@ -362,9 +386,6 @@ public:
         data.raw.y = sens_data.y;
         data.raw.z = sens_data.z;
 
-        uint32_t ms = 0;
-        bma4_get_sensor_time(&ms, dev.get());
-
         data.temperature = getTemperature();
 
         data.mps2.x = sens_data.x * _config.sensitivity;
@@ -434,16 +455,16 @@ public:
     {
         uint8_t regValue = 0;
         switch (range) {
-        case AccelFullScaleRange::FS_2G:  // 2g
+        case AccelFullScaleRange::FS_2G:  // ±2g
             regValue = BMA4_ACCEL_RANGE_2G;
             break;
-        case AccelFullScaleRange::FS_4G:  // 4g
+        case AccelFullScaleRange::FS_4G:  // ±4g
             regValue = BMA4_ACCEL_RANGE_4G;
             break;
-        case AccelFullScaleRange::FS_8G:  // 8g
+        case AccelFullScaleRange::FS_8G:  // ±8g
             regValue = BMA4_ACCEL_RANGE_8G;
             break;
-        case AccelFullScaleRange::FS_16G: // 16g
+        case AccelFullScaleRange::FS_16G: // ±16g
             regValue = BMA4_ACCEL_RANGE_16G;
             break;
         default:
@@ -619,6 +640,49 @@ public:
     }
 
     /**
+     * @brief  Configure the accelerometer.
+     * @note   This function sets various parameters of the accelerometer in a single call.
+     * @param  mode: The desired operation mode. Allowed values are SUSPEND, NORMAL.
+     * @param  range: The desired full-scale range. Allowed values are FS_2G, FS_4G, FS_8G, FS_16G.
+     * @param  data_rate_hz: The desired output data rate in Hz. Allowed values are 0.78, 1.56, 3.12, 6.25, 12.5, 25, 50, 100, 200, 400, 800, 1600.
+     * @param  bandwidth: The desired bandwidth. Allowed values are OSR4_AVG1, OSR2_AVG2, NORMAL_AVG4, etc.
+     * @param  perf_mode: The desired performance mode. Allowed values are CIC_AVG_MODE, CONTINUOUS_MODE.
+     * @retval True if the configuration is successful, false otherwise.
+     */
+    bool configAccelerometer(AccelOperationMode mode, AccelFullScaleRange range, float data_rate_hz,
+                             AccelBandwidth bandwidth, AccelPerfMode perf_mode)
+
+    {
+        bool rslt;
+
+        rslt = setFullScaleRange(range);
+        if (!rslt) {
+            return false;
+        }
+
+        rslt = setOutputDataRate(data_rate_hz);
+        if (!rslt) {
+            return false;
+        }
+
+        rslt = setBandwidth(bandwidth);
+        if (!rslt) {
+            return false;
+        }
+
+        rslt = setPerformanceMode(perf_mode);
+        if (!rslt) {
+            return false;
+        }
+
+        rslt = setOperationMode(mode);
+        if (!rslt) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * @brief  Get the temperature reading from the sensor.
      * @note   This function retrieves the current temperature reading from the sensor.
      * @retval The temperature in degrees Celsius, or NaN if the reading fails.
@@ -641,7 +705,7 @@ public:
      * Reads the interrupt status register which indicates which interrupts have occurred.
      * Each bit in the returned 16-bit value represents a different interrupt source.
      *
-     * @note Use with interrupt masks (e.g., BMA4_DATA_RDY_INT, BMA4_FIFO_FULL_INT)
+     * @note Use with interrupt masks (e.g., BMA4_ACCEL_DATA_RDY_INT, BMA4_FIFO_FULL_INT)
      *       to check specific interrupts.
      * @return uint16_t Bitmask of active interrupt flags, or 0 on error.
      */
@@ -800,8 +864,8 @@ public:
             return false;
         }
         log_d("Remap register offset: 0x%X", _remap_reg_offset);
-        uint8_t feature_config[dev->feature_len] = { 0 };
-        return bma4_set_remap_axes(&remap_data, feature_config,
+        auto feature_config = std::unique_ptr<uint8_t[]>(new uint8_t[dev->feature_len]());
+        return bma4_set_remap_axes(&remap_data, feature_config.get(),
                                    _remap_reg_offset, dev->feature_len, dev.get()) == 0;
     }
 
@@ -839,6 +903,31 @@ public:
     {
         return dev.get();
     }
+
+    /**
+    * @brief Get the current sensor time in milliseconds.
+    *
+    * Reads the 24-bit free-running sensor time counter and converts it to milliseconds.
+    * The counter increments at 39.0625 μs per tick (0.0390625 ms per tick) and overflows
+    * after approximately 10.9 minutes.
+    *
+    * @return uint32_t Sensor time in milliseconds, or 0 on error.
+    */
+    uint32_t getTimeSampleMs() const
+    {
+        uint32_t sensor_time_ticks = 0;
+        bma4_get_sensor_time(&sensor_time_ticks, dev.get());
+        // Convert ticks to milliseconds (1 tick = 39.0625 μs = 0.0390625 ms)
+        float time_ms = sensor_time_ticks * 0.0390625f;
+        return static_cast<uint32_t>(time_ms);
+    }
+
+    /**
+     * @brief  Update the sensor data, this method is implemented by a subclass.
+     * @note   This function is called periodically to update the sensor data.
+     * @retval None
+     */
+    virtual void update() = 0;
 
 private:
     /**
