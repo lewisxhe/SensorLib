@@ -10,8 +10,6 @@
  *       with any potential existing implementations.
  */
 
-#pragma once
-
 // Only activate this fix for Arduino nRF52 platforms with C++ exceptions disabled
 #if defined(ARDUINO_ARCH_NRF52) && !defined(__cpp_exceptions)
 
