@@ -39,7 +39,7 @@
 
 static const char *TAG = "BMA";
 
-SensorBMA423 accel;
+SensorBMA423 accelSensor;
 
 extern uint32_t hal_callback(SensorCommCustomHal::Operation op, void *param1, void *param2);
 
@@ -59,7 +59,7 @@ esp_err_t bma423_init()
     i2c_drv_device_init(address);
 
     ESP_LOGI(TAG, "Implemented using read and write callback methods");
-    if (accel.begin(i2c_wr_function, hal_callback, address)) {
+    if (accelSensor.begin(i2c_wr_function, hal_callback, address)) {
         ESP_LOGI(TAG, "Initialization of BMA423 accelerometer is successful!");
     } else {
         ESP_LOGE(TAG, "Failed to initialize the BMA423 accelerometer!");
@@ -77,7 +77,7 @@ esp_err_t bma423_init()
     // * which is useful when the bus shares multiple devices.
     extern i2c_master_bus_handle_t bus_handle;
 
-    if (accel.begin(bus_handle, address)) {
+    if (accelSensor.begin(bus_handle, address)) {
         ESP_LOGI(TAG, "Initialization of BMA423 accelerometer is successful!");
     } else {
         ESP_LOGE(TAG, "Failed to initialize the BMA423 accelerometer!");
@@ -87,7 +87,7 @@ esp_err_t bma423_init()
 #else
 
     ESP_LOGI(TAG, "Implemented using built-in read and write methods (Use lower version < 5.0 API)");
-    if (accel.begin((i2c_port_t)CONFIG_I2C_MASTER_PORT_NUM, address, CONFIG_SENSOR_SDA, CONFIG_SENSOR_SCL)) {
+    if (accelSensor.begin((i2c_port_t)CONFIG_I2C_MASTER_PORT_NUM, address, CONFIG_SENSOR_SDA, CONFIG_SENSOR_SCL)) {
         ESP_LOGI(TAG, "Initialization of BMA423 accelerometer is successful!");
     } else {
         ESP_LOGE(TAG, "Failed to initialize the BMA423 accelerometer!");
@@ -96,10 +96,6 @@ esp_err_t bma423_init()
 #endif //ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,0,0)
 #endif //CONFIG_I2C_COMMUNICATION_METHOD_BUILTIN_RW
 
-    //Default 4G ,200HZ
-    accel.configAccelerometer();
-
-    accel.enableAccelerometer();
 
     init_done = true;
 
@@ -111,9 +107,7 @@ void bma423_loop()
     if (!init_done) {
         return;
     }
-    ESP_LOGI("BMA423", "Temperature:%.2f*C", accel.getTemperature(SensorBMA423::TEMP_DEG));
-    ESP_LOGI("BMA423", "Temperature:%.2f*F", accel.getTemperature(SensorBMA423::TEMP_FAHRENHEIT));
-    ESP_LOGI("BMA423", "Direction:%u", accel.direction());
+    ESP_LOGI("BMA423", "Temperature:%.2f*C", accelSensor.getTemperature());
 }
 
 #endif
