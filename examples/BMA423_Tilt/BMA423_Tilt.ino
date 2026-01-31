@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      BMA423_Accelerometer.ino
+ * @file      BMA423_Tilt.ino
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2026-01-31
  */
@@ -43,6 +43,11 @@
 SensorBMA423 accelSensor;
 
 volatile bool isInterruptTriggered = false;
+
+void onTiltDetected()
+{
+    Serial.println("Tilt detected");
+}
 
 void setup()
 {
@@ -91,46 +96,47 @@ void setup()
         while (1);
     }
 
-    // Enable data ready feature
-    rslt = accelSensor.enableDataReady(true);
+    bool feature_enable = true; // Enable feature
+    bool interrupt_enable = true;   //True: hardware interrupt enabled
+    InterruptPinMap pin_map = InterruptPinMap::PIN1;
+
+    rslt = accelSensor.setInterruptPinConfig(
+               pin_map, // Which pin should the hardware interrupt be routed to?
+               false,   // level trigger
+               false,   // active high
+               true,    // output enable
+               false);  // input disable
     if (!rslt) {
-        Serial.println("Failed to enable data ready");
+        Serial.println("Failed to set interrupt pin configuration");
         while (1);
     }
 
+    
+    // This setting affects tilt detection. Allowed values are SMARTPHONE or WRISTBAND
+    SensorBMA423::Platform platform = SensorBMA423::Platform::SMARTPHONE;
+    accelSensor.selectPlatform(platform);
+    
+    // @warning The correct axis must be set for proper tilt detection.
+    // Enable tilt detector feature
+    rslt = accelSensor.enableTiltDetector(feature_enable, interrupt_enable, pin_map);
+    if (!rslt) {
+        Serial.println("Failed to enable tilt detector");
+        while (1);
+    }
+
+    // Set tilt detection callback
+    accelSensor.setOnTiltDetectedCallback(onTiltDetected);
+
     delay(3000);
 
-    Serial.println("Now read accelerometer data form sensor");
+    Serial.println("Now you can tilt the sensor.");
 }
 
 void loop()
 {
-    AccelerometerData  accelData;
-    if (accelSensor.isDataReady()) {
-        // Read the accelerometer data
-        if (accelSensor.readData(accelData)) {
-            Serial.print("Temperature: ");
-            Serial.print(accelData.temperature);
-            Serial.print(" °C, Acc_Raw: (");
-            Serial.print(accelData.raw.x);
-            Serial.print(", ");
-            Serial.print(accelData.raw.y);
-            Serial.print(", ");
-            Serial.print(accelData.raw.z);
-            Serial.print("), Acc_ms2: (");
-            Serial.print(accelData.mps2.x, 2);
-            Serial.print(", ");
-            Serial.print(accelData.mps2.y, 2);
-            Serial.print(", ");
-            Serial.print(accelData.mps2.z, 2);
-            Serial.print(") ");
-            uint32_t timeSampleMs = accelSensor.getTimeSampleMs();
-            Serial.print(timeSampleMs);
-            Serial.print("(ms)/");
-            Serial.print(millis());
-            Serial.println(" ");
-        } else {
-            Serial.println("Failed to read accelerometer data");
-        }
+    if (isInterruptTriggered) {
+        isInterruptTriggered = false;
+        accelSensor.update();
     }
+    delay(30);
 }

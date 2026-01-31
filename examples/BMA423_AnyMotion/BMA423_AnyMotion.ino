@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      BMA423_Accelerometer.ino
+ * @file      BMA423_AnyMotion.ino
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2026-01-31
  */
@@ -43,6 +43,11 @@
 SensorBMA423 accelSensor;
 
 volatile bool isInterruptTriggered = false;
+
+void onAnyMotionDetected()
+{
+    Serial.println("Any motion detected");
+}
 
 void setup()
 {
@@ -82,7 +87,7 @@ void setup()
     // The desired bandwidth. Allowed values are OSR4_AVG1, OSR2_AVG2, NORMAL_AVG4, etc.
     AccelBandwidth bandwidth = AccelBandwidth::OSR2_AVG2;
     // The desired data rate in Hz. Allowed values are 0.78, 1.56, 3.12, 6.25, 12.5, 25, 50, 100, 200, 400, 800, 1600.
-    float data_rate_hz = 100.0f;
+    float data_rate_hz = 50.0f;
     // The desired performance mode. Allowed values are CIC_AVG_MODE, CONTINUOUS_MODE
     AccelPerfMode perfMode = AccelPerfMode::CIC_AVG_MODE;
 
@@ -91,46 +96,63 @@ void setup()
         while (1);
     }
 
-    // Enable data ready feature
-    rslt = accelSensor.enableDataReady(true);
+    bool feature_enable = true; // Enable feature
+    bool interrupt_enable = true;   //True: hardware interrupt enabled
+    InterruptPinMap pin_map = InterruptPinMap::PIN1;
+
+    rslt = accelSensor.setInterruptPinConfig(
+               pin_map, // Which pin should the hardware interrupt be routed to?
+               false,   // level trigger
+               false,   // active high
+               true,    // output enable
+               false);  // input disable
     if (!rslt) {
-        Serial.println("Failed to enable data ready");
+        Serial.println("Failed to set interrupt pin configuration");
         while (1);
     }
 
+    /*
+    * Set the slope threshold:
+    *  Interrupt will be generated if the slope of all the axis exceeds the threshold (1 bit = 0.48mG)
+    */
+    uint16_t threshold = 10;
+
+    /*
+     * Set the duration for any-motion interrupt:
+     * Duration defines the number of consecutive data points for which threshold condition must be true(1 bit = 20ms)
+     */
+    uint16_t duration = 4;
+
+    if (!accelSensor.configAnyMotion( threshold,  duration)) {
+        Serial.println("Failed to configure any-motion detection");
+    }
+
+    // Motion axes configuration
+    SensorBMA423::MotionAxesConfig cfg;
+    cfg.x_axis = 1;                 ///< Enable motion detection on X-axis (1=enabled, 0=disabled)
+    cfg.y_axis = 1;                 ///< Enable motion detection on Y-axis (1=enabled, 0=disabled)
+    cfg.z_axis = 1;                 ///< Enable motion detection on Z-axis (1=enabled, 0=disabled)
+
+    // Enable any-motion detection feature
+    rslt = accelSensor.enableAnyMotionDetection(cfg, feature_enable, interrupt_enable, pin_map);
+    if (!rslt) {
+        Serial.println("Failed to enable any-motion detection");
+        while (1);
+    }
+
+    // Set any-motion detection callback
+    accelSensor.setOnAnyMotionCallback(onAnyMotionDetected);
+
     delay(3000);
 
-    Serial.println("Now read accelerometer data form sensor");
+    Serial.println("Now you can move the sensor.");
 }
 
 void loop()
 {
-    AccelerometerData  accelData;
-    if (accelSensor.isDataReady()) {
-        // Read the accelerometer data
-        if (accelSensor.readData(accelData)) {
-            Serial.print("Temperature: ");
-            Serial.print(accelData.temperature);
-            Serial.print(" °C, Acc_Raw: (");
-            Serial.print(accelData.raw.x);
-            Serial.print(", ");
-            Serial.print(accelData.raw.y);
-            Serial.print(", ");
-            Serial.print(accelData.raw.z);
-            Serial.print("), Acc_ms2: (");
-            Serial.print(accelData.mps2.x, 2);
-            Serial.print(", ");
-            Serial.print(accelData.mps2.y, 2);
-            Serial.print(", ");
-            Serial.print(accelData.mps2.z, 2);
-            Serial.print(") ");
-            uint32_t timeSampleMs = accelSensor.getTimeSampleMs();
-            Serial.print(timeSampleMs);
-            Serial.print("(ms)/");
-            Serial.print(millis());
-            Serial.println(" ");
-        } else {
-            Serial.println("Failed to read accelerometer data");
-        }
+    if (isInterruptTriggered) {
+        isInterruptTriggered = false;
+        accelSensor.update();
     }
+    delay(30);
 }
