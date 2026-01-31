@@ -25,7 +25,9 @@ Support list:
 | QMC5883P        | Magnetic Sensor          | ✔️   | ❌   |
 | BMM150          | Magnetic Sensor          | ✔️   | ❌   |
 | XL9555          | I/O expander             | ✔️   | ❌   |
+| BMA422          | Accelerometer            | ✔️   | ❌   |
 | BMA423          | Accelerometer            | ✔️   | ❌   |
+| BMA456          | Accelerometer            | ✔️   | ❌   |
 | DRV2605         | Haptic Driver            | ✔️   | ❌   |
 | CM32181         | Ambient Light Sensor     | ✔️   | ❌   |
 | LTR553          | Light & Proximity Sensor | ✔️   | ❌   |
