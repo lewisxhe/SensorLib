@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      BMA456H_Tag.ino
+ * @file      BMA456H_Tap.ino
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2026-01-30
  * @note      Example of initializing the Bosch BMA456H characteristic profile using the BMA456 triaxial accelerometer.
@@ -103,7 +103,7 @@ void setup()
     // The desired bandwidth. Allowed values are OSR4_AVG1, OSR2_AVG2, NORMAL_AVG4, etc.
     AccelBandwidth bandwidth = AccelBandwidth::OSR2_AVG2;
     // The desired data rate in Hz. Allowed values are 0.78, 1.56, 3.12, 6.25, 12.5, 25, 50, 100, 200, 400, 800, 1600.
-    float data_rate_hz = 100.0f;
+    float data_rate_hz = 200.0f; // A minimum sampling frequency of 200Hz is required for tapping.
     // The desired performance mode. Allowed values are CIC_AVG_MODE, CONTINUOUS_MODE
     AccelPerfMode perfMode = AccelPerfMode::CIC_AVG_MODE;
 

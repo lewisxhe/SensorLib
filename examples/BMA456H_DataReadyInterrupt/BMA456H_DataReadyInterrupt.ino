@@ -129,7 +129,7 @@ void setup()
     }
 
     // Enable data ready feature
-    rslt = accelSensor.enableDataReady(feature_enable, interrupt_enable, pin_map);
+    rslt = accelSensor.enableDataReady(feature_enable, pin_map);
     if (!rslt) {
         Serial.println("Failed to enable data ready");
         while (1);
