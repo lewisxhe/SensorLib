@@ -150,12 +150,10 @@ public:
     * @brief  Enable data ready interrupt
     * @note   Configures the interrupt for accelerometer data ready events
     * @param  enable           Enable/disable the data ready feature
-    * @param  interrupt_enable Enable/disable interrupt generation for data ready
     * @param  pin_map          Interrupt pin to use (PIN1 or PIN2)
     * @return true if successful, false on error
     */
-    bool enableDataReady(bool enable = true, bool interrupt_enable = false,
-                         InterruptPinMap pin_map = InterruptPinMap::PIN1)
+    bool enableDataReady(bool enable = true, InterruptPinMap pin_map = InterruptPinMap::PIN1)
     {
         return enableInterrupt(pin_map, BMA4_DATA_RDY_INT, enable);
     }
