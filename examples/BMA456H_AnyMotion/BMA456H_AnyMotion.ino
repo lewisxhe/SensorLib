@@ -22,9 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      BMA456H_Motion.ino
+ * @file      BMA456H_AnyMotion.ino
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2026-01-30
+ * @date      2026-01-31
  * @note      Example of initializing the Bosch BMA456H characteristic profile using the BMA456 triaxial accelerometer.
  */
 #include <SensorBMA456H.hpp>
@@ -46,19 +46,9 @@ SensorBMA456H accelSensor;
 
 volatile bool isInterruptTriggered = false;
 
-static bool motionDetected = false;
-
-void onMotionDetected(bool active)
+void onAnyMotionDetected()
 {
-    if (active) {
-        Serial.println("Motion detected");
-        motionDetected = true;
-    } else {
-        if (motionDetected) {
-            Serial.println("Motion stopped");
-            motionDetected = false;
-        }
-    }
+    Serial.println("Any motion detected");
 }
 
 void setup()
@@ -135,28 +125,25 @@ void setup()
      */
     uint16_t duration = 4;
 
-    if (!accelSensor.configMotion( threshold,  duration)) {
-        Serial.println("Failed to configure motion detection");
+    if (!accelSensor.configAnyMotion( threshold,  duration)) {
+        Serial.println("Failed to configure any-motion detection");
     }
 
     // Motion axes configuration
     SensorBMA456H::MotionAxesConfig cfg;
-    cfg.any_x_axis = 1;                 ///< Enable motion detection on X-axis (1=enabled, 0=disabled)
-    cfg.any_y_axis = 1;                 ///< Enable motion detection on Y-axis (1=enabled, 0=disabled)
-    cfg.any_z_axis = 1;                 ///< Enable motion detection on Z-axis (1=enabled, 0=disabled)
-    cfg.no_motion_x_axis = 1;           ///< Enable no-motion detection on X-axis (1=enabled, 0=disabled)
-    cfg.no_motion_y_axis = 1;           ///< Enable no-motion detection on Y-axis (1=enabled, 0=disabled)
-    cfg.no_motion_z_axis = 1;           ///< Enable no-motion detection on Z-axis (1=enabled, 0=disabled)
+    cfg.x_axis = 1;                 ///< Enable motion detection on X-axis (1=enabled, 0=disabled)
+    cfg.y_axis = 1;                 ///< Enable motion detection on Y-axis (1=enabled, 0=disabled)
+    cfg.z_axis = 1;                 ///< Enable motion detection on Z-axis (1=enabled, 0=disabled)
 
-    // Enable motion detection feature
-    rslt = accelSensor.enableMotionDetection(cfg, feature_enable, interrupt_enable, pin_map);
+    // Enable any-motion detection feature
+    rslt = accelSensor.enableAnyMotionDetection(cfg, feature_enable, interrupt_enable, pin_map);
     if (!rslt) {
-        Serial.println("Failed to enable motion detection");
+        Serial.println("Failed to enable any-motion detection");
         while (1);
     }
 
-    // Set motion detection callback
-    accelSensor.setOnMotionCallback(onMotionDetected);
+    // Set any-motion detection callback
+    accelSensor.setOnAnyMotionCallback(onAnyMotionDetected);
 
     delay(3000);
 

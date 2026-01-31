@@ -48,7 +48,8 @@ public:
         std::function<void()> onStepDetected = nullptr;                   ///< Callback for step detection events
         std::function<void(uint32_t)> onStepCount = nullptr;              ///< Callback for step count updates
         std::function<void(ActivityType)> onActivity = nullptr;           ///< Callback for activity recognition events
-        std::function<void(bool)> onMotion = nullptr;                     ///< Callback for motion detection (true=motion, false=no motion)
+        std::function<void(void)> onAnyMotion = nullptr;                     ///< Callback for any motion detection
+        std::function<void(void)> onNoMotion = nullptr;                      ///< Callback for no-motion detection
         std::function<void(AccelerometerData &)> onDataReady = nullptr;   ///< Callback for new accelerometer data
     };
 
@@ -59,26 +60,18 @@ public:
      *         on a specific axis.
      */
     struct MotionAxesConfig {
-        uint8_t any_x_axis : 1;        ///< Enable motion detection on X-axis (1=enabled, 0=disabled)
-        uint8_t any_y_axis : 1;        ///< Enable motion detection on Y-axis (1=enabled, 0=disabled)
-        uint8_t any_z_axis : 1;        ///< Enable motion detection on Z-axis (1=enabled, 0=disabled)
-        uint8_t no_motion_x_axis : 1;  ///< Enable no-motion detection on X-axis (1=enabled, 0=disabled)
-        uint8_t no_motion_y_axis : 1;  ///< Enable no-motion detection on Y-axis (1=enabled, 0=disabled)
-        uint8_t no_motion_z_axis : 1;  ///< Enable no-motion detection on Z-axis (1=enabled, 0=disabled)
+        uint8_t x_axis : 1;        ///< Enable motion detection on X-axis (1=enabled, 0=disabled)
+        uint8_t y_axis : 1;        ///< Enable motion detection on Y-axis (1=enabled, 0=disabled)
+        uint8_t z_axis : 1;        ///< Enable motion detection on Z-axis (1=enabled, 0=disabled)
 
         /**
          * @brief  Constructor for MotionAxesConfig
-         * @param  any_x    Enable motion detection on X-axis (default: 1)
-         * @param  any_y    Enable motion detection on Y-axis (default: 1)
-         * @param  any_z    Enable motion detection on Z-axis (default: 1)
-         * @param  no_x     Enable no-motion detection on X-axis (default: 1)
-         * @param  no_y     Enable no-motion detection on Y-axis (default: 1)
-         * @param  no_z     Enable no-motion detection on Z-axis (default: 1)
+         * @param  x_axis    Enable motion detection on X-axis (default: 1)
+         * @param  y_axis    Enable motion detection on Y-axis (default: 1)
+         * @param  z_axis    Enable motion detection on Z-axis (default: 1)
          */
-        MotionAxesConfig(uint8_t any_x = 1, uint8_t any_y = 1, uint8_t any_z = 1,
-                         uint8_t no_x = 1, uint8_t no_y = 1, uint8_t no_z = 1)
-            : any_x_axis(any_x), any_y_axis(any_y), any_z_axis(any_z),
-              no_motion_x_axis(no_x), no_motion_y_axis(no_y), no_motion_z_axis(no_z) {}
+        MotionAxesConfig(uint8_t x = 1, uint8_t y = 1, uint8_t z = 1)
+            : x_axis(x), y_axis(y), z_axis(z) {}
     };
 
 
@@ -138,13 +131,23 @@ public:
     }
 
     /**
-    * @brief  Set the callback for motion events
+    * @brief  Set the any-motion callback for motion events
     * @note   The callback will be invoked when motion state changes.
-    * @param  cb  Callback function that accepts bool (true=motion detected, false=no motion)
+    * @param  cb  Callback function that accepts void
     */
-    void setOnMotionCallback(std::function<void(bool)> cb)
+    void setOnAnyMotionCallback(std::function<void(void)> cb)
     {
-        callbacks.onMotion = std::move(cb);
+        callbacks.onAnyMotion = std::move(cb);
+    }
+
+    /**
+    * @brief  Set the callback for no-motion events
+    * @note   The callback will be invoked when no motion is detected.
+    * @param  cb  Callback function that accepts void
+    */
+    void setOnNoMotionCallback(std::function<void(void)> cb)
+    {
+        callbacks.onNoMotion = std::move(cb);
     }
 
     /**
@@ -316,50 +319,155 @@ public:
     }
 
     /**
-     * @brief  Enable or disable motion detection
-     * @note   Configures motion (any-motion) and no-motion detection on selected axes
+     * @brief  Enable or disable any-motion detection
+     * @note   Configures motion any-motion detection on selected axes
      * @param  &cfg             Configuration for which axes to monitor
      * @param  enable           true to enable, false to disable
      * @param  interrupt_enable Enable/disable interrupt generation
      * @param  pin_map          Interrupt pin to use (PIN1 or PIN2)
      * @return true if successful, false on error
      */
-    bool enableMotionDetection(MotionAxesConfig &cfg, bool enable,
-                               bool interrupt_enable = false,
-                               InterruptPinMap pin_map = InterruptPinMap::PIN1)
+    bool enableAnyMotionDetection(MotionAxesConfig &cfg, bool enable,
+                                  bool interrupt_enable = false,
+                                  InterruptPinMap pin_map = InterruptPinMap::PIN1)
     {
-        if (!enableInterrupt(pin_map, BMA456H_ANY_MOT_INT, interrupt_enable)) {
-            return false;
-        }
-
         uint16_t interrupt_sources = 0;
         uint16_t feature = 0;
-        if (cfg.any_x_axis) feature |= BMA456H_ANY_MOTION_X_AXIS_EN;
-        if (cfg.any_y_axis) feature |= BMA456H_ANY_MOTION_Y_AXIS_EN;
-        if (cfg.any_z_axis) feature |= BMA456H_ANY_MOTION_Z_AXIS_EN;
+        if (cfg.x_axis) feature |= BMA456H_ANY_MOTION_X_AXIS_EN;
+        if (cfg.y_axis) feature |= BMA456H_ANY_MOTION_Y_AXIS_EN;
+        if (cfg.z_axis) feature |= BMA456H_ANY_MOTION_Z_AXIS_EN;
 
-        if(cfg.any_x_axis || cfg.any_y_axis || cfg.any_z_axis){
+        if (cfg.x_axis || cfg.y_axis || cfg.z_axis) {
             interrupt_sources |= BMA456H_ANY_MOT_INT;
         }
 
-        if (cfg.no_motion_x_axis) feature |= BMA456H_NO_MOTION_X_AXIS_EN;
-        if (cfg.no_motion_y_axis) feature |= BMA456H_NO_MOTION_Y_AXIS_EN;
-        if (cfg.no_motion_z_axis) feature |= BMA456H_NO_MOTION_Z_AXIS_EN;
-
-        if(cfg.no_motion_x_axis || cfg.no_motion_y_axis || cfg.no_motion_z_axis){
-            interrupt_sources |= BMA456H_NO_MOT_INT;
+        if (!enableInterrupt(pin_map, BMA456H_ANY_MOT_INT, interrupt_enable)) {
+            return false;
         }
+        return enableFeature(feature, enable);
+    }
 
-        if (!enableInterrupt(pin_map, interrupt_sources, interrupt_enable)) {
+
+    /**
+     * @brief  Enable or disable no-motion detection
+     * @note   Configures motion no-motion detection on selected axes
+     * @param  &cfg             Configuration for which axes to monitor
+     * @param  enable           true to enable, false to disable
+     * @param  interrupt_enable Enable/disable interrupt generation
+     * @param  pin_map          Interrupt pin to use (PIN1 or PIN2)
+     * @return true if successful, false on error
+     */
+    bool enableNoMotionDetection(MotionAxesConfig &cfg, bool enable,
+                                 bool interrupt_enable = false,
+                                 InterruptPinMap pin_map = InterruptPinMap::PIN1)
+    {
+        uint16_t feature = 0;
+        if (cfg.x_axis) feature |= BMA456H_NO_MOTION_X_AXIS_EN;
+        if (cfg.y_axis) feature |= BMA456H_NO_MOTION_Y_AXIS_EN;
+        if (cfg.z_axis) feature |= BMA456H_NO_MOTION_Z_AXIS_EN;
+
+        if (!enableInterrupt(pin_map, BMA456H_NO_MOT_INT, interrupt_enable)) {
             return false;
         }
         return enableFeature(feature, enable);
     }
 
     /**
-     * @brief  Configure motion detection parameters with detailed unit conversion
+    * @brief  Configure no-motion detection parameters with detailed unit conversion
+    * @note   This function sets both the threshold (sensitivity) and duration (time)
+    *         for no-motion detection.
+    *
+    *         = Threshold Units =
+    *         The threshold is specified in LSB (Least Significant Bits), where:
+    *         1 LSB = 0.48 mG = 0.48 × 0.001 g = 0.00048 g ≈ 0.0047 m/s²
+    *
+    *         To convert from milli-g to LSB:
+    *         LSB = mg_value / 0.48
+    *
+    *         Example conversions:
+    *         - 10 LSB = 10 × 0.48 mG = 4.8 mG = 0.0048 g
+    *         - 100 mG = 100 / 0.48 ≈ 208 LSB
+    *
+    *         = Duration Units =
+    *         The duration is specified in LSB, where at 50Hz ODR:
+    *         1 LSB = 20 milliseconds
+    *
+    *         Duration in seconds = duration_LSB × 0.020
+    *
+    *         Example conversions:
+    *         - 4 LSB = 4 × 20ms = 80ms = 0.08s
+    *         - 50ms = 50 / 20 = 2.5 LSB (round to nearest integer)
+    *
+    *         @warning The duration unit (20ms/LSB) is only accurate at 50Hz ODR.
+    *                  For other ODR settings, the time per sample changes.
+    *                  Time per sample = 1 / ODR
+    *                  Example at 100Hz ODR: 1 sample = 10ms, so duration = LSB × 10ms
+    *
+    * @param  threshold  Motion detection threshold in LSB units (1 LSB = 0.48 mG)
+    *                    Recommended range: 10-200 (4.8-96 mG)
+    *                    Higher values = less sensitive, lower values = more sensitive
+    *
+    * @param  duration   Detection duration in LSB units (1 LSB = 20ms at 50Hz ODR)
+    *                    Recommended range: 1-20 (20ms to 400ms)
+    *                    Longer duration = more stable detection, less false positives
+    *
+    * @return true if configuration successful, false on error
+    */
+    bool configNoMotion(uint16_t threshold, uint16_t duration)
+    {
+        return configMotion(false, threshold, duration);
+    }
+
+    /**
+    * @brief  Configure any-motion detection parameters with detailed unit conversion
+    * @note   This function sets both the threshold (sensitivity) and duration (time)
+    *         for any-motion detection.
+    *
+    *         = Threshold Units =
+    *         The threshold is specified in LSB (Least Significant Bits), where:
+    *         1 LSB = 0.48 mG = 0.48 × 0.001 g = 0.00048 g ≈ 0.0047 m/s²
+    *
+    *         To convert from milli-g to LSB:
+    *         LSB = mg_value / 0.48
+    *
+    *         Example conversions:
+    *         - 10 LSB = 10 × 0.48 mG = 4.8 mG = 0.0048 g
+    *         - 100 mG = 100 / 0.48 ≈ 208 LSB
+    *
+    *         = Duration Units =
+    *         The duration is specified in LSB, where at 50Hz ODR:
+    *         1 LSB = 20 milliseconds
+    *
+    *         Duration in seconds = duration_LSB × 0.020
+    *
+    *         Example conversions:
+    *         - 4 LSB = 4 × 20ms = 80ms = 0.08s
+    *         - 50ms = 50 / 20 = 2.5 LSB (round to nearest integer)
+    *
+    *         @warning The duration unit (20ms/LSB) is only accurate at 50Hz ODR.
+    *                  For other ODR settings, the time per sample changes.
+    *                  Time per sample = 1 / ODR
+    *                  Example at 100Hz ODR: 1 sample = 10ms, so duration = LSB × 10ms
+    *
+    * @param  threshold  Motion detection threshold in LSB units (1 LSB = 0.48 mG)
+    *                    Recommended range: 10-200 (4.8-96 mG)
+    *                    Higher values = less sensitive, lower values = more sensitive
+    *
+    * @param  duration   Detection duration in LSB units (1 LSB = 20ms at 50Hz ODR)
+    *                    Recommended range: 1-20 (20ms to 400ms)
+    *                    Longer duration = more stable detection, less false positives
+    *
+    * @return true if configuration successful, false on error
+    */
+    bool configAnyMotion(uint16_t threshold, uint16_t duration)
+    {
+        return configMotion(true, threshold, duration);
+    }
+
+    /**
+     * @brief  Configure any-motion or no-motion detection parameters with detailed unit conversion
      * @note   This function sets both the threshold (sensitivity) and duration (time)
-     *         for motion/no-motion detection.
+     *         for any-motion/no-motion detection.
      *
      *         = Threshold Units =
      *         The threshold is specified in LSB (Least Significant Bits), where:
@@ -387,6 +495,8 @@ public:
      *                  Time per sample = 1 / ODR
      *                  Example at 100Hz ODR: 1 sample = 10ms, so duration = LSB × 10ms
      *
+     * @param  any_motion  true to configure any-motion, false for no-motion
+     *
      * @param  threshold  Motion detection threshold in LSB units (1 LSB = 0.48 mG)
      *                    Recommended range: 10-200 (4.8-96 mG)
      *                    Higher values = less sensitive, lower values = more sensitive
@@ -397,8 +507,10 @@ public:
      *
      * @return true if configuration successful, false on error
      */
-    bool configMotion(uint16_t threshold, uint16_t duration)
+    bool configMotion(bool any_motion, uint16_t threshold, uint16_t duration)
     {
+        int8_t rslt = 0;
+
         if (threshold > 16380) {  // Max threshold based on 0.48mg resolution for 16g range
             log_e("Threshold %u exceeds recommended maximum (16380)", threshold);
         }
@@ -407,7 +519,22 @@ public:
             log_e("Duration %u exceeds recommended maximum (16383)", duration);
         }
 
-        struct bma456h_any_no_mot_config any_mot_config;
+        struct bma456h_any_no_mot_config any_mot_config = {0, 0, 0, 0};
+
+        if (any_motion) {
+            rslt = bma456h_get_any_mot_config(&any_mot_config, dev.get());
+            if (rslt != 0) {
+                log_e("bma456h_an_get_any_mot_config failed");
+                return false;
+            }
+        } else {
+            rslt = bma456h_get_no_mot_config(&any_mot_config, dev.get());
+            if (rslt != 0) {
+                log_e("bma456h_get_no_mot_config failed");
+                return false;
+            }
+        }
+
         any_mot_config.threshold = threshold;
         any_mot_config.duration = duration;
 
@@ -415,16 +542,24 @@ public:
               threshold, threshold * 0.48f,
               duration, duration * 20.0f);
 
-        if (bma456h_set_any_mot_config(&any_mot_config, dev.get()) != 0) {
-            log_e("Failed to configure motion detection");
-            return false;
+        if (any_motion) {
+            if (bma456h_set_any_mot_config(&any_mot_config, dev.get()) != 0) {
+                log_e("Failed to configure any-motion detection");
+                return false;
+            }
+        } else {
+            if (bma456h_set_no_mot_config(&any_mot_config, dev.get()) != 0) {
+                log_e("Failed to configure no-motion detection");
+                return false;
+            }
         }
         return true;
     }
 
+
     /**
-    * @brief  Configure motion detection using physical units
-    * @note   Easier to use than configMotion() as it accepts physical units
+    * @brief  Configure any-motion detection using physical units
+    * @note   Easier to use than configAnyMotion() as it accepts physical units
     *
     * @param  threshold_mg  Threshold in milli-g (1 mG = 0.001 g)
     *                       Will be converted to LSB: LSB = threshold_mg / 0.48
@@ -432,7 +567,7 @@ public:
     *                       Will be converted to LSB: LSB = duration_ms / 20
     * @return true if successful, false on error
     */
-    bool configMotionInPhysicalUnits(float threshold_mg, float duration_ms)
+    bool configAnyMotionInPhysicalUnits(float threshold_mg, float duration_ms)
     {
         uint16_t threshold_lsb = static_cast<uint16_t>(threshold_mg / 0.48f + 0.5f);
         uint16_t duration_lsb = static_cast<uint16_t>(duration_ms / 20.0f + 0.5f);
@@ -440,7 +575,29 @@ public:
         log_d("Converting: %.2f mg -> %u LSB, %.2f ms -> %u LSB",
               threshold_mg, threshold_lsb, duration_ms, duration_lsb);
 
-        return configMotion(threshold_lsb, duration_lsb);
+        return configAnyMotion(threshold_lsb, duration_lsb);
+    }
+
+
+    /**
+    * @brief  Configure no-motion detection using physical units
+    * @note   Easier to use than configNoMotion() as it accepts physical units
+    *
+    * @param  threshold_mg  Threshold in milli-g (1 mG = 0.001 g)
+    *                       Will be converted to LSB: LSB = threshold_mg / 0.48
+    * @param  duration_ms   Duration in milliseconds (at 50Hz ODR)
+    *                       Will be converted to LSB: LSB = duration_ms / 20
+    * @return true if successful, false on error
+    */
+    bool configNoMotionInPhysicalUnits(float threshold_mg, float duration_ms)
+    {
+        uint16_t threshold_lsb = static_cast<uint16_t>(threshold_mg / 0.48f + 0.5f);
+        uint16_t duration_lsb = static_cast<uint16_t>(duration_ms / 20.0f + 0.5f);
+
+        log_d("Converting: %.2f mg -> %u LSB, %.2f ms -> %u LSB",
+              threshold_mg, threshold_lsb, duration_ms, duration_lsb);
+
+        return configNoMotion(threshold_lsb, duration_lsb);
     }
 
     /**
@@ -451,7 +608,7 @@ public:
      * @param[out] duration_ms   Returns duration in milliseconds (at 50Hz ODR)
      * @return true if successful, false on error
      */
-    bool getMotionConfig(float &threshold_mg, float &duration_ms)
+    bool getAnyMotionConfig(float &threshold_mg, float &duration_ms)
     {
         struct bma456h_any_no_mot_config any_mot_config;
         if (bma456h_get_any_mot_config(&any_mot_config, dev.get()) != 0) {
@@ -470,6 +627,32 @@ public:
     }
 
     /**
+    * @brief  Get current no-motion detection configuration
+    * @note   Reads back the current threshold and duration settings
+    *
+    * @param[out] threshold_mg  Returns threshold in milli-g
+    * @param[out] duration_ms   Returns duration in milliseconds (at 50Hz ODR)
+    * @return true if successful, false on error
+    */
+    bool getNoMotionConfig(float &threshold_mg, float &duration_ms)
+    {
+        struct bma456h_any_no_mot_config no_mot_config;
+        if (bma456h_get_no_mot_config(&no_mot_config, dev.get()) != 0) {
+            log_e("Failed to read no-motion configuration");
+            return false;
+        }
+
+        threshold_mg = no_mot_config.threshold * 0.48f;
+        duration_ms = no_mot_config.duration * 20.0f;
+
+        log_d("Current no-motion config: threshold=%u LSB (%.2f mg), duration=%u LSB (%.2f ms)",
+              no_mot_config.threshold, threshold_mg,
+              no_mot_config.duration, duration_ms);
+
+        return true;
+    }
+
+    /**
     * @brief  Get the current step count
     * @note   Reads the accumulated step count from the sensor.
     *         Step counter must be enabled first.
@@ -483,6 +666,16 @@ public:
             return 0;
         }
         return step_count;
+    }
+
+    /**
+     * @brief  Reset the step counter
+     * @note   This function resets the internal step counter to zero.
+     * @retval true if successful, false on error
+     */
+    bool resetStepCounter()
+    {
+        return bma456h_reset_step_counter(dev.get()) == 0;
     }
 
     /**
@@ -559,12 +752,12 @@ public:
             callbacks.onActivity(getActivityType());
         }
 
-        if ((_status & BMA456H_ANY_MOT_INT) && callbacks.onMotion) {
-            callbacks.onMotion(true);
+        if ((_status & BMA456H_ANY_MOT_INT) && callbacks.onAnyMotion) {
+            callbacks.onAnyMotion();
         }
 
-        if ((_status & BMA456H_NO_MOT_INT) && callbacks.onMotion) {
-            callbacks.onMotion(false);
+        if ((_status & BMA456H_NO_MOT_INT) && callbacks.onNoMotion) {
+            callbacks.onNoMotion();
         }
 
         if ((_status & BMA4_ACCEL_DATA_RDY_INT) && callbacks.onDataReady) {
