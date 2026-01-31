@@ -77,7 +77,65 @@
     #include "bosch/firmware/bhi260/bosch_bhi260_klio_flash.h"
 #elif defined(BOSCH_BHI260_KLIO_TURBO_FLASH)
     #include "bosch/firmware/bhi260/bosch_bhi260_klio_turbo_flash.h"
-#else
+
+// BHI360 Firmwares
+#elif defined(BOSCH_DATA_INJECT_BHI360FW)
+    #include "bosch/firmware/bhi360/bosch_data_inject_bhi360fw.h"
+#elif defined(BOSCH_DATA_INJECT_BHI360_BMM150FW)
+    #include "bosch/firmware/bhi360/bosch_data_inject_bhi360_bmm150fw.h"
+#elif defined(BOSCH_DATA_INJECT_BHI360_BMM150_HEAD_ORIENTATIONFW)
+    #include "bosch/firmware/bhi360/bosch_data_inject_bhi360_bmm150_head_orientationfw.h"
+#elif defined(BOSCH_DATA_INJECT_BHI360_BMM350FW)
+    #include "bosch/firmware/bhi360/bosch_data_inject_bhi360_bmm350fw.h"
+#elif defined(BOSCH_DATA_INJECT_BHI360_BMM350_HEAD_ORIENTATIONFW)
+    #include "bosch/firmware/bhi360/bosch_data_inject_bhi360_bmm350_head_orientationfw.h"
+#elif defined(BOSCH_DATA_INJECT_BHI360_ENVFW)
+    #include "bosch/firmware/bhi360/bosch_data_inject_bhi360_envfw.h"
+#elif defined(BOSCH_DATA_INJECT_BHI360_HEAD_ORIENTATIONFW)
+    #include "bosch/firmware/bhi360/bosch_data_inject_bhi360_head_orientationfw.h"
+#elif defined(BOSCH_DATA_INJECT_BHI360_MOTION_AIFW)
+    #include "bosch/firmware/bhi360/bosch_data_inject_bhi360_motion_aifw.h"
+#elif defined(BOSCH_SHUTTLE3_BHI360FW)
+    #include "bosch/firmware/bhi360/bosch_shuttle3_bhi360fw.h"
+#elif defined(BOSCH_SHUTTLE3_BHI360_AUX_BMM150FW)
+    #include "bosch/firmware/bhi360/bosch_shuttle3_bhi360_aux_bmm150fw.h"
+#elif defined(BOSCH_SHUTTLE3_BHI360_BMM150FW)
+    #include "bosch/firmware/bhi360/bosch_shuttle3_bhi360_bmm150fw.h"
+#elif defined(BOSCH_SHUTTLE3_BHI360_BMM150_BMP580_BME688FW)
+    #include "bosch/firmware/bhi360/bosch_shuttle3_bhi360_bmm150_bmp580_bme688fw.h"
+#elif defined(BOSCH_SHUTTLE3_BHI360_BMM150_HEAD_ORIENTATIONFW)
+    #include "bosch/firmware/bhi360/bosch_shuttle3_bhi360_bmm150_head_orientationfw.h"
+#elif defined(BOSCH_SHUTTLE3_BHI360_BMM350CFW)
+    #include "bosch/firmware/bhi360/bosch_shuttle3_bhi360_bmm350cfw.h"
+#elif defined(BOSCH_SHUTTLE3_BHI360_BMM350C_BME688_IAQFW)
+    #include "bosch/firmware/bhi360/bosch_shuttle3_bhi360_bmm350c_bme688_iaqfw.h"
+#elif defined(BOSCH_SHUTTLE3_BHI360_BMM350C_BMP580FW)
+    #include "bosch/firmware/bhi360/bosch_shuttle3_bhi360_bmm350c_bmp580fw.h"
+#elif defined(BOSCH_SHUTTLE3_BHI360_BMM350C_BMP580_BME688FW)
+    #include "bosch/firmware/bhi360/bosch_shuttle3_bhi360_bmm350c_bmp580_bme688fw.h"
+#elif defined(BOSCH_SHUTTLE3_BHI360_BMM350C_HEAD_ORIENTATIONFW)
+    #include "bosch/firmware/bhi360/bosch_shuttle3_bhi360_bmm350c_head_orientationfw.h"
+#elif defined(BOSCH_SHUTTLE3_BHI360_BMM350C_POLLFW)
+    #include "bosch/firmware/bhi360/bosch_shuttle3_bhi360_bmm350c_pollfw.h"
+#elif defined(BOSCH_SHUTTLE3_BHI360_BMM350C_TURBOFW)
+    #include "bosch/firmware/bhi360/bosch_shuttle3_bhi360_bmm350c_turbofw.h"
+#elif defined(BOSCH_SHUTTLE3_BHI360_BMP580_TEST_EXAMPLEFW)
+    #include "bosch/firmware/bhi360/bosch_shuttle3_bhi360_bmp580_test_examplefw.h"
+#elif defined(BOSCH_SHUTTLE3_BHI360_HW_ACTIVITYFW)
+    #include "bosch/firmware/bhi360/bosch_shuttle3_bhi360_hw_activityfw.h"
+#elif defined(BOSCH_SHUTTLE3_BHI360_HW_ACTIVITY_TURBOFW)
+    #include "bosch/firmware/bhi360/bosch_shuttle3_bhi360_hw_activity_turbofw.h"
+#elif defined(BOSCH_SHUTTLE3_BHI360_IMU_HEAD_ORIENTATIONFW)
+    #include "bosch/firmware/bhi360/bosch_shuttle3_bhi360_imu_head_orientationfw.h"
+#elif defined(BOSCH_SHUTTLE3_BHI360_POLLING_STEP_COUNTERFW)
+    #include "bosch/firmware/bhi360/bosch_shuttle3_bhi360_polling_step_counterfw.h"
+#elif defined(BOSCH_SHUTTLE3_BHI360_TEMPFW)
+    #include "bosch/firmware/bhi360/bosch_shuttle3_bhi360_tempfw.h"
+#elif defined(BOSCH_SHUTTLE3_BHI360_TEST_DATA_SOURCEFW)
+    #include "bosch/firmware/bhi360/bosch_shuttle3_bhi360_test_data_sourcefw.h"
+#elif defined(BOSCH_SHUTTLE3_BHI360_TURBOFW)
+    #include "bosch/firmware/bhi360/bosch_shuttle3_bhi360_turbofw.h"
+    #else
     #warning "None of the defined conditions were met, so no firmware will be included".
 #endif
 
