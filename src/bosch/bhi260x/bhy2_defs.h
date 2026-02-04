@@ -648,6 +648,7 @@ struct bhy2_dev {
     uint8_t event_size[BHY2_N_VIRTUAL_SENSOR_MAX];
     uint64_t last_time_stamp[BHY2_FIFO_TYPE_MAX];
     uint8_t present_buff[32];
+    uint8_t phy_present_buff[8];
 };
 
 struct bhy2_fifo_buffer {
