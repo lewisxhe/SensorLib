@@ -1,47 +1,58 @@
-
 cd ../../
 
 pwd
 
-examples=($(find examples/* -maxdepth 1 -type d -printf "%f\n"))
+# Prefixes required for compilation
+patterns=("BHI26*" "BMA42*")
+
+examples=()
+for pattern in "${patterns[@]}"; do
+    while IFS= read -r -d '' dir; do
+        dir_name=$(basename "$dir")
+        examples+=("$dir_name")
+    done < <(find examples/ -maxdepth 1 -type d -name "$pattern" -print0)
+done
+
+readarray -t examples < <(printf '%s\n' "${examples[@]}" | sort -u)
 
 envs=(
-    "esp32s3"
-    "esp32c3"
-    "esp32dev"
-    "rp2040"
-    "nrf52840"
+    "esp32dev_arduino"
+    "nrf52840_arduino"
+    "rp2040_arduino"
     )
 
-pio run -t clean
+echo "Cleaning..."
+pio run -t clean > /dev/null 2>&1
 
-for env in ${envs[@]}
+total=$(( ${#envs[@]} * ${#examples[@]} ))
+current=0
+
+echo "Found ${#examples[@]} examples to build"
+
+for env in "${envs[@]}"
 do
-    for value in ${examples[@]}
+    for value in "${examples[@]}"
     do
+        current=$((current + 1))
+        
         if [ -f "$value/.skip."$env ];then
-            echo "Skip" $value
+            echo "[$current/$total] Skipped: $value [$env]"
             continue
         fi
 
         export PLATFORMIO_SRC_DIR="examples/$value"
-        echo "PLATFORMIO_SRC_DIR=$PLATFORMIO_SRC_DIR , ENV: $env" 
-        pio run -e $env 
-        if [ $? -ne 0 ]; then
-            echo "Build env: $env $PLATFORMIO_SRC_DIR Failed!"
-            exit -1
+        echo -n "[$current/$total] Building: $value [$env] ... "
+        
+        output=$(pio run -e "$env" 2>&1)
+        if [ $? -eq 0 ]; then
+            echo "OK"
         else
-            echo "Build env: $env $PLATFORMIO_SRC_DIR Successed!"
+            echo "FAILED"
+            echo "Error output:"
+            echo "$output"
+            exit -1
         fi
     done
 done
 
-
-
-
-
-
-
-
-
-
+echo "All builds completed successfully!"
