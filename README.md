@@ -23,6 +23,7 @@ Support list:
 | BHI260AP        | IMU                      | ✔️   | ✔️   |
 | QMC6310U/N      | Magnetic Sensor          | ✔️   | ❌   |
 | QMC5883P        | Magnetic Sensor          | ✔️   | ❌   |
+| QMC5883L        | Magnetic Sensor          | ✔️   | ❌   |
 | BMM150          | Magnetic Sensor          | ✔️   | ❌   |
 | XL9555          | I/O expander             | ✔️   | ❌   |
 | BMA422          | Accelerometer            | ✔️   | ❌   |
