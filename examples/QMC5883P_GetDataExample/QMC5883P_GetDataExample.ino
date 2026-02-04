@@ -59,7 +59,7 @@ void setup()
     // The desired output data rate in Hz.  Allowed values are 10.0, 50.0, 100.0 and 200.0HZ.
     float data_rate_hz = 200.0f;
     // op_mode: Allowed values are SUSPEND, NORMAL, SINGLE_MEASUREMENT, CONTINUOUS_MEASUREMENT
-    MagOperationMode op_mode = MagOperationMode::CONTINUOUS_MEASUREMENT;
+    OperationMode op_mode = OperationMode::CONTINUOUS_MEASUREMENT;
     // full_scale: Allowed values are FS_2G, FS_8G, FS_12G, FS_30G
     MagFullScaleRange full_scale = MagFullScaleRange::FS_2G;
     // over_sample_ratio: Allowed values are OSR_1, OSR_2, OSR_4, OSR_8
@@ -87,21 +87,11 @@ void setup()
     Serial.print("Version: "); Serial.println(info.version);
     Serial.print("UID: 0x"); Serial.println(info.uid);
     Serial.print("Type: "); Serial.println(SensorUtils::typeToString(info.type));
-    Serial.print("Address Count: "); Serial.println(info.address_count);
-    Serial.print("Alternate Addresses: ");
-    for (int i = 0; i < info.address_count; i++) {
-        Serial.print(info.alternate_addresses[i], HEX);
-        if (i < info.address_count - 1) {
-            Serial.print(", ");
-        }
-    }
+
     SensorConfig cfg = magnetometer.getConfig();
-    Serial.print("DataRate: "); Serial.println(cfg.data_rate_hz);
-    Serial.print("FullScaleRange: "); Serial.println(cfg.full_scale_range);
-    Serial.print("Mode: "); Serial.println(cfg.mode);
-    Serial.print("Interrupt: "); Serial.println(cfg.interrupt_enabled);
-    Serial.print("FIFO: "); Serial.println(cfg.fifo_enabled);
-    Serial.print("FIFO Size: "); Serial.println(cfg.fifo_size);
+    Serial.print("DataRate: "); Serial.println(cfg.sample_rate);
+    Serial.print("FullScaleRange: "); Serial.println(cfg.range);
+    Serial.print("Mode: "); Serial.println((uint8_t)cfg.mode);
     Serial.println();
 
     //Find the magnetic declination : https://www.magnetic-declination.com/

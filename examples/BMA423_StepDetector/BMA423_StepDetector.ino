@@ -87,7 +87,7 @@ void setup()
 
     // Accelerometer configuration
     // The desired operation mode. Allowed values are SUSPEND, NORMAL.
-    AccelOperationMode operationMode = AccelOperationMode::NORMAL;
+    OperationMode operationMode = OperationMode::NORMAL;
     // The desired full-scale range. Allowed values are FS_2G, FS_4G, FS_8G, FS_16G.
     AccelFullScaleRange fullScaleRange = AccelFullScaleRange::FS_2G;
     // The desired bandwidth. Allowed values are OSR4_AVG1, OSR2_AVG2, NORMAL_AVG4, etc.
