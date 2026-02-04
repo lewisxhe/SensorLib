@@ -96,11 +96,6 @@ esp_err_t bma423_init()
 #endif //ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,0,0)
 #endif //CONFIG_I2C_COMMUNICATION_METHOD_BUILTIN_RW
 
-    //Default 4G ,200HZ
-    accel.configAccelerometer();
-
-    accel.enableAccelerometer();
-
     init_done = true;
 
     return ESP_OK;
@@ -111,9 +106,7 @@ void bma423_loop()
     if (!init_done) {
         return;
     }
-    ESP_LOGI("BMA423", "Temperature:%.2f*C", accel.getTemperature(SensorBMA423::TEMP_DEG));
-    ESP_LOGI("BMA423", "Temperature:%.2f*F", accel.getTemperature(SensorBMA423::TEMP_FAHRENHEIT));
-    ESP_LOGI("BMA423", "Direction:%u", accel.direction());
+    ESP_LOGI("BMA423", "Temperature:%.2f*C", accel.getTemperature());
 }
 
 #endif

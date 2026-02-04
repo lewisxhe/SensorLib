@@ -31,7 +31,6 @@
 #include <SPI.h>
 #include <Arduino.h>
 #include "SensorPCF8563.hpp"
-#include "SensorBMA423.hpp"
 
 #ifndef SENSOR_SDA
 #define SENSOR_SDA  21
@@ -42,7 +41,6 @@
 #endif
 
 SensorPCF8563 rtc;
-SensorBMA423 accel;
 
 uint32_t intervalue;
 char buf[64];
@@ -159,17 +157,6 @@ void setup()
     timeinfo.tm_sec = 30;
     rtc.setDateTime(timeinfo);
 
-    if (!accel.begin(i2c_wr_function, hal_callback)) {
-        Serial.println("Failed to find BMA423 - check your wiring!");
-        while (1) {
-            delay(1000);
-        }
-    }
-
-    //Default 4G ,200HZ
-    accel.configAccelerometer();
-
-    accel.enableAccelerometer();
 }
 
 
@@ -203,15 +190,6 @@ void loop()
         if (written != 0) {
             Serial.println(buf);
         }
-
-        Serial.print("Temperature:");
-        Serial.print(accel.getTemperature(SensorBMA423::TEMP_DEG));
-        Serial.print("*C ");
-        Serial.print(accel.getTemperature(SensorBMA423::TEMP_FAHRENHEIT));
-        Serial.print("*F");
-        Serial.print("Dir:");
-        Serial.print(accel.direction());
-        Serial.println();
     }
 }
 
