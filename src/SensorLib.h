@@ -105,6 +105,10 @@
 #define log_d(fmt, ...)                 LOG_PORT.printf("[D][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
 #endif  /*log_d*/
 
+#ifndef log_w
+#define log_w(fmt, ...)                 LOG_PORT.printf("[W][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
+#endif  /*log_w*/
+
 #elif defined(ARDUINO_ARCH_MBED) || defined(ARDUINO_ARCH_ZEPHYR)
 
 #define LOG_FILE_LINE_INFO __FILE__, __LINE__
@@ -120,6 +124,10 @@
 #ifndef log_d
 #define log_d(fmt, ...)                 printf("[D][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
 #endif  /*log_d*/
+
+#ifndef log_w
+#define log_w(fmt, ...)                 printf("[W][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
+#endif  /*log_w*/
 
 #elif defined(ESP_PLATFORM) && !defined(ARDUINO)
 
@@ -153,6 +161,10 @@
 
 #ifndef log_d
 #define log_d(...)
+#endif
+
+#ifndef log_w
+#define log_w(...)
 #endif
 
 #endif /*ARDUINO*/
