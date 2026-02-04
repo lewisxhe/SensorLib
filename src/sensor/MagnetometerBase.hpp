@@ -30,16 +30,6 @@
 
 #include "SensorBase.hpp"
 
-struct MagnetometerData {
-    SensorVector magnetic_field;            // magnetic field strength (Gauss)
-    RawVector raw;                          // raw data
-    float temperature;                      // temperature (°C)
-    float heading;                          // heading angle (radians)
-    float heading_degrees;                  // heading angle (degrees)
-    bool overflow;                          // data overflow flag
-    bool skip_data;                         // skip data flag
-};
-
 /**
 * @brief Enumeration defining full-scale range settings for the sensor.
 */

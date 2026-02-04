@@ -123,8 +123,6 @@ public:
         // Convert heading to degrees
         data.heading_degrees = data.heading * (180.0 / M_PI);
 
-        triggerDataReady(data);
-
         return true;
     }
 

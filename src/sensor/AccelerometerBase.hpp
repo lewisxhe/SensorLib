@@ -36,18 +36,6 @@
 #include <cmath>
 
 /**
- * @brief Structure representing accelerometer data
- *
- * Contains acceleration values in both raw format (LSB) and processed format (m/s²),
- * as well as temperature if the sensor supports it.
- */
-struct AccelerometerData {
-    SensorVector mps2;       ///< Acceleration in meters per second squared (m/s²)
-    RawVector raw;           ///< Raw sensor values in LSB (least significant bits)
-    float temperature;       ///< Temperature in degrees Celsius (if available)
-};
-
-/**
  * @brief Enumeration of accelerometer full-scale range settings
  */
 enum class AccelFullScaleRange {

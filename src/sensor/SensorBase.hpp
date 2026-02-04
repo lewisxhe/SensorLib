@@ -35,41 +35,10 @@
 #pragma once
 
 #include "../SensorPlatform.hpp"
+#include "SensorDefs.hpp"
 #include <functional>
 #include <vector>
 #include <cstring>
-
-/**
- * @brief Structure representing a 3D vector with floating-point components
- */
-struct SensorVector {
-    float x;  ///< X-axis component
-    float y;  ///< Y-axis component
-    float z;  ///< Z-axis component
-};
-
-/**
- * @brief Structure representing a raw 3D vector with 16-bit integer components
- */
-struct RawVector {
-    int16_t x;  ///< X-axis raw value
-    int16_t y;  ///< Y-axis raw value
-    int16_t z;  ///< Z-axis raw value
-};
-
-/**
- * @brief Enumeration of sensor types
- */
-enum class SensorType {
-    UNKNOWN = 0,     ///< Unknown sensor type
-    ACCELEROMETER,   ///< Accelerometer sensor
-    GYROSCOPE,       ///< Gyroscope sensor
-    MAGNETOMETER,    ///< Magnetometer sensor
-    PRESSURE,        ///< Pressure sensor
-    TEMPERATURE,     ///< Temperature sensor
-    HUMIDITY,        ///< Humidity sensor
-    MULTI_AXIS       ///< Multi-axis sensor
-};
 
 /**
  * @brief Structure containing sensor configuration parameters
@@ -141,8 +110,6 @@ public:
 template<typename T>
 class SensorBase
 {
-    using DataReadyCallback = std::function<void(const T &)>;
-
 protected:
     /**
      * @brief Construct a new SensorBase object
@@ -153,8 +120,7 @@ protected:
      */
     SensorBase(SensorType sensor_type = SensorType::UNKNOWN)
         : comm(nullptr),
-          hal(nullptr),
-          _data_ready_callback(nullptr)
+          hal(nullptr)
     {
         memset(&_config, 0, sizeof(SensorConfig));
         memset(&_info, 0, sizeof(SensorInfo));
@@ -164,12 +130,7 @@ protected:
     /**
      * @brief Virtual destructor for proper polymorphic cleanup
      */
-    virtual ~SensorBase()
-    {
-        if (comm) {
-            comm->deinit();
-        }
-    }
+    virtual ~SensorBase() = default;
 
 public:
     // Delete copy operations to prevent slicing
@@ -333,66 +294,6 @@ public:
         return _config;
     }
 
-    /**
-     * @brief Set callback for data ready events
-     *
-     * @param callback Callback function
-     */
-    void setDataReadyCallback(DataReadyCallback callback)
-    {
-        _data_ready_callback = std::move(callback);
-    }
-
-    /**
-     * @brief Enable/disable data ready interrupt
-     *
-     * @param enable true to enable, false to disable
-     * @return true  Operation successful
-     * @return false Operation failed
-     */
-    virtual bool enableDataReadyInterrupt(bool enable = true)
-    {
-        // Default implementation - should be overridden by derived classes
-        return false;
-    }
-
-    /**
-     * @brief Enable/disable FIFO
-     *
-     * @param enable true to enable, false to disable
-     * @return true  Operation successful
-     * @return false Operation failed
-     */
-    virtual bool enableFifo(bool enable = true)
-    {
-        // Default implementation - should be overridden by derived classes
-        return true;
-    }
-
-    /**
-     * @brief Read data from FIFO buffer
-     *
-     * @param data_list Output vector for FIFO data
-     * @param max_count Maximum number of samples to read
-     * @return uint16_t Actual number of samples read
-     */
-    virtual uint16_t readFifoData(std::vector<T> &data_list, uint16_t max_count)
-    {
-        // Default implementation - should be overridden by derived classes
-        return 0;
-    }
-
-    /**
-     * @brief Clear FIFO buffer
-     *
-     * @return true  Operation successful
-     * @return false Operation failed
-     */
-    virtual bool clearFifo()
-    {
-        return true;
-    }
-
 private:
     /**
      * @brief Sensor-specific initialization implementation
@@ -406,19 +307,6 @@ private:
 protected:
     std::unique_ptr<SensorCommBase> comm;   ///< Communication interface
     std::unique_ptr<SensorHal> hal;         ///< Hardware abstraction layer
-    DataReadyCallback _data_ready_callback; ///< Data ready callback function
     SensorConfig _config;                   ///< Current configuration
     SensorInfo _info;                       ///< Sensor information
-
-    /**
-     * @brief Trigger data ready callback
-     *
-     * @param data Sensor data to pass to callback
-     */
-    virtual void triggerDataReady(const T& data)
-    {
-        if (_data_ready_callback) {
-            _data_ready_callback(data);
-        }
-    }
 };

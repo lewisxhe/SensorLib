@@ -74,7 +74,7 @@ void setup()
     Serial.println(" Sensor initialized successfully");
 
     // Set sensor orientation, based on the hardware placement setting
-    rslt = accelSensor.setRemapAxes(SensorBMA4XX::SensorRemap::TOP_LAYER_RIGHT_CORNER);
+    rslt = accelSensor.setRemapAxes(SensorRemap::TOP_LAYER_RIGHT_CORNER);
     if (!rslt) {
         Serial.println("Failed to set remap axes");
     }

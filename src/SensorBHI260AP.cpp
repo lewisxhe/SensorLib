@@ -739,7 +739,7 @@ uint8_t SensorBHI260AP::availableSensorNums()
 */
 bool SensorBHI260AP::setRemapAxes(SensorRemap remap)
 {
-    if (remap > BOTTOM_LAYER_BOTTOM_LEFT_CORNER) {
+    if (remap > SensorRemap::BOTTOM_LAYER_BOTTOM_LEFT_CORNER) {
         log_e("Invalid SensorRemap value passed to setRemapAxes!");
         return false;
     }
@@ -784,14 +784,15 @@ bool SensorBHI260AP::setRemapAxes(SensorRemap remap)
         {0, -1, 0, -1, 0, 0, 0, 0, -1}
     };
 
+    uint8_t remap_index = static_cast<uint8_t>(remap);
     // Set the orientation matrix for the accelerometer
-    _error_code = bhy2_set_orientation_matrix(BHY2_PHYS_SENSOR_ID_ACCELEROMETER, acc_matrices[remap], _bhy2.get());
+    _error_code = bhy2_set_orientation_matrix(BHY2_PHYS_SENSOR_ID_ACCELEROMETER, acc_matrices[remap_index], _bhy2.get());
     if (_error_code != BHY2_OK) {
         log_e("Set acceleration orientation matrix failed!");
         return false;
     }
     // Set the orientation matrix for the gyroscope
-    _error_code = bhy2_set_orientation_matrix(BHY2_PHYS_SENSOR_ID_GYROSCOPE, gyro_matrices[remap], _bhy2.get());
+    _error_code = bhy2_set_orientation_matrix(BHY2_PHYS_SENSOR_ID_GYROSCOPE, gyro_matrices[remap_index], _bhy2.get());
     if (_error_code != BHY2_OK) {
         log_e("Set gyroscope orientation matrix failed!");
         return false;
