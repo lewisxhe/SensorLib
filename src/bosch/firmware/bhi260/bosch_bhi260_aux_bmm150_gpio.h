@@ -10264,3 +10264,4 @@ const unsigned char bosch_bhi260_aux_bmm150_gpio_firmware_image[] = {
 const unsigned char *bosch_firmware_image = bosch_bhi260_aux_bmm150_gpio_firmware_image;
 const unsigned int  bosch_firmware_size = sizeof(bosch_bhi260_aux_bmm150_gpio_firmware_image)/sizeof(bosch_bhi260_aux_bmm150_gpio_firmware_image[0]);
 const unsigned char bosch_firmware_type = 0;
+const char *bosch_firmware_name = "Bosch bhi260 aux bmm150 gpio";

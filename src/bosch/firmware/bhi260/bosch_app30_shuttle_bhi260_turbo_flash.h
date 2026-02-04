@@ -9607,3 +9607,4 @@ const unsigned char bosch_app30_shuttle_bhi260_turbo_flash_firmware_image[] = {
 const unsigned char *bosch_firmware_image = bosch_app30_shuttle_bhi260_turbo_flash_firmware_image;
 const unsigned int  bosch_firmware_size = sizeof(bosch_app30_shuttle_bhi260_turbo_flash_firmware_image)/sizeof(bosch_app30_shuttle_bhi260_turbo_flash_firmware_image[0]);
 const unsigned char bosch_firmware_type = 1;
+const char *bosch_firmware_name = "Bosch app30 shuttle bhi260 turbo flash";
