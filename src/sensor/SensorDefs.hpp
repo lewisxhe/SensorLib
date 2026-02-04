@@ -30,7 +30,12 @@
 
 #pragma once
 
+#include <stdint.h>
+#include <math.h>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846f
+#endif
 /**
 * @enum SensorRemap
 * @brief Enumeration representing different remapping options for the sensor's orientation.
@@ -175,6 +180,83 @@ enum class OperationMode {
     NORMAL,
     SINGLE_MEASUREMENT,
     CONTINUOUS_MEASUREMENT,
+};
+
+/**
+ * @brief Enumeration of accelerometer full-scale range settings
+ */
+enum class AccelFullScaleRange {
+    FS_2G = 0,   ///< ±2g range
+    FS_4G,       ///< ±4g range
+    FS_8G,       ///< ±8g range
+    FS_16G,      ///< ±16g range
+    FS_32G,      ///< ±32g range
+    FS_64G,      ///< ±64g range
+    FS_128G      ///< ±128g range
+};
+
+/**
+ * @brief Enumeration of interrupt pin mapping options
+ */
+enum class InterruptPinMap {
+    PIN1 = 1,   ///< Interrupt pin 1
+    PIN2,       ///< Interrupt pin 2
+};
+
+
+/**
+* @brief Enumeration defining full-scale range settings for the sensor.
+*/
+enum class MagFullScaleRange {
+    FS_2G = 0,      // ±2 Gauss
+    FS_4G,          // ±4 Gauss
+    FS_8G,          // ±8 Gauss
+    FS_12G,         // ±12 Gauss
+    FS_16G,         // ±16 Gauss
+    FS_20G,         // ±20 Gauss
+    FS_25G,         // ±25 Gauss
+    FS_30G,         // ±30 Gauss
+    FS_32G          // ±32 Gauss
+};
+
+/**
+* @brief Enumeration defining over-sample ratios for the sensor.
+*/
+enum class MagOverSampleRatio {
+    OSR_8,   ///< 8x over-sample ratio
+    OSR_4,   ///< 4x over-sample ratio
+    OSR_2,   ///< 2x over-sample ratio
+    OSR_1    ///< 1x over-sample ratio
+};
+
+/**
+ * @brief Enumeration defining down-sample ratios for the sensor.
+ */
+enum class MagDownSampleRatio {
+    DSR_1,   ///< 1x down-sample ratio
+    DSR_2,   ///< 2x down-sample ratio
+    DSR_4,   ///< 4x down-sample ratio
+    DSR_8,   ///< 8x down-sample ratio
+};
+
+enum class MagLowPassFilter {
+    LPF_1,  ///< 1 Hz low-pass filter
+    LPF_2,  ///< 2 Hz low-pass filter
+    LPF_4,  ///< 4 Hz low-pass filter
+    LPF_8,  ///< 8 Hz low-pass filter
+    LPF_16  ///< 16 Hz low-pass filter
+};
+
+/**
+ * @brief Enumeration of gyroscope full-scale range settings
+ */
+enum class GyroFullScaleRange {
+    FS_125_DPS = 0,  ///< ±125 °/s
+    FS_250_DPS,   ///< ±250 °/s
+    FS_500_DPS,        ///< ±500 °/s
+    FS_1000_DPS,       ///< ±1000 °/s
+    FS_2000_DPS,       ///< ±2000 °/s
+    FS_4000_DPS        ///< ±4000 °/s (if supported)
 };
 
 /**

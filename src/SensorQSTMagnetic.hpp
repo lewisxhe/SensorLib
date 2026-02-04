@@ -88,7 +88,7 @@ public:
         // OVL (Overflow)
         if (isBitSet(status, 1)) {
             data.overflow = true;
-            log_e("Data overflow detected");
+            log_w("Data overflow detected");
         } else {
             data.overflow = false;
         }
@@ -118,7 +118,7 @@ public:
         data.magnetic_field.z = (float)(data.raw.z) * _sensitivity;
 
         // Calculate heading
-        data.heading = calculateHeading(data, _declination_rad);
+        data.heading = MagnetometerUtils::calculateHeading(data, _declination_rad);
 
         // Convert heading to degrees
         data.heading_degrees = data.heading * (180.0 / M_PI);

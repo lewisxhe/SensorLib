@@ -29,49 +29,7 @@
 #pragma once
 
 #include "SensorBase.hpp"
-
-/**
-* @brief Enumeration defining full-scale range settings for the sensor.
-*/
-enum class MagFullScaleRange {
-    FS_2G = 0,      // ±2 Gauss
-    FS_4G,          // ±4 Gauss
-    FS_8G,          // ±8 Gauss
-    FS_12G,         // ±12 Gauss
-    FS_16G,         // ±16 Gauss
-    FS_20G,         // ±20 Gauss
-    FS_30G,         // ±30 Gauss
-    FS_32G          // ±32 Gauss
-};
-
-/**
-* @brief Enumeration defining over-sample ratios for the sensor.
-*/
-enum class MagOverSampleRatio {
-    OSR_8,   ///< 8x over-sample ratio
-    OSR_4,   ///< 4x over-sample ratio
-    OSR_2,   ///< 2x over-sample ratio
-    OSR_1    ///< 1x over-sample ratio
-};
-
-/**
- * @brief Enumeration defining down-sample ratios for the sensor.
- */
-enum class MagDownSampleRatio {
-    DSR_1,   ///< 1x down-sample ratio
-    DSR_2,   ///< 2x down-sample ratio
-    DSR_4,   ///< 4x down-sample ratio
-    DSR_8,   ///< 8x down-sample ratio
-};
-
-enum class MagLowPassFilter {
-    LPF_1,  ///< 1 Hz low-pass filter
-    LPF_2,  ///< 2 Hz low-pass filter
-    LPF_4,  ///< 4 Hz low-pass filter
-    LPF_8,  ///< 8 Hz low-pass filter
-    LPF_16  ///< 16 Hz low-pass filter
-};
-
+#include "MagnetometerUtils.hpp"
 
 class MagnetometerBase : public SensorBase<MagnetometerData>
 {
@@ -187,27 +145,6 @@ public:
      */
     virtual uint16_t getOversamplingRate() const { return _oversampling_rate; }
 
-
-
-    /**
-     * @brief Convert degrees-minutes-seconds to decimal degrees
-     * @param degrees Whole degrees (can be negative)
-     * @param minutes Arc minutes (0-59)
-     * @param seconds Arc seconds (0-59.999...)
-     * @return Decimal degrees
-     */
-    float dmsToDecimalDegrees(int degrees, int minutes, float seconds = 0.0f) {
-        float sign = (degrees < 0 || (degrees == 0 && (minutes < 0 || seconds < 0))) ? -1.0f : 1.0f;
-        return sign * (abs(degrees) + minutes / 60.0f + seconds / 3600.0f);
-    }
-
-    /**
-     * @brief Convert degrees-minutes-seconds to radians
-     */
-    float dmsToRadians(int degrees, int minutes, float seconds = 0.0f) {
-        return dmsToDecimalDegrees(degrees, minutes, seconds) * M_PI / 180.0f;
-    }
-
     /**
      * @brief Set the magnetic declination correction value.
      * 
@@ -243,118 +180,6 @@ public:
         return _declination_rad;
     }
 
-    /**
-     * @brief Calculate heading (yaw) angle from magnetometer data in radians.
-     *
-     * This function computes the magnetic heading in the horizontal plane using
-     * the x and y components of the magnetometer. The result is corrected for
-     * magnetic declination (difference between true north and magnetic north).
-     *
-     * @note This calculation assumes the device is level (no tilt compensation).
-     * For accurate results when device is tilted, use with accelerometer data.
-     *
-     * @param data Magnetometer data structure containing magnetic field measurements
-     * @param declination Magnetic declination correction in radians (positive east)
-     * @return Heading angle in radians, range [0, 2π) (0 = magnetic north)
-     */
-    virtual float calculateHeading(const MagnetometerData& data, float declination = 0.0f) const
-    {
-        const auto& mag = data.magnetic_field;
-
-        // Handle edge case when magnetic field is zero or aligned vertically
-        if (mag.x == 0.0f && mag.y == 0.0f) {
-            return 0.0f;
-        }
-
-        // Calculate angle from x-axis (east) using arctangent of y/x
-        // atan2 returns angle in range [-π, π]
-        float heading = atan2f(mag.y, mag.x);
-
-        // Convert to [0, 2π) range (0 to 2π radians)
-        if (heading < 0) {
-            heading += 2 * M_PI;
-        }
-
-        // Apply magnetic declination correction
-        // Positive declination adds to heading (east declination)
-        heading += declination;
-
-        // Normalize to [0, 2π) range after declination adjustment
-        if (heading > 2 * M_PI) {
-            heading -= 2 * M_PI;
-        } else if (heading < 0) {
-            heading += 2 * M_PI;
-        }
-
-        return heading;
-    }
-
-    /**
-     * @brief Calculate heading (yaw) angle from magnetometer data in degrees.
-     *
-     * This is a convenience wrapper that returns the heading in degrees (0-360).
-     *
-     * @param data Magnetometer data structure containing magnetic field measurements
-     * @param declination_deg Magnetic declination correction in degrees (positive east)
-     * @return Heading angle in degrees, range [0, 360) (0 = magnetic north)
-     */
-    virtual float calculateHeadingDegrees(const MagnetometerData& data, float declination_deg = 0.0f) const
-    {
-        const auto& mag = data.magnetic_field;
-        if (mag.x == 0.0f && mag.y == 0.0f) {
-            return 0.0f;
-        }
-        float heading_deg = atan2f(mag.y, mag.x) * 180.0f / M_PI;
-        if (heading_deg < 0) {
-            heading_deg += 360.0f;
-        }
-        heading_deg += declination_deg;
-        if (heading_deg >= 360.0f) {
-            heading_deg -= 360.0f;
-        } else if (heading_deg < 0) {
-            heading_deg += 360.0f;
-        }
-        return heading_deg;
-    }
-
-    /**
-     * @brief Calculate total magnetic field strength.
-     *
-     * Computes the magnitude of the magnetic field vector from all three axes.
-     * This represents the total strength of the magnetic field at the sensor.
-     *
-     * @param data Magnetometer data structure containing magnetic field measurements
-     * @return Magnetic field strength in the same units as input (typically microtesla, μT)
-     */
-    virtual float calculateMagneticStrength(const MagnetometerData& data) const
-    {
-        const auto& mag = data.magnetic_field;
-
-        // Compute Euclidean norm of the magnetic field vector
-        return sqrtf(mag.x * mag.x + mag.y * mag.y + mag.z * mag.z);
-    }
-
-    /**
-     * @brief  Converts Gauss to microTesla.
-     * @note   This function is used to convert magnetic field strength from Gauss to microTesla.
-     * @param  gauss: The magnetic field strength in Gauss.
-     * @retval The magnetic field strength in microTesla.
-     */
-    float gaussToMicroTesla(float gauss) const
-    {
-        return gauss * 100.0f; // 1 Gauss = 100 μT
-    }
-
-    /**
-     * @brief  Converts microTesla to Gauss.
-     * @note   This function is used to convert magnetic field strength from microTesla to Gauss.
-     * @param  ut: The magnetic field strength in microTesla.
-     * @retval The magnetic field strength in Gauss.
-     */
-    float microTeslaToGauss(float ut) const
-    {
-        return ut * 0.01f; // 1 μT = 0.01 Gauss
-    }
     // *INDENT-ON*
 
 protected:
