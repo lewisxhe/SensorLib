@@ -46,9 +46,6 @@ extern "C" {
 
 #include "bhy2_defs.h"
 
-/*! The Product ID needs to be replaced with Chip ID for explicit HW specific Identification*/
-#define BHI3_PRODUCT_ID                          BHY2_PRODUCT_ID
-
 /*! Firmware header identifier */
 /*#define BHY2_FW_MAGIC                            UINT16_C(0x662B) */
 

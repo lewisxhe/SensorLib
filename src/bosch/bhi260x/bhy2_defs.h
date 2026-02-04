@@ -146,7 +146,8 @@ extern "C" {
 #error "BHY2_COMMAND_PACKET_LEN should be at least 4 bytes"
 #endif
 
-#define BHY2_PRODUCT_ID                           UINT8_C(0x89)
+#define BHI260_PRODUCT_ID                         UINT8_C(0x89)
+#define BHI360_PRODUCT_ID                         UINT8_C(0x7A)
 
 /*! Register map */
 #define BHY2_REG_CHAN_CMD                         UINT8_C(0x00)

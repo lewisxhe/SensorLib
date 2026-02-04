@@ -1077,11 +1077,11 @@ bool SensorBHI260AP::initImpl(bhy2_intf interface)
     BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_get_product_id failed!", false);
 
     /* Check for a valid product ID */
-    if (product_id != BHY2_PRODUCT_ID) {
-        log_e("Product ID read 0x%02X. Expected 0x%02X", product_id, BHY2_PRODUCT_ID);
+    if (product_id != BHI260_PRODUCT_ID && product_id != BHI360_PRODUCT_ID) {
+        log_e("Product ID read 0x%02X. Expected 0x%02X or 0x%02X", product_id, BHI260_PRODUCT_ID, BHI360_PRODUCT_ID);
         return false;
     } else {
-        log_i("BHI260/BHA260 found. Product ID read 0x%02X", product_id);
+        log_i("BHI260/BHI360 found. Product ID read 0x%02X", product_id);
     }
 
     // Set default interrupt configure
