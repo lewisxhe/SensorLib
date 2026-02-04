@@ -32,11 +32,11 @@
 #include <cstdlib>
 #include <assert.h>
 
-#if __GNUC__ < 10
-#define USE_CUSTOM_VECTOR
-#else
+// #if __GNUC__ < 10
+// #define USE_CUSTOM_VECTOR
+// #else
 #include <vector>
-#endif
+// #endif
 
 using SensorDataParseCallback = void (*)(uint8_t sensor_id, uint8_t *data, uint32_t size, uint64_t *timestamp, void *user_data);
 
