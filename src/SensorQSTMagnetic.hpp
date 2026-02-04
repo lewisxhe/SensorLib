@@ -108,14 +108,14 @@ public:
         y = (int16_t)(buffer[3] << 8) | (buffer[2]);  // Combine Y LSB and MSB
         z = (int16_t)(buffer[5] << 8) | (buffer[4]);  // Combine Z LSB and MSB
 
-        data.raw.x = x - _config.x_offset;
-        data.raw.y = y - _config.y_offset;
-        data.raw.z = z - _config.z_offset;
+        data.raw.x = x - _x_offset;
+        data.raw.y = y - _y_offset;
+        data.raw.z = z - _z_offset;
 
         // Convert raw values to Gauss using sensitivity (depends on selected magnetic range)
-        data.magnetic_field.x = (float)(data.raw.x) * _config.sensitivity;
-        data.magnetic_field.y = (float)(data.raw.y) * _config.sensitivity;
-        data.magnetic_field.z = (float)(data.raw.z) * _config.sensitivity;
+        data.magnetic_field.x = (float)(data.raw.x) * _sensitivity;
+        data.magnetic_field.y = (float)(data.raw.y) * _sensitivity;
+        data.magnetic_field.z = (float)(data.raw.z) * _sensitivity;
 
         // Calculate heading
         data.heading = calculateHeading(data, _declination_rad);
@@ -186,7 +186,7 @@ public:
      */
     bool selfTest(int16_t &x_result, int16_t &y_result, int16_t &z_result)
     {
-        if (!setOperationMode(MagOperationMode::CONTINUOUS_MEASUREMENT)) {
+        if (!setOperationMode(OperationMode::CONTINUOUS_MEASUREMENT)) {
             log_e("Failed to set CONTINUOUS_MEASUREMENT for selfTest");
             return false;
         }
@@ -215,7 +215,7 @@ public:
 
         comm->clrRegisterBit(REG_0x0B_CMD2, 6);
 
-        return setOperationMode(MagOperationMode::SUSPEND);
+        return setOperationMode(OperationMode::SUSPEND);
     }
 
     /**
@@ -229,25 +229,26 @@ public:
     bool setFullScaleRange(MagFullScaleRange range) override
     {
         float full_scale = 0;
+        float sensitivity = 0.0f;
         uint8_t range_value = 0;
         switch (range) {
         case MagFullScaleRange::FS_30G:
-            _config.sensitivity = 0.001f;      // 1000 LSB/Gauss
+            sensitivity = 0.001f;      // 1000 LSB/Gauss
             range_value = 0x00 << 2;
             full_scale = 30.0f;
             break;
         case MagFullScaleRange::FS_12G:
-            _config.sensitivity = 0.0004f;     // 2500 LSB/Gauss
+            sensitivity = 0.0004f;     // 2500 LSB/Gauss
             range_value = 0x01 << 2;
             full_scale = 12.0f;
             break;
         case MagFullScaleRange::FS_8G:
-            _config.sensitivity = 0.00026667f; // 3750 LSB/Gauss
+            sensitivity = 0.00026667f; // 3750 LSB/Gauss
             range_value = 0x02 << 2;
             full_scale = 8.0f;
             break;
         case MagFullScaleRange::FS_2G:
-            _config.sensitivity = 0.00006667f; // 15000 LSB/Gauss
+            sensitivity = 0.00006667f; // 15000 LSB/Gauss
             range_value = 0x03 << 2;
             full_scale = 2.0f;
             break;
@@ -259,7 +260,8 @@ public:
             log_e("Failed to set full-scale range");
             return false;
         }
-        _config.full_scale_range = full_scale;
+        _sensitivity = sensitivity;
+        _config.range = full_scale;
         return true;
     }
 
@@ -295,7 +297,7 @@ public:
             log_e("Failed to set bandwidth");
             return false;
         }
-        _config.data_rate_hz = odr;
+        _config.sample_rate = odr;
         return true;
     }
 
@@ -306,20 +308,20 @@ public:
     * @param  mode: SUSPEND, NORMAL, SINGLE_MEASUREMENT, CONTINUOUS_MEASUREMENT
     * @retval True if the mode was set successfully, false otherwise.
     */
-    bool setOperationMode(MagOperationMode mode) override
+    bool setOperationMode(OperationMode mode) override
     {
         uint8_t mode_val = 0;
         switch (mode) {
-        case MagOperationMode::SUSPEND:
+        case OperationMode::SUSPEND:
             mode_val = 0x00;
             break;
-        case MagOperationMode::NORMAL:
+        case OperationMode::NORMAL:
             mode_val = 0x01;
             break;
-        case MagOperationMode::SINGLE_MEASUREMENT:
+        case OperationMode::SINGLE_MEASUREMENT:
             mode_val = 0x02;
             break;
-        case MagOperationMode::CONTINUOUS_MEASUREMENT:
+        case OperationMode::CONTINUOUS_MEASUREMENT:
             mode_val = 0x03;
             break;
         default:
@@ -330,7 +332,7 @@ public:
             log_e("Failed to set operation mode");
             return false;
         }
-        _config.mode = static_cast<uint8_t>(mode);
+        _config.mode = mode;
         return true;
     }
 
@@ -419,7 +421,7 @@ public:
      * @param  dsr: DSR_1, DSR_2, DSR_4, DSR_8
      * @retval True if the configuration was successful, false otherwise.
      */
-    bool configMagnetometer(MagOperationMode mode, MagFullScaleRange range, float odr,
+    bool configMagnetometer(OperationMode mode, MagFullScaleRange range, float odr,
                             MagOverSampleRatio osr, MagDownSampleRatio dsr)
     {
         if (!setOperationMode(mode)) {
@@ -468,14 +470,8 @@ private:
         _info.uid = comm->readRegister(REG_0x00_CHIP_ID);
         _info.manufacturer = "QSTMagnetic";
         _info.type = SensorType::MAGNETOMETER;
-        _info.address_count = 0;
-        _info.alternate_addresses = nullptr;
         _info.i2c_address = addr;
         _info.version = 1;  // Set a default version
-
-        _config.fifo_size = 0;
-        _config.fifo_enabled = false;
-        _config.interrupt_enabled = false;
 
         switch (addr) {
         case QMC6310U_SLAVE_ADDRESS:
@@ -495,6 +491,19 @@ private:
             _info.model = "UNKNOWN";
             return false;
         }
+
+        // Set default configuration
+        configMagnetometer(OperationMode::SUSPEND,
+                           MagFullScaleRange::FS_8G,
+                           50.0f,
+                           MagOverSampleRatio::OSR_8,
+                           MagDownSampleRatio::DSR_1);
+
+        _config.mode = OperationMode::SUSPEND;
+        _config.range = 8.0f;
+        _config.sample_rate = 50.0f;
+        _config.latency = 0;
+        _config.type = SensorType::MAGNETOMETER;
 
         return true;
     }

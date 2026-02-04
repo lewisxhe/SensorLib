@@ -467,7 +467,7 @@ SensorConfig SensorBHI260AP::getConfigure(uint8_t sensor_id)
     bhy2_virt_sensor_conf conf;
     bhy2_get_virt_sensor_cfg(sensor_id, &conf, _bhy2.get());
     log_d("range:%u sample_rate:%f latency:%lu sensitivity:%u\n", conf.range, conf.sample_rate, conf.latency, conf.sensitivity);
-    return conf;
+    return SensorConfig{SensorType::MULTI_AXIS, static_cast<float>(conf.range), conf.sample_rate, conf.latency, OperationMode::NORMAL};
 }
 
 /**

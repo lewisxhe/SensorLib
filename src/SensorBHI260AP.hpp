@@ -41,7 +41,6 @@
 #define BHI260AP_SLAVE_ADDRESS_L          0x28
 #define BHI260AP_SLAVE_ADDRESS_H          0x29
 
-using SensorConfig = struct bhy2_virt_sensor_conf;
 using ProcessCallback = void (*)(void *user_data, uint32_t total, uint32_t transferred);
 
 class SensorBHI260AP : public BoschVirtualSensor, BoschParseBase

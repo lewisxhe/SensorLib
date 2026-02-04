@@ -148,7 +148,7 @@ protected:
      * @note   Initializes the communication interfaces and hardware abstraction layer.
      */
     SensorBMA4XX(): comm(nullptr), hal(nullptr), staticComm(nullptr),
-        dev(nullptr),  _remap_reg_offset(0),  _half_scale(0)
+        dev(nullptr),  _remap_reg_offset(0),  _half_scale(0), _interface(COMM_I2C)
     {
     }
 
@@ -176,7 +176,8 @@ public:
         if (!beginCommonStatic<SensorCommI2C, HalArduino>(comm, staticComm, hal, wire, addr, sda, scl)) {
             return false;
         }
-        return initImpl(static_cast<uint8_t>(COMM_I2C));
+        _interface = COMM_I2C;
+        return initImpl(addr);
     }
 
 
@@ -197,7 +198,8 @@ public:
                 spi, csPin, mosi, miso, sck)) {
             return false;
         }
-        return initImpl(static_cast<uint8_t>(COMM_SPI));
+        _interface = COMM_SPI;
+        return initImpl(0x00);
     }
 
 #elif defined(ESP_PLATFORM)
@@ -218,7 +220,8 @@ public:
         if (!beginCommonStatic<SensorCommI2C, HalEspIDF>(comm, staticComm, hal, port_num, addr, sda, scl)) {
             return false;
         }
-        return initImpl(static_cast<uint8_t>(COMM_I2C));
+        _interface = COMM_I2C;
+        return initImpl(addr);
     }
 #else
 
@@ -234,7 +237,8 @@ public:
         if (!beginCommonStatic<SensorCommI2C, HalEspIDF>(comm, staticComm, hal, handle, addr)) {
             return false;
         }
-        return initImpl(static_cast<uint8_t>(COMM_I2C));
+        _interface = COMM_I2C;
+        return initImpl(addr);
     }
 #endif  //ESP_PLATFORM
 #endif  //ARDUINO
@@ -257,7 +261,8 @@ public:
                 callback, hal_callback, addr, comm, hal)) {
             return false;
         }
-        return initImpl(static_cast<uint8_t>(interface));
+        _interface = interface;
+        return initImpl(addr);
     }
 
     /**
@@ -277,15 +282,15 @@ public:
             log_e("Failed to read acceleration data");
             return false;
         }
-        data.raw.x = sens_data.x;
-        data.raw.y = sens_data.y;
-        data.raw.z = sens_data.z;
+        data.raw.x = sens_data.x - _x_offset;
+        data.raw.y = sens_data.y - _y_offset;
+        data.raw.z = sens_data.z - _z_offset;
 
         data.temperature = getTemperature();
 
-        data.mps2.x = sens_data.x * _config.sensitivity;
-        data.mps2.y = sens_data.y * _config.sensitivity;
-        data.mps2.z = sens_data.z * _config.sensitivity;
+        data.mps2.x = (float)(sens_data.x) * _sensitivity;
+        data.mps2.y = (float)(sens_data.y) * _sensitivity;
+        data.mps2.z = (float)(sens_data.z) * _sensitivity;
 
         data.mps2.x = AccelerometerUtils::gToMps2(data.mps2.x);
         data.mps2.y = AccelerometerUtils::gToMps2(data.mps2.y);
@@ -369,8 +374,8 @@ public:
         _accel_conf.range = regValue;
         if (bma4_set_accel_config(&_accel_conf, dev.get()) == 0) {
             float tmp_range = AccelerometerUtils::rangeToG(range);
-            _config.full_scale_range = (int)tmp_range;
-            _config.sensitivity = tmp_range / _half_scale;
+            _config.range = (int)tmp_range;
+            _sensitivity = tmp_range / _half_scale;
             return true;
         }
         return false;
@@ -431,7 +436,7 @@ public:
         }
         _accel_conf.odr = regValue;
         if (bma4_set_accel_config(&_accel_conf, dev.get()) == 0) {
-            _config.data_rate_hz = data_rate_hz;
+            _config.sample_rate = data_rate_hz;
             return true;
         }
         return false;
@@ -517,21 +522,25 @@ public:
     * @param  mode: The desired operation mode. Allowed values are SUSPEND, NORMAL.
     * @retval True if the configuration is successful, false otherwise.
     */
-    bool setOperationMode(AccelOperationMode mode) override
+    bool setOperationMode(OperationMode mode) override
     {
         bool enable = false;
         switch (mode) {
-        case AccelOperationMode::SUSPEND:
+        case OperationMode::SUSPEND:
             enable = false;
             break;
-        case AccelOperationMode::NORMAL:
+        case OperationMode::NORMAL:
             enable = true;
             break;
         default:
             log_e("Error: Invalid operation mode %d\n", static_cast<int>(mode));
             break;
         }
-        return bma4_set_accel_enable(enable, dev.get()) == 0;
+        if (bma4_set_accel_enable(enable, dev.get()) == 0) {
+            _config.mode = mode;
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -544,7 +553,7 @@ public:
      * @param  perf_mode: The desired performance mode. Allowed values are CIC_AVG_MODE, CONTINUOUS_MODE.
      * @retval True if the configuration is successful, false otherwise.
      */
-    bool configAccelerometer(AccelOperationMode mode, AccelFullScaleRange range, float data_rate_hz,
+    bool configAccelerometer(OperationMode mode, AccelFullScaleRange range, float data_rate_hz,
                              AccelBandwidth bandwidth, AccelPerfMode perf_mode)
 
     {
@@ -842,14 +851,12 @@ private:
      */
     bool initImpl(uint8_t addr)
     {
-        CommInterface interface = static_cast<CommInterface>(addr);
-
         dev = std::make_unique<struct bma4_dev>();
         if (!dev) {
             log_e(" Device handler malloc failed!");
             return false;
         }
-        switch (interface) {
+        switch (_interface) {
         case COMM_I2C:
             dev->intf = BMA4_I2C_INTF;
             break;
@@ -878,6 +885,13 @@ private:
             return false;
         }
 
+        _info.uid = dev->chip_id;
+        _info.manufacturer = "Bosch-Sensortec";
+        _info.model = getModelName();
+        _info.type = SensorType::ACCELEROMETER;
+        _info.i2c_address = addr;
+        _info.version = 1;  // Set a default version
+
         // Set default axis remapping
         struct bma4_axes_remap axes_remap;
         axes_remap.x_axis = BMA4_MAP_X_AXIS;
@@ -893,6 +907,12 @@ private:
         _accel_conf.odr = BMA4_OUTPUT_DATA_RATE_50HZ;
         _accel_conf.perf_mode = BMA4_CIC_AVG_MODE;
         _accel_conf.range = BMA4_ACCEL_RANGE_2G;
+
+        _config.mode = OperationMode::SUSPEND;
+        _config.range = 2.0f;
+        _config.sample_rate = 50.0f;
+        _config.latency = 0;
+        _config.type = SensorType::ACCELEROMETER;
 
         // Calculate half scale
         _half_scale = powf(2.0f, (float)dev->resolution) / 2.0f;
@@ -923,4 +943,5 @@ protected:
     struct bma4_accel_config _accel_conf;
     uint8_t  _remap_reg_offset;
     float    _half_scale;
+    CommInterface _interface;
 };

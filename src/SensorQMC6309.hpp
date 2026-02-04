@@ -100,14 +100,14 @@ public:
         data.raw.y = (int16_t)(buffer[3] << 8) | (buffer[2]);  // Combine Y LSB and MSB
         data.raw.z = (int16_t)(buffer[5] << 8) | (buffer[4]);  // Combine Z LSB and MSB
 
-        data.raw.x -= _config.x_offset;
-        data.raw.y -= _config.y_offset;
-        data.raw.z -= _config.z_offset;
+        data.raw.x -= _x_offset;
+        data.raw.y -= _y_offset;
+        data.raw.z -= _z_offset;
 
         // Convert raw values to Gauss using sensitivity (depends on selected magnetic range)
-        data.magnetic_field.x = (float)(data.raw.x) * _config.sensitivity;
-        data.magnetic_field.y = (float)(data.raw.y) * _config.sensitivity;
-        data.magnetic_field.z = (float)(data.raw.z) * _config.sensitivity;
+        data.magnetic_field.x = (float)(data.raw.x) * _sensitivity;
+        data.magnetic_field.y = (float)(data.raw.y) * _sensitivity;
+        data.magnetic_field.z = (float)(data.raw.z) * _sensitivity;
 
         // Calculate heading
         data.heading = calculateHeading(data, _declination_rad);
@@ -203,12 +203,12 @@ public:
     */
     bool selfTest(int16_t &x_result, int16_t &y_result, int16_t &z_result)
     {
-        if (!setOperationMode(MagOperationMode::SUSPEND)) {
+        if (!setOperationMode(OperationMode::SUSPEND)) {
             log_e("Failed to set SUSPEND mode for selfTest");
             return false;
         }
 
-        if (!setOperationMode(MagOperationMode::CONTINUOUS_MEASUREMENT)) {
+        if (!setOperationMode(OperationMode::CONTINUOUS_MEASUREMENT)) {
             log_e("Failed to set CONTINUOUS_MEASUREMENT for selfTest");
             return false;
         }
@@ -238,7 +238,7 @@ public:
 
         comm->writeRegister(REG_0x0E_SELFTEST_CTRL, MASK_SOFT_RST, 0x00);
 
-        setOperationMode(MagOperationMode::SUSPEND);
+        setOperationMode(OperationMode::SUSPEND);
 
         bool x_ok = (x_result >= -50 && x_result <= -1);
         bool y_ok = (y_result >= -50 && y_result <= -1);
@@ -263,20 +263,21 @@ public:
     bool setFullScaleRange(MagFullScaleRange range) override
     {
         float full_scale = 0.0f;
+        float sensitivity = 0.0f;
         uint8_t range_value = 0;
         switch (range) {
         case MagFullScaleRange::FS_32G:
-            _config.sensitivity = 0.001f;      // 1000 LSB/Gauss
+            sensitivity = 0.001f;      // 1000 LSB/Gauss
             range_value = 0x00 << 2;
             full_scale = 32.0f;
             break;
         case MagFullScaleRange::FS_16G:
-            _config.sensitivity = 0.0005f;     // 2000 LSB/Gauss
+            sensitivity = 0.0005f;     // 2000 LSB/Gauss
             range_value = 0x01 << 2;
             full_scale = 16.0f;
             break;
         case MagFullScaleRange::FS_8G:
-            _config.sensitivity = 0.00025f;    // 4000 LSB/Gauss
+            sensitivity = 0.00025f;    // 4000 LSB/Gauss
             range_value = 0x02 << 2;
             full_scale = 8.0f;
             break;
@@ -288,7 +289,8 @@ public:
             log_e("Failed to set full scale range for QMC6309");
             return false;
         }
-        _config.full_scale_range = full_scale;
+        _sensitivity = sensitivity;
+        _config.range = full_scale;
         return true;
     }
 
@@ -327,7 +329,7 @@ public:
             log_e("Failed to set bandwidth");
             return false;
         }
-        _config.data_rate_hz = data_rate_hz;
+        _config.sample_rate = data_rate_hz;
         return true;
     }
 
@@ -338,20 +340,20 @@ public:
     * @param  mode: SUSPEND, NORMAL, SINGLE_MEASUREMENT, CONTINUOUS_MEASUREMENT
     * @retval True if the mode was set successfully, false otherwise.
     */
-    bool setOperationMode(MagOperationMode mode) override
+    bool setOperationMode(OperationMode mode) override
     {
         uint8_t mode_val = 0x00;
         switch (mode) {
-        case MagOperationMode::SUSPEND:
+        case OperationMode::SUSPEND:
             mode_val = 0x00;
             break;
-        case MagOperationMode::NORMAL:
+        case OperationMode::NORMAL:
             mode_val = 0x01;
             break;
-        case MagOperationMode::SINGLE_MEASUREMENT:
+        case OperationMode::SINGLE_MEASUREMENT:
             mode_val = 0x02;
             break;
-        case MagOperationMode::CONTINUOUS_MEASUREMENT:
+        case OperationMode::CONTINUOUS_MEASUREMENT:
             mode_val = 0x03;
             break;
         default:
@@ -362,7 +364,7 @@ public:
             log_e("Failed to set operation mode");
             return false;
         }
-        _config.mode = static_cast<uint8_t>(mode);
+        _config.mode = mode;
         return true;
     }
 
@@ -463,7 +465,7 @@ public:
      * @param  dsr: QMC6309 does not support downsampling rate settings; this parameter is ignored.
      * @retval True if the configuration was successful, false otherwise.
      */
-    bool configMagnetometer(MagOperationMode mode, MagFullScaleRange range, float data_rate_hz,
+    bool configMagnetometer(OperationMode mode, MagFullScaleRange range, float data_rate_hz,
                             MagOverSampleRatio osr, MagDownSampleRatio dsr = MagDownSampleRatio::DSR_1)
     {
         if (!setOperationMode(mode)) {
@@ -550,14 +552,22 @@ private:
         _info.uid = comm->readRegister(REG_0x00_CHIP_ID);
         _info.manufacturer = "QSTMagnetic";
         _info.type = SensorType::MAGNETOMETER;
-        _info.address_count = 0;
-        _info.alternate_addresses = nullptr;
+        _info.model = "QMC6309";
         _info.i2c_address = addr;
         _info.version = 1;  // Set a default version
 
-        _config.fifo_size = 0;
-        _config.fifo_enabled = false;
-        _config.interrupt_enabled = false;
+
+        // Set default configuration
+        configMagnetometer(OperationMode::SUSPEND,
+                           MagFullScaleRange::FS_8G,
+                           50.0f,
+                           MagOverSampleRatio::OSR_8);
+
+        _config.mode = OperationMode::SUSPEND;
+        _config.range = 8.0f;
+        _config.sample_rate = 50.0f;
+        _config.latency = 0;
+        _config.type = SensorType::MAGNETOMETER;
 
         if (_info.uid != QMC6309_CHIP_ID) {
             log_e("Unsupported chip ID");

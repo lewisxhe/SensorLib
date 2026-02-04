@@ -49,17 +49,6 @@ enum class AccelFullScaleRange {
 };
 
 /**
- * @brief Enumeration of accelerometer operation modes
- */
-enum class AccelOperationMode {
-    SUSPEND = 0,               ///< Power-down/suspend mode
-    LOW_POWER,                 ///< Low-power mode
-    NORMAL,                    ///< Normal operation mode
-    HIGH_RESOLUTION,           ///< High-resolution mode
-    ULTRA_HIGH_RESOLUTION      ///< Ultra-high-resolution mode
-};
-
-/**
  * @brief Enumeration of interrupt pin mapping options
  */
 enum class InterruptPinMap {
@@ -264,7 +253,7 @@ public:
      * @return true  Configuration successful
      * @return false Configuration failed
      */
-    virtual bool setOperationMode(AccelOperationMode mode) = 0;
+    virtual bool setOperationMode(OperationMode mode) = 0;
 
     // Virtual getter functions with default implementations
 
@@ -275,7 +264,7 @@ public:
      */
     virtual float getFullScaleRange() const
     {
-        return _config.full_scale_range;
+        return _config.range;
     }
 
     /**
@@ -285,16 +274,16 @@ public:
      */
     virtual float getOutputDataRate() const
     {
-        return _config.data_rate_hz;
+        return _config.sample_rate;
     }
 
     /**
      * @brief Get current operation mode setting
      *
-     * @return AccelOperationMode Operation mode enumeration
+     * @return OperationMode Operation mode enumeration
      */
-    virtual AccelOperationMode getOperationMode() const
+    virtual OperationMode getOperationMode() const
     {
-        return static_cast<AccelOperationMode>(_config.mode);
+        return _config.mode;
     }
 };

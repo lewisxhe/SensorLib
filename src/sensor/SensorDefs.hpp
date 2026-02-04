@@ -168,6 +168,16 @@ struct RawVector {
 };
 
 /**
+ * @brief Enumeration of sensor operation modes
+ */
+enum class OperationMode {
+    SUSPEND = 0,
+    NORMAL,
+    SINGLE_MEASUREMENT,
+    CONTINUOUS_MEASUREMENT,
+};
+
+/**
  * @brief Structure representing accelerometer data
  *
  * Contains acceleration values in both raw format (LSB) and processed format (m/s²),
@@ -210,4 +220,32 @@ struct GyroscopeData {
     GyroscopeData() : dps{0, 0, 0}, raw{0, 0, 0}, temperature{0} {}
 };
 
+/**
+ * @brief Structure representing sensor configuration parameters
+ */
+struct SensorConfig {
 
+    SensorType type;            ///< Type of the sensor
+    float range;                ///< Measurement range
+    float sample_rate;          ///< Sample rate in Hz
+    uint32_t latency;           ///< Reporting latency in milliseconds
+    OperationMode mode;         ///< Operation mode
+    SensorConfig() : type(SensorType::UNKNOWN), range(0), sample_rate(0), latency(0), mode(OperationMode::SUSPEND) {}
+
+    SensorConfig(SensorType type, float range, float sample_rate, uint32_t latency, OperationMode mode)
+        : type(type), range(range), sample_rate(sample_rate), latency(latency), mode(mode) {}
+};
+
+/**
+ * @brief Structure containing sensor identification information
+ */
+struct SensorInfo {
+    const char *manufacturer;       ///< Manufacturer name
+    const char *model;              ///< Model name/identifier
+    uint8_t i2c_address;            ///< Default I2C address
+    uint8_t version;                ///< Hardware/firmware version
+    uint32_t uid;                   ///< Unique identifier
+    SensorType type;                ///< Sensor type
+
+    SensorInfo() : manufacturer("Unknown"), model("Unknown"), i2c_address(0), version(0), uid(0), type(SensorType::UNKNOWN) {}
+};

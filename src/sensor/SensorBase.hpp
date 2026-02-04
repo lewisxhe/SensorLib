@@ -40,35 +40,6 @@
 #include <vector>
 #include <cstring>
 
-/**
- * @brief Structure containing sensor configuration parameters
- */
-struct SensorConfig {
-    float data_rate_hz;      ///< Data output rate in Hertz
-    float full_scale_range;  ///< Full-scale range in appropriate units
-    float sensitivity;       ///< Sensitivity (units per LSB)
-    int16_t x_offset;        ///< X-axis calibration offset
-    int16_t y_offset;        ///< Y-axis calibration offset
-    int16_t z_offset;        ///< Z-axis calibration offset
-    uint16_t fifo_size;      ///< FIFO buffer size (if available)
-    uint8_t mode;            ///< Operation mode
-    bool interrupt_enabled;  ///< Interrupt enable flag
-    bool fifo_enabled;       ///< FIFO enable flag
-};
-
-/**
- * @brief Structure containing sensor identification information
- */
-struct SensorInfo {
-    const char *manufacturer;       ///< Manufacturer name
-    const char *model;              ///< Model name/identifier
-    uint8_t i2c_address;            ///< Default I2C address
-    uint8_t version;                ///< Hardware/firmware version
-    uint32_t uid;                   ///< Unique identifier
-    SensorType type;                ///< Sensor type
-    uint8_t address_count;          ///< Number of supported I2C addresses
-    uint8_t *alternate_addresses;   ///< List of alternate I2C addresses
-};
 
 /**
  * @brief Utility class providing static sensor-related helper functions
@@ -122,8 +93,6 @@ protected:
         : comm(nullptr),
           hal(nullptr)
     {
-        memset(&_config, 0, sizeof(SensorConfig));
-        memset(&_info, 0, sizeof(SensorInfo));
         _info.type = sensor_type;
     }
 
@@ -224,9 +193,9 @@ public:
      */
     void setOffset(int16_t x, int16_t y, int16_t z)
     {
-        _config.x_offset = x;
-        _config.y_offset = y;
-        _config.z_offset = z;
+        _x_offset = x;
+        _y_offset = y;
+        _z_offset = z;
     }
 
     /**
@@ -236,7 +205,7 @@ public:
      */
     float getSensitivity() const
     {
-        return _config.sensitivity;
+        return _sensitivity;
     }
 
     /**
@@ -309,4 +278,8 @@ protected:
     std::unique_ptr<SensorHal> hal;         ///< Hardware abstraction layer
     SensorConfig _config;                   ///< Current configuration
     SensorInfo _info;                       ///< Sensor information
+    int16_t _x_offset;
+    int16_t _y_offset;
+    int16_t _z_offset;
+    float   _sensitivity;
 };

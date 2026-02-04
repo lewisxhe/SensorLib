@@ -72,13 +72,6 @@ enum class MagLowPassFilter {
     LPF_16  ///< 16 Hz low-pass filter
 };
 
-enum class MagOperationMode {
-    SUSPEND = 0,
-    NORMAL,
-    SINGLE_MEASUREMENT,
-    CONTINUOUS_MEASUREMENT,
-    EXTERNAL_TRIGGER_MEASUREMENT
-};
 
 class MagnetometerBase : public SensorBase<MagnetometerData>
 {
@@ -151,7 +144,7 @@ public:
      * @param  mode: The desired operation mode.
      * @retval True if the mode was set successfully, false otherwise.
      */
-    virtual bool setOperationMode(MagOperationMode mode) = 0;
+    virtual bool setOperationMode(OperationMode mode) = 0;
 
     /**
      * @brief  Sets the oversampling rate for the magnetometer.
@@ -175,7 +168,7 @@ public:
      * @retval The current full-scale range (e.g., 2.0, 4.0, 8.0, 16.0).
      */
     virtual float getFullScaleRange() const { 
-        return _config.full_scale_range;
+        return _config.range;
     }
 
     /**
@@ -183,8 +176,8 @@ public:
      * @note   This function should be called to retrieve the sensor's current operation mode.
      * @retval The current operation mode.
      */
-    virtual MagOperationMode getOperationMode() const { 
-        return static_cast<MagOperationMode>(_config.mode); 
+    virtual OperationMode getOperationMode() const { 
+        return _config.mode; 
     }
 
     /**
@@ -194,19 +187,6 @@ public:
      */
     virtual uint16_t getOversamplingRate() const { return _oversampling_rate; }
 
-
-    /**
-     * @brief  Sets the interrupt threshold for the magnetometer.
-     * @note   This function should be called to configure the sensor's interrupt threshold.
-     * @param  enable: Whether to enable the interrupt.
-     * @param  threshold: The interrupt threshold value (in uT).
-     * @param  axis: The axis mask (0x01=X, 0x02=Y, 0x04=Z, 0x07=all axes).
-     * @retval True if the interrupt threshold was set successfully, false otherwise.
-     */
-    virtual bool setInterruptThreshold(bool enable, float threshold, uint8_t axis = 0x07) {
-        // TODO: Implement interrupt threshold setting
-        return false;
-    }
 
 
     /**
