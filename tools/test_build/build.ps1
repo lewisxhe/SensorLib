@@ -1,39 +1,57 @@
-# Set-Location ..
+# Build PlatformIO examples with prefix filter
+# e.g.
+# 1. Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+# 2. .\tools\test_build\build.ps1 -prefix "BHI"
 
-$currentDir = Get-Location
-
-Write-Host "Current path :  $currentDir !"
-
-
-$examples = Get-ChildItem -Path "examples" -Directory -Name
-
-$envs = @(
-    "esp32s3",
-    "esp32c3",
-    "esp32dev",
-    "rp2040",
-    "nrf52840"
+param(
+    [string]$prefix = "*"
 )
 
-platformio run -t clean
+# Set-Location ..\..\
+Write-Host "Starting build process..." -ForegroundColor Cyan
+
+# Get and filter examples
+$examples = Get-ChildItem -Path "examples" -Directory -Name
+if ($prefix -ne "*") {
+    $examples = $examples | Where-Object { $_ -like "${prefix}*" }
+}
+
+if ($examples.Count -eq 0) {
+    Write-Host "ERROR: No examples found" -ForegroundColor Red
+    exit 1
+}
+
+$envs = @("nrf52840_arduino")
+$total = $examples.Count * $envs.Count
+$current = 0
+$success = 0
+
+# Clean
+platformio run -t clean > $null 2>&1
 
 foreach ($env in $envs) {
     foreach ($example in $examples) {
-        $skipFile = "examples/$example/.skip.$env"
-        if (Test-Path $skipFile) {
-            Write-Host "Skip $example for $env"
+        $current++
+        Write-Progress -Activity "Building examples" -Status "$example ($env)" -PercentComplete (($current / $total) * 100)
+        
+        # Skip if .skip file exists
+        if (Test-Path "examples/$example/.skip.$env") {
             continue
         }
-
+        
+        # Build
         $env:PLATFORMIO_SRC_DIR = "examples/$example"
-        Write-Host "PLATFORMIO_SRC_DIR=$env:PLATFORMIO_SRC_DIR , ENV: $env" 
-
-        platformio run -e $env 
+        $output = platformio run -e $env 2>&1
+        
         if ($LASTEXITCODE -ne 0) {
-            Write-Host "Build env: $env $env:PLATFORMIO_SRC_DIR Failed!"
+            Write-Host "`nERROR: Build failed for $example ($env)" -ForegroundColor Red
+            Write-Host $output -ForegroundColor Red
             exit 1
         } else {
-            Write-Host "Build env: $env $env:PLATFORMIO_SRC_DIR Successed!"
+            $success++
         }
     }
 }
+
+Write-Progress -Activity "Building examples" -Completed
+Write-Host "`nBuild completed: $success/$total successful" -ForegroundColor Green
