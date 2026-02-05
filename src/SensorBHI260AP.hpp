@@ -32,18 +32,18 @@
 #include "bosch/BoschSensorControl.hpp"
 #include "bosch/BoschPhySensorInfo.hpp"
 #include "bosch/BoschSensorInfo.hpp"
+#include "bosch/BoschSensorBase.hpp"
 #include "SensorPlatform.hpp"
-#include "bosch/BoschSensorID.hpp"
-#include "bosch/BoschParseBase.hpp"
-#include "bosch/BoschParseCallbackManager.hpp"
-#include "sensor/SensorDefs.hpp"
 
+// The BHI260 I2C address can be either 0x28 or 0x29, depending on the state of the HSDO pin.
+// HSDO pin set low
 #define BHI260AP_SLAVE_ADDRESS_L          0x28
+// HSDO pin set high
 #define BHI260AP_SLAVE_ADDRESS_H          0x29
 
 using ProcessCallback = void (*)(void *user_data, uint32_t total, uint32_t transferred);
 
-class SensorBHI260AP : public BoschVirtualSensor, BoschParseBase
+class SensorBHI260AP : public BoschSensorBase
 {
 public:
     using SensorDebugMessageCallback = void (*)(const char *message);
@@ -112,7 +112,7 @@ public:
     /**
      * @brief  setPins
      * @note   Set the reset pin. reset pin is not set by default.
-     * @param  rst:
+     * @param  rst: Reset pin number
      * @retval None
      */
     void setPins(int rst);
@@ -193,6 +193,13 @@ public:
     bool begin(CommInterface interface, SensorCommCustom::CustomCallback callback,
                SensorCommCustomHal::CustomHalCallback hal_callback,
                uint8_t addr = BHI260AP_SLAVE_ADDRESS_L);
+
+    /**
+     * @brief  Get the sensor model
+     * @note   This function retrieves the model of the Bosch sensor.
+     * @retval BoschSensorType The model of the sensor.
+     */
+    BoschSensorType getModel() override;
 
     /**
      * @brief  reset
@@ -287,7 +294,7 @@ public:
      * @param  *user_data: user data,can be null
      * @retval bool true-> Success false-> failure
      */
-    bool onResultEvent(BoschSensorID sensor_id, SensorDataParseCallback callback, void *user_data = nullptr);
+    bool onResultEvent(uint8_t sensor_id, SensorDataParseCallback callback, void *user_data = nullptr) override;
 
     /**
      * @brief  removeResultEvent
@@ -296,7 +303,7 @@ public:
      * @param  callback: Callback Function
      * @retval bool true-> Success false-> failure
      */
-    bool removeResultEvent(BoschSensorID sensor_id, SensorDataParseCallback callback);
+    bool removeResultEvent(uint8_t sensor_id, SensorDataParseCallback callback) override;
 
     /**
      * @brief  setProcessBufferSize
@@ -331,7 +338,7 @@ public:
      * @param  report_latency_ms: Report interval in milliseconds
      * @return bool true-> Success false-> failure
      */
-    bool configure(uint8_t sensor_id, float sample_rate, uint32_t report_latency_ms);
+    bool configure(uint8_t sensor_id, float sample_rate, uint32_t report_latency_ms) override;
 
     /**
      * @brief  configureRange
@@ -340,7 +347,7 @@ public:
      * @param  range:     Range for selected SensorID. See Table 79 in BHY260 datasheet 109 page
      * @retval  bool true-> Success false-> failure
      */
-    bool configureRange(uint8_t sensor_id, uint16_t range);
+    bool configureRange(uint8_t sensor_id, uint16_t range) override;
 
 
     /**
@@ -349,7 +356,7 @@ public:
      * @param  sensor_id: Sensor ID , see enum BoschSensorID
      * @retval  SensorConfig
      */
-    SensorConfig getConfigure(uint8_t sensor_id);
+    SensorConfig getConfigure(uint8_t sensor_id) override;
 
     /**
      * @brief  getScaling
@@ -357,7 +364,7 @@ public:
      * @param  sensor_id: Sensor ID , see enum BoschSensorID
      * @retval scale factor
      */
-    float getScaling(uint8_t sensor_id);
+    float getScaling(uint8_t sensor_id) override;
 
     /**
      * @brief  setFirmware
@@ -485,13 +492,19 @@ public:
 
 protected:
 
-    void parseData(const struct bhy2_fifo_parse_data_info *fifo, void *user_data) override;
+    void parseData(const struct bhy2_fifo_parse_data_info *fifo, void *user_data);
 
-    void parseMetaEvent(const struct bhy2_fifo_parse_data_info *callback_info, void *user_data) override;
+    void parseMetaEvent(const struct bhy2_fifo_parse_data_info *callback_info, void *user_data);
 
-    void parseDebugMessage(const struct bhy2_fifo_parse_data_info *callback_info, void *user_data) override;
+    void parseDebugMessage(const struct bhy2_fifo_parse_data_info *callback_info, void *user_data);
 
 private:
+
+    static void bosch_static_parse_data(const struct bhy2_fifo_parse_data_info *fifo, void *user_data);
+
+    static void bosch_static_parse_meta_event(const struct bhy2_fifo_parse_data_info *callback_info, void *user_data);
+
+    static void bosch_static_parse_debug_message(const struct bhy2_fifo_parse_data_info *callback_info, void *user_data);
 
     /**
      * @brief  bootFromFlash

@@ -30,30 +30,25 @@
  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * @file    common.h
+ * @file    BoschSensorUtils.h
  * @brief   Common header file for the BHI260/BHA260 examples
  * @note    Adapting Arduino based on BHY2-Sensor-API by lewis
  */
 
-#ifndef _COMMON_H_
-#define _COMMON_H_
+#pragma once
 
-#include "bosch/bhi260x/bhy2.h"
-#include "bosch/bhi260x/bhi3.h"
-#include "bosch/bhi260x/bhi3_multi_tap.h"
-#include "bosch/bhi260x/bhy2_klio.h"
-#include "bosch/bhi260x/bhy2_swim.h"
-#include "bosch/bhi260x/bhy2_bsec.h"
-#include "bosch/bhi260x/bhy2_head_tracker.h"
+#include <stdint.h>
 
+// *INDENT-OFF*
+namespace BoschSensorUtils {
 
-void time_to_s_ns(uint64_t time_ticks, uint32_t *s, uint32_t *ns, uint64_t *tns);
-const char *get_api_error(int8_t error_code);
-const char *get_sensor_error_text(uint8_t sensor_error);
-const char *get_sensor_name(uint8_t sensor_id);
-float get_sensor_default_scaling(uint8_t sensor_id);
-const char *get_sensor_parse_format(uint8_t sensor_id);
-const char *get_sensor_axis_names(uint8_t sensor_id);
+    void time_to_s_ns(uint64_t time_ticks, uint32_t *s, uint32_t *ns, uint64_t *tns);
+    const char *get_api_error(int8_t error_code);
+    const char *get_sensor_error_text(uint8_t sensor_error);
+    const char *get_sensor_name(uint8_t sensor_id);
+    float get_sensor_default_scaling(uint8_t sensor_id);
+    const char *get_sensor_parse_format(uint8_t sensor_id);
+    const char *get_sensor_axis_names(uint8_t sensor_id);
 
-
-#endif /* _COMMON_H_ */
+}
+// *INDENT-ON*

@@ -42,6 +42,7 @@
 #include "platform/SensorCommCustomHal.hpp"
 #include "platform/SensorCommDebug.hpp"
 #include "platform/SensorCommStatic.hpp"
+#include <assert.h>
 
 enum CommInterface {
     COMM_CUSTOM = 0,

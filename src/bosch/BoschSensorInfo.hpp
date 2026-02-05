@@ -33,7 +33,8 @@
 #include <stdio.h>
 #include "bhi260x/bhy2_parse.h"
 #include "bhi260x/bhy2_defs.h"
-#include "common/common.h"
+#include "BoschSensorUtils.hpp"
+
 #ifdef ARDUINO
 #include <Stream.h>
 #endif
@@ -165,7 +166,7 @@ public:
             for (uint8_t i = 0; i < BHY2_SENSOR_ID_MAX; i++) {
                 if (bhy2_is_sensor_available(i, dev)) {
                     if (i < BHY2_SENSOR_ID_CUSTOM_START) {
-                        stream.printf(" %8u | %36s ", i, get_sensor_name(i));
+                        stream.printf(" %8u | %36s ", i, BoschSensorUtils::get_sensor_name(i));
                     }
                     stream.printf("| %3u | %3u | %9.4f | %9.4f |\n",
                                   (unsigned int)info[i].driver_id,
@@ -217,7 +218,7 @@ public:
         stream.printf("Feature status : 0x%02x\n", feat_status);
         printBootStatus(stream);
         if (sensor_error) {
-            stream.printf( "%s\n", get_sensor_error_text(sensor_error));
+            stream.printf( "%s\n", BoschSensorUtils::get_sensor_error_text(sensor_error));
         }
         printVirtualSensorList(stream);
     }
@@ -237,7 +238,7 @@ public:
             for (uint8_t i = 0; i < BHY2_SENSOR_ID_MAX; i++) {
                 if (bhy2_is_sensor_available(i, dev)) {
                     if (i < BHY2_SENSOR_ID_CUSTOM_START) {
-                        printf(" %8u | %36s ", i, get_sensor_name(i));
+                        printf(" %8u | %36s ", i, BoschSensorUtils::get_sensor_name(i));
                     }
                     printf("| %3u | %3u | %9.4f | %9.4f |\n",
                            (unsigned int)info[i].driver_id,
@@ -288,7 +289,7 @@ public:
         printf("Host interface : %s\n", (host_status & BHY2_HST_HOST_PROTOCOL) ? "SPI" : "I2C");
         printf("Feature status : 0x%02x\n", feat_status);
         if (sensor_error) {
-            printf( "%s\n", get_sensor_error_text(sensor_error));
+            printf( "%s\n", BoschSensorUtils::get_sensor_error_text(sensor_error));
         }
         printBootStatus();
         printVirtualSensorList();

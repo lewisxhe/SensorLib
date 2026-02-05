@@ -30,13 +30,15 @@
  */
 #pragma once
 #include "SensorBHI260AP.hpp"
+#include "bosch/bhi260x/bhy2_klio_defs.h"
+#include "bosch/bhi260x/bhy2_klio.h"
 
 class SensorBHI260AP_Klio
 {
 public:
     static constexpr int8_t INVALID_LEARNING_INDEX = -1;
 
-    enum LeaningChangeReason {
+    enum LearningChangeReason {
         LEARNING_PROGRESSING,               //Learning is progressing.
         LEARNING_NO_REPETITIVE_ACTIVITY,    //Learning was interrupted by a non-repetitive activity.
         LEARNING_NO_SIGNIFICANT,            //Learning was interrupted because no significant movement was detected.
@@ -53,7 +55,7 @@ public:
     using KlioError = bhy2_klio_driver_error_state_t;
     using KlioState = bhy2_klio_sensor_state_t;
     using RecognitionCallback = void (*)(uint8_t pattern_id, float count, void *user_data);
-    using LearningCallback = void (*)(LeaningChangeReason reason, uint32_t progress, int learn_index, void *user_data);
+    using LearningCallback = void (*)(LearningChangeReason reason, uint32_t progress, int learn_index, void *user_data);
 
     /**
     * @brief Constructor to initialize the SensorBHI260AP_Klio object.
@@ -299,7 +301,7 @@ private:
        * @param timestamp The timestamp of the data.
        * @param user_data A pointer to user - defined data.
        */
-    static void static_klio_callback(uint8_t sensor_id, uint8_t *data, uint32_t size, uint64_t *timestamp, void *user_data);
+    static void static_klio_callback(uint8_t sensor_id, const uint8_t *data, uint32_t size, uint64_t *timestamp, void *user_data);
 
     /**
      * @brief Local KLIO callback function to actually handle sensor data.
@@ -310,7 +312,7 @@ private:
      * @param timestamp The timestamp of the data.
      * @param user_data A pointer to user - defined data.
      */
-    void klio_call_local(uint8_t sensor_id, uint8_t *data_ptr, uint32_t size, uint64_t *timestamp, void *user_data);
+    void klio_call_local(uint8_t sensor_id, const uint8_t *data_ptr, uint32_t size, uint64_t *timestamp, void *user_data);
 
     /**
      * @brief Static KLIO log callback function to handle sensor log data.
@@ -322,7 +324,7 @@ private:
      * @param timestamp The timestamp of the log data.
      * @param user_data A pointer to user - defined data.
      */
-    static void static_klio_log_callback(uint8_t sensor_id, uint8_t *data, uint32_t size, uint64_t *timestamp, void *user_data);
+    static void static_klio_log_callback(uint8_t sensor_id, const uint8_t *data, uint32_t size, uint64_t *timestamp, void *user_data);
 
     /**
      * @brief Local KLIO log callback function to actually handle sensor log data.
@@ -333,7 +335,7 @@ private:
      * @param timestamp The timestamp of the log data.
      * @param user_data A pointer to user - defined data.
      */
-    void klio_log_call_local(uint8_t sensor_id, uint8_t *data_ptr, uint32_t size, uint64_t *timestamp, void *user_data);
+    void klio_log_call_local(uint8_t sensor_id, const uint8_t *data_ptr, uint32_t size, uint64_t *timestamp, void *user_data);
 
     template<typename Func, typename... Args>
     bool KlioTemplate(Func func, Args &&... args);

@@ -28,9 +28,8 @@
  *
  */
 #pragma once
-#include "../SensorBHI260AP.hpp"
+#include "BoschSensorBase.hpp"
 #include "bhi260x/bhy2_defs.h"
-#include <math.h>
 
 class BoschSensorDataHelperBase
 {
@@ -50,7 +49,7 @@ public:
         bool detected;
     } SensorData;
 
-    BoschSensorDataHelperBase(SensorBHI260AP::BoschSensorID sensor_id, SensorBHI260AP &handle)
+    BoschSensorDataHelperBase(BoschSensorID sensor_id, BoschSensorBase &handle)
         : _sensor_id(sensor_id), _handle(handle)
     {
         _scaling_factor = _handle.getScaling(_sensor_id);
@@ -163,16 +162,16 @@ protected:
         }
         return result;
     }
-    SensorBHI260AP::BoschSensorID _sensor_id;
+    BoschSensorID _sensor_id;
     float _scaling_factor;
-    SensorBHI260AP &_handle;
+    BoschSensorBase &_handle;
 };
 
 template <typename DataType>
 class SensorTemplateBase : public BoschSensorDataHelperBase
 {
 public:
-    SensorTemplateBase(SensorBHI260AP::BoschSensorID sensor_id, SensorBHI260AP &handle)
+    SensorTemplateBase(BoschSensorID sensor_id, BoschSensorBase &handle)
         : BoschSensorDataHelperBase(sensor_id, handle)
     {
     }
@@ -240,7 +239,7 @@ private:
     {
         return _currentTime * 15625;
     }
-    static void staticCallback(uint8_t sensor_id, uint8_t *data, uint32_t size, uint64_t *timestamp, void *user_data)
+    static void staticCallback(uint8_t sensor_id, const uint8_t *data, uint32_t size, uint64_t *timestamp, void *user_data)
     {
         auto self = static_cast<SensorTemplateBase<DataType>*>(user_data);
         SensorData parsedData = self->parse_data(sensor_id, data);
@@ -253,8 +252,8 @@ private:
 class SensorTemperature : public SensorTemplateBase<float>
 {
 public:
-    SensorTemperature(SensorBHI260AP &handle)
-        : SensorTemplateBase<float>(SensorBHI260AP::TEMPERATURE, handle) {}
+    SensorTemperature(BoschSensorBase &handle)
+        : SensorTemplateBase<float>(BoschSensorID::TEMPERATURE, handle) {}
 
     float getCelsius() const
     {
@@ -286,8 +285,8 @@ protected:
 class SensorHumidity : public SensorTemplateBase<float>
 {
 public:
-    SensorHumidity(SensorBHI260AP &handle)
-        : SensorTemplateBase<float>(SensorBHI260AP::HUMIDITY, handle) {}
+    SensorHumidity(BoschSensorBase &handle)
+        : SensorTemplateBase<float>(BoschSensorID::HUMIDITY, handle) {}
 
     float getHumidity() const
     {
@@ -309,8 +308,8 @@ protected:
 class SensorPressure : public SensorTemplateBase<float>
 {
 public:
-    SensorPressure(SensorBHI260AP &handle)
-        : SensorTemplateBase<float>(SensorBHI260AP::BAROMETER, handle) {}
+    SensorPressure(BoschSensorBase &handle)
+        : SensorTemplateBase<float>(BoschSensorID::BAROMETER, handle) {}
 
     float getPressure() const
     {
@@ -328,8 +327,8 @@ protected:
 class SensorGas : public SensorTemplateBase<uint32_t>
 {
 public:
-    SensorGas(SensorBHI260AP &handle)
-        : SensorTemplateBase<uint32_t>(SensorBHI260AP::GAS, handle) {}
+    SensorGas(BoschSensorBase &handle)
+        : SensorTemplateBase<uint32_t>(BoschSensorID::GAS, handle) {}
 
     uint32_t getGas() const
     {
@@ -346,8 +345,8 @@ protected:
 class SensorOrientation : public SensorTemplateBase<uint8_t>
 {
 public:
-    SensorOrientation(SensorBHI260AP &handle)
-        : SensorTemplateBase<uint8_t>(SensorBHI260AP::DEVICE_ORIENTATION, handle) {}
+    SensorOrientation(BoschSensorBase &handle)
+        : SensorTemplateBase<uint8_t>(BoschSensorID::DEVICE_ORIENTATION, handle) {}
 
     uint32_t getOrientation() const
     {
@@ -363,8 +362,8 @@ protected:
 class SensorEuler : public SensorTemplateBase<bhy2_data_orientation>
 {
 public:
-    SensorEuler(SensorBHI260AP &handle)
-        : SensorTemplateBase<bhy2_data_orientation>(SensorBHI260AP::ORIENTATION, handle) {}
+    SensorEuler(BoschSensorBase &handle)
+        : SensorTemplateBase<bhy2_data_orientation>(BoschSensorID::ORIENTATION, handle) {}
 
     float getHeading() const
     {
@@ -391,8 +390,8 @@ protected:
 class SensorQuaternion : public SensorTemplateBase<bhy2_data_quaternion>
 {
 public:
-    SensorQuaternion(SensorBHI260AP &handle)
-        : SensorTemplateBase<bhy2_data_quaternion>(SensorBHI260AP::GAME_ROTATION_VECTOR, handle) {}
+    SensorQuaternion(BoschSensorBase &handle)
+        : SensorTemplateBase<bhy2_data_quaternion>(BoschSensorID::GAME_ROTATION_VECTOR, handle) {}
 
     float getX() const
     {
@@ -455,8 +454,8 @@ protected:
 class SensorStepCounter : public SensorTemplateBase<uint32_t>
 {
 public:
-    SensorStepCounter(SensorBHI260AP &handle)
-        : SensorTemplateBase<uint32_t>(SensorBHI260AP::STEP_COUNTER, handle) {}
+    SensorStepCounter(BoschSensorBase &handle)
+        : SensorTemplateBase<uint32_t>(BoschSensorID::STEP_COUNTER, handle) {}
 
     uint32_t getStepCount() const
     {
@@ -473,8 +472,8 @@ protected:
 class SensorStepDetector : public SensorTemplateBase<bool>
 {
 public:
-    SensorStepDetector(SensorBHI260AP &handle)
-        : SensorTemplateBase<bool>(SensorBHI260AP::STEP_DETECTOR, handle) {}
+    SensorStepDetector(BoschSensorBase &handle)
+        : SensorTemplateBase<bool>(BoschSensorID::STEP_DETECTOR, handle) {}
 
     bool isDetected()
     {
@@ -493,7 +492,7 @@ protected:
 class SensorXYZ : public SensorTemplateBase<bhy2_data_xyz>
 {
 public:
-    SensorXYZ(SensorBHI260AP::BoschSensorID sensor_id, SensorBHI260AP &handle)
+    SensorXYZ(BoschSensorID sensor_id, BoschSensorBase &handle)
         : SensorTemplateBase<bhy2_data_xyz>(sensor_id, handle) {}
 
     float getX() const
@@ -512,6 +511,73 @@ protected:
     void updateValue(const SensorData &data) override
     {
         _value = data.vector;
+    }
+};
+
+
+class SensorAcceleration : public SensorXYZ
+{
+public:
+    SensorAcceleration(BoschSensorBase &handle)
+        : SensorXYZ(BoschSensorID::ACCEL_PASSTHROUGH, handle) {}
+
+    bool readData(AccelerometerData &data)
+    {
+        if (hasUpdated()) {
+            data.temperature = NAN;
+            data.mps2.x = getX();
+            data.mps2.y = getY();
+            data.mps2.z = getZ();
+            data.raw.x = getValue().x;
+            data.raw.y = getValue().y;
+            data.raw.z = getValue().z;
+            return true;
+        }
+        return false;
+    }
+};
+
+class SensorGyroscope : public SensorXYZ
+{
+public:
+    SensorGyroscope(BoschSensorBase &handle)
+        : SensorXYZ(BoschSensorID::GYRO_PASSTHROUGH, handle) {}
+
+    bool readData(GyroscopeData &data)
+    {
+        if (hasUpdated()) {
+            data.temperature = NAN;
+            data.dps.x = getX();
+            data.dps.y = getY();
+            data.dps.z = getZ();
+            data.raw.x = getValue().x;
+            data.raw.y = getValue().y;
+            data.raw.z = getValue().z;
+            return true;
+        }
+        return false;
+    }
+};
+
+class SensorMagnetometer : public SensorXYZ
+{
+public:
+    SensorMagnetometer(BoschSensorBase &handle)
+        : SensorXYZ(BoschSensorID::MAGNETOMETER_PASSTHROUGH, handle) {}
+
+    bool readData(MagnetometerData &data)
+    {
+        if (hasUpdated()) {
+            data.temperature = NAN;
+            data.magnetic_field.x = getX();
+            data.magnetic_field.y = getY();
+            data.magnetic_field.z = getZ();
+            data.raw.x = getValue().x;
+            data.raw.y = getValue().y;
+            data.raw.z = getValue().z;
+            return true;
+        }
+        return false;
     }
 };
 
@@ -538,8 +604,8 @@ public:
         IN_VEHICLE_STILL_STARTED,
         RESERVED_HIGH
     };
-    SensorActivity(SensorBHI260AP &handle)
-        : SensorTemplateBase<uint16_t>(SensorBHI260AP::ACTIVITY_RECOGNITION, handle) {}
+    SensorActivity(BoschSensorBase &handle)
+        : SensorTemplateBase<uint16_t>(BoschSensorID::ACTIVITY_RECOGNITION, handle) {}
 
     /**
      * @brief Check if a specific activity status is set in the activity bitmap.

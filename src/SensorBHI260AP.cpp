@@ -28,9 +28,8 @@
  *
  */
 #include "SensorBHI260AP.hpp"
-#include "bosch/BoschParseStatic.hpp"
 
-#define BHY2_RLST_CHECK(ret, str, val) \
+#define BHY2_RSLT_CHECK(ret, str, val) \
     do                                 \
     {                                  \
         if (ret)                       \
@@ -138,6 +137,29 @@ bool SensorBHI260AP::begin(CommInterface interface,
         return false;
     }
     return initImpl(static_cast<bhy2_intf>(interface));
+}
+
+/**
+ * @brief  Get the sensor model
+ * @note   This function retrieves the model of the Bosch sensor.
+ * @retval BoschSensorType The model of the sensor.
+ */
+BoschSensorType SensorBHI260AP::getModel()
+{
+    if (_bhy2) {
+        uint8_t product_id = 0x00;
+        bhy2_get_product_id(&product_id, _bhy2.get());
+        switch (product_id) {
+        case BHI260_PRODUCT_ID:
+            return BoschSensorType::BOSCH_SENSORTEC_BHI260;
+            break;
+        case BHI360_PRODUCT_ID:
+            return BoschSensorType::BOSCH_SENSORTEC_BHI360;
+        default:
+            break;
+        }
+    }
+    return BoschSensorType::BOSCH_SENSORTEC_UNKNOWN;
 }
 
 /**
@@ -303,7 +325,7 @@ void SensorBHI260AP::removeEvent()
  * @param  *user_data: user data,can be null
  * @retval bool true-> Success false-> failure
  */
-bool SensorBHI260AP::onResultEvent(BoschSensorID sensor_id, SensorDataParseCallback callback, void *user_data)
+bool SensorBHI260AP::onResultEvent(uint8_t sensor_id, SensorDataParseCallback callback, void *user_data)
 {
     if (!bhy2_is_sensor_available(sensor_id, _bhy2.get())) {
         log_e("%s not present", getSensorName(sensor_id)); return false;
@@ -318,7 +340,7 @@ bool SensorBHI260AP::onResultEvent(BoschSensorID sensor_id, SensorDataParseCallb
  * @param  callback: Callback Function
  * @retval bool true-> Success false-> failure
  */
-bool SensorBHI260AP::removeResultEvent(BoschSensorID sensor_id, SensorDataParseCallback callback)
+bool SensorBHI260AP::removeResultEvent(uint8_t sensor_id, SensorDataParseCallback callback)
 {
     if (!bhy2_is_sensor_available(sensor_id, _bhy2.get())) {
         log_e("%s not present", getSensorName(sensor_id)); return false;
@@ -357,7 +379,7 @@ bool SensorBHI260AP::uploadFirmware(const uint8_t *firmware, uint32_t length, bo
     log_d("Upload Firmware ...");
 
     _error_code = bhy2_get_boot_status(&boot_status, _bhy2.get());
-    BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_get_boot_status failed!", false);
+    BHY2_RSLT_CHECK(_error_code != BHY2_OK, "bhy2_get_boot_status failed!", false);
 
     if (write2Flash) {
         if (boot_status & BHY2_BST_FLASH_DETECTED) {
@@ -365,7 +387,7 @@ bool SensorBHI260AP::uploadFirmware(const uint8_t *firmware, uint32_t length, bo
             uint32_t end_addr = start_addr + length;
             log_d("Flash detected. Erasing flash to upload firmware");
             _error_code = bhy2_erase_flash(start_addr, end_addr, _bhy2.get());
-            BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_erase_flash failed!", false);
+            BHY2_RSLT_CHECK(_error_code != BHY2_OK, "bhy2_erase_flash failed!", false);
         } else {
             log_e("Flash not detected");
             return false;
@@ -374,21 +396,21 @@ bool SensorBHI260AP::uploadFirmware(const uint8_t *firmware, uint32_t length, bo
         _error_code = bhy2_upload_firmware_to_flash(firmware, length, _bhy2.get(),
                       _process_callback,
                       _process_callback_user_data);
-        BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_upload_firmware_to_flash failed!", false);
+        BHY2_RSLT_CHECK(_error_code != BHY2_OK, "bhy2_upload_firmware_to_flash failed!", false);
         log_d("Loading firmware into FLASH Done");
     } else {
         log_d("Loading firmware into RAM.");
         log_d("upload size = %lu", length);
         _error_code = bhy2_upload_firmware_to_ram(firmware, length, _bhy2.get());
-        BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_upload_firmware_to_ram failed!", false);
+        BHY2_RSLT_CHECK(_error_code != BHY2_OK, "bhy2_upload_firmware_to_ram failed!", false);
         log_d("Loading firmware into RAM Done");
     }
 
     _error_code = bhy2_get_error_value(&sensor_error, _bhy2.get());
-    BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_get_error_value failed!", false);
+    BHY2_RSLT_CHECK(_error_code != BHY2_OK, "bhy2_get_error_value failed!", false);
     if (sensor_error != BHY2_OK) {
         _error_code = bhy2_get_error_value(&sensor_error, _bhy2.get());
-        log_e("%s", get_sensor_error_text(sensor_error));
+        log_e("%s", BoschSensorUtils::get_sensor_error_text(sensor_error));
         return false;
     }
 
@@ -400,11 +422,11 @@ bool SensorBHI260AP::uploadFirmware(const uint8_t *firmware, uint32_t length, bo
         log_d("Booting from RAM.");
         _error_code = bhy2_boot_from_ram(_bhy2.get());
     }
-    BHY2_RLST_CHECK(_error_code != BHY2_OK, "_bhy2 boot failed!", false);
+    BHY2_RSLT_CHECK(_error_code != BHY2_OK, "_bhy2 boot failed!", false);
 
     _error_code = bhy2_get_error_value(&sensor_error, _bhy2.get());
     if (sensor_error) {
-        log_e("%s", get_sensor_error_text(sensor_error));
+        log_e("%s", BoschSensorUtils::get_sensor_error_text(sensor_error));
         return false;
     }
     return sensor_error == BHY2_OK;
@@ -418,7 +440,7 @@ bool SensorBHI260AP::uploadFirmware(const uint8_t *firmware, uint32_t length, bo
  */
 const char *SensorBHI260AP::getError()
 {
-    snprintf(_err_buffer, 128, "API:%s\nSensor:%s\n", get_api_error(_error_code), get_sensor_error_text(_error_code));
+    snprintf(_err_buffer, 128, "API:%s\nSensor:%s\n", BoschSensorUtils::get_api_error(_error_code), BoschSensorUtils::get_sensor_error_text(_error_code));
     return static_cast<const char *>(_err_buffer);
 }
 
@@ -436,8 +458,8 @@ bool SensorBHI260AP::configure(uint8_t sensor_id, float sample_rate, uint32_t re
         log_e("%s not present", getSensorName(sensor_id)); return false;
     }
     _error_code = bhy2_set_virt_sensor_cfg(sensor_id, sample_rate, report_latency_ms, _bhy2.get());
-    BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_set_virt_sensor_cfg failed!", false);
-    log_d("Enable %s at %.2fHz.", get_sensor_name(sensor_id), sample_rate);
+    BHY2_RSLT_CHECK(_error_code != BHY2_OK, "bhy2_set_virt_sensor_cfg failed!", false);
+    log_d("Enable %s at %.2fHz.", BoschSensorUtils::get_sensor_name(sensor_id), sample_rate);
     return true;
 }
 
@@ -451,7 +473,7 @@ bool SensorBHI260AP::configure(uint8_t sensor_id, float sample_rate, uint32_t re
 bool SensorBHI260AP::configureRange(uint8_t sensor_id, uint16_t range)
 {
     _error_code = bhy2_set_virt_sensor_range(sensor_id, range, _bhy2.get());
-    BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_set_virt_sensor_range failed!", false);
+    BHY2_RSLT_CHECK(_error_code != BHY2_OK, "bhy2_set_virt_sensor_range failed!", false);
     return true;
 }
 
@@ -464,7 +486,7 @@ bool SensorBHI260AP::configureRange(uint8_t sensor_id, uint16_t range)
  */
 SensorConfig SensorBHI260AP::getConfigure(uint8_t sensor_id)
 {
-    bhy2_virt_sensor_conf conf;
+    bhy2_virt_sensor_conf conf {};
     bhy2_get_virt_sensor_cfg(sensor_id, &conf, _bhy2.get());
     log_d("range:%u sample_rate:%f latency:%lu sensitivity:%u\n", conf.range, conf.sample_rate, conf.latency, conf.sensitivity);
     return SensorConfig{SensorType::MULTI_AXIS, static_cast<float>(conf.range), conf.sample_rate, conf.latency, OperationMode::NORMAL};
@@ -478,7 +500,7 @@ SensorConfig SensorBHI260AP::getConfigure(uint8_t sensor_id)
  */
 float SensorBHI260AP::getScaling(uint8_t sensor_id)
 {
-    return get_sensor_default_scaling(sensor_id);
+    return BoschSensorUtils::get_sensor_default_scaling(sensor_id);
 }
 
 /**
@@ -506,7 +528,7 @@ void SensorBHI260AP::setFirmware(const uint8_t *image, size_t image_len, bool wr
  */
 const char *SensorBHI260AP::getSensorName(uint8_t sensor_id)
 {
-    return get_sensor_name(sensor_id);
+    return BoschSensorUtils::get_sensor_name(sensor_id);
 }
 
 // Get an accuracy report
@@ -531,11 +553,11 @@ uint8_t SensorBHI260AP::digitalRead(uint8_t pin, bool pullup)
     } else {
         pin_mask |= (BHY2_INPUT << 8);
     }
-    bhy2_set_virt_sensor_cfg(BoschSensorID::GPIO_EXP, (float)pin_mask, 0, _bhy2.get());
+    bhy2_set_virt_sensor_cfg(BHY2_SENSOR_ID_GPIO_EXP, (float)pin_mask, 0, _bhy2.get());
     pin_mask = pin /*GetCmd*/;
-    bhy2_set_virt_sensor_cfg(BoschSensorID::GPIO_EXP, (float)pin_mask, 0, _bhy2.get());
+    bhy2_set_virt_sensor_cfg(BHY2_SENSOR_ID_GPIO_EXP, (float)pin_mask, 0, _bhy2.get());
     bhy2_virt_sensor_conf conf;
-    bhy2_get_virt_sensor_cfg(BoschSensorID::GPIO_EXP, &conf, _bhy2.get());
+    bhy2_get_virt_sensor_cfg(BHY2_SENSOR_ID_GPIO_EXP, &conf, _bhy2.get());
     uint8_t level = conf.sample_rate;
     return level;
 }
@@ -551,7 +573,7 @@ void SensorBHI260AP::digitalWrite(uint8_t pin, uint8_t level)
 {
     if (pin > JTAG_DIO)return;
     uint32_t pin_mask = pin  | (BHY2_OUTPUT << 8) | (level << 6) | BHY2_GPIO_SET ;
-    bhy2_set_virt_sensor_cfg(BoschSensorID::GPIO_EXP, (float)pin_mask, 0, _bhy2.get());
+    bhy2_set_virt_sensor_cfg(BHY2_SENSOR_ID_GPIO_EXP, (float)pin_mask, 0, _bhy2.get());
 }
 
 /**
@@ -564,7 +586,7 @@ void SensorBHI260AP::disableGpio(uint8_t pin)
 {
     if (pin > JTAG_DIO)return;
     uint32_t pin_mask = pin  | (BHY2_OPEN_DRAIN << 8) | BHY2_GPIO_SET;
-    bhy2_set_virt_sensor_cfg(BoschSensorID::GPIO_EXP, (float)pin_mask, 0, _bhy2.get());
+    bhy2_set_virt_sensor_cfg(BHY2_SENSOR_ID_GPIO_EXP, (float)pin_mask, 0, _bhy2.get());
 }
 
 /**
@@ -815,7 +837,7 @@ bool SensorBHI260AP::bootFromFlash()
     log_d("Waiting for firmware verification to complete");
     do {
         _error_code = bhy2_get_boot_status(&boot_status, _bhy2.get());
-        BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_get_boot_status failed!", false);
+        BHY2_RSLT_CHECK(_error_code != BHY2_OK, "bhy2_get_boot_status failed!", false);
         if (boot_status & BHY2_BST_FLASH_VERIFY_DONE) {
             break;
         }
@@ -823,7 +845,7 @@ bool SensorBHI260AP::bootFromFlash()
     } while (tries--);
 
     _error_code = bhy2_get_boot_status(&boot_status, _bhy2.get());
-    BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_get_boot_status failed!", false);
+    BHY2_RSLT_CHECK(_error_code != BHY2_OK, "bhy2_get_boot_status failed!", false);
     print_boot_status(boot_status);
 
     if (boot_status & BHY2_BST_HOST_INTERFACE_READY) {
@@ -834,28 +856,28 @@ bool SensorBHI260AP::bootFromFlash()
             log_d("Booting from flash");
             rslt = bhy2_boot_from_flash(_bhy2.get());
             if (rslt != BHY2_OK) {
-                log_e("%s. Booting from flash failed.\r\n", get_api_error(rslt));
+                log_e("%s. Booting from flash failed.\r\n", BoschSensorUtils::get_api_error(rslt));
                 _error_code = bhy2_get_regs(BHY2_REG_ERROR_VALUE, &error_val, 1, _bhy2.get());
-                BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_get_regs failed!", false);
+                BHY2_RSLT_CHECK(_error_code != BHY2_OK, "bhy2_get_regs failed!", false);
                 if (error_val) {
-                    log_e("%s\r\n", get_sensor_error_text(error_val));
+                    log_e("%s\r\n", BoschSensorUtils::get_sensor_error_text(error_val));
                 }
                 return false;
             }
 
             _error_code = bhy2_get_boot_status(&boot_status, _bhy2.get());
-            BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_get_boot_status failed!", false);
+            BHY2_RSLT_CHECK(_error_code != BHY2_OK, "bhy2_get_boot_status failed!", false);
             print_boot_status(boot_status);
 
             if (!(boot_status & BHY2_BST_HOST_INTERFACE_READY)) {
                 /* hub is not ready, need reset hub */
                 log_d("Host interface is not ready, triggering a reset");
                 _error_code = bhy2_soft_reset(_bhy2.get());
-                BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_soft_reset failed!", false);
+                BHY2_RSLT_CHECK(_error_code != BHY2_OK, "bhy2_soft_reset failed!", false);
             }
 
             _error_code = (bhy2_get_feature_status(&feat_status, _bhy2.get()));
-            BHY2_RLST_CHECK(_error_code != BHY2_OK, "Reading Feature status failed, booting from flash failed!", false);
+            BHY2_RSLT_CHECK(_error_code != BHY2_OK, "Reading Feature status failed, booting from flash failed!", false);
 
         } else {
             log_e("Can't detect external flash");
@@ -907,13 +929,37 @@ void SensorBHI260AP::print_boot_status(uint8_t boot_status)
     }
 }
 
+void SensorBHI260AP::bosch_static_parse_data(const struct bhy2_fifo_parse_data_info *callback_info, void *user_data)
+{
+    auto *self = static_cast<SensorBHI260AP *>(user_data);
+    if (self && callback_info) {
+        self->parseData(callback_info, user_data);
+    }
+}
+
+void SensorBHI260AP::bosch_static_parse_meta_event(const struct bhy2_fifo_parse_data_info *callback_info, void *user_data)
+{
+    auto *self = static_cast<SensorBHI260AP *>(user_data);
+    if (self && callback_info) {
+        self->parseMetaEvent(callback_info, user_data);
+    }
+}
+
+void SensorBHI260AP::bosch_static_parse_debug_message(const struct bhy2_fifo_parse_data_info *callback_info, void *user_data)
+{
+    auto *self = static_cast<SensorBHI260AP *>(user_data);
+    if (self && callback_info) {
+        self->parseDebugMessage(callback_info, user_data);
+    }
+}
+
 void SensorBHI260AP::parseData(const struct bhy2_fifo_parse_data_info *fifo, void *user_data)
 {
     if (user_data != this) {
         return;
     }
 #ifdef BHI260AP_PARSE_DATA_DUMP
-    log_i("ID:[%d]:%s: DATA LEN:%u", fifo->sensor_id, get_sensor_name(fifo->sensor_id), fifo->data_size);
+    log_i("ID:[%d]:%s: DATA LEN:%u", fifo->sensor_id, BoschSensorUtils::get_sensor_name(fifo->sensor_id), fifo->data_size);
     SensorLibDumpBuffer(fifo->data_ptr, fifo->data_size);
 #endif
     _callback_manager.call(fifo->sensor_id, fifo->data_ptr, fifo->data_size, fifo->time_stamp);
@@ -1036,7 +1082,7 @@ bool SensorBHI260AP::initImpl(bhy2_intf interface)
     reset();
 
     _bhy2 = std::make_unique<struct bhy2_dev>();
-    BHY2_RLST_CHECK(!_bhy2, " Device handler malloc failed!", false);
+    BHY2_RSLT_CHECK(!_bhy2, " Device handler malloc failed!", false);
 
     if (_max_rw_length == -1) {
 
@@ -1067,14 +1113,14 @@ bool SensorBHI260AP::initImpl(bhy2_intf interface)
                             staticComm.get(),
                             _bhy2.get());
 
-    BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_init failed!", false);
+    BHY2_RSLT_CHECK(_error_code != BHY2_OK, "bhy2_init failed!", false);
 
 
     _error_code = bhy2_soft_reset(_bhy2.get());
-    BHY2_RLST_CHECK(_error_code != BHY2_OK, "reset _bhy2 failed!", false);
+    BHY2_RSLT_CHECK(_error_code != BHY2_OK, "reset _bhy2 failed!", false);
 
     _error_code = bhy2_get_product_id(&product_id, _bhy2.get());
-    BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_get_product_id failed!", false);
+    BHY2_RSLT_CHECK(_error_code != BHY2_OK, "bhy2_get_product_id failed!", false);
 
     /* Check for a valid product ID */
     if (product_id != BHI260_PRODUCT_ID && product_id != BHI360_PRODUCT_ID) {
@@ -1119,7 +1165,7 @@ bool SensorBHI260AP::initImpl(bhy2_intf interface)
                 return false;
             }
             _error_code = bhy2_soft_reset(_bhy2.get());
-            BHY2_RLST_CHECK(_error_code != BHY2_OK, "reset _bhy2 failed!", false);
+            BHY2_RSLT_CHECK(_error_code != BHY2_OK, "reset _bhy2 failed!", false);
             log_i("Force update firmware.");
             if (!uploadFirmware(_firmware_stream, _firmware_size, _write_flash)) {
                 log_e("uploadFirmware failed!");
@@ -1140,18 +1186,18 @@ bool SensorBHI260AP::initImpl(bhy2_intf interface)
     }
 
     uint16_t version = getKernelVersion();
-    BHY2_RLST_CHECK(!version, "getKernelVersion failed!", false);
+    BHY2_RSLT_CHECK(!version, "getKernelVersion failed!", false);
     log_i("Boot successful. Kernel version %u.", version);
 
-    _error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT, BoschParseStatic::parseMetaEvent, this, _bhy2.get());
-    BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_register_fifo_parse_callback failed!", false);
+    _error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT, bosch_static_parse_data, this, _bhy2.get());
+    BHY2_RSLT_CHECK(_error_code != BHY2_OK, "bhy2_register_fifo_parse_callback failed!", false);
 
-    _error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT_WU, BoschParseStatic::parseMetaEvent, this, _bhy2.get());
-    BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_register_fifo_parse_callback failed!", false);
+    _error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT_WU, bosch_static_parse_meta_event, this, _bhy2.get());
+    BHY2_RSLT_CHECK(_error_code != BHY2_OK, "bhy2_register_fifo_parse_callback failed!", false);
 
     if (_debug) {
-        _error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_DEBUG_MSG, BoschParseStatic::parseDebugMessage, this, _bhy2.get());
-        BHY2_RLST_CHECK(_error_code != BHY2_OK, "bhy2_register_fifo_parse_callback parseDebugMessage failed!", false);
+        _error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_DEBUG_MSG, bosch_static_parse_debug_message, this, _bhy2.get());
+        BHY2_RSLT_CHECK(_error_code != BHY2_OK, "bhy2_register_fifo_parse_callback parseDebugMessage failed!", false);
     }
 
     //Set process buffer
@@ -1170,7 +1216,7 @@ bool SensorBHI260AP::initImpl(bhy2_intf interface)
 #else
     _processBuffer = (uint8_t *)malloc(_processBufferSize);
 #endif
-    BHY2_RLST_CHECK(!_processBuffer, "process buffer malloc failed!", false);
+    BHY2_RSLT_CHECK(!_processBuffer, "process buffer malloc failed!", false);
 
     _error_code = bhy2_get_and_process_fifo(_processBuffer, _processBufferSize, _bhy2.get());
     if (_error_code != BHY2_OK) {
@@ -1188,7 +1234,7 @@ bool SensorBHI260AP::initImpl(bhy2_intf interface)
     for (uint8_t i = 0; i < BHY2_SENSOR_ID_MAX; i++) {
         if (bhy2_is_sensor_available(i, _bhy2.get())) {
             _sensor_available_nums++;
-            bhy2_register_fifo_parse_callback(i, BoschParseStatic::parseData, this, _bhy2.get());
+            bhy2_register_fifo_parse_callback(i, bosch_static_parse_data, this, _bhy2.get());
         }
     }
     return _error_code == BHY2_OK;

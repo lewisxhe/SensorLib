@@ -63,10 +63,10 @@ SensorBHI260AP_Klio::~SensorBHI260AP_Klio()
 void SensorBHI260AP_Klio::end()
 {
     if (sensor) {
-        sensor->configure(SensorBHI260AP::KLIO, 0, 0);
-        sensor->removeResultEvent(SensorBHI260AP::KLIO, static_klio_callback);
-        sensor->configure(SensorBHI260AP::KLIO_LOG, 0, 0);
-        sensor->removeResultEvent(SensorBHI260AP::KLIO_LOG, static_klio_log_callback);
+        sensor->configure(BoschSensorID::KLIO, 0, 0);
+        sensor->removeResultEvent(BoschSensorID::KLIO, static_klio_callback);
+        sensor->configure(BoschSensorID::KLIO_LOG, 0, 0);
+        sensor->removeResultEvent(BoschSensorID::KLIO_LOG, static_klio_log_callback);
     }
 
     if (similarity_result_buf ) {
@@ -86,7 +86,7 @@ bool SensorBHI260AP_Klio::begin()
         return true;
     }
     if (!sensor) {
-        log_e("BHI260 data pointer is empty");
+        log_e("The sensor handle is null");
         return false;
     }
     const uint8_t PARAM_BUF_LEN = 252;
@@ -149,9 +149,9 @@ bool SensorBHI260AP_Klio::begin()
                  sizeof(ignore_insignificant_movement));
 
 
-    sensor->onResultEvent(SensorBHI260AP::KLIO_LOG, static_klio_log_callback, this);
+    sensor->onResultEvent(BoschSensorID::KLIO_LOG, static_klio_log_callback, this);
 
-    return  sensor->onResultEvent(SensorBHI260AP::KLIO, static_klio_callback, this);
+    return  sensor->onResultEvent(BoschSensorID::KLIO, static_klio_callback, this);
 }
 
 bool SensorBHI260AP_Klio::setState(bool learning_enable, bool learning_reset, bool recognition_enable, bool recognition_reset)
@@ -168,8 +168,11 @@ bool SensorBHI260AP_Klio::setState(bool learning_enable, bool learning_reset, bo
 
 SensorBHI260AP_Klio::KlioState SensorBHI260AP_Klio::getState()
 {
-    assert(sensor);
     bhy2_klio_sensor_state_t sensor_state;
+    if (!sensor) {
+        log_e("The sensor handle is null");
+        return {};
+    }
     bhy2_klio_get_state(&sensor_state, sensor->getHandler());
     return sensor_state;
 }
@@ -177,7 +180,7 @@ SensorBHI260AP_Klio::KlioState SensorBHI260AP_Klio::getState()
 bool SensorBHI260AP_Klio::setState(KlioState sensor_state)
 {
     if (!sensor) {
-        log_e("BHI260 data pointer is empty");
+        log_e("The sensor handle is null");
         return false;
     }
     return bhy2_klio_set_state(&sensor_state, sensor->getHandler()) == BHY2_OK;
@@ -212,13 +215,13 @@ uint8_t SensorBHI260AP_Klio::getMaxPatterns()
     return max_patterns;
 }
 
-void SensorBHI260AP_Klio::static_klio_callback(uint8_t sensor_id, uint8_t *data, uint32_t size, uint64_t *timestamp, void *user_data)
+void SensorBHI260AP_Klio::static_klio_callback(uint8_t sensor_id, const uint8_t *data, uint32_t size, uint64_t *timestamp, void *user_data)
 {
     SensorBHI260AP_Klio *self = static_cast<SensorBHI260AP_Klio *>(user_data);
     self->klio_call_local(sensor_id, data, size, timestamp, self);
 }
 
-void SensorBHI260AP_Klio::klio_call_local(uint8_t sensor_id, uint8_t *data_ptr, uint32_t size, uint64_t *timestamp, void *user_data)
+void SensorBHI260AP_Klio::klio_call_local(uint8_t sensor_id, const uint8_t *data_ptr, uint32_t size, uint64_t *timestamp, void *user_data)
 {
     bhy2_klio_sensor_frame_t data;
     if (size != 11) {
@@ -227,7 +230,7 @@ void SensorBHI260AP_Klio::klio_call_local(uint8_t sensor_id, uint8_t *data_ptr, 
     memcpy(&data, data_ptr, sizeof(data));
     if (learning_callback) {
         if (k_state.learning_enabled) {
-            learning_callback(static_cast<LeaningChangeReason>(data.learn.change_reason),
+            learning_callback(static_cast<LearningChangeReason>(data.learn.change_reason),
                               data.learn.progress, data.learn.index, learning_callback_user_data);
         }
     }
@@ -238,13 +241,13 @@ void SensorBHI260AP_Klio::klio_call_local(uint8_t sensor_id, uint8_t *data_ptr, 
     }
 }
 
-void SensorBHI260AP_Klio::static_klio_log_callback(uint8_t sensor_id, uint8_t *data, uint32_t size, uint64_t *timestamp, void *user_data)
+void SensorBHI260AP_Klio::static_klio_log_callback(uint8_t sensor_id, const uint8_t *data, uint32_t size, uint64_t *timestamp, void *user_data)
 {
     SensorBHI260AP_Klio *self = static_cast<SensorBHI260AP_Klio *>(user_data);
     self->klio_log_call_local(sensor_id, data, size, timestamp, self);
 }
 
-void SensorBHI260AP_Klio::klio_log_call_local(uint8_t sensor_id, uint8_t *data_ptr, uint32_t size, uint64_t *timestamp, void *user_data)
+void SensorBHI260AP_Klio::klio_log_call_local(uint8_t sensor_id, const uint8_t *data_ptr, uint32_t size, uint64_t *timestamp, void *user_data)
 {
     bhy2_klio_log_frame_t data;
     memcpy(&data, data_ptr, sizeof(data));
@@ -301,28 +304,28 @@ bool SensorBHI260AP_Klio::readPattern(uint8_t idx, uint8_t *buffer, uint16_t *le
 bool SensorBHI260AP_Klio::enable(float sample_rate, uint32_t report_latency_ms)
 {
     if (!sensor) {
-        log_e("BHI260 data pointer is empty");
+        log_e("The sensor handle is null");
         return false;
     }
-    return sensor->configure(SensorBHI260AP::KLIO, sample_rate, report_latency_ms);
+    return sensor->configure(BoschSensorID::KLIO, sample_rate, report_latency_ms);
 }
 
 void SensorBHI260AP_Klio::disable()
 {
     if (!sensor) {
-        log_e("BHI260 data pointer is empty");
+        log_e("The sensor handle is null");
         return;
     }
-    sensor->configure(SensorBHI260AP::KLIO, 0, 0);
+    sensor->configure(BoschSensorID::KLIO, 0, 0);
 }
 
 bool SensorBHI260AP_Klio::logout(float sample_rate, uint32_t report_latency_ms)
 {
     if (!sensor) {
-        log_e("BHI260 data pointer is empty");
+        log_e("The sensor handle is null");
         return false;
     }
-    return sensor->configure(SensorBHI260AP::KLIO_LOG, sample_rate, report_latency_ms);
+    return sensor->configure(BoschSensorID::KLIO_LOG, sample_rate, report_latency_ms);
 }
 
 void SensorBHI260AP_Klio::setLearningCallback(LearningCallback cb, void *user_data)
@@ -340,7 +343,7 @@ void SensorBHI260AP_Klio::setRecognitionCallback(RecognitionCallback cb, void *u
 bool SensorBHI260AP_Klio::checkError()
 {
     if (!sensor) {
-        log_e("BHI260 data pointer is empty");
+        log_e("The sensor handle is null");
         return false;
     }
     uint32_t klio_status;
@@ -371,12 +374,12 @@ template<typename Func, typename... Args>
 bool SensorBHI260AP_Klio::KlioTemplate(Func func, Args &&... args)
 {
     if (!sensor) {
-        log_e("BHI260 data pointer is empty");
+        log_e("The sensor handle is null");
         return false;
     }
     int8_t rslt = func(std::forward<Args>(args)..., sensor->getHandler());
     if (rslt != BHY2_OK) {
-        log_e("Interface access error, %s", get_api_error(rslt));
+        log_e("Interface access error, %s", BoschSensorUtils::get_api_error(rslt));
         return false;
     }
     if (checkError()) {
