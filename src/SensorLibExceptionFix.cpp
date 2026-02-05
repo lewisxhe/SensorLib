@@ -41,6 +41,7 @@ namespace std {
      * 
      * @param msg Error message (included in assert output for debugging)
      */
+    __attribute__((weak))
     void __throw_length_error(char const* msg) {
         // Use assert to indicate programming error
         assert(false && msg);
@@ -54,6 +55,7 @@ namespace std {
      * 
      * @param msg Error message (included in assert output for debugging)
      */
+    __attribute__((weak))
     void __throw_out_of_range(char const* msg) {
         assert(false && msg);
     }
