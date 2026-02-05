@@ -133,16 +133,16 @@ bool force_update_flash_firmware = true;
 #endif
 
 #ifdef USING_SENSOR_IRQ_METHOD
-bool isReadyFlag = false;
+volatile bool isInterruptTriggered = false;
 
 void dataReadyISR()
 {
-    isReadyFlag = true;
+    isInterruptTriggered = true;
 }
 #endif /*USING_SENSOR_IRQ_METHOD*/
 
 #ifndef USING_DATA_HELPER
-void parse_quaternion(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
+void parse_quaternion(uint8_t sensor_id, const uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
 {
     struct bhy2_data_quaternion data;
     uint32_t s, ns;
@@ -150,7 +150,7 @@ void parse_quaternion(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64
     // Function to parse FIFO frame data into orientation
     bhy2_parse_quaternion(data_ptr, &data);
     uint64_t _timestamp =  *timestamp;
-    time_to_s_ns(_timestamp, &s, &ns, &tns);
+    BoschSensorUtils::time_to_s_ns(_timestamp, &s, &ns, &tns);
     Serial.print("SID:"); Serial.print(sensor_id);
     Serial.print(" T:"); Serial.print(s);
     Serial.print("."); Serial.print(ns);
@@ -241,9 +241,9 @@ void setup()
 #ifdef USING_DATA_HELPER
     quaternion.enable(sample_rate, report_latency_ms);
 #else
-    bhy.configure(SensorBHI260AP::ROTATION_VECTOR, sample_rate, report_latency_ms);
+    bhy.configure(BoschSensorID::ROTATION_VECTOR, sample_rate, report_latency_ms);
     // Register event callback function
-    bhy.onResultEvent(SensorBHI260AP::ROTATION_VECTOR, parse_quaternion);
+    bhy.onResultEvent(BoschSensorID::ROTATION_VECTOR, parse_quaternion);
 #endif
 
 #ifdef USING_SENSOR_IRQ_METHOD
@@ -262,8 +262,8 @@ void setup()
 void loop()
 {
 #ifdef USING_SENSOR_IRQ_METHOD
-    if (isReadyFlag) {
-        isReadyFlag = false;
+    if (isInterruptTriggered) {
+        isInterruptTriggered = false;
 #endif /*USING_SENSOR_IRQ_METHOD*/
 
         /* If the interrupt is connected to the sensor and BHI260_IRQ is not equal to -1,

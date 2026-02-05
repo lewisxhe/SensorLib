@@ -108,29 +108,29 @@ SdFat32 sd;
 #endif
 
 #ifdef USING_SENSOR_IRQ_METHOD
-bool isReadyFlag = false;
+volatile bool isInterruptTriggered = false;
 
 void dataReadyISR()
 {
-    isReadyFlag = true;
+    isInterruptTriggered = true;
 }
 #endif /*USING_SENSOR_IRQ_METHOD*/
 
-void parse_bme280_sensor_data(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
+void parse_bme280_sensor_data(uint8_t sensor_id,const uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
 {
     float humidity = 0;
     float temperature = 0;
     float pressure = 0;
     switch (sensor_id) {
-    case SensorBHI260AP::HUMIDITY:
+    case BoschSensorID::HUMIDITY:
         bhy2_parse_humidity(data_ptr, &humidity);
         Serial.print("humidity:"); Serial.print(humidity); Serial.println("%");
         break;
-    case SensorBHI260AP::TEMPERATURE:
+    case BoschSensorID::TEMPERATURE:
         bhy2_parse_temperature_celsius(data_ptr, &temperature);
         Serial.print("temperature:"); Serial.print(temperature); Serial.println("*C");
         break;
-    case SensorBHI260AP::BAROMETER:
+    case BoschSensorID::BAROMETER:
         bhy2_parse_pressure(data_ptr, &pressure);
         Serial.print("pressure:"); Serial.print(pressure); Serial.println("hPa");
         break;
@@ -140,7 +140,7 @@ void parse_bme280_sensor_data(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len
     }
 }
 
-void printResult(uint8_t sensor_id, float sample_rate, bool rlst)
+void printResult(uint8_t sensor_id, float sample_rate, bool rslt)
 {
     const char  *sensorName = bhy.getSensorName(sensor_id);
     Serial.print("Configure ");
@@ -148,7 +148,7 @@ void printResult(uint8_t sensor_id, float sample_rate, bool rlst)
     Serial.print(" sensor ");
     Serial.print(sample_rate, 2);
     Serial.print(" HZ ");
-    if (rlst) {
+    if (rslt) {
         Serial.print("successfully");
     } else {
         Serial.print("failed");
@@ -265,20 +265,20 @@ void setup()
     * * */
     float sample_rate = 1.0;      /* Set to 1Hz update frequency */
     uint32_t report_latency_ms = 0; /* Report immediately */
-    bool rlst = false;
+    bool rslt = false;
 
-    rlst = bhy.configure(SensorBHI260AP::TEMPERATURE, sample_rate, report_latency_ms);
-    printResult(SensorBHI260AP::TEMPERATURE, sample_rate, rlst);
-    rlst = bhy.configure(SensorBHI260AP::BAROMETER, sample_rate, report_latency_ms);
-    printResult(SensorBHI260AP::BAROMETER, sample_rate, rlst);
-    rlst = bhy.configure(SensorBHI260AP::HUMIDITY, sample_rate, report_latency_ms);
-    printResult(SensorBHI260AP::HUMIDITY, sample_rate, rlst);
+    rslt = bhy.configure(BoschSensorID::TEMPERATURE, sample_rate, report_latency_ms);
+    printResult(BoschSensorID::TEMPERATURE, sample_rate, rslt);
+    rslt = bhy.configure(BoschSensorID::BAROMETER, sample_rate, report_latency_ms);
+    printResult(BoschSensorID::BAROMETER, sample_rate, rslt);
+    rslt = bhy.configure(BoschSensorID::HUMIDITY, sample_rate, report_latency_ms);
+    printResult(BoschSensorID::HUMIDITY, sample_rate, rslt);
 
     // Register BME280 data parse callback function
     Serial.println("Register sensor result callback function");
-    bhy.onResultEvent(SensorBHI260AP::TEMPERATURE, parse_bme280_sensor_data);
-    bhy.onResultEvent(SensorBHI260AP::HUMIDITY, parse_bme280_sensor_data);
-    bhy.onResultEvent(SensorBHI260AP::BAROMETER, parse_bme280_sensor_data);
+    bhy.onResultEvent(BoschSensorID::TEMPERATURE, parse_bme280_sensor_data);
+    bhy.onResultEvent(BoschSensorID::HUMIDITY, parse_bme280_sensor_data);
+    bhy.onResultEvent(BoschSensorID::BAROMETER, parse_bme280_sensor_data);
 
 #ifdef USING_SENSOR_IRQ_METHOD
     // Set the specified pin (BHI260_IRQ) ​​to an input pin.
@@ -295,8 +295,8 @@ void setup()
 void loop()
 {
 #ifdef USING_SENSOR_IRQ_METHOD
-    if (isReadyFlag) {
-        isReadyFlag = false;
+    if (isInterruptTriggered) {
+        isInterruptTriggered = false;
 #endif /*USING_SENSOR_IRQ_METHOD*/
 
         /* If the interrupt is connected to the sensor and BHI260_IRQ is not equal to -1,

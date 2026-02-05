@@ -89,25 +89,11 @@ void initialiseCommander();
 SensorBHI260AP bhy;
 
 // The firmware runs in RAM and will be lost if the power is off. The firmware will be loaded from RAM each time it is run.
-// #define BOSCH_APP30_SHUTTLE_BHI260_FW
-// #define BOSCH_APP30_SHUTTLE_BHI260_AUX_BMM150FW
-// #define BOSCH_APP30_SHUTTLE_BHI260_BME68X
-// #define BOSCH_APP30_SHUTTLE_BHI260_BMP390
-// #define BOSCH_APP30_SHUTTLE_BHI260_TURBO
-// #define BOSCH_BHI260_AUX_BEM280
-// #define BOSCH_BHI260_AUX_BMM150_BEM280
 // #define BOSCH_BHI260_AUX_BMM150_BEM280_GPIO
 // #define BOSCH_BHI260_AUX_BMM150_GPIO
 #define BOSCH_BHI260_GPIO
 
 // Firmware is stored in flash and booted from flash,Depends on BHI260 hardware connected to SPI Flash
-// #define BOSCH_APP30_SHUTTLE_BHI260_AUX_BMM150_FLASH
-// #define BOSCH_APP30_SHUTTLE_BHI260_BME68X_FLASH
-// #define BOSCH_APP30_SHUTTLE_BHI260_BMP390_FLASH
-// #define BOSCH_APP30_SHUTTLE_BHI260_FLASH
-// #define BOSCH_APP30_SHUTTLE_BHI260_TURBO_FLASH
-// #define BOSCH_BHI260_AUX_BEM280_FLASH
-// #define BOSCH_BHI260_AUX_BMM150_BEM280_FLASH
 // #define BOSCH_BHI260_AUX_BMM150_BEM280_GPIO_FLASH
 // #define BOSCH_BHI260_AUX_BMM150_GPIO_FLASH
 // #define BOSCH_BHI260_GPIO_FLASH
@@ -124,11 +110,11 @@ bool force_update_flash_firmware = true;
 #endif
 
 #ifdef USING_SENSOR_IRQ_METHOD
-bool isReadyFlag = false;
+volatile bool isInterruptTriggered = false;
 
 void dataReadyISR()
 {
-    isReadyFlag = true;
+    isInterruptTriggered = true;
 }
 #endif /*USING_SENSOR_IRQ_METHOD*/
 
@@ -228,8 +214,8 @@ void loop()
     cmd.update();
     
 #ifdef USING_SENSOR_IRQ_METHOD
-    if (isReadyFlag) {
-        isReadyFlag = false;
+    if (isInterruptTriggered) {
+        isInterruptTriggered = false;
 #endif /*USING_SENSOR_IRQ_METHOD*/
 
         /* If the interrupt is connected to the sensor and BHI260_IRQ is not equal to -1,

@@ -134,11 +134,11 @@ bool force_update_flash_firmware = true;
 #endif
 
 #ifdef USING_SENSOR_IRQ_METHOD
-bool isReadyFlag = false;
+volatile bool isInterruptTriggered = false;
 
 void dataReadyISR()
 {
-    isReadyFlag = true;
+    isInterruptTriggered = true;
 }
 #endif /*USING_SENSOR_IRQ_METHOD*/
 
@@ -206,7 +206,7 @@ void print_orientation(uint8_t direction)
 }
 
 #ifndef USING_DATA_HELPER
-void orientation_process_callback(uint8_t  sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
+void orientation_process_callback(uint8_t  sensor_id, const uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
 {
     uint8_t direction = *data_ptr;
     Serial.print(bhy.getSensorName(sensor_id));
@@ -282,9 +282,9 @@ void setup()
     orientation.enable(sample_rate, report_latency_ms);
 #else
 // Enable direction detection
-    bhy.configure(SensorBHI260AP::DEVICE_ORIENTATION, sample_rate, report_latency_ms);
+    bhy.configure(BoschSensorID::DEVICE_ORIENTATION, sample_rate, report_latency_ms);
 // Set the direction detection result output processing function
-    bhy.onResultEvent(SensorBHI260AP::DEVICE_ORIENTATION, orientation_process_callback);
+    bhy.onResultEvent(BoschSensorID::DEVICE_ORIENTATION, orientation_process_callback);
 #endif
 
 #ifdef USING_SENSOR_IRQ_METHOD
@@ -303,8 +303,8 @@ void setup()
 void loop()
 {
 #ifdef USING_SENSOR_IRQ_METHOD
-    if (isReadyFlag) {
-        isReadyFlag = false;
+    if (isInterruptTriggered) {
+        isInterruptTriggered = false;
 #endif /*USING_SENSOR_IRQ_METHOD*/
 
         /* If the interrupt is connected to the sensor and BHI260_IRQ is not equal to -1,

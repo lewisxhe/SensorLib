@@ -133,11 +133,11 @@ bool force_update_flash_firmware = true;
 #endif
 
 #ifdef USING_SENSOR_IRQ_METHOD
-bool isReadyFlag = false;
+volatile bool isInterruptTriggered = false;
 
 void dataReadyISR()
 {
-    isReadyFlag = true;
+    isInterruptTriggered = true;
 }
 #endif /*USING_SENSOR_IRQ_METHOD*/
 
@@ -166,7 +166,7 @@ void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
  * @param user_data A generic pointer to user - defined data.
  */
 #ifndef USING_DATA_HELPER
-void parse_quaternion(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
+void parse_quaternion(uint8_t sensor_id, const uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
 {
     // Declare variables to store the Euler angles (roll, pitch, and yaw).
     float roll, pitch, yaw;
@@ -260,21 +260,21 @@ void setup()
     // Set the sensor's axis remapping based on the chip's orientation.
     // These commented-out lines show different ways to configure the sensor according to the chip's corners.
     // When the chip is viewed from the top, set the orientation to the top-left corner.
-    // bhy.setRemapAxes(SensorBHI260AP::TOP_LAYER_LEFT_CORNER);
+    // bhy.setRemapAxes(SensorRemap::TOP_LAYER_LEFT_CORNER);
     // When the chip is viewed from the top, set the orientation to the top-right corner.
-    // bhy.setRemapAxes(SensorBHI260AP::TOP_LAYER_RIGHT_CORNER);
+    // bhy.setRemapAxes(SensorRemap::TOP_LAYER_RIGHT_CORNER);
     // When the chip is viewed from the top, set the orientation to the bottom-right corner of the top layer.
-    // bhy.setRemapAxes(SensorBHI260AP::TOP_LAYER_BOTTOM_RIGHT_CORNER);
+    // bhy.setRemapAxes(SensorRemap::TOP_LAYER_BOTTOM_RIGHT_CORNER);
     // When the chip is viewed from the top, set the orientation to the bottom-left corner of the top layer.
-    // bhy.setRemapAxes(SensorBHI260AP::TOP_LAYER_BOTTOM_LEFT_CORNER);
+    // bhy.setRemapAxes(SensorRemap::TOP_LAYER_BOTTOM_LEFT_CORNER);
     // When the chip is viewed from the bottom, set the orientation to the top-left corner of the bottom layer.
-    // bhy.setRemapAxes(SensorBHI260AP::BOTTOM_LAYER_TOP_LEFT_CORNER);
+    // bhy.setRemapAxes(SensorRemap::BOTTOM_LAYER_TOP_LEFT_CORNER);
     // When the chip is viewed from the bottom, set the orientation to the top-right corner of the bottom layer.
-    // bhy.setRemapAxes(SensorBHI260AP::BOTTOM_LAYER_TOP_RIGHT_CORNER);
+    // bhy.setRemapAxes(SensorRemap::BOTTOM_LAYER_TOP_RIGHT_CORNER);
     // When the chip is viewed from the bottom, set the orientation to the bottom-right corner of the bottom layer.
-    // bhy.setRemapAxes(SensorBHI260AP::BOTTOM_LAYER_BOTTOM_RIGHT_CORNER);
+    // bhy.setRemapAxes(SensorRemap::BOTTOM_LAYER_BOTTOM_RIGHT_CORNER);
     // When the chip is viewed from the bottom, set the orientation to the bottom-left corner of the bottom layer.
-    // bhy.setRemapAxes(SensorBHI260AP::BOTTOM_LAYER_BOTTOM_LEFT_CORNER);
+    // bhy.setRemapAxes(SensorRemap::BOTTOM_LAYER_BOTTOM_LEFT_CORNER);
 
     // Define the sample rate for data reading.
     // The sensor will read out data measured at a frequency of 100Hz.
@@ -289,10 +289,10 @@ void setup()
     // GAME_ROTATION_VECTOR virtual sensor does not rely on external magnetometers, such as BMM150, BMM350
     // Configure the sensor to measure the game rotation vector.
     // Set the sample rate and report latency for this measurement.
-    bhy.configure(SensorBHI260AP::GAME_ROTATION_VECTOR, sample_rate, report_latency_ms);
+    bhy.configure(BoschSensorID::GAME_ROTATION_VECTOR, sample_rate, report_latency_ms);
     // Register a callback function 'parse_quaternion' to handle the result events of the game rotation vector measurement.
     // When the sensor has new data for the game rotation vector, the 'parse_quaternion' function will be called.
-    bhy.onResultEvent(SensorBHI260AP::GAME_ROTATION_VECTOR, parse_quaternion);
+    bhy.onResultEvent(BoschSensorID::GAME_ROTATION_VECTOR, parse_quaternion);
 #endif
 
 #ifdef USING_SENSOR_IRQ_METHOD
@@ -311,8 +311,8 @@ void setup()
 void loop()
 {
 #ifdef USING_SENSOR_IRQ_METHOD
-    if (isReadyFlag) {
-        isReadyFlag = false;
+    if (isInterruptTriggered) {
+        isInterruptTriggered = false;
 #endif /*USING_SENSOR_IRQ_METHOD*/
 
         /* If the interrupt is connected to the sensor and BHI260_IRQ is not equal to -1,

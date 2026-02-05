@@ -94,8 +94,8 @@ SensorBHI260AP bhy;
 #define USING_DATA_HELPER
 
 #ifdef USING_DATA_HELPER
-SensorXYZ accel(SensorBHI260AP::ACCEL_PASSTHROUGH, bhy);
-SensorXYZ gyro(SensorBHI260AP::GYRO_PASSTHROUGH, bhy);
+SensorAcceleration accel(bhy);
+SensorGyroscope gyro(bhy);
 #endif
 
 // The firmware runs in RAM and will be lost if the power is off. The firmware will be loaded from RAM each time it is run.
@@ -134,17 +134,17 @@ bool force_update_flash_firmware = true;
 #endif
 
 #ifdef USING_SENSOR_IRQ_METHOD
-bool isReadyFlag = false;
+volatile bool isInterruptTriggered = false;
 
 void dataReadyISR()
 {
-    isReadyFlag = true;
+    isInterruptTriggered = true;
 }
 #endif /*USING_SENSOR_IRQ_METHOD*/
 
 
 #ifndef USING_DATA_HELPER
-void xyz_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
+void xyz_process_callback(uint8_t sensor_id, const uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
 {
     struct bhy2_data_xyz data;
     float scaling_factor = bhy.getScaling(sensor_id);
@@ -240,13 +240,13 @@ void setup()
     gyro.enable(sample_rate, report_latency_ms);
 #else
     // Enable acceleration
-    bhy.configure(SensorBHI260AP::ACCEL_PASSTHROUGH, sample_rate, report_latency_ms);
+    bhy.configure(BoschSensorID::ACCEL_PASSTHROUGH, sample_rate, report_latency_ms);
     // Enable gyroscope
-    bhy.configure(SensorBHI260AP::GYRO_PASSTHROUGH, sample_rate, report_latency_ms);
+    bhy.configure(BoschSensorID::GYRO_PASSTHROUGH, sample_rate, report_latency_ms);
     // Set the acceleration sensor result callback function
-    bhy.onResultEvent(SensorBHI260AP::ACCEL_PASSTHROUGH, xyz_process_callback);
+    bhy.onResultEvent(BoschSensorID::ACCEL_PASSTHROUGH, xyz_process_callback);
     // Set the gyroscope sensor result callback function
-    bhy.onResultEvent(SensorBHI260AP::GYRO_PASSTHROUGH, xyz_process_callback);
+    bhy.onResultEvent(BoschSensorID::GYRO_PASSTHROUGH, xyz_process_callback);
 #endif
 
 #ifdef USING_SENSOR_IRQ_METHOD
@@ -265,8 +265,8 @@ void setup()
 void loop()
 {
 #ifdef USING_SENSOR_IRQ_METHOD
-    if (isReadyFlag) {
-        isReadyFlag = false;
+    if (isInterruptTriggered) {
+        isInterruptTriggered = false;
 #endif /*USING_SENSOR_IRQ_METHOD*/
 
         /* If the interrupt is connected to the sensor and BHI260_IRQ is not equal to -1,
@@ -280,36 +280,47 @@ void loop()
 
 
 #ifdef USING_DATA_HELPER
-    if (accel.hasUpdated() && gyro.hasUpdated()) {
-        uint32_t s;
-        uint32_t ns;
+    uint32_t s;
+    uint32_t ns;
+    AccelerometerData accel_data;
+    if (accel.readData(accel_data)) {
         accel.getLastTime(s, ns);
-
 #ifdef PLATFORM_HAS_PRINTF
-        Serial.printf("[T: %" PRIu32 ".%09" PRIu32 "] AX:%+7.2f AY:%+7.2f AZ:%+7.2f GX:%+7.2f GY:%+7.2f GZ:%+7.2f \n",
-                      s, ns, accel.getX(), accel.getY(), accel.getZ(),
-                      gyro.getX(), gyro.getY(), gyro.getZ());
-
+        Serial.printf("[T: %" PRIu32 ".%09" PRIu32 "] [AX:%+7.2f AY:%+7.2f AZ:%+7.2f] \n",
+                      s, ns, accel_data.mps2.x, accel_data.mps2.y,  accel_data.mps2.z);
 #else
         Serial.print("[T: ");
         Serial.print(s);
         Serial.print(".");
         Serial.print(ns);
-        Serial.print("] AX:");
-        Serial.print(accel.getX(), 2);
+        Serial.print("] [AX:");
+        Serial.print(accel_data.mps2.x, 2);
         Serial.print(" AY:");
-        Serial.print(accel.getY(), 2);
+        Serial.print(accel_data.mps2.y, 2);
         Serial.print(" AZ:");
-        Serial.print(accel.getZ(), 2);
-        Serial.print(" GX:");
-        Serial.print(gyro.getX(), 2);
-        Serial.print(" GY:");
-        Serial.print(gyro.getY(), 2);
-        Serial.print(" GZ:");
-        Serial.print(gyro.getZ(), 2);
-        Serial.println();
+        Serial.print(accel_data.mps2.z, 2);
+        Serial.println("]");
 #endif
-
+    }
+    GyroscopeData gyro_data;
+    if (gyro.readData(gyro_data)) {
+        gyro.getLastTime(s, ns);
+#ifdef PLATFORM_HAS_PRINTF
+        Serial.printf("[T: %" PRIu32 ".%09" PRIu32 "] [GX:%+7.2f GY:%+7.2f GZ:%+7.2f] \n",
+                      s, ns, gyro_data.dps.x, gyro_data.dps.y, gyro_data.dps.z);
+#else
+        Serial.print("[T: ");
+        Serial.print(s);
+        Serial.print(".");
+        Serial.print(ns);
+        Serial.print("] [GX:");
+        Serial.print(gyro_data.dps.x, 2);
+        Serial.print(" GY:");
+        Serial.print(gyro_data.dps.y, 2);
+        Serial.print(" GZ:");
+        Serial.print(gyro_data.dps.z, 2);
+        Serial.println("]");
+#endif
     }
 #endif  /*USING_DATA_HELPER*/
     delay(50);

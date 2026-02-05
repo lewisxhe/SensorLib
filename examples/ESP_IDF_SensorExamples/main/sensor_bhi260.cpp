@@ -100,10 +100,10 @@ static void bhi260_isr_init()
 #endif
 }
 
-static void accel_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
+static void accel_process_callback(uint8_t sensor_id, const uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
 {
     struct bhy2_data_xyz data;
-    float scaling_factor = get_sensor_default_scaling(sensor_id);
+    float scaling_factor = BoschSensorUtils::get_sensor_default_scaling(sensor_id);
     bhy2_parse_xyz(data_ptr, &data);
     ESP_LOGI(TAG, "%s: x: %f, y: %f, z: %f;", bhy.getSensorName(sensor_id),
              data.x * scaling_factor,
@@ -111,10 +111,10 @@ static void accel_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_
              data.z * scaling_factor);
 }
 
-static void gyro_process_callback(uint8_t sensor_id, uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
+static void gyro_process_callback(uint8_t sensor_id, const uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
 {
     struct bhy2_data_xyz data;
-    float scaling_factor = get_sensor_default_scaling(sensor_id);
+    float scaling_factor = BoschSensorUtils::get_sensor_default_scaling(sensor_id);
     bhy2_parse_xyz(data_ptr, &data);
     ESP_LOGI(TAG, "%s: x: %f, y: %f, z: %f;", bhy.getSensorName(sensor_id),
              data.x * scaling_factor,
@@ -201,15 +201,15 @@ esp_err_t bhi260_init()
     uint32_t report_latency_ms = 0; /* Report immediately */
 
     // Enable acceleration
-    bhy.configure(SensorBHI260AP::ACCEL_PASSTHROUGH, sample_rate, report_latency_ms);
+    bhy.configure(BoschSensorID::ACCEL_PASSTHROUGH, sample_rate, report_latency_ms);
     // Enable gyroscope
-    bhy.configure(SensorBHI260AP::GYRO_PASSTHROUGH, sample_rate, report_latency_ms);
+    bhy.configure(BoschSensorID::GYRO_PASSTHROUGH, sample_rate, report_latency_ms);
 
     // Set the acceleration sensor result callback function
-    bhy.onResultEvent(SensorBHI260AP::ACCEL_PASSTHROUGH, accel_process_callback);
+    bhy.onResultEvent(BoschSensorID::ACCEL_PASSTHROUGH, accel_process_callback);
 
     // Set the gyroscope sensor result callback function
-    bhy.onResultEvent(SensorBHI260AP::GYRO_PASSTHROUGH, gyro_process_callback);
+    bhy.onResultEvent(BoschSensorID::GYRO_PASSTHROUGH, gyro_process_callback);
 
     // Registration interruption
     bhi260_isr_init();
