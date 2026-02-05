@@ -29,7 +29,7 @@
  *            Simplification for Arduino
  */
 #pragma once
-#include "bosch/BoschSensorControl.hpp"
+#include "bosch/BoschInterruptConfig.hpp"
 #include "bosch/BoschPhySensorInfo.hpp"
 #include "bosch/BoschSensorInfo.hpp"
 #include "bosch/BoschSensorBase.hpp"
@@ -231,6 +231,25 @@ public:
     bhy2_dev *getDev();
 
     /**
+     * @brief Set interrupt configuration
+     * @param config Interrupt configuration
+     * @return true if success
+     */
+    bool configureInterrupt(const InterruptConfig& config);
+
+    /**
+     * @brief Get current interrupt configuration
+     * @return Current interrupt configuration
+     */
+    InterruptConfig getInterruptConfig() const;
+
+    /**
+     * @brief Get raw interrupt register value
+     * @return Current register value (0x00-0xFF)
+     */
+    uint8_t getInterruptRegisterValue() const;
+
+    /**
      * @brief  setInterruptCtrl
      * @note   Set the interrupt control mask
      * @param  data:
@@ -248,11 +267,11 @@ public:
     bool setInterruptCtrl(uint8_t data);
 
     /**
-     * @brief  getInterruptCtrl
-     * @note   Get interrupt control info
-     * @retval SensorBHI260APControl class
+     * @brief  readInterruptRegister
+     * @note   Read the interrupt register
+     * @retval Interrupt register value
      */
-    SensorBHI260APControl getInterruptCtrl();
+    uint8_t readInterruptRegister() const;
 
 
     /**

@@ -214,6 +214,31 @@ bhy2_dev *SensorBHI260AP::getDev()
     return _bhy2.get();
 }
 
+
+uint8_t SensorBHI260AP::readInterruptRegister()  const
+{
+    uint8_t data = 0;
+    bhy2_get_host_interrupt_ctrl(&data, _bhy2.get());
+    return data;
+}
+
+bool SensorBHI260AP::configureInterrupt(const InterruptConfig& config)
+{
+    uint8_t regValue = config.getRegisterValue();
+    return setInterruptCtrl(regValue);
+}
+
+InterruptConfig SensorBHI260AP::getInterruptConfig() const
+{
+    uint8_t regValue = readInterruptRegister();
+    return InterruptConfig::fromRegisterValue(regValue);
+}
+
+uint8_t SensorBHI260AP::getInterruptRegisterValue() const
+{
+    return readInterruptRegister();
+}
+
 /**
  * @brief  setInterruptCtrl
  * @note   Set the interrupt control mask
@@ -232,35 +257,8 @@ bhy2_dev *SensorBHI260AP::getDev()
 bool SensorBHI260AP::setInterruptCtrl(uint8_t data)
 {
     _error_code = bhy2_set_host_interrupt_ctrl(data, _bhy2.get());
-    if (_error_code != BHY2_OK) {
-        return false;
-    }
-    return true;
+    return _error_code == BHY2_OK;
 }
-
-/**
- * @brief  getInterruptCtrl
- * @note   Get interrupt control info
- * @retval SensorBHI260APCtrl class
- */
-SensorBHI260APControl SensorBHI260AP::getInterruptCtrl()
-{
-    uint8_t data;
-    _error_code = bhy2_get_host_interrupt_ctrl(&data, _bhy2.get());
-    SensorBHI260APControl result;
-    if (_error_code == BHY2_OK) {
-        result.wakeUpFIFOEnabled = !(data & BHY2_ICTL_DISABLE_FIFO_W);
-        result.nonWakeUpFIFOEnabled = !(data & BHY2_ICTL_DISABLE_FIFO_NW);
-        result.statusFIFOEnabled = !(data & BHY2_ICTL_DISABLE_STATUS_FIFO);
-        result.debuggingEnabled = !(data & BHY2_ICTL_DISABLE_DEBUG);
-        result.faultEnabled = !(data & BHY2_ICTL_DISABLE_FAULT);
-        result.interruptIsActiveLow = (data & BHY2_ICTL_ACTIVE_LOW);
-        result.interruptIsPulseTriggered = (data & BHY2_ICTL_EDGE);
-        result.interruptPinDriveIsOpenDrain = (data & BHY2_ICTL_OPEN_DRAIN);
-    }
-    return result;
-}
-
 
 /**
  * @brief  isReady
@@ -563,7 +561,7 @@ uint8_t SensorBHI260AP::digitalRead(uint8_t pin, bool pullup)
 }
 
 /**
- * @brief  hal->digitalWrite
+ * @brief  digitalWrite
  * @note   Write GPIO level, only for custom firmware
  * @param  pin: see BHI260AP_aux_BMM150_BME280_Expand_GPIO example
  * @param  level: 1 is high ,0 is low
