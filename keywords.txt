@@ -224,7 +224,7 @@ isHighThreshold KEYWORD2
 ### SensorBHI260AP Coloring Map ###
 setPins KEYWORD2
 setBootFromFlash    KEYWORD2
-getHandler  KEYWORD2
+getDev  KEYWORD2
 printInfo   KEYWORD2
 setInterruptCtrl    KEYWORD2
 getInterruptCtrl    KEYWORD2

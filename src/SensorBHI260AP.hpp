@@ -224,11 +224,11 @@ public:
     void setBootFromFlash(bool boot_from_flash);
 
     /**
-     * @brief  getHandler
+     * @brief  getDev
      * @note   Get the native BHI API handle
      * @retval handle
      */
-    bhy2_dev *getHandler();
+    bhy2_dev *getDev();
 
     /**
      * @brief  setInterruptCtrl

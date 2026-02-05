@@ -205,11 +205,11 @@ void SensorBHI260AP::setBootFromFlash(bool boot_from_flash)
 }
 
 /**
- * @brief  getHandler
+ * @brief  getDev
  * @note   Get the native BHI API handle
  * @retval handle
  */
-bhy2_dev *SensorBHI260AP::getHandler()
+bhy2_dev *SensorBHI260AP::getDev()
 {
     return _bhy2.get();
 }

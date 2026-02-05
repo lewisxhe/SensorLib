@@ -173,7 +173,7 @@ SensorBHI260AP_Klio::KlioState SensorBHI260AP_Klio::getState()
         log_e("The sensor handle is null");
         return {};
     }
-    bhy2_klio_get_state(&sensor_state, sensor->getHandler());
+    bhy2_klio_get_state(&sensor_state, sensor->getDev());
     return sensor_state;
 }
 
@@ -183,7 +183,7 @@ bool SensorBHI260AP_Klio::setState(KlioState sensor_state)
         log_e("The sensor handle is null");
         return false;
     }
-    return bhy2_klio_set_state(&sensor_state, sensor->getHandler()) == BHY2_OK;
+    return bhy2_klio_set_state(&sensor_state, sensor->getDev()) == BHY2_OK;
 }
 
 bool SensorBHI260AP_Klio::learning()
@@ -347,7 +347,7 @@ bool SensorBHI260AP_Klio::checkError()
         return false;
     }
     uint32_t klio_status;
-    int8_t rslt = bhy2_klio_read_reset_driver_status(&klio_status, sensor->getHandler());
+    int8_t rslt = bhy2_klio_read_reset_driver_status(&klio_status, sensor->getDev());
     if (rslt != BHY2_OK) {
         errorCode = static_cast<KlioError>(klio_status);
         return true;
@@ -377,7 +377,7 @@ bool SensorBHI260AP_Klio::KlioTemplate(Func func, Args &&... args)
         log_e("The sensor handle is null");
         return false;
     }
-    int8_t rslt = func(std::forward<Args>(args)..., sensor->getHandler());
+    int8_t rslt = func(std::forward<Args>(args)..., sensor->getDev());
     if (rslt != BHY2_OK) {
         log_e("Interface access error, %s", BoschSensorUtils::get_api_error(rslt));
         return false;
