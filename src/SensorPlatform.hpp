@@ -33,6 +33,7 @@
 #include "platform/arduino/SensorCommArduino_HW.hpp"
 #include "platform/arduino/SensorCommArduino_I2C.hpp"
 #include "platform/arduino/SensorCommArduino_SPI.hpp"
+#include "platform/arduino/StreamArduinoAdapter.hpp"
 #elif !defined(ARDUINO)  && defined(ESP_PLATFORM)
 #include "platform/espidf/SensorCommEspIDF_HW.hpp"
 #include "platform/espidf/SensorCommEspIDF_I2C.hpp"
