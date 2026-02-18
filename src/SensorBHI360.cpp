@@ -31,7 +31,5 @@
 
 uint16_t SensorBHI360::getConfirmationIDImpl()
 {
-    Serial.print("should be return ");
-    Serial.println(BHI360_PRODUCT_ID);
     return BHI360_PRODUCT_ID;
 }

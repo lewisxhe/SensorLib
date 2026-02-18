@@ -91,7 +91,7 @@ void setup()
     Serial.println();
 
     //Find the magnetic declination : https://www.magnetic-declination.com/
-    float declination_deg = magnetometer.dmsToDecimalDegrees(-3, 20);   // -3.3333
+    float declination_deg = MagnetometerUtils::dmsToDecimalDegrees(-3, 20);   // -3.3333
 
     magnetometer.setDeclination(declination_deg);
 
@@ -116,9 +116,9 @@ void loop()
     if (magnetometer.readData(data)) {
 
         // Gauss to μT
-        float x = magnetometer.gaussToMicroTesla(data.magnetic_field.x);
-        float y = magnetometer.gaussToMicroTesla(data.magnetic_field.y);
-        float z = magnetometer.gaussToMicroTesla(data.magnetic_field.z);
+        float x = MagnetometerUtils::gaussToMicroTesla(data.magnetic_field.x);
+        float y = MagnetometerUtils::gaussToMicroTesla(data.magnetic_field.y);
+        float z = MagnetometerUtils::gaussToMicroTesla(data.magnetic_field.z);
 
         Serial.print("Mag:");
         Serial.print(" X:"); Serial.print(x);
@@ -146,7 +146,7 @@ void loop()
         Serial.print(data.heading_degrees, 2);
         Serial.print("°");
 
-        float strength = magnetometer.calculateMagneticStrength(data);
+        float strength = MagnetometerUtils::calculateMagneticStrength(data);
         Serial.print(" Magnetic Strength: ");
         Serial.print(strength, 2);
         Serial.println(" μT");
