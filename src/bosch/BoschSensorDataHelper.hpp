@@ -39,6 +39,7 @@ public:
         float humidity;
         float pressure;
         float altitude;
+        unified_air_quality_t iaq;
         bhy2_data_quaternion quaternion;
         bhy2_data_orientation orientation;
         bhy2_data_xyz vector;
@@ -155,6 +156,33 @@ protected:
             break;
         case BHY2_SENSOR_ID_AR:
             result.activity_bitmap = (data[1] << 8) | data[0];
+            break;
+        case BHY2_SENSOR_ID_AIR_QUALITY:
+            if (_handle.getModel() == BoschSensorType::BOSCH_SENSORTEC_BHI260) {
+                bhy2_bsec_air_quality raw;
+                bhy2_bsec_parse_air_quality(data, &raw);
+                result.iaq.co2 = raw.e_co2;
+                result.iaq.humidity = raw.comp_hum;
+                result.iaq.iaq_accuracy = raw.iaq_accuracy;
+                result.iaq.temperature = raw.comp_temp;
+                result.iaq.voc = raw.voc;
+                result.iaq.static_iaq = raw.static_iaq;
+                result.iaq.gas_resistance = raw.comp_gas;
+            } else {
+                /*SCALE FACTOR from BHI3 data sheet, IAQ data format*/
+                const float  SCALE_IAQ_VOC  = 100.0;
+                const float  SCALE_IAQ_TEMP = 256.0;
+                const float  SCALE_IAQ_HUMI = 500.0;
+                bhi360_event_data_iaq_output_t raw;
+                bhi360_event_data_parse_air_quality(data, &raw);
+                result.iaq.co2 = raw.co2;
+                result.iaq.humidity = raw.comp_humidity / SCALE_IAQ_HUMI;
+                result.iaq.iaq_accuracy = raw.iaq_accuracy;
+                result.iaq.temperature = raw.comp_temperature / SCALE_IAQ_TEMP;
+                result.iaq.voc = raw.voc / SCALE_IAQ_VOC;
+                result.iaq.static_iaq = raw.siaq;
+                result.iaq.gas_resistance = raw.raw_gas;
+            }
             break;
         default:
             log_e("Sensor ID Undefined");
@@ -311,9 +339,22 @@ public:
     SensorPressure(BoschSensorBase &handle)
         : SensorTemplateBase<float>(BoschSensorID::BAROMETER, handle) {}
 
+    // Pressure in Pa (pascals)
     float getPressure() const
     {
         return getValue();
+    }
+
+    // Pressure in hPa (hectopascals)
+    float getPressureHPa() const
+    {
+        return getPressure() / 100.0f;
+    }
+
+    // Pressure in kPa (kilopascals)
+    float getPressureKPa() const
+    {
+        return getPressure() / 1000.0f;
     }
 
 protected:
@@ -639,3 +680,135 @@ protected:
     }
 };
 
+class SensorIAQ : public SensorTemplateBase<unified_air_quality_t>
+{
+public:
+    SensorIAQ(BoschSensorBase &handle)
+        : SensorTemplateBase<unified_air_quality_t>(BoschSensorID::IAQ, handle) {}
+
+    float getCelsius() const
+    {
+        return getValue().temperature;
+    }
+
+    float getFahrenheit() const
+    {
+        return getCelsius() * 9.0f / 5.0f + 32;
+    }
+    float getKelvin()     const
+    {
+        return getCelsius() + 273.15f;
+    }
+
+    float getVOC() const
+    {
+        return getValue().voc;
+    }
+
+    float getHumidity() const
+    {
+        return getValue().humidity;
+    }
+
+    uint16_t getIAQ() const
+    {
+        return getValue().iaq;
+    }
+
+    uint16_t getSIAQ() const
+    {
+        return getValue().static_iaq;
+    }
+
+    uint32_t getCO2() const
+    {
+        return getValue().co2;
+    }
+
+    uint8_t getIAQAccuracy() const
+    {
+        return getValue().iaq_accuracy;
+    }
+
+    uint32_t getRawGas() const
+    {
+        return getValue().gas_resistance;
+    }
+
+    uint8_t getIAQLevel() const
+    {
+        uint16_t iaq = getIAQ();
+        if (iaq <= 50) {
+            return 0; // Excellent
+        } else if (iaq <= 100) {
+            return 1; // Good
+        } else if (iaq <= 150) {
+            return 2; // Lightly Polluted
+        } else if (iaq <= 200) {
+            return 3; // Moderately Polluted
+        } else if (iaq <= 300) {
+            return 4; // Heavily Polluted
+        } else {
+            return 5; // Severely Polluted
+        }
+    }
+
+    uint8_t getIAQLevelText(char *buffer, size_t buffer_size) const
+    {
+        uint16_t iaq = getIAQ();
+        const char *level_text;
+        if (iaq <= 50) {
+            level_text = "Excellent";
+        } else if (iaq <= 100) {
+            level_text = "Good";
+        } else if (iaq <= 150) {
+            level_text = "Lightly Polluted";
+        } else if (iaq <= 200) {
+            level_text = "Moderately Polluted";
+        } else if (iaq <= 300) {
+            level_text = "Heavily Polluted";
+        } else {
+            level_text = "Severely Polluted";
+        }
+        strncpy(buffer, level_text, buffer_size - 1);
+        buffer[buffer_size - 1] = '\0'; // Ensure null-termination
+        return getIAQLevel();
+    }
+
+    uint8_t getIAQAccuracyText(char *buffer, size_t buffer_size) const
+    {
+        uint8_t accuracy = getIAQAccuracy();
+        const char *accuracy_text;
+        switch (accuracy) {
+        case 0:
+            accuracy_text = "Unreliable";
+            break;
+        case 1:
+            accuracy_text = "Low Accuracy";
+            break;
+        case 2:
+            accuracy_text = "Medium Accuracy";
+            break;
+        case 3:
+            accuracy_text = "High Accuracy";
+            break;
+        default:
+            accuracy_text = "Unknown Accuracy";
+            break;
+        }
+        strncpy(buffer, accuracy_text, buffer_size - 1);
+        buffer[buffer_size - 1] = '\0'; // Ensure null-termination
+        return accuracy;
+    }
+
+    bool enable()
+    {
+        return SensorTemplateBase::enable(1, 0);
+    }
+
+protected:
+    void updateValue(const SensorData &data) override
+    {
+        _value = data.iaq;
+    }
+};
