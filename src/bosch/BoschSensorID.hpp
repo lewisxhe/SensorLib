@@ -84,6 +84,7 @@ enum BoschSensorID {
     STEP_DETECTOR_WAKE_UP                   = (94),  /*BHY2_SENSOR_ID_STD_WU: Step detector wake up */
     KLIO                                    = (112), /*BHY2_SENSOR_ID_KLIO Supported by klio firmware ,defined in bhy2_klio_defs.h */
     SWIM                                    = (114), /*BHY2_SENSOR_ID_SWIM:Supported by swim firmware ,defined in bhy2_swim_defs.h */
+    IAQ                                     = (115), /*BHY2_SENSOR_ID_AIR_QUALITY: IAQ */
     KLIO_LOG                                = (127), /*BHY2_SENSOR_ID_KLIO_LOG Supported by klio firmware ,defined in bhy2_klio_defs.h */
     TEMPERATURE                             = (128), /*BHY2_SENSOR_ID_TEMP: Temperature */
     BAROMETER                               = (129), /*BHY2_SENSOR_ID_BARO: Barometer */
