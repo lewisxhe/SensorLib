@@ -2,7 +2,7 @@
  *
  * @license MIT License
  *
- * Copyright (c) 2025 lewis he
+ * Copyright (c) 2026 lewis he
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,9 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      BHI260AP_Euler.ino
+ * @file      BHI260AP_InterruptSettings.ino
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2025-02-04
+ * @date      2026-02-04
  * @note      Changed from Boschsensortec API https://github.com/boschsensortec/BHY2_SensorAPI
  */
 #include <Wire.h>
@@ -84,18 +84,8 @@
 #endif
 
 SensorBHI260AP bhy;
-
-/*
-* Define the USING_DATA_HELPER use of data assistants.
-* No callback function will be used. Data can be obtained directly through
-* the data assistant. Note that this method is not a thread-safe function.
-* Please pay attention to protecting data access security.
-* */
-#define USING_DATA_HELPER
-
-#ifdef USING_DATA_HELPER
-SensorQuaternion quaternion(bhy);
-#endif
+SensorAcceleration accel(bhy);
+SensorGyroscope gyro(bhy);
 
 // The firmware runs in RAM and will be lost if the power is off. The firmware will be loaded from RAM each time it is run.
 #define BOSCH_APP30_SHUTTLE_BHI260_FW
@@ -141,6 +131,7 @@ void dataReadyISR()
 }
 #endif /*USING_SENSOR_IRQ_METHOD*/
 
+
 // Firmware update progress callback
 void progress_callback(uint32_t total, uint32_t transferred, void *user_data)
 {
@@ -150,41 +141,6 @@ void progress_callback(uint32_t total, uint32_t transferred, void *user_data)
     Serial.println("%");
 }
 
-/**
- * @brief Parse the quaternion data from the sensor and convert it to Euler angles.
- *
- * This function serves as a callback to handle the sensor data related to the game rotation vector.
- * It takes the raw quaternion data received from the sensor, converts it into Euler angles (roll, pitch, and yaw),
- *
- * @param sensor_id The ID of the sensor that generated the data. It helps in identifying which specific sensor
- *                  the data is coming from, especially in systems with multiple sensors.
- * @param data_ptr A pointer to the buffer containing the raw quaternion data. The data in this buffer
- *                 represents the orientation of the sensor in quaternion format.
- * @param len The length of the data buffer, indicating the size of the quaternion data in bytes.
- * @param timestamp A pointer to a 64 - bit unsigned integer representing the timestamp when the sensor data was captured.
- *                  This can be used to correlate the data with a specific point in time.
- * @param user_data A generic pointer to user - defined data.
- */
-#ifndef USING_DATA_HELPER
-void parse_quaternion(uint8_t sensor_id, const uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
-{
-    // Declare variables to store the Euler angles (roll, pitch, and yaw).
-    float roll, pitch, yaw;
-    // Call the bhy2_quaternion_to_euler function to convert the raw quaternion data
-    // pointed to by data_ptr into Euler angles (roll, pitch, and yaw).
-    bhy2_quaternion_to_euler(data_ptr, &roll,  &pitch, &yaw);
-    // Print the roll angle to the serial monitor.
-    Serial.print(roll);
-    // Print a comma as a separator between the roll and pitch angles.
-    Serial.print(",");
-    // Print the pitch angle to the serial monitor.
-    Serial.print(pitch);
-    // Print a comma as a separator between the pitch and yaw angles.
-    Serial.print(",");
-    // Print the yaw angle to the serial monitor and start a new line.
-    Serial.println(yaw);
-}
-#endif
 
 void setup()
 {
@@ -193,6 +149,8 @@ void setup()
 
     // Set the reset pin
     bhy.setPins(BHI260_RST);
+
+    Serial.println("Initializing Sensors...");
 
     // Set the firmware array address and firmware size
     bhy.setFirmware(bosch_firmware_image, bosch_firmware_size, bosch_firmware_type, force_update_flash_firmware);
@@ -208,8 +166,6 @@ void setup()
 
     // Set to load firmware from flash
     bhy.setBootFromFlash(bosch_firmware_type);
-
-    Serial.println("Initializing Sensors...");
 
 #ifdef USE_I2C_INTERFACE
     // Using I2C interface
@@ -253,55 +209,50 @@ void setup()
     });
 #endif
 
-    /**
-    * @brief Set the axis remapping for the sensor based on the specified orientation.
-    *
-    * This function allows you to configure the sensor's axis remapping according to a specific
-    * physical orientation of the chip. By passing one of the values from the SensorRemap enum,
-    * you can ensure that the sensor data is correctly interpreted based on how the chip is placed.
-    * [bst-bhi260ab-ds000.pdf](https://www.mouser.com/datasheet/2/783/bst-bhi260ab-ds000-1816249.pdf)
-    * 20.3 Sensing axes and axes remapping
-    * @param remap An enumeration value from SensorRemap that specifies the desired axis remapping.
-    * @return Returns true if the axis remapping is successfully set; false otherwise.
+
+    // Interrupt configuration
+    InterruptConfig config;
+    config.wakeUpFIFOEnabled = false;
+    config.nonWakeUpFIFOEnabled = true; // It must be enabled, otherwise FIFO cannot be updated.
+    config.faultEnabled = false;
+    config.debuggingEnabled = false;
+    config.polarity = InterruptConfig::Polarity::ACTIVE_HIGH;
+    config.triggerMode = InterruptConfig::TriggerMode::EDGE;
+    bhy.configureInterrupt(config);
+
+    uint8_t regValue = bhy.getInterruptRegisterValue();
+    String desc;
+    desc += "Register Value: 0x" + String(regValue, HEX) + "\n";
+    desc += "Bit 0 - Wake-up FIFO:   " + String((regValue & (1 << 0)) ? "MASKED" : "ACTIVE") + "\n";
+    desc += "Bit 1 - Non-Wake FIFO:  " + String((regValue & (1 << 1)) ? "MASKED" : "ACTIVE") + "\n";
+    desc += "Bit 2 - Status FIFO:    " + String((regValue & (1 << 2)) ? "MASKED" : "ACTIVE") + "\n";
+    desc += "Bit 3 - Debug:          " + String((regValue & (1 << 3)) ? "MASKED" : "ACTIVE") + "\n";
+    desc += "Bit 4 - Fault:          " + String((regValue & (1 << 4)) ? "MASKED" : "ACTIVE") + "\n";
+    desc += "Bit 5 - Polarity:       " + String((regValue & (1 << 5)) ? "ACTIVE_LOW" : "ACTIVE_HIGH") + "\n";
+    desc += "Bit 6 - Trigger:        " + String((regValue & (1 << 6)) ? "EDGE" : "LEVEL") + "\n";
+    desc += "Bit 7 - Pin Mode:       " + String((regValue & (1 << 7)) ? "OPEN_DRAIN" : "PUSH_PULL");
+
+    /*
+    Register Value: 0x59
+    Bit 0 - Wake-up FIFO:   MASKED
+    Bit 1 - Non-Wake FIFO:  ACTIVE
+    Bit 2 - Status FIFO:    ACTIVE
+    Bit 3 - Debug:          MASKED
+    Bit 4 - Fault:          MASKED
+    Bit 5 - Polarity:       ACTIVE_HIGH
+    Bit 6 - Trigger:        EDGE
+    Bit 7 - Pin Mode:       PUSH_PULL
     */
+    Serial.println(desc);
 
-    // Set the sensor's axis remapping based on the chip's orientation.
-    // These commented-out lines show different ways to configure the sensor according to the chip's corners.
-    // When the chip is viewed from the top, set the orientation to the top-left corner.
-    // bhy.setRemapAxes(SensorRemap::TOP_LAYER_LEFT_CORNER);
-    // When the chip is viewed from the top, set the orientation to the top-right corner.
-    // bhy.setRemapAxes(SensorRemap::TOP_LAYER_RIGHT_CORNER);
-    // When the chip is viewed from the top, set the orientation to the bottom-right corner of the top layer.
-    // bhy.setRemapAxes(SensorRemap::TOP_LAYER_BOTTOM_RIGHT_CORNER);
-    // When the chip is viewed from the top, set the orientation to the bottom-left corner of the top layer.
-    // bhy.setRemapAxes(SensorRemap::TOP_LAYER_BOTTOM_LEFT_CORNER);
-    // When the chip is viewed from the bottom, set the orientation to the top-left corner of the bottom layer.
-    // bhy.setRemapAxes(SensorRemap::BOTTOM_LAYER_TOP_LEFT_CORNER);
-    // When the chip is viewed from the bottom, set the orientation to the top-right corner of the bottom layer.
-    // bhy.setRemapAxes(SensorRemap::BOTTOM_LAYER_TOP_RIGHT_CORNER);
-    // When the chip is viewed from the bottom, set the orientation to the bottom-right corner of the bottom layer.
-    // bhy.setRemapAxes(SensorRemap::BOTTOM_LAYER_BOTTOM_RIGHT_CORNER);
-    // When the chip is viewed from the bottom, set the orientation to the bottom-left corner of the bottom layer.
-    // bhy.setRemapAxes(SensorRemap::BOTTOM_LAYER_BOTTOM_LEFT_CORNER);
 
-    // Define the sample rate for data reading.
-    // The sensor will read out data measured at a frequency of 100Hz.
-    float sample_rate = 100.0;
-    // Define the report latency in milliseconds.
-    // A value of 0 means the sensor will report the measured data immediately.
-    uint32_t report_latency_ms = 0;
+    float sample_rate = 1.0;      /* Read out data measured at 1Hz */
+    uint32_t report_latency_ms = 0; /* Report immediately */
 
-#ifdef USING_DATA_HELPER
-    quaternion.enable(sample_rate, report_latency_ms);
-#else
-    // GAME_ROTATION_VECTOR virtual sensor does not rely on external magnetometers, such as BMM150, BMM350
-    // Configure the sensor to measure the game rotation vector.
-    // Set the sample rate and report latency for this measurement.
-    bhy.configure(BoschSensorID::GAME_ROTATION_VECTOR, sample_rate, report_latency_ms);
-    // Register a callback function 'parse_quaternion' to handle the result events of the game rotation vector measurement.
-    // When the sensor has new data for the game rotation vector, the 'parse_quaternion' function will be called.
-    bhy.onResultEvent(BoschSensorID::GAME_ROTATION_VECTOR, parse_quaternion);
-#endif
+    // Enable acceleration
+    accel.enable(sample_rate, report_latency_ms);
+    // Enable gyroscope
+    gyro.enable(sample_rate, report_latency_ms);
 
 #ifdef USING_SENSOR_IRQ_METHOD
     // Set the specified pin (BHI260_IRQ) ​​to an input pin.
@@ -332,23 +283,49 @@ void loop()
     }
 #endif /*USING_SENSOR_IRQ_METHOD*/
 
-#ifdef USING_DATA_HELPER
-    if (quaternion.hasUpdated()) {
-        // Convert rotation vector to Euler angles
-        quaternion.toEuler();
-        // Print the roll angle to the serial monitor.
-        Serial.print(quaternion.getRoll());
-        // Print a comma as a separator between the roll and pitch angles.
-        Serial.print(",");
-        // Print the pitch angle to the serial monitor.
-        Serial.print(quaternion.getPitch());
-        // Print a comma as a separator between the pitch and yaw angles.
-        Serial.print(",");
-        // Print the yaw angle to the serial monitor and start a new line.
-        Serial.println(quaternion.getHeading());
-    }
-#endif
 
+    uint32_t s;
+    uint32_t ns;
+    AccelerometerData accel_data;
+    if (accel.readData(accel_data)) {
+        accel.getLastTime(s, ns);
+#ifdef PLATFORM_HAS_PRINTF
+        Serial.printf("[T: %" PRIu32 ".%09" PRIu32 "] [AX:%+7.2f AY:%+7.2f AZ:%+7.2f] \n",
+                      s, ns, accel_data.mps2.x, accel_data.mps2.y,  accel_data.mps2.z);
+#else
+        Serial.print("[T: ");
+        Serial.print(s);
+        Serial.print(".");
+        Serial.print(ns);
+        Serial.print("] [AX:");
+        Serial.print(accel_data.mps2.x, 2);
+        Serial.print(" AY:");
+        Serial.print(accel_data.mps2.y, 2);
+        Serial.print(" AZ:");
+        Serial.print(accel_data.mps2.z, 2);
+        Serial.println("]");
+#endif
+    }
+    GyroscopeData gyro_data;
+    if (gyro.readData(gyro_data)) {
+        gyro.getLastTime(s, ns);
+#ifdef PLATFORM_HAS_PRINTF
+        Serial.printf("[T: %" PRIu32 ".%09" PRIu32 "] [GX:%+7.2f GY:%+7.2f GZ:%+7.2f] \n",
+                      s, ns, gyro_data.dps.x, gyro_data.dps.y, gyro_data.dps.z);
+#else
+        Serial.print("[T: ");
+        Serial.print(s);
+        Serial.print(".");
+        Serial.print(ns);
+        Serial.print("] [GX:");
+        Serial.print(gyro_data.dps.x, 2);
+        Serial.print(" GY:");
+        Serial.print(gyro_data.dps.y, 2);
+        Serial.print(" GZ:");
+        Serial.print(gyro_data.dps.z, 2);
+        Serial.println("]");
+#endif
+    }
     delay(50);
 }
 

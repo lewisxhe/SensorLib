@@ -142,30 +142,28 @@ void parse_bme280_sensor_data(uint8_t sensor_id, const uint8_t *data_ptr, uint32
     }
 }
 
-void sensor_event_callback(uint8_t event, uint8_t sensor_id, uint8_t data)
+void sensor_event_callback(MetaEventType event, uint8_t sensor_id, uint8_t data)
 {
     Serial.print("Sensor Event:");
     const char  *sensorName = bhy.getSensorName(sensor_id);
     switch (event) {
-    case BHY2_META_EVENT_SAMPLE_RATE_CHANGED:
+    case MetaEventType::BOSCH_META_EVENT_SAMPLE_RATE_CHANGED:
         Serial.print("Sample rate changed for ");
         Serial.print(sensorName);
         Serial.println(" sensor");
         break;
-    case BHY2_META_EVENT_POWER_MODE_CHANGED:
+    case MetaEventType::BOSCH_META_EVENT_POWER_MODE_CHANGED:
         Serial.print("Power mode changed for ");
         Serial.print(sensorName);
         Serial.println(" sensor");
         break;
     default:
-        Serial.print("Other event : ");
-        Serial.println(event);
         break;
     }
 }
 
 // Firmware update progress callback
-void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
+void progress_callback(uint32_t total, uint32_t transferred, void *user_data)
 {
     float progress = (float)transferred / total * 100;
     Serial.print("Upload progress: ");
@@ -236,10 +234,18 @@ void setup()
 
     // Output all sensors info to Serial
     BoschSensorInfo info = bhy.getSensorInfo();
-#ifdef PLATFORM_HAS_PRINTF
-    info.printInfo(Serial);
+    
+#ifdef ARDUINO
+    ArduinoStreamPrinter printer(Serial);
+    info.printInfo(printer);
 #else
-    info.printInfo();
+    info.printInfo([](const char *format, ...) -> int {
+        va_list args;
+        va_start(args, format);
+        int result = vprintf(format, args);
+        va_end(args);
+        return result;
+    });
 #endif
 
     initialiseCommander();

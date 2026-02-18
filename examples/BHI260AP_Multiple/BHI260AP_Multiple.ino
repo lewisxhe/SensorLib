@@ -132,7 +132,7 @@ void print_orientation(uint8_t direction)
 {
     char report[256];
     switch (direction) {
-    case SensorBHI260AP::DIRECTION_BOTTOM_LEFT:
+    case SensorDirection::DIRECTION_BOTTOM_LEFT:
         sprintf( report, "\r\n  ________________  " \
                  "\r\n |                | " \
                  "\r\n |                | " \
@@ -143,7 +143,7 @@ void print_orientation(uint8_t direction)
                  "\r\n |________________| \r\n" );
 
         break;
-    case SensorBHI260AP::DIRECTION_TOP_RIGHT:
+    case SensorDirection::DIRECTION_TOP_RIGHT:
         sprintf( report, "\r\n  ________________  " \
                  "\r\n |                | " \
                  "\r\n |             *  | " \
@@ -153,7 +153,7 @@ void print_orientation(uint8_t direction)
                  "\r\n |                | " \
                  "\r\n |________________| \r\n" );
         break;
-    case SensorBHI260AP::DIRECTION_TOP_LEFT:
+    case SensorDirection::DIRECTION_TOP_LEFT:
         sprintf( report, "\r\n  ________________  " \
                  "\r\n |                | " \
                  "\r\n |  *             | " \
@@ -163,7 +163,7 @@ void print_orientation(uint8_t direction)
                  "\r\n |                | " \
                  "\r\n |________________| \r\n" );
         break;
-    case SensorBHI260AP::DIRECTION_BOTTOM_RIGHT:
+    case SensorDirection::DIRECTION_BOTTOM_RIGHT:
         sprintf( report, "\r\n  ________________  " \
                  "\r\n |                | " \
                  "\r\n |                | " \
@@ -194,7 +194,7 @@ void orientation_process_callback(uint8_t  sensor_id, const uint8_t *data_ptr, u
 #endif
 
 // Firmware update progress callback
-void progress_callback(void *user_data, uint32_t total, uint32_t transferred)
+void progress_callback(uint32_t total, uint32_t transferred, void *user_data)
 {
     float progress = (float)transferred / total * 100;
     Serial.print("Upload progress: ");
@@ -246,10 +246,18 @@ void initSensor(SensorBHI260AP &sensor, int rst, int sda, int scl, int irq,
 
     // Output all sensors info to Serial
     BoschSensorInfo info = sensor.getSensorInfo();
-#ifdef PLATFORM_HAS_PRINTF
-    info.printInfo(Serial);
+    
+#ifdef ARDUINO
+    ArduinoStreamPrinter printer(Serial);
+    info.printInfo(printer);
 #else
-    info.printInfo();
+    info.printInfo([](const char *format, ...) -> int {
+        va_list args;
+        va_start(args, format);
+        int result = vprintf(format, args);
+        va_end(args);
+        return result;
+    });
 #endif
 
     // The orientation sensor will only report when it changes, so the value is 0 ~ 1
