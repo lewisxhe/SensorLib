@@ -144,6 +144,8 @@ int8_t bhy2_hif_erase_flash(uint32_t start_addr, uint32_t end_addr, struct bhy2_
  * @param[in/out] work_buffer   : Reference to the work buffer
  * @param[in] work_buf_len      : Length of the work buffer
  * @param[out] exp_size         : Expected size of the work buffer if insufficient size
+ * @param[in] progress_cb       : Callback function to report the progress of the firmware upload
+ * @param[in] user_data        : User data to be passed to the callback function
  * @param[in] hif               : HIF device reference
  * @return API error codes
  */
@@ -152,9 +154,9 @@ int8_t bhy2_hif_upload_to_flash(const uint8_t *firmware,
                                 uint8_t *work_buffer,
                                 uint32_t work_buf_len,
                                 uint32_t *exp_size,
-                                struct bhy2_hif_dev *hif,
                                 bhy2_progress_callback progress_cb,
-                                void *user_data);
+                                void *user_data,
+                                struct bhy2_hif_dev *hif);
 
 /**
  * @brief Function to upload data to flash partly
@@ -267,10 +269,12 @@ int8_t bhy2_hif_reset(struct bhy2_hif_dev *hif);
  * @brief Function to upload a firmware to RAM
  * @param[in] firmware  : Reference to the data buffer storing the firmware
  * @param[in] length    : Length of the firmware
+ * @param[in] progress_cb : Callback function to report progress
+ * @param[in] user_data   : User data pointer for the callback function
  * @param[in] hif       : HIF device reference
  * @return API error codes
  */
-int8_t bhy2_hif_upload_firmware_to_ram(const uint8_t *firmware, uint32_t length, struct bhy2_hif_dev *hif);
+int8_t bhy2_hif_upload_firmware_to_ram(const uint8_t *firmware, uint32_t length, bhy2_progress_callback progress_cb, void *user_data, struct bhy2_hif_dev *hif);
 
 /**
  * @brief Function to upload a part of the firmware to RAM

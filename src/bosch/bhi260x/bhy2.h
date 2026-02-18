@@ -262,10 +262,13 @@ int8_t bhy2_set_fifo_format_ctrl(uint8_t param, struct bhy2_dev *dev);
  * @brief Function to upload firmware to RAM
  * @param[in] firmware  : Reference to the data buffer containing the firmware
  * @param[in] length    : Size of the firmware
+ * @param[in] progress_cb : Callback function to report the progress of the firmware upload
+ * @param[in] user_data  : User data to be passed to the callback function
  * @param[in] dev       : Device reference
  * @return API error codes
  */
-int8_t bhy2_upload_firmware_to_ram(const uint8_t *firmware, uint32_t length, struct bhy2_dev *dev);
+int8_t bhy2_upload_firmware_to_ram(const uint8_t *firmware, uint32_t length, bhy2_progress_callback progress_cb, void *user_data, 
+                                struct bhy2_dev *dev);
 
 /**
  * @brief Function to upload part of the firmware to RAM
@@ -301,12 +304,15 @@ int8_t bhy2_erase_flash(uint32_t start_address, uint32_t end_addr, struct bhy2_d
 /**
  * @brief Function to upload firmware to Flash
  * @param[in] firmware  : Reference to the data buffer containing the firmware
- * @param[in] length    : Size of the firwmare
+ * @param[in] length    : Size of the firmware
+ * @param[in] progress_cb : Callback function to report the progress of the firmware upload
+ * @param[in] user_data  : User data to be passed to the callback function
  * @param[in] dev       : Device reference
  * @return API error codes
  */
-int8_t bhy2_upload_firmware_to_flash(const uint8_t *firmware, uint32_t length, struct bhy2_dev *dev,
-                                    bhy2_progress_callback progress_cb, void *user_data);
+int8_t bhy2_upload_firmware_to_flash(const uint8_t *firmware, uint32_t length,
+                                    bhy2_progress_callback progress_cb, void *user_data,
+                                    struct bhy2_dev *dev);
 
 /**
  * @brief Function to upload part of the firmware to Flash

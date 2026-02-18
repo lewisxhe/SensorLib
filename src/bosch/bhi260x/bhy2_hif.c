@@ -113,6 +113,8 @@ static int8_t bhy2_hif_exec_cmd_generic(uint16_t cmd,
                                         const uint8_t *pre_payload,
                                         uint32_t pre_length,
                                         uint32_t cmd_length,
+                                        bhy2_progress_callback progress_cb, 
+                                        void *user_data,
                                         struct bhy2_hif_dev *hif)
 {
     int8_t rslt = BHY2_OK;
@@ -174,7 +176,9 @@ static int8_t bhy2_hif_exec_cmd_generic(uint16_t cmd,
                     else if (remain > length)
                     {
                         memcpy(&command_buf[pos], &pre_payload[total_len - remain], remain - length);
-                        memcpy(&command_buf[pos + remain - length], payload, copy_len - (remain - length));
+                        if (payload != NULL) {
+                            memcpy(&command_buf[pos + remain - length], payload, copy_len - (remain - length));
+                        } 
                     }
                     else
                     {
@@ -196,6 +200,9 @@ static int8_t bhy2_hif_exec_cmd_generic(uint16_t cmd,
                 pos = 0;
                 remain -= copy_len;
                 loop_remain_len = remain;
+                if(progress_cb!=NULL){
+                    progress_cb(length, length-remain, user_data);
+                }
             }
         }
         else
@@ -486,7 +493,7 @@ int8_t bhy2_hif_delay_us(uint32_t period_us, const struct bhy2_hif_dev *hif)
 
 int8_t bhy2_hif_exec_cmd(uint16_t cmd, const uint8_t *payload, uint32_t length, struct bhy2_hif_dev *hif)
 {
-    return bhy2_hif_exec_cmd_generic(cmd, payload, length, NULL, 0, 0, hif);
+    return bhy2_hif_exec_cmd_generic(cmd, payload, length, NULL, 0, 0, NULL, NULL, hif);
 }
 
 int8_t bhy2_hif_get_parameter(uint16_t param,
@@ -685,7 +692,7 @@ int8_t bhy2_hif_reset(struct bhy2_hif_dev *hif)
     return rslt;
 }
 
-int8_t bhy2_hif_upload_firmware_to_ram(const uint8_t *firmware, uint32_t length, struct bhy2_hif_dev *hif)
+int8_t bhy2_hif_upload_firmware_to_ram(const uint8_t *firmware, uint32_t length,bhy2_progress_callback progress_cb, void *user_data, struct bhy2_hif_dev *hif)
 {
     int8_t rslt = BHY2_OK;
     uint16_t magic;
@@ -699,7 +706,7 @@ int8_t bhy2_hif_upload_firmware_to_ram(const uint8_t *firmware, uint32_t length,
         }
         else
         {
-            rslt = bhy2_hif_exec_cmd(BHY2_CMD_UPLOAD_TO_PROGRAM_RAM, firmware, length, hif);
+            rslt = bhy2_hif_exec_cmd_generic(BHY2_CMD_UPLOAD_TO_PROGRAM_RAM, firmware, length, NULL, 0, 0, progress_cb, user_data,hif);
             if (rslt == BHY2_OK)
             {
                 rslt = bhy2_hif_check_boot_status_ram(hif);
@@ -742,7 +749,7 @@ int8_t bhy2_hif_upload_firmware_to_ram_partly(const uint8_t *firmware,
                                                  packet_len,
                                                  NULL,
                                                  0,
-                                                 total_size,
+                                                 total_size,NULL, NULL, 
                                                  hif);
             }
         }
@@ -1179,7 +1186,7 @@ int8_t bhy2_hif_set_sensor_ctrl(uint8_t sensor_id,
     param_num = (uint16_t)(BHY2_PARAM_SET_SENSOR_CTRL | sensor_id);
     command = (uint8_t)(ctrl_code & (~BHY2_PARAM_SENSOR_CTRL_READ));
 
-    return bhy2_hif_exec_cmd_generic(param_num, payload, payload_len, &command, 1, 0, hif);
+    return bhy2_hif_exec_cmd_generic(param_num, payload, payload_len, &command, 1, 0, NULL, NULL, hif);
 }
 
 int8_t bhy2_hif_get_bsx_state(uint16_t param_id,
@@ -1349,9 +1356,9 @@ int8_t bhy2_hif_upload_to_flash(const uint8_t *firmware,
                                 uint8_t *work_buffer,
                                 uint32_t work_buf_len,
                                 uint32_t *exp_size,
-                                struct bhy2_hif_dev *hif,
                                 bhy2_progress_callback progress_cb,
-                                void *user_data)
+                                void *user_data,
+                                struct bhy2_hif_dev *hif)
 {
     int8_t rslt = BHY2_OK;
     uint16_t magic;
@@ -1395,7 +1402,7 @@ int8_t bhy2_hif_upload_to_flash(const uint8_t *firmware,
                 addr_buf[3] = (uint8_t)((sector_addr >> 24) & 0xFF);
 
                 /* Transfer firmware to the flash */
-                rslt = bhy2_hif_exec_cmd_generic(BHY2_CMD_WRITE_FLASH, &firmware[pos], trans_len, addr_buf, 4, 0, hif);
+                rslt = bhy2_hif_exec_cmd_generic(BHY2_CMD_WRITE_FLASH, &firmware[pos], trans_len, addr_buf, 4, 0, NULL, NULL,  hif);
                 if (rslt != BHY2_OK)
                 {
                     break;
@@ -1425,7 +1432,7 @@ int8_t bhy2_hif_upload_to_flash(const uint8_t *firmware,
                 sector_addr += hif->read_write_len;
 
                 if (progress_cb != NULL) {
-                    progress_cb(user_data, length, pos);
+                    progress_cb(length, pos, user_data);
                 }
             }
         }
@@ -1471,7 +1478,7 @@ int8_t bhy2_hif_upload_to_flash_partly(const uint8_t *firmware,
             addr_buf[3] = (uint8_t)((sector_addr >> 24) & 0xFF);
 
             /* Transfer firmware to the flash */
-            rslt = bhy2_hif_exec_cmd_generic(BHY2_CMD_WRITE_FLASH, firmware, packet_len, addr_buf, 4, 0, hif);
+            rslt = bhy2_hif_exec_cmd_generic(BHY2_CMD_WRITE_FLASH, firmware, packet_len, addr_buf, 4, 0, NULL, NULL, hif);
             if (rslt == BHY2_OK)
             {
                 rslt = bhy2_hif_wait_status_ready(hif);
