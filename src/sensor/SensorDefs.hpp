@@ -140,6 +140,58 @@ enum class SensorRemap {
     BOTTOM_LAYER_BOTTOM_LEFT_CORNER,
 };
 
+
+enum SensorDirection {
+    //  ________________
+    // |                |
+    // |             *  |
+    // |                |
+    // |                |
+    // |                |
+    // |                |
+    // |________________|
+    DIRECTION_TOP_RIGHT,
+    
+    //  ________________
+    // |                |
+    // |  *             |
+    // |                |
+    // |                |
+    // |                |
+    // |                |
+    // |________________|
+    DIRECTION_TOP_LEFT,
+
+    //  ________________
+    // |                |
+    // |                |
+    // |                |
+    // |                |
+    // |                |
+    // |  *             |
+    // |________________|
+    DIRECTION_BOTTOM_LEFT,
+
+    //  ________________
+    // |                |
+    // |                |
+    // |                |
+    // |                |
+    // |                |
+    // |             *  |
+    // |________________|
+    DIRECTION_BOTTOM_RIGHT,
+
+    //  ________________
+    // |________________|
+    //    *
+    DIRECTION_BOTTOM,
+
+    //  __*_____________
+    // |________________|
+    DIRECTION_TOP,
+};
+
 /**
  * @brief Enumeration of sensor types
  */
