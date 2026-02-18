@@ -31,6 +31,7 @@
 
 #ifdef ARDUINO
 #include <Arduino.h>
+#include <stdarg.h>
 
 class ArduinoStreamPrinter {
 private:
