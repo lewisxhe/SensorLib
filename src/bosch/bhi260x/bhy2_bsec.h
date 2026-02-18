@@ -52,8 +52,18 @@ extern "C" {
 
 #define BHY2_SENSOR_ID_AIR_QUALITY  UINT8_C(115)
 
-struct bhy2_bsec_air_quality
-{
+typedef struct {
+    float temperature;      /* Compensated temperature (deg C) */
+    float humidity;         /* Compensated humidity (%rH) */
+    float gas_resistance;   /* Compensated gas resistivity (ohms) */
+    float iaq;              /* Indoor air quality index (IAQ) */
+    float static_iaq;       /* Static IAQ index */
+    float co2;              /* Equivalent CO2 concentration (ppm) */
+    float voc;              /* Volatile organic compound concentration (ppb) */
+    uint8_t iaq_accuracy;   /* IAQ index accuracy (0-3) */
+} unified_air_quality_t;
+
+struct bhy2_bsec_air_quality {
     float comp_temp; /* Sensor heat compensated temperature (deg C) */
     float comp_hum; /* Sensor heat compensated humidity (%rH) */
     float comp_gas; /* Compensated gas resistance (ohms) */
@@ -64,7 +74,20 @@ struct bhy2_bsec_air_quality
     uint8_t iaq_accuracy; /* IAQ index accuracy (0-3) */
 };
 
+typedef struct {
+    uint16_t iaq;
+    uint16_t siaq;
+    uint16_t voc;
+    uint32_t co2;
+    uint8_t iaq_accuracy;
+    int16_t comp_temperature;
+    uint16_t comp_humidity;
+    uint32_t raw_gas;
+}  bhi360_event_data_iaq_output_t;
+
 void bhy2_bsec_parse_air_quality(const uint8_t *payload, struct bhy2_bsec_air_quality *data);
+
+void bhi360_event_data_parse_air_quality(const uint8_t *payload, bhi360_event_data_iaq_output_t *air_quality_data);
 
 /* End of CPP Guard */
 #ifdef __cplusplus
