@@ -3,7 +3,6 @@ set(src_dirs ./src
              ./src/platform
              ./src/bosch
              ./src/bosch/BMM150
-             ./src/bosch/common
              )
 set(include_dirs ./src
                 ./src/REG
@@ -11,8 +10,7 @@ set(include_dirs ./src
                 ./src/platform
                 ./src/bosch
                 ./src/bosch/firmware
-                ./src/bosch/BMM150
-                ./src/bosch/common)
+                ./src/bosch/BMM150)
 
 idf_component_register(SRC_DIRS ${src_dirs} 
                         INCLUDE_DIRS ${include_dirs}
