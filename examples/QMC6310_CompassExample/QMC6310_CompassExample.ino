@@ -161,7 +161,7 @@ void setup()
     display.init();
 
     //Find the magnetic declination : https://www.magnetic-declination.com/
-    float declination_deg = magnetometer.dmsToDecimalDegrees(-3, 20);   // -3.3333
+    float declination_deg = MagnetometerUtils::dmsToDecimalDegrees(-3, 20);   // -3.3333
 
     magnetometer.setDeclination(declination_deg);
 
@@ -211,7 +211,7 @@ void loop()
             display.setTextAlignment(TEXT_ALIGN_LEFT);
             display.drawString(75, 5, "Angle:" +  String(angle) + "°");
             display.drawString(75, 25, "Decl:" + String(magnetometer.getDeclinationDeg(), 1) + "°");
-            float strength = magnetometer.calculateMagneticStrength(data);
+            float strength = MagnetometerUtils::calculateMagneticStrength(data);
             display.drawString(75, 45, "Str:" + String(strength, 1) + "uT");
 
             display.display();
