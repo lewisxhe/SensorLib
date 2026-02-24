@@ -51,10 +51,10 @@ enum class BoschSensorType {
  * @brief Enumeration of meta event types that can be received from the sensor.
  */
 enum class MetaEventType {
-    BOSCH_META_EVENT_FLUSH_COMPLETE,           ///< Flush complete event
+    BOSCH_META_EVENT_FLUSH_COMPLETE = 1,       ///< Flush complete event
     BOSCH_META_EVENT_SAMPLE_RATE_CHANGED,      ///< Sample rate changed event
     BOSCH_META_EVENT_POWER_MODE_CHANGED,       ///< Power mode changed event
-    BOSCH_META_EVENT_ALGORITHM_EVENTS,         ///< Algorithm events
+    BOSCH_META_EVENT_ALGORITHM_EVENTS = 5,       ///< Algorithm events
     BOSCH_META_EVENT_SENSOR_STATUS,            ///< Sensor status event
     BOSCH_META_EVENT_BSX_DO_STEPS_MAIN,        ///< BSX do steps main event
     BOSCH_META_EVENT_BSX_DO_STEPS_CALIB,       ///< BSX do steps calibration event
