@@ -128,6 +128,14 @@
 #define BHI260_IRQ   5
 #define BHI260_RST   -1
 #define USE_SPI_INTERFACE   1
+#elif defined(CUSTOM_SENSOR_EVB)
+#define SPI_MOSI     11
+#define SPI_MISO     10
+#define SPI_SCK      12
+#define BHI360_CS    13
+#define BHI360_IRQ   9
+#define BHI360_RST   14
+#define USE_SPI_INTERFACE   1
 #endif
 
 
