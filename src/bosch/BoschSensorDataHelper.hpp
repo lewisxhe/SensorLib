@@ -30,7 +30,7 @@
 #pragma once
 #include "BoschSensorBase.hpp"
 #include "bhi260x/bhy2_defs.h"
-
+#include "bosch/bhi36x/bhi360_event_data.h"
 class BoschSensorDataHelperBase
 {
 public:
@@ -149,16 +149,18 @@ protected:
             break;
         case BHY2_SENSOR_ID_STC:
         case BHY2_SENSOR_ID_STC_WU:
+        case BHY2_SENSOR_ID_STC_LP:
             result.step_counter = bhy2_parse_step_counter(data);
             break;
         case  BHY2_SENSOR_ID_STD:
+        case BHY2_SENSOR_ID_STD_LP:
             result.detected = true;
             break;
         case BHY2_SENSOR_ID_AR:
             result.activity_bitmap = (data[1] << 8) | data[0];
             break;
         case BHY2_SENSOR_ID_AIR_QUALITY:
-            if (_handle.getModel() == BoschSensorType::BOSCH_SENSORTEC_BHI260) {
+            if (_handle.getChipID() == BHI260_CHIP_ID) {
                 bhy2_bsec_air_quality raw;
                 bhy2_bsec_parse_air_quality(data, &raw);
                 result.iaq.co2 = raw.e_co2;
@@ -496,7 +498,16 @@ class SensorStepCounter : public SensorTemplateBase<uint32_t>
 {
 public:
     SensorStepCounter(BoschSensorBase &handle)
-        : SensorTemplateBase<uint32_t>(BoschSensorID::STEP_COUNTER, handle) {}
+        : SensorTemplateBase<uint32_t>(BoschSensorID::STEP_COUNTER, handle)
+    {
+        if (_handle.getChipID() == BHI360_CHIP_ID) {
+            _sensor_id = BoschSensorID::STEP_COUNTER_LOW_POWER;
+        } else if (_handle.getChipID() == BHI260_CHIP_ID) {
+            _sensor_id = BoschSensorID::STEP_COUNTER;
+        } else {
+            log_e("Unknown chip ID 0x%02X. Step Counter sensor may not function correctly.", _handle.getChipID());
+        }
+    }
 
     uint32_t getStepCount() const
     {
@@ -514,7 +525,16 @@ class SensorStepDetector : public SensorTemplateBase<bool>
 {
 public:
     SensorStepDetector(BoschSensorBase &handle)
-        : SensorTemplateBase<bool>(BoschSensorID::STEP_DETECTOR, handle) {}
+        : SensorTemplateBase<bool>(BoschSensorID::STEP_DETECTOR, handle)
+    {
+        if (_handle.getChipID() == BHI360_CHIP_ID) {
+            _sensor_id = BoschSensorID::STEP_DETECTOR_LOW_POWER;
+        } else if (_handle.getChipID() == BHI260_CHIP_ID) {
+            _sensor_id = BoschSensorID::STEP_DETECTOR;
+        } else {
+            log_e("Unknown chip ID 0x%02X. Step Detector sensor may not function correctly.", _handle.getChipID());
+        }
+    }
 
     bool isDetected()
     {

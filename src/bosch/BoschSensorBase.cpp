@@ -305,6 +305,11 @@ void BoschSensorBase::setFirmware(const uint8_t *image, size_t image_len, bool w
     _force_update = force_update;
 }
 
+uint8_t BoschSensorBase::getChipID()
+{
+    return getConfirmationIDImpl();
+}
+
 const char *BoschSensorBase::getSensorName(uint8_t sensor_id)
 {
     return BoschSensorUtils::get_sensor_name(sensor_id);

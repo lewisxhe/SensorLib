@@ -33,3 +33,25 @@ uint16_t SensorBHI360::getConfirmationIDImpl()
 {
     return BHI360_CHIP_ID;
 }
+
+bool SensorBHI360::getStepCounterConfig(StepCounterConfig &config)
+{
+    int8_t rslt = bhi360_phy_sensor_ctrl_param_get_step_counter_config(&config, getDev());
+    if (rslt != BHY2_OK) {
+        log_e("Failed to get Step Counter configuration, error code: %d", rslt);
+        return false;
+    }
+    return true;
+}
+
+bool SensorBHI360::setStepCounterConfig(const StepCounterConfig &config)
+{
+    int8_t rslt = bhi360_phy_sensor_ctrl_param_set_step_counter_config(&config, getDev());
+    if (rslt != BHY2_OK) {
+        log_e("Failed to set Step Counter configuration, error code: %d", rslt);
+        return false;
+    }
+    return true;
+}
+
+

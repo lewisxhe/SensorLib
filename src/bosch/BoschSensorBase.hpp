@@ -435,6 +435,14 @@ public:
      */
     void setFirmware(const uint8_t *image, size_t image_len, bool write_flash = false, bool force_update = false);
 
+    /**
+     * @brief Get the chip ID of the sensor.
+     * @note This function retrieves the chip ID by calling the pure virtual getConfirmationIDImpl() method,
+     *       which must be implemented by derived classes to return the expected product ID for the specific
+     * @return 8-bit chip ID value.
+     */
+    uint8_t getChipID();
+
 protected:
     /**
      * @brief Pure virtual function to get the confirmation ID for the specific sensor model.
