@@ -147,7 +147,9 @@ extern "C" {
 #endif
 
 #define BHI260_PRODUCT_ID                         UINT8_C(0x89)
-#define BHI360_PRODUCT_ID                         UINT8_C(0x7A)
+#define BHI360_PRODUCT_ID                         UINT8_C(0x89)
+#define BHI360_CHIP_ID                            UINT8_C(0x7A)
+#define BHI260_CHIP_ID                            UINT8_C(0x70)
 
 /*! Register map */
 #define BHY2_REG_CHAN_CMD                         UINT8_C(0x00)
@@ -574,6 +576,9 @@ extern "C" {
                                                               (uint32_t)(x)[3] << 24))
 #define BHY2_LE2S32(x)                            ((int32_t)BHY2_LE2U32(x))
 #define BHY2_LE2U40(x)                            (BHY2_LE2U32(x) | (uint64_t)(x)[4] << 32)
+#define BHY2_LE2U48(x)                            ((BHY2_LE2U32(x) | (uint64_t)(x)[4] << 32 | \
+                                                                         (uint64_t)(x)[5] << 40))
+
 #define BHY2_LE2U64(x)                            (BHY2_LE2U32(x) | (uint64_t)BHY2_LE2U32(&(x)[4]) << 32)
 
 #define BHY2_LE24MUL(x)                           (((x) % 4) ? (uint16_t)((((x) / 4) + 1) * 4) : (uint16_t)((x) + 4))

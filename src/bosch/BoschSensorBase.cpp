@@ -140,10 +140,10 @@ BoschSensorType BoschSensorBase::getModel()
 {
     if (dev) {
         switch (_chipID) {
-        case BHI260_PRODUCT_ID:
+        case BHI260_CHIP_ID:
             return BoschSensorType::BOSCH_SENSORTEC_BHI260;
             break;
-        case BHI360_PRODUCT_ID:
+        case BHI360_CHIP_ID:
             return BoschSensorType::BOSCH_SENSORTEC_BHI360;
         default:
             break;
@@ -382,7 +382,7 @@ BoschSensorInfo BoschSensorBase::getSensorInfo()
     uint8_t feat_status;
     uint8_t boot_status;
     uint8_t sensor_error;
-    
+
     if (bhy2_get_product_id(&product_id, dev.get()) != BHY2_OK) {
         log_e("Failed to get product id");
     }
@@ -847,7 +847,7 @@ bool BoschSensorBase::uploadFirmware(const uint8_t *firmware, uint32_t length, b
 
 bool BoschSensorBase::initImpl(CommInterface interface)
 {
-    uint8_t chip_id = 0;
+    uint8_t chip_id = 0, product_id = 0;
 
     if (_rst != -1) {
         hal->pinMode(_rst, OUTPUT);
@@ -868,9 +868,9 @@ bool BoschSensorBase::initImpl(CommInterface interface)
             _max_rw_length = I2C_BUFFER_LENGTH;
 #ifdef ARDUINO_ARCH_ESP32
             // The test data was obtained from tests conducted on the ESP32S3-R8.
-            // ESP32 series has an issue with reading large data, so we need to reduce 
+            // ESP32 series has an issue with reading large data, so we need to reduce
             // the max read/write length by half as a workaround.
-            _max_rw_length /= 2; 
+            _max_rw_length /= 2;
 #endif
             break;
         case BHY2_SPI_INTERFACE:
@@ -903,16 +903,22 @@ bool BoschSensorBase::initImpl(CommInterface interface)
 
     _error_code = bhy2_get_chip_id(&chip_id, dev.get());
     if (_error_code != BHY2_OK) {
+        log_e("Failed to get chip ID");
+        return false;
+    }
+
+    bhy2_get_product_id(&product_id, dev.get());
+    if (_error_code != BHY2_OK) {
         log_e("Failed to get product ID");
         return false;
     }
 
     // Check for a valid product ID
-    if (chip_id != BHI260_PRODUCT_ID && chip_id != BHI360_PRODUCT_ID) {
-        log_e("Product ID read 0x%02X. Expected 0x%02X or 0x%02X", chip_id, BHI260_PRODUCT_ID, BHI360_PRODUCT_ID);
+    if (chip_id != BHI260_CHIP_ID && chip_id != BHI360_CHIP_ID) {
+        log_e("Chip ID read 0x%02X. Expected 0x%02X or 0x%02X", chip_id, BHI260_CHIP_ID, BHI360_CHIP_ID);
         return false;
     } else {
-        log_i("%s found. Product ID read 0x%02X", chip_id == BHI260_PRODUCT_ID ? "BHI260" : "BHI360", chip_id);
+        log_i("%s found. Chip ID read 0x%02X, Product ID read 0x%02X", chip_id == BHI260_CHIP_ID ? "BHI260" : "BHI360", chip_id, product_id);
     }
 
     // Check confirmation ID

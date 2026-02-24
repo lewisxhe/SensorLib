@@ -31,5 +31,5 @@
 
 uint16_t SensorBHI360::getConfirmationIDImpl()
 {
-    return BHI360_PRODUCT_ID;
+    return BHI360_CHIP_ID;
 }

@@ -68,5 +68,5 @@ void SensorBHI260AP::disableGpio(uint8_t pin)
 
 uint16_t SensorBHI260AP::getConfirmationIDImpl()
 {
-    return BHI260_PRODUCT_ID;
+    return BHI260_CHIP_ID;
 }
