@@ -574,6 +574,12 @@ int8_t bhy2_hif_inject_data(const uint8_t *payload, uint32_t payload_len, struct
  */
 int8_t bhy2_hif_wait_status_ready(struct bhy2_hif_dev *hif);
 
+int8_t bhy2_hif_get_fifo(uint8_t reg,
+                                uint8_t *fifo,
+                                uint32_t fifo_len,
+                                uint32_t *bytes_read,
+                                uint32_t *bytes_remain,
+                                struct bhy2_hif_dev *hif);
 /* End of CPP Guard */
 #ifdef __cplusplus
 }

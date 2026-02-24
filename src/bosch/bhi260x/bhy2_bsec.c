@@ -76,35 +76,3 @@ void bhy2_bsec_parse_air_quality(const uint8_t *payload, struct bhy2_bsec_air_qu
     }
 }
 
-
-
-/**
- * @brief Parses the payload data and extracts the air quality information.
- *
- * @param[in] payload : Pointer to the payload data.
- * @param[out] air_quality_data : Pointer to the `bhi3_event_data_iaq_output_t` structure where the extracted air quality
- *                         data will be stored.
- */
-void bhi360_event_data_parse_air_quality(const uint8_t *payload, bhi360_event_data_iaq_output_t *air_quality_data)
-{
-    uint8_t i = 0;
-
-    if ((payload != NULL) && (air_quality_data != NULL))
-    {
-        air_quality_data->iaq = BHY2_LE2U16(payload + i);
-        i += 2;
-        air_quality_data->siaq = BHY2_LE2U16(payload + i);
-        i += 2;
-        air_quality_data->voc = BHY2_LE2U16(payload + i);
-        i += 2;
-        air_quality_data->co2 = BHY2_LE2U24(payload + i);
-        i += 3;
-        air_quality_data->iaq_accuracy = payload[i];
-        i += 1;
-        air_quality_data->comp_temperature = BHY2_LE2S16(payload + i);
-        i += 2;
-        air_quality_data->comp_humidity = BHY2_LE2U16(payload + i);
-        i += 2;
-        air_quality_data->raw_gas = BHY2_LE2U32(payload + i);
-    }
-}

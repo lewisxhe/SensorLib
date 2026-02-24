@@ -326,7 +326,7 @@ static int8_t bhy2_hif_check_boot_status_flash(struct bhy2_hif_dev *hif)
     return BHY2_OK;
 }
 
-static int8_t bhy2_hif_get_fifo(uint8_t reg,
+int8_t bhy2_hif_get_fifo(uint8_t reg,
                                 uint8_t *fifo,
                                 uint32_t fifo_len,
                                 uint32_t *bytes_read,

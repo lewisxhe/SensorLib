@@ -74,20 +74,7 @@ struct bhy2_bsec_air_quality {
     uint8_t iaq_accuracy; /* IAQ index accuracy (0-3) */
 };
 
-typedef struct {
-    uint16_t iaq;
-    uint16_t siaq;
-    uint16_t voc;
-    uint32_t co2;
-    uint8_t iaq_accuracy;
-    int16_t comp_temperature;
-    uint16_t comp_humidity;
-    uint32_t raw_gas;
-}  bhi360_event_data_iaq_output_t;
-
 void bhy2_bsec_parse_air_quality(const uint8_t *payload, struct bhy2_bsec_air_quality *data);
-
-void bhi360_event_data_parse_air_quality(const uint8_t *payload, bhi360_event_data_iaq_output_t *air_quality_data);
 
 /* End of CPP Guard */
 #ifdef __cplusplus
