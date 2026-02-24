@@ -43,7 +43,10 @@
 // HSDO pin set high
 #define BHI360_SLAVE_ADDRESS_H          0x29
 
+using MultiTapDataType = bhi360_event_data_multi_tap;
 using StepCounterConfig = bhi360_phy_sensor_ctrl_param_step_counter;
+using MultiTapDetectorConfig = bhi360_multi_tap_param_detector;
+
 class SensorBHI360 final: public BoschSensorBase
 {
 public:
@@ -57,13 +60,42 @@ public:
      * @return true if the configuration was successfully retrieved, false otherwise.
      */
     bool getStepCounterConfig(StepCounterConfig &config);
-    
+
     /**
      * @brief Set the configuration for the Step Counter algorithm.
      * @param config Reference to a StepCounterConfig structure containing the desired configuration.
      * @return true if the configuration was successfully set, false otherwise.
      */
     bool setStepCounterConfig(const StepCounterConfig &config);
+
+    /**
+     * @brief Get the current configuration of the Multi Tap Detector algorithm.
+     * @param config Reference to a MultiTapDetectorConfig structure to store the retrieved configuration.
+     * @return true if the configuration was successfully retrieved, false otherwise.
+     */
+    bool getMultiTapDetectorConfig(MultiTapDetectorConfig &config);
+
+    /**
+     * @brief Set the configuration for the Multi Tap Detector algorithm.
+     * @param config Reference to a MultiTapDetectorConfig structure containing the desired configuration.
+     * @return true if the configuration was successfully set, false otherwise.
+     */
+    bool setMultiTapDetectorConfig(const MultiTapDetectorConfig &config);
+
+    /**
+     * @brief Get the current configuration of the Multi Tap parameters.
+     * @param config Reference to an array of MultiTapDataType to store the retrieved configuration.
+     * @note The array should have a size of 8 to accommodate all possible Multi Tap parameters.
+     * @return true if the configuration was successfully retrieved, false otherwise.
+     */
+    bool getMultiTapParamConfig(MultiTapDataType (&config)[8]);
+
+    /**
+     * @brief Set the configuration for the Multi Tap parameters.
+     * @param config Reference to a MultiTapDataType containing the desired configuration.
+     * @return true if the configuration was successfully set, false otherwise.
+     */
+    bool setMultiTapParamConfig(const MultiTapDataType &config);
 
 protected:
     /**

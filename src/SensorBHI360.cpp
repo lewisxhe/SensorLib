@@ -54,4 +54,43 @@ bool SensorBHI360::setStepCounterConfig(const StepCounterConfig &config)
     return true;
 }
 
+bool SensorBHI360::getMultiTapDetectorConfig(MultiTapDetectorConfig &config)
+{
+    int8_t rslt = bhi360_multi_tap_param_detector_get_config(&config, getDev());
+    if (rslt != BHY2_OK) {
+        log_e("Failed to get Multi Tap Detector configuration, error code: %d", rslt);
+        return false;
+    }
+    return true;
+}
+
+bool SensorBHI360::setMultiTapDetectorConfig(const MultiTapDetectorConfig &config)
+{
+    int8_t rslt = bhi360_multi_tap_param_detector_set_config(&config, getDev());
+    if (rslt != BHY2_OK) {
+        log_e("Failed to set Multi Tap Detector configuration, error code: %d", rslt);
+        return false;
+    }
+    return true;
+}
+
+bool SensorBHI360::getMultiTapParamConfig(MultiTapDataType (&config)[8])
+{
+    int8_t rslt = bhi360_multi_tap_param_get_config(config, getDev());
+    if (rslt != BHY2_OK) {
+        log_e("Failed to get Multi Tap Param configuration, error code: %d", rslt);
+        return false;
+    }
+    return true;
+}
+
+bool SensorBHI360::setMultiTapParamConfig(const MultiTapDataType &config)
+{
+    int8_t rslt = bhi360_multi_tap_param_set_config(&config, getDev());
+    if (rslt != BHY2_OK) {
+        log_e("Failed to set Multi Tap Param configuration, error code: %d", rslt);
+        return false;
+    }
+    return true;
+}
 

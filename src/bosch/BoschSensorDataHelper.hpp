@@ -31,6 +31,8 @@
 #include "BoschSensorBase.hpp"
 #include "bhi260x/bhy2_defs.h"
 #include "bosch/bhi36x/bhi360_event_data.h"
+#include "bosch/bhi36x/bhi360_multi_tap_param_defs.h"
+
 class BoschSensorDataHelperBase
 {
 public:
@@ -47,6 +49,7 @@ public:
         uint32_t gas;
         uint16_t activity_bitmap;
         uint8_t dev_ori;
+        bhi360_event_data_multi_tap multi_tap;
         bool detected;
     } SensorData;
 
@@ -185,6 +188,9 @@ protected:
                 result.iaq.static_iaq = raw.siaq;
                 result.iaq.gas_resistance = raw.raw_gas;
             }
+            break;
+        case BHI360_SENSOR_ID_MULTI_TAP:
+            result.multi_tap = static_cast<bhi360_event_data_multi_tap>(data[0]);
             break;
         default:
             log_e("Sensor ID Undefined");
@@ -830,5 +836,23 @@ protected:
     void updateValue(const SensorData &data) override
     {
         _value = data.iaq;
+    }
+};
+
+
+class SensorMultiTap : public SensorTemplateBase<bhi360_event_data_multi_tap>
+{
+public:
+    SensorMultiTap(BoschSensorBase &handle)
+        : SensorTemplateBase<bhi360_event_data_multi_tap>(BoschSensorID::MULTI_TAP, handle)
+    {
+        if (_handle.getChipID() == BHI260_CHIP_ID) {
+            log_e("BHI260 does not support Multi Tap sensor.");
+        }
+    }
+protected:
+    void updateValue(const SensorData &data) override
+    {
+        _value = data.multi_tap;
     }
 };
