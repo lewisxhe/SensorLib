@@ -127,13 +127,21 @@ typedef struct bhi360_event_data_wrist_gesture_detect {
 
 static const char *const bhi360_event_data_wrist_gesture_detect_output[] = {
     "NO_GESTURE",
-    "",
-    "",
     "WRIST_SHAKE_JIGGLE",
     "FLICK_IN",
     "FLICK_OUT"
 };
 
+typedef struct {
+    uint16_t iaq;
+    uint16_t siaq;
+    uint16_t voc;
+    uint32_t co2;
+    uint8_t iaq_accuracy;
+    int16_t comp_temperature;
+    uint16_t comp_humidity;
+    uint32_t raw_gas;
+} BHI360_PACKED bhi360_event_data_iaq_output_t;
 
 /* End of CPP Guard */
 #ifdef __cplusplus

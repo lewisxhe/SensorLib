@@ -202,10 +202,10 @@ int8_t bhi360_multi_tap_param_detector_get_config(bhi360_multi_tap_param_detecto
                 (((uint16_t)buffer[0] & BHI360_MULTI_TAP_PARAM_SINGLE_TAP_FILTER_MODE_MASK) >>
                  BHI360_MULTI_TAP_PARAM_SINGLE_TAP_FILTER_MODE_SHIFT);
             conf->dtap_setting.as_s.tap_peak_thres =
-                (BHI360_LE2U16(&buffer[2]) & BHI360_MULTI_TAP_PARAM_DOUBLE_TAP_TAP_PEAK_DUR_MASK) >>
+                (BHY2_LE2U16(&buffer[2]) & BHI360_MULTI_TAP_PARAM_DOUBLE_TAP_TAP_PEAK_DUR_MASK) >>
                 BHI360_MULTI_TAP_PARAM_DOUBLE_TAP_TAP_PEAK_DUR_SHIFT;
             conf->dtap_setting.as_s.max_gesture_dur =
-                ((BHI360_LE2U16(&buffer[2]) & BHI360_MULTI_TAP_PARAM_DOUBLE_TAP_MAX_GES_DUR_MASK) >>
+                ((BHY2_LE2U16(&buffer[2]) & BHI360_MULTI_TAP_PARAM_DOUBLE_TAP_MAX_GES_DUR_MASK) >>
                  BHI360_MULTI_TAP_PARAM_DOUBLE_TAP_MAX_GES_DUR_SHIFT);
             conf->ttap_setting.as_s.max_dur_between_peaks =
                 ((uint16_t)buffer[4] & BHI360_MULTI_TAP_PARAM_TRIPLE_TAP_MAX_DUR_BW_PEAKS_MASK) >>

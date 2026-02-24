@@ -108,6 +108,14 @@ int8_t bhi360_event_data_multi_tap_parsing(const uint8_t *data, uint8_t *output)
 int8_t bhi360_event_data_wrist_gesture_detect_parsing(const uint8_t *data,
                                                       bhi360_event_data_wrist_gesture_detect_t *output);
 
+/**
+ * @brief Parses the payload data and extracts the air quality information.
+ *
+ * @param[in] payload : Pointer to the payload data.
+ * @param[out] air_quality_data : Pointer to the `bhi360_event_data_iaq_output_t` structure where the extracted air quality
+ *                         data will be stored.
+ */
+void bhi360_event_data_parse_air_quality(const uint8_t *payload, bhi360_event_data_iaq_output_t *air_quality_data);
 
 /* End of CPP Guard */
 #ifdef __cplusplus
