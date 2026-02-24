@@ -2,7 +2,7 @@
  *
  * @license MIT License
  *
- * Copyright (c) 2024 lewis he
+ * Copyright (c) 2026 lewis he
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,15 +22,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      BHI260AP_aux_BMM150_euler.ino
+ * @file      BHI360_aux_BMM350_quaternion.ino
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2024-07-23
+ * @date      2026-02-25
  * @note      Changed from Boschsensortec API https://github.com/boschsensortec/BHY2_SensorAPI
  */
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
-#include <SensorBHI260AP.hpp>
+#include <SensorBHI360.hpp>
 #include <bosch/BoschSensorDataHelper.hpp>
 
 // #define USE_I2C_INTERFACE        true
@@ -54,36 +54,36 @@
 #define SPI_SCK     35
 #endif
 
-// If BHI260_IRQ is set to -1, sensor interrupts are not used and the sensor polling method is used instead.
-#ifndef BHI260_IRQ
-#define BHI260_IRQ  37
+// If BHI360_IRQ is set to -1, sensor interrupts are not used and the sensor polling method is used instead.
+#ifndef BHI360_IRQ
+#define BHI360_IRQ  37
 #endif
 
-#ifndef BHI260_CS
-#define BHI260_CS   36
+#ifndef BHI360_CS
+#define BHI360_CS   36
 #endif
 
 #else   //* I2C */
 
-#ifndef BHI260_SDA
-#define BHI260_SDA  2
+#ifndef BHI360_SDA
+#define BHI360_SDA  2
 #endif
 
-#ifndef BHI260_SCL
-#define BHI260_SCL  3
+#ifndef BHI360_SCL
+#define BHI360_SCL  3
 #endif
 
-// If BHI260_IRQ is set to -1, sensor interrupts are not used and the sensor polling method is used instead.
-#ifndef BHI260_IRQ
-#define BHI260_IRQ  8
+// If BHI360_IRQ is set to -1, sensor interrupts are not used and the sensor polling method is used instead.
+#ifndef BHI360_IRQ
+#define BHI360_IRQ  8
 #endif
 #endif  /*USE_SPI_INTERFACE*/
 
-#ifndef BHI260_RST
-#define BHI260_RST -1
+#ifndef BHI360_RST
+#define BHI360_RST -1
 #endif
 
-SensorBHI260AP bhy;
+SensorBHI360 bhy;
 
 /*
 * Define the USING_DATA_HELPER use of data assistants.
@@ -91,44 +91,49 @@ SensorBHI260AP bhy;
 * the data assistant. Note that this method is not a thread-safe function.
 * Please pay attention to protecting data access security.
 * */
-#define USING_DATA_HELPER
+// #define USING_DATA_HELPER
 
 #ifdef USING_DATA_HELPER
-SensorEuler euler(bhy);
+SensorQuaternion quaternion(bhy);
 #endif
 
-// The firmware runs in RAM and will be lost if the power is off. The firmware will be loaded from RAM each time it is run.
-// #define BOSCH_APP30_SHUTTLE_BHI260_FW
-#define BOSCH_APP30_SHUTTLE_BHI260_AUX_BMM150FW
-// #define BOSCH_APP30_SHUTTLE_BHI260_BME68X
-// #define BOSCH_APP30_SHUTTLE_BHI260_BMP390
-// #define BOSCH_APP30_SHUTTLE_BHI260_TURBO
-// #define BOSCH_BHI260_AUX_BEM280
-// #define BOSCH_BHI260_AUX_BMM150_BEM280
-// #define BOSCH_BHI260_AUX_BMM150_BEM280_GPIO
-// #define BOSCH_BHI260_AUX_BMM150_GPIO
-// #define BOSCH_BHI260_GPIO
-
-// Firmware is stored in flash and booted from flash,Depends on BHI260 hardware connected to SPI Flash
-// #define BOSCH_APP30_SHUTTLE_BHI260_AUX_BMM150_FLASH
-// #define BOSCH_APP30_SHUTTLE_BHI260_BME68X_FLASH
-// #define BOSCH_APP30_SHUTTLE_BHI260_BMP390_FLASH
-// #define BOSCH_APP30_SHUTTLE_BHI260_FLASH
-// #define BOSCH_APP30_SHUTTLE_BHI260_TURBO_FLASH
-// #define BOSCH_BHI260_AUX_BEM280_FLASH
-// #define BOSCH_BHI260_AUX_BMM150_BEM280_FLASH
-// #define BOSCH_BHI260_AUX_BMM150_BEM280_GPIO_FLASH
-// #define BOSCH_BHI260_AUX_BMM150_GPIO_FLASH
-// #define BOSCH_BHI260_GPIO_FLASH
+// #define BOSCH_DATA_INJECT_BHI360
+// #define BOSCH_DATA_INJECT_BHI360_BMM150
+// #define BOSCH_DATA_INJECT_BHI360_BMM150_HEAD_ORIENTATION
+// #define BOSCH_DATA_INJECT_BHI360_BMM350
+// #define BOSCH_DATA_INJECT_BHI360_BMM350_HEAD_ORIENTATION
+// #define BOSCH_DATA_INJECT_BHI360_ENV
+// #define BOSCH_DATA_INJECT_BHI360_HEAD_ORIENTATION
+// #define BOSCH_DATA_INJECT_BHI360_MOTION_AI
+// #define BOSCH_SHUTTLE3_BHI360
+// #define BOSCH_SHUTTLE3_BHI360_AUX_BMM150
+// #define BOSCH_SHUTTLE3_BHI360_BMM150
+// #define BOSCH_SHUTTLE3_BHI360_BMM150_BMP580_BME688
+// #define BOSCH_SHUTTLE3_BHI360_BMM150_HEAD_ORIENTATION
+#define BOSCH_SHUTTLE3_BHI360_BMM350C
+// #define BOSCH_SHUTTLE3_BHI360_BMM350C_BME688_IAQ
+// #define BOSCH_SHUTTLE3_BHI360_BMM350C_BMP580
+// #define BOSCH_SHUTTLE3_BHI360_BMM350C_BMP580_BME688
+// #define BOSCH_SHUTTLE3_BHI360_BMM350C_HEAD_ORIENTATION
+// #define BOSCH_SHUTTLE3_BHI360_BMM350C_POLL
+// #define BOSCH_SHUTTLE3_BHI360_BMM350C_TURBO
+// #define BOSCH_SHUTTLE3_BHI360_BMP580_TEST_EXAMPLE
+// #define BOSCH_SHUTTLE3_BHI360_HW_ACTIVITY
+// #define BOSCH_SHUTTLE3_BHI360_HW_ACTIVITY_TURBO
+// #define BOSCH_SHUTTLE3_BHI360_IMU_HEAD_ORIENTATION
+// #define BOSCH_SHUTTLE3_BHI360_POLLING_STEP_COUNTER
+// #define BOSCH_SHUTTLE3_BHI360_TEMP
+// #define BOSCH_SHUTTLE3_BHI360_TEST_DATA_SOURCE
+// #define BOSCH_SHUTTLE3_BHI360_TURBO
 
 #include <BoschFirmware.h>
 
 // Force update of current firmware, whether it exists or not.
-// Only works when external SPI Flash is connected to BHI260.
+// Only works when external SPI Flash is connected to BHI360.
 // After uploading firmware once, you can change this to false to speed up boot time.
 bool force_update_flash_firmware = true;
 
-#if BHI260_IRQ > 0
+#if BHI360_IRQ > 0
 #define USING_SENSOR_IRQ_METHOD
 #endif
 
@@ -142,30 +147,23 @@ void dataReadyISR()
 #endif /*USING_SENSOR_IRQ_METHOD*/
 
 #ifndef USING_DATA_HELPER
-void parse_euler(uint8_t sensor_id, const uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
+void parse_quaternion(uint8_t sensor_id, const uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
 {
-    struct bhy2_data_orientation data;
+    struct bhy2_data_quaternion data;
     uint32_t s, ns;
     uint64_t tns;
     // Function to parse FIFO frame data into orientation
-    bhy2_parse_orientation(data_ptr, &data);
+    bhy2_parse_quaternion(data_ptr, &data);
     uint64_t _timestamp =  *timestamp;
     BoschSensorUtils::time_to_s_ns(_timestamp, &s, &ns, &tns);
-    uint8_t accuracy =  bhy.getAccuracy();
-    if (accuracy) {
-        Serial.print(" T:"); Serial.print(s);
-        Serial.print("."); Serial.print(ns);
-        Serial.print(" R:"); Serial.print(data.roll * 360.0f / 32768.0f);
-        Serial.print(" P:"); Serial.print(data.pitch * 360.0f / 32768.0f);
-        Serial.print(" H:"); Serial.print(data.heading * 360.0f / 32768.0f);
-        Serial.print(" A:"); Serial.println(accuracy);
-    } else {
-        Serial.print(" T:"); Serial.print(s);
-        Serial.print("."); Serial.print(ns);
-        Serial.print(" R:"); Serial.print(data.roll * 360.0f / 32768.0f);
-        Serial.print(" P:"); Serial.print(data.pitch * 360.0f / 32768.0f);
-        Serial.print(" H:"); Serial.println(data.heading * 360.0f / 32768.0f);
-    }
+    Serial.print("SID:"); Serial.print(sensor_id);
+    Serial.print(" T:"); Serial.print(s);
+    Serial.print("."); Serial.print(ns);
+    Serial.print(" x:"); Serial.print(data.x / 16384.0f);
+    Serial.print(" y:"); Serial.print(data.y / 16384.0f);
+    Serial.print(" x:"); Serial.print(data.z / 16384.0f);
+    Serial.print(" w:"); Serial.print(data.w / 16384.0f);
+    Serial.print(" acc:"); Serial.println(((data.accuracy * 180.0f) / 16384.0f) / 3.141592653589793f);
 }
 #endif
 
@@ -184,12 +182,12 @@ void setup()
     while (!Serial);
 
     // Set the reset pin
-    bhy.setPins(BHI260_RST);
+    bhy.setPins(BHI360_RST);
 
     Serial.println("Initializing Sensors...");
 
     // Set the firmware array address and firmware size
-    bhy.setFirmware(bosch_firmware_image, bosch_firmware_size, bosch_firmware_type, force_update_flash_firmware);
+    bhy.setFirmware(bosch_firmware_image, bosch_firmware_size);
 
     // Set the firmware update processing progress callback function
     // bhy.setUpdateProcessCallback(progress_callback, NULL);
@@ -200,14 +198,13 @@ void setup()
     // Set the processing fifo data buffer size,The default size is 512 bytes.
     // bhy.setProcessBufferSize(1024);
 
-    // Set to load firmware from flash
-    bhy.setBootFromFlash(bosch_firmware_type);
+    Serial.println("Initializing Sensors...");
 
 #ifdef USE_I2C_INTERFACE
     // Using I2C interface
-    // BHI260AP_SLAVE_ADDRESS_L = 0x28
-    // BHI260AP_SLAVE_ADDRESS_H = 0x29
-    if (!bhy.begin(Wire, BHI260AP_SLAVE_ADDRESS_L, BHI260_SDA, BHI260_SCL)) {
+    // BHI360AP_SLAVE_ADDRESS_L = 0x28
+    // BHI360AP_SLAVE_ADDRESS_H = 0x29
+    if (!bhy.begin(Wire, BHI360AP_SLAVE_ADDRESS_L, BHI360_SDA, BHI360_SCL)) {
         Serial.print("Failed to initialize sensor - error code:");
         Serial.println(bhy.getError());
         while (1) {
@@ -218,7 +215,7 @@ void setup()
 
 #ifdef USE_SPI_INTERFACE
     // Using SPI interface
-    if (!bhy.begin(SPI, BHI260_CS, SPI_MOSI, SPI_MISO, SPI_SCK)) {
+    if (!bhy.begin(SPI, BHI360_CS, SPI_MOSI, SPI_MISO, SPI_SCK)) {
         Serial.print("Failed to initialize sensor - error code:");
         Serial.println(bhy.getError());
         while (1) {
@@ -231,7 +228,7 @@ void setup()
 
     // Output all sensors info to Serial
     BoschSensorInfo info = bhy.getSensorInfo();
-    
+
 #ifdef ARDUINO
     ArduinoStreamPrinter printer(Serial);
     info.printInfo(printer);
@@ -245,43 +242,43 @@ void setup()
     });
 #endif
 
-    float sample_rate = 100.0;      /* Read out data measured at 100Hz */
+    // The stepcount sensor will only report when it changes, so the value is 0 ~ 1
+    float sample_rate = 100.0;
     uint32_t report_latency_ms = 0; /* Report immediately */
 
-    /*
-    * Enable Euler function
-    * The Euler function depends on BMM150.
-    * If the hardware is not connected to BMM150, the Euler function cannot be used.
-    * * */
 #ifdef USING_DATA_HELPER
-    euler.enable(sample_rate, report_latency_ms);
+    stepDetector.enable(sample_rate, report_latency_ms);
+    stepCounter.enable(sample_rate, report_latency_ms);
 #else
-    bhy.configure(BoschSensorID::ORIENTATION_WAKE_UP, sample_rate, report_latency_ms);
-    // Register event callback function
-    bhy.onResultEvent(BoschSensorID::ORIENTATION_WAKE_UP, parse_euler);
+    // Enable Step detector
+    bhy.configure(BoschSensorID::ROTATION_VECTOR, sample_rate, report_latency_ms);
+    bhy.onResultEvent(BoschSensorID::ROTATION_VECTOR, parse_quaternion);
 #endif
 
 #ifdef USING_SENSOR_IRQ_METHOD
-    // Set the specified pin (BHI260_IRQ) ​​to an input pin.
+    // Set the specified pin (BHI360_IRQ) ​​to an input pin.
     // This makes the pin ready to receive external signals.
-    // If the interrupt is already connected, if BHI260_IRQ is equal to -1 then the polling method will be used
-    pinMode(BHI260_IRQ, INPUT);
+    // If the interrupt is already connected, if BHI360_IRQ is equal to -1 then the polling method will be used
+    pinMode(BHI360_IRQ, INPUT);
 
-    // Attach an interrupt service routine (ISR) to the specified pin (BHI260_IRQ).
+    // Attach an interrupt service routine (ISR) to the specified pin (BHI360_IRQ).
     // The ISR 'dataReadyISR' will be called whenever a rising edge is detected on the pin.
-    attachInterrupt(BHI260_IRQ, dataReadyISR, RISING);
+    attachInterrupt(BHI360_IRQ, dataReadyISR, RISING);
 #endif
 }
 
 
 void loop()
 {
+    uint32_t s;
+    uint32_t ns;
+
 #ifdef USING_SENSOR_IRQ_METHOD
     if (isInterruptTriggered) {
         isInterruptTriggered = false;
 #endif /*USING_SENSOR_IRQ_METHOD*/
 
-        /* If the interrupt is connected to the sensor and BHI260_IRQ is not equal to -1,
+        /* If the interrupt is connected to the sensor and BHI360_IRQ is not equal to -1,
          * the interrupt function will be enabled, otherwise the method of polling the sensor is used
          */
         bhy.update();
@@ -291,21 +288,32 @@ void loop()
 #endif /*USING_SENSOR_IRQ_METHOD*/
 
 #ifdef USING_DATA_HELPER
-    if (euler.hasUpdated()) {
-        // Print the roll angle to the serial monitor.
-        Serial.print(euler.getRoll());
-        // Print a comma as a separator between the roll and pitch angles.
-        Serial.print(",");
-        // Print the pitch angle to the serial monitor.
-        Serial.print(euler.getPitch());
-        // Print a comma as a separator between the pitch and yaw angles.
-        Serial.print(",");
-        // Print the yaw angle to the serial monitor and start a new line.
-        Serial.println(euler.getHeading());
+    if (quaternion.hasUpdated()) {
+        uint32_t s;
+        uint32_t ns;
+        quaternion.getLastTime(s, ns);
+#ifdef PLATFORM_HAS_PRINTF
+        Serial.printf("[T: %" PRIu32 ".%09" PRIu32 "] QX:%+7.2f QY:%+7.2f QZ:%+7.2f QW:%+7.2f\n",
+                      s, ns, quaternion.getX(), quaternion.getY(), quaternion.getZ(), quaternion.getW());
+#else
+        Serial.print("[T: ");
+        Serial.print(s);
+        Serial.print(".");
+        Serial.print(ns);
+        Serial.print("] ");
+        Serial.print("QX:");
+        Serial.print(quaternion.getX(), 2);
+        Serial.print(" QY:");
+        Serial.print(quaternion.getY(), 2);
+        Serial.print(" QZ:");
+        Serial.print(quaternion.getZ(), 2);
+        Serial.print(" QW:");
+        Serial.print(quaternion.getW(), 2);
+        Serial.println();
+#endif
     }
 #endif
     delay(50);
 }
-
 
 
