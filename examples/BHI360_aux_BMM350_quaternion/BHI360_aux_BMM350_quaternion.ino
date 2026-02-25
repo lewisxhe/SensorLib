@@ -202,9 +202,9 @@ void setup()
 
 #ifdef USE_I2C_INTERFACE
     // Using I2C interface
-    // BHI360AP_SLAVE_ADDRESS_L = 0x28
-    // BHI360AP_SLAVE_ADDRESS_H = 0x29
-    if (!bhy.begin(Wire, BHI360AP_SLAVE_ADDRESS_L, BHI360_SDA, BHI360_SCL)) {
+    // BHI360_SLAVE_ADDRESS_L = 0x28
+    // BHI360_SLAVE_ADDRESS_H = 0x29
+    if (!bhy.begin(Wire, BHI360_SLAVE_ADDRESS_L, BHI360_SDA, BHI360_SCL)) {
         Serial.print("Failed to initialize sensor - error code:");
         Serial.println(bhy.getError());
         while (1) {
