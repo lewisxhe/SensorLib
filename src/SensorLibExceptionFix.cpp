@@ -14,6 +14,8 @@
 #if defined(ARDUINO_ARCH_NRF52) && !defined(__cpp_exceptions)
 
 #include <assert.h>
+#include <cstdlib>
+#include <new>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -59,8 +61,63 @@ namespace std {
     void __throw_out_of_range(char const* msg) {
         assert(false && msg);
     }
+
+    const nothrow_t nothrow{};
 }
 
+/**
+ * @brief Single-object nothrow new operator.
+ *
+ * Allocates memory using malloc and returns nullptr on failure instead of throwing.
+ *
+ * @param size Number of bytes to allocate.
+ * @param tag  The std::nothrow_t dummy argument (unused).
+ * @return Pointer to allocated memory, or nullptr if allocation fails.
+ */
+__attribute__((weak))
+void* operator new(std::size_t size, const std::nothrow_t&) noexcept {
+    return malloc(size);
+}
+
+/**
+ * @brief Single-object nothrow delete operator.
+ *
+ * Corresponding deallocation function for nothrow new. Frees memory using free.
+ *
+ * @param ptr Pointer to memory to deallocate.
+ * @param tag The std::nothrow_t dummy argument (unused).
+ */
+__attribute__((weak))
+void operator delete(void* ptr, const std::nothrow_t&) noexcept {
+    free(ptr);
+}
+
+/**
+ * @brief Array nothrow new[] operator.
+ *
+ * Allocates memory for an array using malloc and returns nullptr on failure.
+ *
+ * @param size Number of bytes to allocate.
+ * @param tag  The std::nothrow_t dummy argument (unused).
+ * @return Pointer to allocated memory, or nullptr if allocation fails.
+ */
+__attribute__((weak))
+void* operator new[](std::size_t size, const std::nothrow_t&) noexcept {
+    return malloc(size);
+}
+
+/**
+ * @brief Array nothrow delete[] operator.
+ *
+ * Corresponding deallocation function for nothrow new[]. Frees memory using free.
+ *
+ * @param ptr Pointer to memory to deallocate.
+ * @param tag The std::nothrow_t dummy argument (unused).
+ */
+__attribute__((weak))
+void operator delete[](void* ptr, const std::nothrow_t&) noexcept {
+    free(ptr);
+}
 #pragma GCC diagnostic pop
 
 #endif // defined(ARDUINO_ARCH_NRF52) && !defined(__cpp_exceptions)
