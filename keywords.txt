@@ -6,7 +6,9 @@
 #######################################
 # Datatypes (KEYWORD1)
 #######################################
-ExtensionIOXL9555	KEYWORD1
+IoExpanderBase	KEYWORD1
+IoExpanderXL9555	KEYWORD1
+IoExpanderPCA9570	KEYWORD1
 
 SensorPCF8563	KEYWORD1
 SensorQMC6310	KEYWORD1
