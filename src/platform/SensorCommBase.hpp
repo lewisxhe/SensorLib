@@ -137,6 +137,7 @@ public:
     virtual bool init() = 0;
     virtual void deinit() = 0;
 
+    virtual int readRegister(uint8_t *buf,size_t len) = 0;
     virtual int readRegister(const uint8_t reg) = 0;
     virtual int readRegister(const uint8_t reg, uint8_t *buf, size_t len) = 0;
 

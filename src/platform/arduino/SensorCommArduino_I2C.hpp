@@ -95,6 +95,11 @@ public:
         }
     }
 
+    int readRegister(uint8_t *buf, size_t len) override
+    {
+        wire.requestFrom(addr, static_cast<uint8_t>(len));
+        return wire.readBytes(buf, len) == len ? 0 : -1;
+    }
 
     int readRegister(const uint8_t reg) override
     {

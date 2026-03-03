@@ -122,6 +122,19 @@ public:
         return 0;
     }
 
+    int readRegister(uint8_t *buf, size_t len) override
+    {
+        hal->digitalWrite(csPin, LOW);
+        spi.beginTransaction(setting);
+        spi.transfer(0x00);
+        for (size_t i = 0; i < len; ++i) {
+            buf[i] = spi.transfer(0x00);
+        }
+        spi.endTransaction();
+        hal->digitalWrite(csPin, HIGH);
+        return 0;
+    }
+
     int readRegister(const uint8_t reg) override
     {
         uint8_t value = 0x00;
