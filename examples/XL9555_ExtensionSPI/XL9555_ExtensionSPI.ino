@@ -317,8 +317,6 @@ void setup()
 #endif
         .flags =
         {
-            .disp_active_low = 0,
-            .relax_on_idle = 0,
             .fb_in_psram = 1, // allocate frame buffer in PSRAM
         },
     };
