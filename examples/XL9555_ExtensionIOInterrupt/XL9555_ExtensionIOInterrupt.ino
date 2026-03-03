@@ -28,7 +28,7 @@
  *
  */
 #include <Arduino.h>
-#include "ExtensionIOXL9555.hpp"
+#include "IoExpanderXL9555.hpp"
 
 #ifndef SENSOR_SDA
 #define SENSOR_SDA  17
@@ -42,7 +42,7 @@
 #define SENSOR_IRQ  10
 #endif
 
-ExtensionIOXL9555 io;
+IoExpanderXL9555 expander;
 
 void printBinary(uint8_t port, uint32_t num, int bits, bool new_line = false)
 {
@@ -82,7 +82,7 @@ void setup()
     *
     *    If the device address is not known, the 0xFF parameter can be passed in.
     *
-    *    XL9555_UNKOWN_ADDRESS  = 0xFF
+    *    XL9555_UNKNOWN_ADDRESS  = 0xFF
     *
     *    If the device address is known, the device address is given
     *
@@ -95,9 +95,9 @@ void setup()
     *    XL9555_SLAVE_ADDRESS6  = 0x26
     *    XL9555_SLAVE_ADDRESS7  = 0x27
     */
-    const uint8_t chip_address = XL9555_UNKOWN_ADDRESS;
+    const uint8_t chip_address = XL9555_UNKNOWN_ADDRESS;
 
-    if (!io.begin(Wire, chip_address, SENSOR_SDA, SENSOR_SCL)) {
+    if (!expander.begin(Wire, chip_address, SENSOR_SDA, SENSOR_SCL)) {
         while (1) {
             Serial.println("Failed to find XL9555 - check your wiring!");
             delay(1000);
@@ -110,13 +110,8 @@ void setup()
     *   XL9535 has a floating input internally and an uncertain state when idle, requiring an external pull-up/pull-down resistor
     * * */
 
-    // Set PORT0 as input,mask = 0xFF = all pin input
-    io.configPort(ExtensionIOXL9555::PORT0, 0xFF);
-
-    // Set PORT1 as input,mask = 0xFF = all pin input
-    io.configPort(ExtensionIOXL9555::PORT1, 0xFF);
-
-
+    // Set all pins as input
+    expander.configPins(IoExpanderXL9555::PORT_ALL, INPUT);
 }
 
 void loop()
@@ -124,27 +119,19 @@ void loop()
     // When the interrupt occurs, we read the mask value of PORT
     if (digitalRead(SENSOR_IRQ) == LOW) {
 
-        // Read 8-bit port 0 input status
-        int val = io.readPort(0);
-
-        // Read 8-bit port 1 input status
-        int val1 = io.readPort(1);
-
-        printBinary(1, val1, 8);
-        printBinary(0, val, 8);
-
+        // Read 16-bit port 0 and port 1 input status
+        uint16_t value = expander.digitalReadPort();
         // Read 16-bit gpio input status
-        uint16_t all_val = io.read();
-        printBinary(3, all_val, 16, true);
+        printBinary(3, value, 16, true);
 
         int i = 15;
         for (; i >= 0; i--) {
-            if (!(all_val & 1)) {
+            if (!(value & 1)) {
                 Serial.print("GPIO: ");
                 Serial.print(15 - i);
                 Serial.println(" is low");
             }
-            all_val >>= 1;
+            value >>= 1;
         }
     }
 }

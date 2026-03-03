@@ -35,11 +35,11 @@
 
 #ifdef CONFIG_XL9555
 
-#include "ExtensionIOXL9555.hpp"
+#include "IoExpanderXL9555.hpp"
 
 static const char *TAG = "XL9555";
 
-ExtensionIOXL9555 io;
+IoExpanderXL9555 io;
 
 static bool init_done = false;
 

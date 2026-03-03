@@ -28,7 +28,7 @@
  * @note      Use XL9555 to drive AW9364 led driver, use esp32 to test, the highest I2C communication rate must reach 1MHz, otherwise it will not work
  */
 #include <Arduino.h>
-#include "ExtensionIOXL9555.hpp"
+#include "IoExpanderXL9555.hpp"
 #include "AW9364LedDriver.hpp"
 
 #ifdef ENABLE_TFT
@@ -51,7 +51,7 @@ TFT_eSPI tft;
 // Drive LED  pin, corresponding to XL9555 GPIO2
 #define BACKLIGHT_PIN   2
 
-ExtensionIOXL9555 io;
+IoExpanderXL9555 expander;
 AW9364LedDriver ledDriver;
 uint8_t level = 0;
 
@@ -74,7 +74,7 @@ void setup()
     *
     *    If the device address is not known, the 0xFF parameter can be passed in.
     *
-    *    XL9555_UNKOWN_ADDRESS  = 0xFF
+    *    XL9555_UNKNOWN_ADDRESS  = 0xFF
     *
     *    If the device address is known, the device address is given
     *
@@ -87,16 +87,16 @@ void setup()
     *    XL9555_SLAVE_ADDRESS6  = 0x26
     *    XL9555_SLAVE_ADDRESS7  = 0x27
     */
-    const uint8_t chip_address = XL9555_UNKOWN_ADDRESS;
+    const uint8_t chip_address = XL9555_UNKNOWN_ADDRESS;
 
-    if (!io.begin(Wire, chip_address, SENSOR_SDA, SENSOR_SCL)) {
+    if (!expander.begin(Wire, chip_address, SENSOR_SDA, SENSOR_SCL)) {
         while (1) {
             Serial.println("Failed to find XL9555 - check your wiring!");
             delay(1000);
         }
     }
 
-    ledDriver.begin(&io, BACKLIGHT_PIN);
+    ledDriver.begin(expander, BACKLIGHT_PIN);
 
 }
 

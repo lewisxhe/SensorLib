@@ -36,7 +36,7 @@
 #include "TouchDrvFT6X36.hpp"
 #include "TouchDrvCSTXXX.hpp"
 #include "TouchDrvGT911.hpp"
-#include "ExtensionIOXL9555.hpp"
+#include "IoExpanderXL9555.hpp"
 #include "SensorWireHelper.h"
 
 #ifndef TOUCH_SDA
@@ -58,11 +58,12 @@
 // Use the TouchDrvInterface base class for automatic discovery and use of multi-touch devices
 TouchDrvInterface *touchDrv;
 // T-RGB uses XL9555 as the reset control of the touch screen
-ExtensionIOXL9555 extension;
+IoExpanderXL9555 expander;
 
 int16_t x[5], y[5];
 
-ExtensionIOXL9555::ExtensionGPIO tp_reset = ExtensionIOXL9555::IO1;
+// Expander gpio 1
+uint8_t expander_io_tp_reset = 1;
 
 /**
  * @brief  i2c_wr_function
@@ -155,7 +156,7 @@ uint32_t hal_callback(SensorCommCustomHal::Operation op, void *param1, void *par
 void TouchDrvDigitalWrite(uint8_t gpio, uint8_t level)
 {
     if (gpio & 0x80) {
-        extension.digitalWrite(gpio & 0x7F, level);
+        expander.digitalWrite(gpio & 0x7F, level);
     } else {
         digitalWrite(gpio, level);
     }
@@ -164,7 +165,7 @@ void TouchDrvDigitalWrite(uint8_t gpio, uint8_t level)
 uint8_t TouchDrvDigitalRead(uint8_t gpio)
 {
     if (gpio & 0x80) {
-        return extension.digitalRead(gpio & 0x7F);
+        return expander.digitalRead(gpio & 0x7F);
     } else {
         return digitalRead(gpio);
     }
@@ -173,7 +174,7 @@ uint8_t TouchDrvDigitalRead(uint8_t gpio)
 void TouchDrvPinMode(uint8_t gpio, uint8_t mode)
 {
     if (gpio & 0x80) {
-        extension.pinMode(gpio & 0x7F, mode);
+        expander.pinMode(gpio & 0x7F, mode);
     } else {
         pinMode(gpio, mode);
     }
@@ -181,8 +182,8 @@ void TouchDrvPinMode(uint8_t gpio, uint8_t mode)
 
 bool setupTouchDrv()
 {
-    // Add the highest bit to indicate that the GPIO extension is used, not the ESP's GPIO
-    const uint8_t touch_reset_pin = tp_reset | 0x80;
+    // Add the highest bit to indicate that the GPIO expander is used, not the ESP's GPIO
+    const uint8_t touch_reset_pin = expander_io_tp_reset | 0x80;
     const uint8_t touch_irq_pin = TOUCH_IRQ;
     bool result = false;
 
@@ -254,7 +255,7 @@ void setup()
 
     // Use unspecified address to test the address discovery function.
     // T-RGB XL9555 uses 0X20 device address
-    if (!extension.begin(i2c_wr_function, XL9555_UNKOWN_ADDRESS)) {
+    if (!expander.begin(i2c_wr_function, XL9555_UNKNOWN_ADDRESS)) {
         Serial.println("Failed to find XL9555 - check your wiring!");
         while (1) {
             delay(1000);

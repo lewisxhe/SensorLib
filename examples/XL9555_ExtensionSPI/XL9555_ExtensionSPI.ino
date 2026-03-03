@@ -29,8 +29,8 @@
  *
  */
 #include <Arduino.h>
-#include "ExtensionIOXL9555.hpp"
-
+#include "IoExpanderXL9555.hpp"
+#include "IoExpanderSPI.hpp"
 #ifdef ARDUINO_ARCH_ESP32
 
 #include <esp_lcd_panel_io.h>
@@ -129,21 +129,23 @@ DRAM_ATTR static const lcd_init_cmd_t st7701_2_1_inches[] = {
     {0, {0}, 0xff}
 };
 
-ExtensionIOXL9555 io;
-ExtensionIOXL9555::ExtensionGPIO cs = ExtensionIOXL9555::IO3;
-ExtensionIOXL9555::ExtensionGPIO mosi = ExtensionIOXL9555::IO4;
-ExtensionIOXL9555::ExtensionGPIO sclk = ExtensionIOXL9555::IO5;
-ExtensionIOXL9555::ExtensionGPIO reset = ExtensionIOXL9555::IO6;
-ExtensionIOXL9555::ExtensionGPIO power_enable = ExtensionIOXL9555::IO2;
+IoExpanderXL9555 expander;
+IoExpanderSPI expanderSPI;
+
+uint8_t cs = 3;
+uint8_t mosi = 4;
+uint8_t sclk = 5;
+uint8_t reset = 6;
+uint8_t power_enable = 2;
 
 static const lcd_init_cmd_t *_init_cmd = st7701_2_1_inches;
 esp_lcd_panel_handle_t _panelDrv;
-std::vector<uint16_t> draw_buf(BOARD_TFT_WIDTH * BOARD_TFT_HEIGHT * 2, 0x000);
+std::vector < uint16_t > draw_buf(BOARD_TFT_WIDTH * BOARD_TFT_HEIGHT * 2, 0x000);
 
 void writeCommand(const uint8_t cmd)
 {
     uint16_t data = cmd;
-    io.transfer9(data);
+    expanderSPI.transfer9(data);
 }
 
 void writeData(const uint8_t *data, int len)
@@ -153,7 +155,7 @@ void writeData(const uint8_t *data, int len)
         do {
             // The ninth bit of data, 1, represents data, 0 represents command
             uint16_t pdat = (*(data + i)) | 1 << 8;
-            io.transfer9(pdat);
+            expanderSPI.transfer9(pdat);
             i++;
         } while (len--);
     }
@@ -167,7 +169,7 @@ void setup()
     *
     *    If the device address is not known, the 0xFF parameter can be passed in.
     *
-    *    XL9555_UNKOWN_ADDRESS  = 0xFF
+    *    XL9555_UNKNOWN_ADDRESS  = 0xFF
     *
     *    If the device address is known, the device address is given
     *
@@ -180,9 +182,9 @@ void setup()
     *    XL9555_SLAVE_ADDRESS6  = 0x26
     *    XL9555_SLAVE_ADDRESS7  = 0x27
     */
-    const uint8_t chip_address = XL9555_UNKOWN_ADDRESS;
+    const uint8_t chip_address = XL9555_UNKNOWN_ADDRESS;
 
-    if (!io.begin(Wire, chip_address, SENSOR_SDA, SENSOR_SCL)) {
+    if (!expander.begin(Wire, chip_address, SENSOR_SDA, SENSOR_SCL)) {
         while (1) {
             Serial.println("Failed to find XL9555 - check your wiring!");
             delay(1000);
@@ -193,20 +195,20 @@ void setup()
     * * The power enable is connected to the XL9555 expansion chip GPIO.
     * * It must be turned on and can only be started when using a battery.
     */
-    io.pinMode(power_enable, OUTPUT);
-    io.digitalWrite(power_enable, HIGH);
+    expander.pinMode(power_enable, OUTPUT);
+    expander.digitalWrite(power_enable, HIGH);
 
-    io.pinMode(reset, OUTPUT);
-    io.digitalWrite(reset, LOW);
+    expander.pinMode(reset, OUTPUT);
+    expander.digitalWrite(reset, LOW);
     delay(20);
-    io.digitalWrite(reset, HIGH);
+    expander.digitalWrite(reset, HIGH);
     delay(10);
 
 
     Wire.setClock(1000000UL);
     uint32_t start = millis();
 
-    io.beginSPI(mosi, -1, sclk, cs);
+    expanderSPI.beginSPI(expander, mosi, -1, sclk, cs);
 
     int i = 0;
     while (_init_cmd[i].databytes != 0xff) {
@@ -245,10 +247,15 @@ void setup()
             .vsync_front_porch = 20,
             .flags =
             {
+                .hsync_idle_low = 0,
+                .vsync_idle_low = 0,
+                .de_idle_high = 0,
                 .pclk_active_neg = 1,
+                .pclk_idle_high = 0
             },
         },
         .data_width = 16, // RGB565 in parallel mode, thus 16bit in width
+        .sram_trans_align = 0,
         .psram_trans_align = 64,
         .hsync_gpio_num = BOARD_TFT_HSYNC,
         .vsync_gpio_num = BOARD_TFT_VSYNC,
@@ -310,6 +317,8 @@ void setup()
 #endif
         .flags =
         {
+            .disp_active_low = 0,
+            .relax_on_idle = 0,
             .fb_in_psram = 1, // allocate frame buffer in PSRAM
         },
     };
