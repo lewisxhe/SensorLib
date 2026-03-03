@@ -133,6 +133,21 @@ public:
         return ret;
     }
 
+    int readRegister(uint8_t *buf, size_t len) override
+    {
+        if (!buf || len == 0)return -1;
+        hal->digitalWrite(csPin, LOW);
+        spi_transaction_t trans;
+        memset(&trans, 0, sizeof(trans));
+        trans.addr = READ_MASK;
+        trans.length = len * 8;
+        trans.rxlength = len * 8;
+        trans.rx_buffer = buf;
+        esp_err_t ret = spi_device_transmit(spi, &trans);
+        hal->digitalWrite(csPin, HIGH);
+        return ret == ESP_OK ? 0 : -1;
+    }
+
     int readRegister(const uint8_t reg) override
     {
         uint8_t value = 0x00;

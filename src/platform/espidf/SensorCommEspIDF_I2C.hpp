@@ -129,6 +129,20 @@ public:
         return -1;
     }
 
+    int readRegister(uint8_t *buf, size_t len) override
+    {
+#if defined(USEING_I2C_LEGACY)
+        if (ESP_OK == i2c_master_write_read_device(_i2cNum, addr, NULL, 0, buf, len,
+                SENSORLIB_I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS)) {
+            return 0;
+        }
+#else //ESP_IDF_VERSION
+        if (ESP_OK == i2c_master_transmit_receive(_i2cDevice, NULL, 0, buf, len, -1)) {
+            return 0;
+        }
+#endif //ESP_IDF_VERSION
+        return -1;
+    }
 
     int readRegister(const uint8_t reg) override
     {
