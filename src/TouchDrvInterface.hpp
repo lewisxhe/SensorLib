@@ -92,7 +92,7 @@ public:
     * @brief  Destructor for the touch driver
     * @retval None
     */
-    ~TouchDrvInterface()
+    virtual ~TouchDrvInterface()
     {
         if (comm) {
             comm->deinit();
