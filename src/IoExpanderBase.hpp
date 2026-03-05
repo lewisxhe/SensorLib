@@ -42,10 +42,6 @@
 class IoExpanderBase
 {
 public:
-
-    enum Port {
-        PORT_ALL = 0x0F
-    };
     /**
      * @brief Construct a new IoExpanderBase object.
      *

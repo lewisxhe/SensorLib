@@ -45,6 +45,11 @@
 class IoExpanderPCA9570 : public IoExpanderBase
 {
 public:
+
+    enum Port {
+        PORT_ALL = 0x0F
+    };
+    
     /**
      * @brief Construct a new IoExpanderPCA9570 object.
      *
