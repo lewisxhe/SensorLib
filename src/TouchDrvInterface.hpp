@@ -32,14 +32,28 @@
 #include "SensorPlatform.hpp"
 #include "touch/TouchPoints.hpp"
 
+/**
+ * @brief Abstract base class for touch screen drivers.
+ *
+ * This class provides a common interface for initializing, configuring,
+ * and reading touch data from various touch controller chips.
+ * It also handles coordinate transformations (swap, mirror, scaling) and
+ * optional home button callbacks.
+ */
 class TouchDrvInterface : public SensorHalCustom
 {
 public:
+    /**
+     * @brief Callback type for home button events.
+     * @param user_data Pointer to user-defined data passed during callback registration.
+     */
     using HomeButtonCallback = void(*)(void *user_data);
 
     /**
-     * @brief  Constructor for the touch driver
-     * @retval None
+     * @brief Construct a new TouchDrvInterface object.
+     *
+     * Initializes member variables to default values.
+     * Does not allocate any hardware resources.
      */
     TouchDrvInterface() : comm(nullptr), hal(nullptr), _halModeCallback(nullptr),
         _halWriteCallback(nullptr), _halReadCallback(nullptr),
@@ -51,9 +65,10 @@ public:
     }
 
     /**
-    * @brief  Destructor for the touch driver
-    * @retval None
-    */
+     * @brief Destroy the TouchDrvInterface object.
+     *
+     * Deinitializes the communication interface if it was created.
+     */
     virtual ~TouchDrvInterface()
     {
         if (comm) {
@@ -64,13 +79,14 @@ public:
 // *INDENT-OFF*
 #if defined(ARDUINO)
     /**
-     * @brief  Initializes the touch driver with the specified I2C port and address
-     * @note   This function initializes the touch driver with the provided I2C port and address.
-     * @param  &wire: The I2C wire object
-     * @param  addr: The I2C address of the touch driver
-     * @param  sda: The SDA pin number
-     * @param  scl: The SCL pin number
-     * @retval True if the initialization was successful, false otherwise.
+     * @brief Initialize the touch driver using Arduino I2C (TwoWire).
+     *
+     * @param wire Reference to the Arduino TwoWire I2C object.
+     * @param addr I2C slave address of the touch controller.
+     * @param sda SDA pin number (optional, default -1 means use default Wire pins).
+     * @param scl SCL pin number (optional, default -1 means use default Wire pins).
+     * @retval true  Initialization successful.
+     * @retval false Initialization failed.
      */
     virtual bool begin(TwoWire &wire, uint8_t addr, int sda = -1, int scl = -1)
     {
@@ -88,13 +104,14 @@ public:
 #if defined(USEING_I2C_LEGACY)
 
     /**
-     * @brief  Initializes the touch driver with the specified I2C port and address
-     * @note   This function initializes the touch driver with the provided I2C port and address.
-     * @param  port_num: The I2C port number
-     * @param  addr: The I2C address of the touch driver
-     * @param  sda: The SDA pin number
-     * @param  scl: The SCL pin number
-     * @retval True if the initialization was successful, false otherwise.
+     * @brief Initialize the touch driver using ESP-IDF legacy I2C driver.
+     *
+     * @param port_num I2C port number (e.g., I2C_NUM_0).
+     * @param addr I2C slave address of the touch controller.
+     * @param sda SDA pin number.
+     * @param scl SCL pin number.
+     * @retval true  Initialization successful.
+     * @retval false Initialization failed.
      */
     virtual bool begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
     {
@@ -110,11 +127,12 @@ public:
 #else
 
     /**
-     * @brief  Initializes the touch driver with the specified I2C handle and address
-     * @note   This function initializes the touch driver with the provided I2C handle and address.
-     * @param  handle: The I2C master bus handle
-     * @param  addr: The I2C address of the touch driver
-     * @retval True if the initialization was successful, false otherwise.
+     * @brief Initialize the touch driver using ESP-IDF I2C master bus handle (new driver).
+     *
+     * @param handle I2C master bus handle obtained from `i2c_new_master_bus()`.
+     * @param addr I2C slave address of the touch controller.
+     * @retval true  Initialization successful.
+     * @retval false Initialization failed.
      */
     virtual bool begin(i2c_master_bus_handle_t handle, uint8_t addr)
     {
@@ -131,16 +149,20 @@ public:
 #endif  //ARDUINO
 
     /**
-    * @brief  Initializes the touch driver with custom callbacks
-    * @note   This function initializes the touch driver with the provided custom callbacks.
-    * @param  callback: The custom callback for communication
-    * @param  hal_callback: The custom callback for hardware abstraction layer
-    * @param  addr: The I2C address of the touch driver
-    * @retval True if the initialization was successful, false otherwise.
-    */
+     * @brief Initialize the touch driver with custom communication callbacks.
+     *
+     * Use this method when you need to provide your own low-level I2C/SPI-like
+     * communication functions (e.g., for non-standard buses or simulated interfaces).
+     *
+     * @param callback Custom callback for basic communication operations.
+     * @param hal_callback Custom callback for hardware abstraction layer (GPIO) operations.
+     * @param addr I2C slave address (ignored if not applicable).
+     * @retval true  Initialization successful.
+     * @retval false Initialization failed.
+     */
     virtual bool begin(SensorCommCustom::CustomCallback callback,
-                                SensorCommCustomHal::CustomHalCallback hal_callback,
-                                uint8_t addr)
+                       SensorCommCustomHal::CustomHalCallback hal_callback,
+                       uint8_t addr)
     {
         if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(COMM_CUSTOM,
                 callback, hal_callback, addr, comm, hal)) {
@@ -150,12 +172,14 @@ public:
     }
 
     /**
-     * @brief  Sets the GPIO callbacks for the touch driver
-     * @note   This function sets the callbacks for the GPIO operations in the touch driver.
-     * @param  mode_cb: The callback for the mode change
-     * @param  write_cb: The callback for the write operation
-     * @param  read_cb: The callback for the read operation
-     * @retval None
+     * @brief Set custom GPIO callbacks for pin control (e.g., reset, interrupt).
+     *
+     * These callbacks will be used by the HAL to manipulate GPIO pins.
+     * Must be called before `begin()` if custom GPIO handling is required.
+     *
+     * @param mode_cb Callback to set pin mode (input/output).
+     * @param write_cb Callback to write a digital value to a pin.
+     * @param read_cb Callback to read a digital value from a pin.
      */
     virtual void setGpioCallback(CustomMode mode_cb, CustomWrite write_cb, CustomRead read_cb) {
         _halModeCallback  = mode_cb;
@@ -164,20 +188,19 @@ public:
     }
 
     /**
-     * @brief  Gets the number of supported touch points
-     * @note   This function retrieves the number of touch points supported by the touch driver.
-     * @retval The number of supported touch points.
+     * @brief Get the maximum number of touch points supported by the hardware.
+     *
+     * @return uint8_t Maximum number of simultaneous touches.
      */
     virtual uint8_t getSupportTouchPoint() {
         return _maxTouchPoints;
     }
 
     /**
-     * @brief  Gets the touch point coordinates
-     * @note   This function retrieves the touch point coordinates from the touch driver.
-     * @param  &x: The X coordinate of the touch point
-     * @param  &y: The Y coordinate of the touch point
-     * @retval None
+     * @brief Get the raw resolution (maximum coordinate values) of the touch panel.
+     *
+     * @param[out] x Reference to store the maximum X coordinate.
+     * @param[out] y Reference to store the maximum Y coordinate.
      */
     virtual void getResolution(int16_t &x, int16_t &y) {
         x = _resX;
@@ -185,67 +208,66 @@ public:
     }
 
     /**
-     * @brief  Gets the touch point resolution
-     * @note   This function retrieves the touch point resolution from the touch driver.
-     * @retval None
+     * @brief Get the raw maximum X coordinate of the touch panel.
+     *
+     * @return int16_t Maximum X coordinate.
      */
     virtual int16_t getResolutionX() {
         return _resX;
     }
 
     /**
-     * @brief  Gets the touch point resolution
-     * @note   This function retrieves the touch point resolution from the touch driver.
-     * @retval None
+     * @brief Get the raw maximum Y coordinate of the touch panel.
+     *
+     * @return int16_t Maximum Y coordinate.
      */
     virtual int16_t getResolutionY() {
         return _resY;
     }
 
     /**
-     * @brief  Initializes the touch driver
-     * @note   This function initializes the touch driver and prepares it for use.
-     *         This function is virtual and needs to be implemented in subclasses.
-     * @param  addr: The I2C address of the touch driver
-     * @retval True if the initialization was successful, false otherwise.
+     * @brief Device-specific initialization implementation (pure virtual).
+     *
+     * This method must be implemented by derived classes to perform
+     * hardware-specific initialization, such as reading chip ID,
+     * configuring registers, and setting up default behavior.
+     *
+     * @param addr I2C address (or other bus address) of the device.
+     * @retval true  Initialization successful.
+     * @retval false Initialization failed.
      */
     virtual bool initImpl(uint8_t addr) = 0;
 
     /**
-     * @brief  Resets the touch driver
-     * @note   This function resets the touch driver to its initial state.
-     *         This function is virtual and needs to be implemented in subclasses.
-     * @retval None
+     * @brief Reset the touch controller (pure virtual).
+     *
+     * Typically toggles the reset pin (if connected) or sends a software reset command.
      */
     virtual void reset() = 0;
 
     /**
-     * @brief  Puts the touch driver to sleep
-     * @note   This function puts the touch driver into sleep mode.
-     *         This function is virtual and needs to be implemented in subclasses.
-     *         If the device does not have a reset pin connected, it cannot be woken up after being put
-     *         into sleep mode and must be powered on again.
-     * @retval None
+     * @brief Put the touch controller into low-power sleep mode (pure virtual).
+     *
+     * @note If the device does not have a hardware reset pin connected,
+     *       it may not be possible to wake it from sleep without power cycling.
      */
     virtual void sleep() = 0;
 
     /**
-    * @brief Wake up the touch driver
-    * @note This function will wake the touch driver from sleep mode.
-    *       This function is virtual and needs to be implemented in subclasses.
-    * @retval None
-    */
+     * @brief Wake the touch controller from sleep mode (pure virtual).
+     */
     virtual void wakeup() = 0;
 
     /**
-    * @brief  Get the touch point coordinates
-    * @note   This function will retrieve the touch point coordinates from the touch driver.
-    *         This function is virtual and needs to be implemented in subclasses.
-    * @param  *x_array: Pointer to the array to store the X coordinates
-    * @param  *y_array: Pointer to the array to store the Y coordinates
-    * @param  size: Number of touch points to retrieve
-    * @retval Number of touch points retrieved
-    */
+     * @brief Retrieve touch point coordinates (deprecated).
+     *
+     * @deprecated Use `getTouchPoints()` instead, which returns a richer TouchPoints object.
+     *
+     * @param[out] x_array Pointer to array to store X coordinates.
+     * @param[out] y_array Pointer to array to store Y coordinates.
+     * @param get_point Number of points to retrieve (max).
+     * @return uint8_t Actual number of touch points detected.
+     */
     virtual uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point) __attribute__((deprecated("use getTouchPoints instead of getPoint")))
     {
         TouchPoints data = getTouchPoints();
@@ -265,42 +287,45 @@ public:
     }
 
     /**
-     * @brief  Get the touch points
-     * @note   This function retrieves the touch points from the touch driver.
-     * @retval A reference to the touch points.
+     * @brief Get the current touch points (pure virtual).
+     *
+     * @return const TouchPoints& Reference to an object containing all detected touch points,
+     *         their coordinates, and additional metadata.
      */
     virtual const TouchPoints& getTouchPoints() = 0;
 
     /**
-    * @brief  Check if the touch point is pressed
-    * @note   This function will check if the touch point is currently pressed.
-    * @retval True if the touch point is pressed, false otherwise.
-    */
+     * @brief Check if any touch point is currently pressed.
+     *
+     * @retval true  At least one touch point detected.
+     * @retval false No touch detected.
+     */
     virtual bool isPressed() = 0;
 
     /**
-     * @brief  Get the model name
-     * @note   This function will retrieve the model name from the touch driver.
-     *         This function is virtual and needs to be implemented in subclasses.
-     * @retval The model name.
+     * @brief Get the human-readable model name of the touch controller.
+     *
+     * @return const char* String describing the chip model (e.g., "FT6336").
      */
     virtual const char *getModelName() = 0;
 
     /**
-    * @brief  Get the chip ID
-    * @note   This function will retrieve the chip ID from the touch driver.
-    * @retval The chip ID.
-    */
+     * @brief Get the chip identifier (e.g., ID register value).
+     *
+     * @return uint32_t Chip ID.
+     */
     virtual uint32_t getChipID() {
         return _chipID;
     }
 
     /**
-     * @brief  Set the reset and interrupt pins
-     * @note   This function will set the reset and interrupt pins for the touch driver.
-     * @param  rst: The reset pin number
-     * @param  irq: The interrupt pin number
-     * @retval None
+     * @brief Set the hardware reset and interrupt pin numbers.
+     *
+     * These pins will be used by the driver for hardware control.
+     * Must be called before `begin()` if the pins are connected.
+     *
+     * @param rst Reset pin number (negative value if not used).
+     * @param irq Interrupt pin number (negative value if not used).
      */
     virtual void setPins(int rst, int irq) {
         _rst = rst;
@@ -308,21 +333,22 @@ public:
     }
 
     /**
-     * @brief  Set the swap XY flag
-     * @note   This function will set the swap XY flag for the touch driver.
-     * @param  swap: True to swap X and Y coordinates, false otherwise.
-     * @retval None
+     * @brief Enable or disable swapping of X and Y coordinates.
+     *
+     * @param swap true to swap X and Y, false to keep original order.
      */
     virtual void setSwapXY(bool swap) {
         _swapXY = swap;
     }
 
     /**
-     * @brief  Set the mirror XY flag
-     * @note   This function will set the mirror XY flag for the touch driver.
-     * @param  mirrorX: True to mirror X coordinates, false otherwise.
-     * @param  mirrorY: True to mirror Y coordinates, false otherwise.
-     * @retval None
+     * @brief Enable or disable mirroring of X and/or Y coordinates.
+     *
+     * Mirroring is applied after scaling, using the maximum coordinates
+     * set via `setMaxCoordinates()` or `setTargetResolution()`.
+     *
+     * @param mirrorX true to mirror X (flip horizontally).
+     * @param mirrorY true to mirror Y (flip vertically).
      */
     virtual void setMirrorXY(bool mirrorX, bool mirrorY) {
         _mirrorX = mirrorX;
@@ -330,11 +356,14 @@ public:
     }
 
     /**
-     * @brief  Set the maximum coordinate values for mirroring operations.
-     * @note   These values are used only when mirroring is enabled.
-     *         For scaling to a display resolution, use setTargetResolution() instead.
-     * @param  x Maximum X coordinate (e.g., screen width).
-     * @param  y Maximum Y coordinate (e.g., screen height).
+     * @brief Set the maximum coordinate values used for mirroring.
+     *
+     * These values define the reference range when mirroring is enabled.
+     * If you also use scaling, consider using `setTargetResolution()` instead,
+     * which automatically sets these maxima.
+     *
+     * @param x Maximum X coordinate (e.g., display width).
+     * @param y Maximum Y coordinate (e.g., display height).
      */
     virtual void setMaxCoordinates(uint16_t x, uint16_t y) {
         _xMax = x;
@@ -342,11 +371,13 @@ public:
     }
 
     /**
-     * @brief  Set the raw touch panel resolution (physical maximum coordinates).
-     * @note   This should be called if the chip cannot automatically report its resolution.
-     *         The raw resolution is used to compute scaling factors when setTargetResolution() is called.
-     * @param  width  Maximum X coordinate reported by the touch controller.
-     * @param  height Maximum Y coordinate reported by the touch controller.
+     * @brief Set the raw resolution of the touch panel (physical maximum coordinates).
+     *
+     * This should be called if the touch controller does not provide its resolution automatically.
+     * These values are used to compute scaling factors when `setTargetResolution()` is called.
+     *
+     * @param width  Maximum X coordinate reported by the touch controller.
+     * @param height Maximum Y coordinate reported by the touch controller.
      */
     virtual void setResolution(uint16_t width, uint16_t height) {
         _resX = width;
@@ -354,12 +385,14 @@ public:
     }
 
     /**
-     * @brief  Set the target display resolution to map touch coordinates.
-     * @note   This function calculates scaling factors based on the previously set raw resolution.
-     *         If raw resolution is not set (both _resX and _resY are 0), scaling is disabled.
-     *         The provided width/height are also stored as maximum values for mirroring.
-     * @param  width  Target display width.
-     * @param  height Target display height.
+     * @brief Set the target display resolution to map touch coordinates to screen pixels.
+     *
+     * This function calculates scaling factors based on the previously set raw resolution
+     * (via `setResolution()`). If raw resolution is not set (both zero), scaling is disabled.
+     * It also stores the target dimensions as maximum coordinates for mirroring.
+     *
+     * @param width  Target display width in pixels.
+     * @param height Target display height in pixels.
      */
     virtual void setTargetResolution(uint16_t width, uint16_t height) {
         if (_resX == 0 || _resY == 0) {
@@ -375,14 +408,14 @@ public:
     }
 
     /**
-     * @brief Applies coordinate transformations to all points in a TouchPoints object.
+     * @brief Apply coordinate transformations (swap, scale, mirror) to all touch points.
      *
      * Transformations are applied in the following order:
-     * 1. Swap X and Y (if _swapXY is true)
-     * 2. Scale coordinates from raw to target resolution (if scaling enabled)
-     * 3. Mirror X (if _mirrorX is true) using _xMax as maximum X value
-     * 4. Mirror Y (if _mirrorY is true) using _yMax as maximum Y value
-     * 5. Clamp to [_xMax, _yMax] to ensure coordinates stay within bounds.
+     * 1. Swap X and Y (if `_swapXY` is true).
+     * 2. Scale from raw to target resolution (if scaling enabled).
+     * 3. Mirror X (if `_mirrorX` true) using `_xMax` as the maximum X value.
+     * 4. Mirror Y (if `_mirrorY` true) using `_yMax` as the maximum Y value.
+     * 5. Clamp coordinates to `[0, _xMax]` and `[0, _yMax]`.
      *
      * @param points The TouchPoints object to transform (modified in-place).
      */
@@ -398,7 +431,7 @@ public:
                 pt.y = tmp;
             }
 
-            // Application scaling , if set target resolution
+            // Apply scaling if target resolution set
             if (_scalingEnabled) {
                 pt.x = static_cast<uint16_t>(pt.x * _scaleX + 0.5f);
                 pt.y = static_cast<uint16_t>(pt.y * _scaleY + 0.5f);
@@ -414,17 +447,20 @@ public:
                 pt.y = _yMax - pt.y;
             }
 
+            // Clamp to display bounds
             if (pt.x > _xMax) pt.x = _xMax;
             if (pt.y > _yMax) pt.y = _yMax;
         }
     }
 
     /**
-     * @brief  Set the home button callback
-     * @note   This function will set the callback function for the home button.
-     * @param  cb: The callback function to set
-     * @param  *user_data: Pointer to user data to pass to the callback function
-     * @retval None
+     * @brief Register a callback for home button events.
+     *
+     * The callback will be invoked when a touch event occurs near the center button area
+     * (coordinates set via `setCenterButtonCoordinate()`).
+     *
+     * @param cb Function pointer to the callback.
+     * @param user_data Pointer to user-defined data passed to the callback.
      */
     virtual void setHomeButtonCallback(HomeButtonCallback cb, void *user_data) {
         _HButtonCallback = cb;
@@ -432,11 +468,13 @@ public:
     }
 
     /**
-     * @brief  Set the center button coordinate
-     * @note   This function will set the center button coordinate for the touch driver.
-     * @param  x: The X coordinate of the center button
-     * @param  y: The Y coordinate of the center button
-     * @retval None
+     * @brief Set the expected screen coordinates of a hardware home button.
+     *
+     * If a touch occurs within a small region around these coordinates,
+     * and a home button callback is registered, the callback will be triggered.
+     *
+     * @param x X coordinate of the button center.
+     * @param y Y coordinate of the button center.
      */
     virtual void setCenterButtonCoordinate(int16_t x, int16_t y) {
         _center_btn_x = x;
@@ -446,22 +484,24 @@ public:
 // *INDENT-ON*
 
 protected:
-    std::unique_ptr <SensorCommBase> comm;
-    std::unique_ptr <SensorHal> hal;
-    CustomMode  _halModeCallback;
-    CustomWrite _halWriteCallback;
-    CustomRead  _halReadCallback;
+    std::unique_ptr<SensorCommBase> comm;        ///< Communication interface (I2C/SPI/etc.)
+    std::unique_ptr<SensorHal> hal;              ///< Hardware abstraction layer for GPIO
+    CustomMode  _halModeCallback;                ///< Custom GPIO mode callback
+    CustomWrite _halWriteCallback;               ///< Custom GPIO write callback
+    CustomRead  _halReadCallback;                ///< Custom GPIO read callback
 
-    uint16_t _resX, _resY, _xMax, _yMax;
-    bool _swapXY, _mirrorX, _mirrorY;
-    int _rst;
-    int _irq;
-    uint32_t _chipID;
-    HomeButtonCallback _HButtonCallback;
-    void *_userData;
-    uint8_t _maxTouchPoints;
-    int16_t _center_btn_x;
-    int16_t _center_btn_y;
-    float _scaleX, _scaleY;
-    bool _scalingEnabled;
+    uint16_t _resX, _resY;        ///< Raw touch panel resolution (max X, max Y)
+    uint16_t _xMax, _yMax;        ///< Maximum coordinates used for mirroring/clamping
+    bool _swapXY;                 ///< Flag to swap X and Y
+    bool _mirrorX, _mirrorY;      ///< Flags to mirror X and Y axes
+    int _rst;                     ///< Reset pin number (-1 if not used)
+    int _irq;                     ///< Interrupt pin number (-1 if not used)
+    uint32_t _chipID;              ///< Chip identification value
+    HomeButtonCallback _HButtonCallback; ///< Home button callback function
+    void *_userData;               ///< User data for home button callback
+    uint8_t _maxTouchPoints;       ///< Maximum supported touch points
+    int16_t _center_btn_x;         ///< X coordinate of home button center
+    int16_t _center_btn_y;         ///< Y coordinate of home button center
+    float _scaleX, _scaleY;        ///< Scaling factors for X and Y
+    bool _scalingEnabled;           ///< Flag indicating whether scaling is active
 };
