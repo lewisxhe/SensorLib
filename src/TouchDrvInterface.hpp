@@ -46,7 +46,7 @@ public:
         _resX(0), _resY(0), _xMax(0), _yMax(0),
         _swapXY(false), _mirrorX(false), _mirrorY(false), _rst(-1), _irq(-1),
         _chipID(0x00), _HButtonCallback(nullptr), _userData(nullptr), _maxTouchPoints(0),
-        _center_btn_x(-1), _center_btn_y(-1)
+        _center_btn_x(-1), _center_btn_y(-1), _scaleX(1.0f), _scaleY(1.0f), _scalingEnabled(false)
     {
     }
 
@@ -330,11 +330,11 @@ public:
     }
 
     /**
-     * @brief  Set the maximum coordinates
-     * @note   This function will set the maximum coordinates for the touch driver.
-     * @param  x: The maximum X coordinate
-     * @param  y: The maximum Y coordinate
-     * @retval None
+     * @brief  Set the maximum coordinate values for mirroring operations.
+     * @note   These values are used only when mirroring is enabled.
+     *         For scaling to a display resolution, use setTargetResolution() instead.
+     * @param  x Maximum X coordinate (e.g., screen width).
+     * @param  y Maximum Y coordinate (e.g., screen height).
      */
     virtual void setMaxCoordinates(uint16_t x, uint16_t y) {
         _xMax = x;
@@ -342,12 +342,47 @@ public:
     }
 
     /**
+     * @brief  Set the raw touch panel resolution (physical maximum coordinates).
+     * @note   This should be called if the chip cannot automatically report its resolution.
+     *         The raw resolution is used to compute scaling factors when setTargetResolution() is called.
+     * @param  width  Maximum X coordinate reported by the touch controller.
+     * @param  height Maximum Y coordinate reported by the touch controller.
+     */
+    virtual void setResolution(uint16_t width, uint16_t height) {
+        _resX = width;
+        _resY = height;
+    }
+
+    /**
+     * @brief  Set the target display resolution to map touch coordinates.
+     * @note   This function calculates scaling factors based on the previously set raw resolution.
+     *         If raw resolution is not set (both _resX and _resY are 0), scaling is disabled.
+     *         The provided width/height are also stored as maximum values for mirroring.
+     * @param  width  Target display width.
+     * @param  height Target display height.
+     */
+    virtual void setTargetResolution(uint16_t width, uint16_t height) {
+        if (_resX == 0 || _resY == 0) {
+            _scaleX = _scaleY = 1.0f;
+            _scalingEnabled = false;
+        } else {
+            _scaleX = (float)width / _resX;
+            _scaleY = (float)height / _resY;
+            _scalingEnabled = true;
+        }
+        _xMax = width;
+        _yMax = height;
+    }
+
+    /**
      * @brief Applies coordinate transformations to all points in a TouchPoints object.
      *
      * Transformations are applied in the following order:
      * 1. Swap X and Y (if _swapXY is true)
-     * 2. Mirror X (if _mirrorX is true) using _xMax as maximum X value
-     * 3. Mirror Y (if _mirrorY is true) using _yMax as maximum Y value
+     * 2. Scale coordinates from raw to target resolution (if scaling enabled)
+     * 3. Mirror X (if _mirrorX is true) using _xMax as maximum X value
+     * 4. Mirror Y (if _mirrorY is true) using _yMax as maximum Y value
+     * 5. Clamp to [_xMax, _yMax] to ensure coordinates stay within bounds.
      *
      * @param points The TouchPoints object to transform (modified in-place).
      */
@@ -363,6 +398,12 @@ public:
                 pt.y = tmp;
             }
 
+            // Application scaling , if set target resolution
+            if (_scalingEnabled) {
+                pt.x = static_cast<uint16_t>(pt.x * _scaleX + 0.5f);
+                pt.y = static_cast<uint16_t>(pt.y * _scaleY + 0.5f);
+            }
+
             // Mirror X
             if (_mirrorX && _xMax > 0) {
                 pt.x = _xMax - pt.x;
@@ -372,6 +413,9 @@ public:
             if (_mirrorY && _yMax > 0) {
                 pt.y = _yMax - pt.y;
             }
+
+            if (pt.x > _xMax) pt.x = _xMax;
+            if (pt.y > _yMax) pt.y = _yMax;
         }
     }
 
@@ -418,4 +462,6 @@ protected:
     uint8_t _maxTouchPoints;
     int16_t _center_btn_x;
     int16_t _center_btn_y;
+    float _scaleX, _scaleY;
+    bool _scalingEnabled;
 };

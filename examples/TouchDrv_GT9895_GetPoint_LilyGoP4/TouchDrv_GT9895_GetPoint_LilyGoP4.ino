@@ -128,8 +128,15 @@ void setup()
     // Wakeup touch
     // touch.wakeup();
 
-    // Set touch max xy
-    // touch.setMaxCoordinates(240, 296);
+    // LilyGo-P4 chip cannot automatically obtain the resolution; 
+    // the original resolution must be manually set.
+    touch.setResolution(1060, 2400);
+
+    // Set the target resolution, and the scaling factor will be calculated automatically.
+    touch.setTargetResolution(568, 1232);
+
+    // Set the maximum coordinates ，used for mirroring touch coordinates
+    // touch.setMaxCoordinates(568, 1232);
 
     // Set swap xy
     // touch.setSwapXY(true);
