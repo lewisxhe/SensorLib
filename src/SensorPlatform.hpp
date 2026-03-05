@@ -116,3 +116,15 @@ bool beginCommCustomCallback(CommInterface interface,
     comm->init();
     return true;
 }
+
+inline void addrToBeBuf(uint32_t addr, uint8_t buf[4]) {
+    buf[0] = (addr >> 24) & 0xFF;
+    buf[1] = (addr >> 16) & 0xFF;
+    buf[2] = (addr >> 8) & 0xFF;
+    buf[3] = addr & 0xFF;
+}
+
+inline void addrToBeBuf(uint16_t addr, uint8_t buf[2]) {
+    buf[0] = (addr >> 8) & 0xFF;
+    buf[1] = addr & 0xFF;
+}
