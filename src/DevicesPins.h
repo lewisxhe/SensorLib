@@ -81,21 +81,21 @@
 #define SENSOR_SCL 5
 #define SENSOR_IRQ 15
 #define SENSOR_RST 41
-#elif defined(ARDUINO_T_WATCH_S3_U)
+#elif defined(ARDUINO_T_WATCH_S3_ULTRA)
 // T-Watch-S3-U
-#define SENSOR_SDA 2
-#define SENSOR_SCL 3
-#define SENSOR_IRQ 12
-#define SENSOR_RST 16
+#define TOUCH_SDA 3
+#define TOUCH_SCL 2
+#define TOUCH_IRQ 12
+#define TOUCH_RST -1
 #elif defined(ARDUINO_T_WATCH_S3)
 // T-Watch-S3
 #define SENSOR_SDA 10
 #define SENSOR_SCL 11
 #define PCF8563_IRQ 17
 #define BMA423_IRQ 14
-#define FT6336_SDA 39
-#define FT6336_SCL 40
-#define FT6336_IRQ 16
+#define TOUCH_SDA 39
+#define TOUCH_SCL 40
+#define TOUCH_IRQ 16
 #elif defined(ARDUINO_T_BEAM_S3_SUPREME)
 #define OLED_SDA   (17)
 #define OLED_SCL   (18)

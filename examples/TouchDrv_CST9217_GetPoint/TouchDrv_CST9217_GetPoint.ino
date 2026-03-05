@@ -51,9 +51,7 @@
 #endif
 
 TouchDrvCST92xx touch;
-int16_t x[5], y[5];
-bool  isPressed = false;
-
+volatile bool isPressed = false;
 
 void setup()
 {
@@ -85,7 +83,6 @@ void setup()
     // Scan I2C devices
     SensorWireHelper::dumpDevices(Wire);
 
-
     // uint8_t touchAddress = 0x1A;        // Other device addresses are determined by the touch firmware and are generally 0X5A by default.
     uint8_t touchAddress = 0x5A;     // The device address is determined according to the actual situation. Not all device addresses are 0X5A. There can also be other customized device addresses.
 
@@ -97,7 +94,8 @@ void setup()
     touch.setPins(TOUCH_RST, TOUCH_IRQ);
     bool result = touch.begin(Wire, touchAddress, TOUCH_SDA, TOUCH_SCL);
     if (result == false) {
-        Serial.println("touch is not online..."); while (1)delay(1000);
+        Serial.println("touch is not online...");
+        while (1)delay(1000);
     }
     Serial.print("Model :"); Serial.println(touch.getModelName());
 
@@ -107,11 +105,11 @@ void setup()
     }, NULL);
 
 
-    Serial.println("Enter touch sleep mode.");
+    // Serial.println("Enter touch sleep mode.");
     // Unable to obtain coordinates after turning on sleep
     // CST9217 Work current ~= 1.3mA
     // CST9217 sleep current = 3.4 uA
-    touch.sleep();
+    // touch.sleep();
 
     // int i = 10;
     // while (i--) {
@@ -123,7 +121,7 @@ void setup()
 
 
     // Wakeup touch
-    touch.reset();
+    // touch.reset();
 
     // Set touch max xy
     // touch.setMaxCoordinates(240, 296);
@@ -134,32 +132,26 @@ void setup()
     // Set mirror xy
     // touch.setMirrorXY(true, true);
 
-    //Register touch plane interrupt pin
-    attachInterrupt(TOUCH_IRQ, []() {
-        isPressed = true;
-    }, FALLING);
 }
 
 void loop()
 {
-    if (isPressed) {
-        isPressed = false;
-        uint8_t touched = touch.getPoint(x, y, touch.getSupportTouchPoint());
-        if (touched) {
-            for (int i = 0; i < touched; ++i) {
-                Serial.print("X[");
-                Serial.print(i);
-                Serial.print("]:");
-                Serial.print(x[i]);
-                Serial.print(" ");
-                Serial.print(" Y[");
-                Serial.print(i);
-                Serial.print("]:");
-                Serial.print(y[i]);
-                Serial.print(" ");
-            }
-            Serial.println();
+    TouchPoints touch_points = touch.getTouchPoints();
+    if (touch_points.hasPoints()) {
+        for (int i = 0; i < touch_points.getPointCount(); ++i) {
+            const TouchPoint &point = touch_points.getPoint(i);
+            Serial.print("X[");
+            Serial.print(i);
+            Serial.print("]:");
+            Serial.print(point.x);
+            Serial.print(" ");
+            Serial.print(" Y[");
+            Serial.print(i);
+            Serial.print("]:");
+            Serial.print(point.y);
+            Serial.print(" ");
         }
+        Serial.println();
     }
     delay(30);
 }

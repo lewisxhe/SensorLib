@@ -62,6 +62,14 @@ void setup()
     }
     touch.interruptPolling();
 
+    // Set swap xy coordinates
+    // touch.setSwapXY(true);
+
+    // Set max coordinates
+    // touch.setMaxCoordinates(320, 320);
+
+    // Set mirror xy coordinates
+    // touch.setMirrorXY(true, true);
 
     Serial.println("Touch Info:");
     Serial.print("Model: "); Serial.println(touch.getModelName());
@@ -74,22 +82,24 @@ void setup()
 
 void loop()
 {
-    int16_t x[2], y[2];
     if (digitalRead(TOUCH_IRQ) == LOW) {
-        uint8_t touched = touch.getPoint(x, y, 2);
-        for (int i = 0; i < touched; ++i) {
-            Serial.print("X[");
-            Serial.print(i);
-            Serial.print("]:");
-            Serial.print(x[i]);
-            Serial.print(" ");
-            Serial.print(" Y[");
-            Serial.print(i);
-            Serial.print("]:");
-            Serial.print(y[i]);
-            Serial.print(" ");
+        TouchPoints touch_points = touch.getTouchPoints();
+        if (touch_points.hasPoints()) {
+            for (int i = 0; i < touch_points.getPointCount(); ++i) {
+                const TouchPoint &point = touch_points.getPoint(i);
+                Serial.print("X[");
+                Serial.print(i);
+                Serial.print("]:");
+                Serial.print(point.x);
+                Serial.print(" ");
+                Serial.print(" Y[");
+                Serial.print(i);
+                Serial.print("]:");
+                Serial.print(point.y);
+                Serial.print(" ");
+            }
+            Serial.println();
         }
-        Serial.println();
     }
     delay(50);
 }

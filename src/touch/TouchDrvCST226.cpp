@@ -42,54 +42,52 @@ void TouchDrvCST226::reset()
     }
 }
 
-uint8_t TouchDrvCST226::getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point)
+const TouchPoints &TouchDrvCST226::getTouchPoints()
 {
-    static constexpr uint8_t  statusReg   =  (0x00);
-    static constexpr uint8_t  bufferSize =   (28);
-
+    static TouchPoints points;
+    const uint8_t  statusReg   =  (0x00);
+    const uint8_t  bufferSize =   (28);
     uint8_t buffer[bufferSize];
     uint8_t index = 0;
 
-    if (comm->readRegister(statusReg, buffer, bufferSize) == -1) {
-        return 0;
-    }
-    if (buffer[0] == 0x83 && buffer[1] == 0x17 && buffer[5] == 0x80) {
-        if (_HButtonCallback) {
-            _HButtonCallback(_userData);
+    // Clear cached touch points
+    points.clear();
+
+    if (comm->readRegister(statusReg, buffer, bufferSize) == 0) {
+
+        if (buffer[0] == 0x83 && buffer[1] == 0x17 && buffer[5] == 0x80) {
+            if (_HButtonCallback) {
+                _HButtonCallback(_userData);
+            }
+            return points;
         }
-        return 0;
-    }
 
-    if (buffer[6] != 0xAB)return 0;
-    if (buffer[0] == 0xAB)return 0;
-    if (buffer[5] == 0x80)return 0;
+        if (buffer[6] != 0xAB)return points; // Return zero points
+        if (buffer[0] == 0xAB)return points; // Return zero points
+        if (buffer[5] == 0x80)return points; // Return zero points
 
-    uint8_t numPoints = buffer[5] & 0x7F;
+        uint8_t numPoints = buffer[5] & 0x7F; // Get number of touch points (lower 7 bits)
 
-    if (numPoints > 5  || !numPoints) {
-        comm->writeRegister(0x00, 0xAB);
-        return 0;
-    }
-
-    for (int i = 0; i < numPoints; i++) {
-        report.id[i] = buffer[index] >> 4;
-        report.status[i] = buffer[index] & 0x0F;
-        report.x[i] = (uint16_t)((buffer[index + 1] << 4) | ((buffer[index + 3] >> 4) & 0x0F));
-        report.y[i] = (uint16_t)((buffer[index + 2] << 4) | (buffer[index + 3] & 0x0F));
-        report.pressure[i] = buffer[index + 4];
-        index = (i == 0) ?  (index + 7) :  (index + 5);
-    }
-
-    updateXY(numPoints, report.x, report.y);
-
-    if (numPoints) {
-        for (int i = 0; i < get_point; i++) {
-            x_array[i] =  report.x[i];
-            y_array[i] =  report.y[i];
+        // Validate number of touch points
+        if (numPoints > MAX_FINGER_NUM  || !numPoints) {
+            comm->writeRegister(0x00, 0xAB);
+            return points; // Return zero points
         }
-    }
 
-    return numPoints;
+        // If not center button, add point
+        for (int i = 0; i < numPoints; i++) {
+            points.addPoint((buffer[index + 1] << 4) | ((buffer[index + 3] >> 4) & 0x0F), ///< X coordinate
+                            (buffer[index + 2] << 4) | (buffer[index + 3] & 0x0F),    ///< Y coordinate
+                            buffer[index + 4],      ///< Pressure
+                            buffer[index] >> 4,     ///< Touch point ID
+                            buffer[index] & 0x0F    ///< Status/event type
+                           );
+            index = (i == 0) ?  (index + 7) :  (index + 5);
+        }
+        // Swap XY or mirroring coordinates,if set
+        updateXY(points);
+    }
+    return points;
 }
 
 bool TouchDrvCST226::isPressed()
@@ -105,7 +103,7 @@ bool TouchDrvCST226::isPressed()
         }
         return false;
     }
-    return getPoint(NULL, NULL, 1);
+    return getTouchPoints().hasPoints();
 }
 
 

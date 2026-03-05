@@ -28,28 +28,28 @@
  */
 #pragma once
 
-#include "REG/CST9xxConstants.h"
 #include "TouchDrvInterface.hpp"
 
 #define CST92XX_SLAVE_ADDRESS      (0x5A)
 
-class TouchDrvCST92xx : public TouchDrvInterface, public CST92xxConstants
+class TouchDrvCST92xx : public TouchDrvInterface
 {
 public:
+    using TouchDrvInterface::getPoint;
     enum CST92_RunMode {
-        CST92_MODE_NORMAL = (0x00),
-        CST92_MODE_LOW_POWER = (0X01),
-        CST92_MODE_DEEP_SLEEP = (0X02),
-        CST92_MODE_WAKEUP = (0x03),
-        CST92_MODE_DEBUG_DIFF = (0x04),
-        CST92_MODE_DEBUG_RAWDATA = (0X05),
-        CST92_MODE_FACTORY = (0x06),
-        CST92_MODE_DEBUG_INFO = (0x07),
-        CST92_MODE_UPDATE_FW = (0x08),
-        CST92_MODE_FACTORY_HIGHDRV = (0x10),
-        CST92_MODE_FACTORY_LOWDRV = (0x11),
-        CST92_MODE_FACTORY_SHORT = (0x12),
-        CST92_MODE_LPSCAN = (0x13),
+        MODE_NORMAL = (0x00),
+        MODE_LOW_POWER = (0X01),
+        MODE_DEEP_SLEEP = (0X02),
+        MODE_WAKEUP = (0x03),
+        MODE_DEBUG_DIFF = (0x04),
+        MODE_DEBUG_RAWDATA = (0X05),
+        MODE_FACTORY = (0x06),
+        MODE_DEBUG_INFO = (0x07),
+        MODE_UPDATE_FW = (0x08),
+        MODE_FACTORY_HIGH_DRV = (0x10),
+        MODE_FACTORY_LOW_DRV = (0x11),
+        MODE_FACTORY_SHORT = (0x12),
+        MODE_LPSCAN = (0x13),
     };
 
     /**
@@ -88,14 +88,11 @@ public:
     void wakeup() override;
 
     /**
-     * @brief  Get the touch point coordinates
-     * @note   This function will retrieve the touch point coordinates from the touch driver.
-     * @param  *x_array: Pointer to the array to store the X coordinates
-     * @param  *y_array: Pointer to the array to store the Y coordinates
-     * @param  size: Number of touch points to retrieve
-     * @retval Return the number of touch points retrieved
+     * @brief  Get the touch points
+     * @note   This function will retrieve the touch points from the touch driver.
+     * @retval A reference to the touch points.
      */
-    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point = 1) override;
+    const TouchPoints &getTouchPoints() override;
 
     /**
     * @brief  Check if the touch point is pressed
@@ -125,14 +122,33 @@ private:
     bool setMode(uint8_t mode);
     bool enterBootloader();
     bool getAttribute();
-    void parseFingerData(uint8_t *data,  cst9xx_point_t *point);
     uint32_t readWordFromMem(uint8_t type, uint16_t mem_addr);
-    uint32_t get_u32_from_ptr(const void *ptr);
     uint32_t getChipType();
 
 protected:
     int _slave_addr;
     uint16_t chipType;
+
+    static constexpr uint16_t  CST9220_CHIP_ID             = (0x9220);
+    static constexpr uint16_t  CST9217_CHIP_ID             = (0x9217);
+    
+    static constexpr uint16_t  REG_READ                    = (0xD000);
+    static constexpr uint16_t  REG_DEBUG_MODE              = (0xD101);
+    static constexpr uint16_t  REG_SLEEP_MODE              = (0xD105);
+    static constexpr uint16_t  REG_DIS_LOW_POWER_SCAN_MODE = (0xD106);
+    static constexpr uint16_t  REG_NORMAL_MODE             = (0xD109);
+    static constexpr uint16_t  REG_RAW_MODE                = (0xD10A);
+    static constexpr uint16_t  REG_DIFF_MODE               = (0xD10D);
+    static constexpr uint16_t  REG_BASE_LINE_MODE          = (0xD10E);
+    static constexpr uint16_t  REG_LOW_POWER_MODE          = (0xD10F);
+    static constexpr uint16_t  REG_FACTORY_MODE            = (0xD114);
+    
+    static constexpr uint8_t   CST92XX_BOOT_ADDRESS        = (0x5A);
+    static constexpr uint8_t   CST92XX_ACK                 = (0xAB);
+    static constexpr uint32_t  CST92XX_MEM_SIZE            = (0x007F80);// 31KB
+
+    static constexpr uint8_t   MAX_FINGER_NUM              = (2);
+    static constexpr uint8_t   PROGRAM_PAGE_SIZE           = (128);
 
 #if 0  /*DISABLE UPDATE FIRMWARE*/
 
@@ -156,7 +172,7 @@ protected:
         uint32_t project_id;
         uint32_t chip_type;
     } bin_data;
-
+    uint32_t get_u32_from_ptr(const void *ptr);
     bool getFirmwareInfo(void);
     int16_t eraseMem(void);
     int16_t writeSRAM(uint8_t *buf, uint16_t len);

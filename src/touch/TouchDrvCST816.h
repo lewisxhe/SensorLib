@@ -35,6 +35,7 @@
 class TouchDrvCST816 : public TouchDrvInterface
 {
 public:
+    using TouchDrvInterface::getPoint;
     /**
      * @brief  Constructor for the touch driver
      * @retval None
@@ -52,7 +53,7 @@ public:
     * @note   This function will reset the touch driver by toggling the reset pin.
     * @retval None
     */
-    void reset();
+    void reset() override;
 
     /**
     * @brief Puts the touch driver to sleep
@@ -61,53 +62,50 @@ public:
     *       into sleep mode and must be powered on again.
     * @retval None
     */
-    void sleep();
+    void sleep() override;
 
     /**
      * @brief  Wake up the touch driver
      * @note   This function will wake up the touch driver from sleep mode.
      * @retval None
      */
-    void wakeup();
+    void wakeup() override;
 
     /**
-     * @brief  Get the touch point coordinates
-     * @note   This function will retrieve the touch point coordinates from the touch driver.
-     * @param  *x_array: Pointer to the array to store the X coordinates
-     * @param  *y_array: Pointer to the array to store the Y coordinates
-     * @param  size: Number of touch points to retrieve
-     * @retval None
+     * @brief  Get the touch points
+     * @note   This function will retrieve the touch points from the touch driver.
+     * @retval A reference to the touch points.
      */
-    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point);
+    const TouchPoints &getTouchPoints() override;
 
     /**
     * @brief  Check if the touch point is pressed
     * @note   This function will check if the touch point is currently pressed.
     * @retval True if the touch point is pressed, false otherwise.
     */
-    bool isPressed();
+    bool isPressed() override;
 
     /**
     * @brief  Get the model name
     * @note   This function will retrieve the model name from the touch driver.
     * @retval The model name.
     */
-    const char *getModelName();
+    const char *getModelName() override;
 
     /**
      * @brief  Disable auto sleep mode
      * @note   This function will disable the auto sleep mode of the touch driver.
-     *          
+     *
      * @retval None
      */
-    void disableAutoSleep();
+    void disableAutoSleep() ;
 
     /**
      * @brief  Enable auto sleep mode
      * @note   This function will enable the auto sleep mode of the touch driver.
      * @retval None
      */
-    void enableAutoSleep();
+    void enableAutoSleep() ;
 
 private:
     bool initImpl(uint8_t addr);
@@ -127,4 +125,5 @@ protected:
     static constexpr uint8_t  CST716_CHIP_ID            = (0x20);
     static constexpr uint8_t  CST820_CHIP_ID            = (0xB7);
     static constexpr uint8_t  CST816D_CHIP_ID           = (0xB6);
+    static constexpr uint8_t  MAX_FINGER_NUM            = (1);
 };

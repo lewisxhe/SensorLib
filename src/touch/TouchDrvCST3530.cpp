@@ -39,92 +39,75 @@ void TouchDrvCST3530::reset()
     }
 }
 
-uint16_t TouchDrvCST3530::check_sum_16(int val, uint8_t* buf, uint16_t len)
+uint16_t TouchDrvCST3530::check_sum_16(int val, uint8_t *buf, uint16_t len)
 {
     uint16_t sum = val;
     while (len--) sum += *buf++;
     return sum;
 }
 
-uint8_t TouchDrvCST3530::getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point)
+
+const TouchPoints &TouchDrvCST3530::getTouchPoints()
 {
+    static TouchPoints points;
     uint8_t numPoints = 0;
-
-    if (!get_point) {
-        return 0;
-    }
-
-    TouchPoint_t points[MAX_FINGER_NUM];
+    uint8_t keyNumber = 0;
     uint8_t read_buffer[MAX_READ_BYTES] = {0};
-    uint8_t finger_num = 0, key_num = 0;
-    uint8_t report_typ = 0;
 
+    // Clear cached touch points
+    points.clear();
+
+    // If read command fails, return zero points
     if (!writeCommand(READ_COMMAND, read_buffer, sizeof(read_buffer))) {
         writeCommand(CLEAR_COMMAND);
-        return 0;
+        return points;
     }
-
-    report_typ = read_buffer[2];
-    if (report_typ != 0xFF) {
+    // If status is not 0xFF, clear points
+    if (read_buffer[2] != 0xFF) {
         writeCommand(CLEAR_COMMAND);
-        return 0;
+        return points;
     }
 
-    finger_num = read_buffer[3] & 0x0F;
-    key_num = (read_buffer[3] & 0xF0) >> 4;
+    numPoints = read_buffer[3] & 0x0F;  // Get number of touch points (lower 4 bits)
+    keyNumber = (read_buffer[3] & 0xF0) >> 4; // Get key number (upper 4 bits)
 
-    if (finger_num == 0 || finger_num > MAX_FINGER_NUM) {
+    if (numPoints == 0 || numPoints > MAX_FINGER_NUM) {
         writeCommand(CLEAR_COMMAND);
-        return 0;
+        return points;
     }
 
-    if (x_array == nullptr || y_array == nullptr) {
-        writeCommand(CLEAR_COMMAND);
-        return finger_num;
-    }
-
-
-    if (get_point > finger_num) {
-        get_point = finger_num;
-    }
-
-    for (uint8_t i = 0; i < get_point; i++) {
-        uint16_t idx = (key_num + i) * 5;
+    for (uint8_t i = 0; i < numPoints; i++) {
+        uint16_t idx = (keyNumber + i) * 5;
         if (idx + 8 >= MAX_READ_BYTES) {
             break;
         }
-        points[i].pos_id   = read_buffer[idx + 8] & 0x0F;
-        points[i].event    = read_buffer[idx + 8] >> 4;
-        points[i].pos_x    = read_buffer[idx + 4] + ((uint16_t)(read_buffer[idx + 7] & 0x0F) << 8);
-        points[i].pos_y    = read_buffer[idx + 5] + ((uint16_t)(read_buffer[idx + 7] & 0xF0) << 4);
-        points[i].pres_z   = read_buffer[idx + 6];
+        const uint8_t pos_id  = read_buffer[idx + 8] & 0x0F;
+        const uint8_t event   = read_buffer[idx + 8] >> 4;
+        const uint8_t pos_x   = read_buffer[idx + 4] + ((uint16_t)(read_buffer[idx + 7] & 0x0F) << 8);
+        const uint8_t pos_y   = read_buffer[idx + 5] + ((uint16_t)(read_buffer[idx + 7] & 0xF0) << 4);
+        const uint8_t pressure  = read_buffer[idx + 6];
 
-        if (check_sum_16(0x55, &read_buffer[4], (key_num + finger_num) * 5) != (read_buffer[0] | read_buffer[1] << 8)) {
+        if (check_sum_16(0x55, &read_buffer[4], (keyNumber + numPoints) * 5) != (read_buffer[0] | read_buffer[1] << 8)) {
             writeCommand(CLEAR_COMMAND);
-            return 0;
+            return points;
         }
-        if (points[i].event != 0) {
-            x_array[i] = points[i].pos_x;
-            y_array[i] = points[i].pos_y;
-            numPoints++;
-            log_d("ID=%d , X=%d, Y=%d, press=%d", points[i].pos_id, points[i].pos_x, points[i].pos_y, points[i].pres_z);
+        if (event != 0x00) {
+            points.addPoint(pos_x, pos_y, pressure, pos_id, event);
         }
     }
-
+    // Clear cached touch points
     writeCommand(CLEAR_COMMAND);
-
-    updateXY(numPoints, x_array, y_array);
-
-    return numPoints;
+    // Swap XY or mirroring coordinates,if set
+    updateXY(points);
+    return points;
 }
-
 
 bool TouchDrvCST3530::isPressed()
 {
     if (_irq != -1) {
         return hal->digitalRead(_irq) == LOW;
     }
-    return getPoint(nullptr, nullptr, 1) > 0;
+    return getTouchPoints().hasPoints();
 }
 
 const char *TouchDrvCST3530::getModelName()

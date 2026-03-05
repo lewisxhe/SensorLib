@@ -36,16 +36,8 @@
 
 class TouchDrvCST3530 : public TouchDrvInterface
 {
-private:
-    static constexpr uint32_t  READ_COMMAND                = (0xD0070000);
-    static constexpr uint32_t  INFO_COMMAND                = (0xD0030000);
-    static constexpr uint32_t  SLEEP_COMMAND               = (0xD00022AB);
-    static constexpr uint32_t  CLEAR_COMMAND               = (0xD00002AB);
-    static constexpr uint8_t   MAX_FINGER_NUM              = (5);
-    static constexpr uint8_t   MAX_READ_BYTES              = (32);
-
 public:
-
+    using TouchDrvInterface::getPoint;
     /**
     * @brief  Constructor for the touch driver
     * @retval None
@@ -82,14 +74,11 @@ public:
     void wakeup() override;
 
     /**
-    * @brief  Get the touch point coordinates
-    * @note   This function will retrieve the touch point coordinates from the touch driver.
-    * @param  *x_array: Pointer to the array to store the X coordinates
-    * @param  *y_array: Pointer to the array to store the Y coordinates
-    * @param  size: Number of touch points to retrieve
-    * @retval None
-    */
-    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point) override;
+     * @brief  Get the touch points
+     * @note   This function will retrieve the touch points from the touch driver.
+     * @retval A reference to the touch points.
+     */
+    const TouchPoints &getTouchPoints() override;
 
     /**
     * @brief  Check if the touch point is pressed
@@ -124,4 +113,12 @@ private:
     }
 
     uint16_t check_sum_16(int val, uint8_t* buf, uint16_t len);
+
+protected:
+    static constexpr uint32_t  READ_COMMAND                = (0xD0070000);
+    static constexpr uint32_t  INFO_COMMAND                = (0xD0030000);
+    static constexpr uint32_t  SLEEP_COMMAND               = (0xD00022AB);
+    static constexpr uint32_t  CLEAR_COMMAND               = (0xD00002AB);
+    static constexpr uint8_t   MAX_FINGER_NUM              = (5);
+    static constexpr uint8_t   MAX_READ_BYTES              = (32);
 };

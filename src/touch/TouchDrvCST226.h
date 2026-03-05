@@ -35,6 +35,7 @@
 class TouchDrvCST226 : public TouchDrvInterface
 {
 public:
+    using TouchDrvInterface::getPoint;
     /**
      * @brief  Constructor for the touch driver
      * @retval None
@@ -71,15 +72,12 @@ public:
     void wakeup() override;
 
     /**
-    * @brief  Get the touch point coordinates
-    * @note   This function will retrieve the touch point coordinates from the touch driver.
-    * @param  *x_array: Pointer to the array to store the X coordinates
-    * @param  *y_array: Pointer to the array to store the Y coordinates
-    * @param  size: Number of touch points to retrieve
-    * @retval None
-    */
-    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point) override;
-
+     * @brief  Get the touch points
+     * @note   This function will retrieve the touch points from the touch driver.
+     * @retval A reference to the touch points.
+     */
+    const TouchPoints &getTouchPoints() override;
+    
     /**
     * @brief  Check if the touch point is pressed
     * @note   This function will check if the touch point is currently pressed.
@@ -97,10 +95,8 @@ public:
 private:
     static constexpr uint8_t  CST226SE_CHIPTYPE   =  (0xA8);
     static constexpr uint8_t  CST328_CHIPTYPE     =  (0x48);
+    static constexpr uint8_t  MAX_FINGER_NUM      =  (5);
 
     bool initImpl(uint8_t addr);
 
-protected:
-
-    TouchData report;
 };

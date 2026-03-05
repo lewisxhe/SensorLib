@@ -157,7 +157,26 @@ void TouchDrvCSTXXX::reset()
 uint8_t TouchDrvCSTXXX::getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point)
 {
     if (!_drv)return 0;
-    return _drv->getPoint(x_array, y_array, get_point);
+    TouchPoints data = getTouchPoints();
+    if (x_array == nullptr || y_array == nullptr) {
+        return data.getPointCount();
+    }
+    if (data.hasPoints()) {
+        uint8_t pointsToCopy = (get_point < data.getPointCount()) ? get_point : data.getPointCount();
+        for (int i = 0; i < pointsToCopy; i++) {
+            const TouchPoint &pt = data.getPoint(i);
+            x_array[i] = pt.x;
+            y_array[i] = pt.y;
+        }
+    }
+    return data.getPointCount();
+}
+
+const TouchPoints &TouchDrvCSTXXX::getTouchPoints()
+{
+    static TouchPoints points;
+    if (!_drv)return points;
+    return _drv->getTouchPoints();
 }
 
 bool TouchDrvCSTXXX::isPressed()

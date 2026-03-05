@@ -39,46 +39,44 @@ void TouchDrvCST816::reset()
     }
 }
 
-uint8_t TouchDrvCST816::getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point)
+const TouchPoints &TouchDrvCST816::getTouchPoints()
 {
+    static TouchPoints points;
     uint8_t buffer[13];
-    if (comm->readRegister(CST8xx_REG_STATUS, buffer, 13) == -1) {
-        return 0;
+    uint16_t x = 0, y = 0;
+
+    // Clear cached touch points
+    points.clear();
+
+    if (comm->readRegister(CST8xx_REG_STATUS, buffer, 13) == 0) {
+
+        // Some CST816T will return all 0xFF after turning off automatic sleep.
+        if (buffer[2] == 0x00 || buffer[2] == 0xFF) {
+            return points;
+        }
+
+        uint8_t numPoints = buffer[2] & 0x0F; // Get number of touch points (lower 4 bits)
+
+        // CST816 only supports single touch
+        if (numPoints > MAX_FINGER_NUM) {
+            return points;
+        }
+
+        x = ((buffer[3] & 0x0F) << 8 | buffer[4]);
+        y = ((buffer[5] & 0x0F) << 8 | buffer[6]);
+
+        // Depends on touch screen firmware
+        if (x == _center_btn_x && y == _center_btn_y && _HButtonCallback) {
+            _HButtonCallback(_userData);
+            return points; // Return zero points
+        }
+        // If not center button, add point
+        points.addPoint(x, y);
+        // Swap XY or mirroring coordinates,if set
+        updateXY(points);
     }
 
-    if (!buffer[2] || !x_array || !y_array || !get_point) {
-        return 0;
-    }
-
-    // Some CST816T will return all 0xFF after turning off automatic sleep.
-    if (buffer[2] == 0xFF) {
-        return 0;
-    }
-
-    uint8_t numPoints = buffer[2] & 0x0F;
-
-    // CST816 only supports single touch
-    if (numPoints > 1) {
-        return 0;
-    }
-
-    int16_t tmp_x, tmp_y;
-
-    tmp_x = ((buffer[CST8xx_REG_XPOS_HIGH] & 0x0F) << 8 | buffer[CST8xx_REG_XPOS_LOW]);
-    tmp_y = ((buffer[CST8xx_REG_YPOS_HIGH] & 0x0F) << 8 | buffer[CST8xx_REG_YPOS_LOW]);
-
-    // Depends on touch screen firmware
-    if (tmp_x == _center_btn_x && tmp_y == _center_btn_y && _HButtonCallback) {
-        _HButtonCallback(_userData);
-        return 0;
-    }
-
-    x_array[0] = tmp_x;
-    y_array[0] = tmp_y;
-
-    updateXY(numPoints, x_array, y_array);
-
-    return numPoints;
+    return points;
 }
 
 bool TouchDrvCST816::isPressed()
@@ -94,9 +92,8 @@ bool TouchDrvCST816::isPressed()
         }
         return false;
     }
-    return getPoint(NULL, NULL, 1);
+    return getTouchPoints().hasPoints();
 }
-
 
 const char *TouchDrvCST816::getModelName()
 {
@@ -134,7 +131,6 @@ void TouchDrvCST816::wakeup()
 {
     reset();
 }
-
 
 void TouchDrvCST816::disableAutoSleep()
 {

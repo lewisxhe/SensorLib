@@ -2,7 +2,7 @@
  *
  * @license MIT License
  *
- * Copyright (c) 2024 lewis he
+ * Copyright (c) 2026 lewis he
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,31 +22,60 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      TouchDrv_GT9895_GetPoint.ino
+ * @file      TouchDrv_GT9895_GetPoint_LilyGoP4.ino
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2024-09-21
+ * @date      2026-03-05
  *
  */
 #include <Arduino.h>
 #include "TouchDrvGT9895.hpp"
+#include "IoExpanderXL9555.hpp"
+#include "SensorWireHelper.h"
 
-#ifndef TOUCH_SDA
-#define TOUCH_SDA  2
-#endif
+#define P4_TOUCH_SDA  7
+#define P4_TOUCH_SCL  8
+#define P4_IO_EXPANDER_IRQ 5
+#define IO_EXPANDER_TOUCH_RST   (3 | 0x80)
+#define IO_EXPANDER_TOUCH_IRQ   (4 | 0x80)
 
-#ifndef TOUCH_SCL
-#define TOUCH_SCL  3
-#endif
-
-#ifndef TOUCH_IRQ
-#define TOUCH_IRQ  1
-#endif
-
-#ifndef TOUCH_RST
-#define TOUCH_RST  10
-#endif
+#ifdef ARDUINO_ESP32P4_DEV
 
 TouchDrvGT9895 touch;
+IoExpanderXL9555 expander;
+volatile bool ioExpanderInterruptTriggered = false;
+
+void TouchDrvDigitalWrite(uint8_t gpio, uint8_t level)
+{
+    if (gpio & 0x80) {
+        Serial.print("Expander DigitalWrite: "); Serial.print(gpio & 0x7F); Serial.print(" Level: "); Serial.println(level);
+        expander.digitalWrite(gpio & 0x7F, level);
+    } else {
+        Serial.print("GPIO DigitalWrite: "); Serial.print(gpio); Serial.print(" Level: "); Serial.println(level);
+        digitalWrite(gpio, level);
+    }
+}
+
+uint8_t TouchDrvDigitalRead(uint8_t gpio)
+{
+    if (gpio & 0x80) {
+        Serial.print("Expander DigitalRead: "); Serial.print(gpio & 0x7F); Serial.println();
+        return expander.digitalRead(gpio & 0x7F);
+    } else {
+        Serial.print("GPIO DigitalRead: "); Serial.print(gpio); Serial.println();
+        return digitalRead(gpio);
+    }
+}
+
+void TouchDrvPinMode(uint8_t gpio, uint8_t mode)
+{
+    if (gpio & 0x80) {
+        Serial.print("Expander PinMode: "); Serial.print(gpio & 0x7F); Serial.print(" Mode: "); Serial.println(mode);
+        expander.pinMode(gpio & 0x7F, mode);
+    } else {
+        Serial.print("GPIO PinMode: "); Serial.print(gpio); Serial.print(" Mode: "); Serial.println(mode);
+        pinMode(gpio, mode);
+    }
+}
 
 void setup()
 {
@@ -54,17 +83,34 @@ void setup()
 
     while (!Serial);
 
-    delay(3000);
+    Serial.println("Sketch only works with LilyGo-T-Display-P4 AMOLED(GT9895) Version");
 
-    // Set touch interrupt and reset Pin
-    touch.setPins(TOUCH_RST, TOUCH_IRQ);
+    Wire.begin(P4_TOUCH_SDA, P4_TOUCH_SCL);
 
-    if (!touch.begin(Wire, GT9895_SLAVE_ADDRESS_L, TOUCH_SDA, TOUCH_SCL )) {
+    SensorWireHelper::dumpDevices(Wire);
+
+    if (!expander.begin(Wire, XL9555_SLAVE_ADDRESS0)) {
         while (1) {
-            Serial.println("Failed to find GT9895 - check your wiring!");
+            Serial.println("Failed to find io expander - check your wiring!");
             delay(1000);
         }
     }
+    Serial.println("Sensor Expander Initialized");
+
+    // LilyGo-Display-P4 touch interrupt pin and touch reset pin aux to expander , use gpio custom callback
+    touch.setGpioCallback(TouchDrvPinMode, TouchDrvDigitalWrite, TouchDrvDigitalRead);
+
+    // Set touch interrupt and reset Pin
+    touch.setPins(IO_EXPANDER_TOUCH_RST, IO_EXPANDER_TOUCH_IRQ);
+
+    if (!touch.begin(Wire, GT9895_SLAVE_ADDRESS_L)) {
+        while (1) {
+            Serial.println("Failed to find touch device - check your wiring!");
+            delay(1000);
+        }
+    }
+
+    Serial.println("GT9895 Touch Initialized");
 
     Serial.print("Chip ID : 0x"); Serial.println(touch.getChipID(), HEX);
 
@@ -90,7 +136,6 @@ void setup()
 
     // Set mirror xy
     // touch.setMirrorXY(true, true);
-
 }
 
 void loop()
@@ -102,6 +147,7 @@ void loop()
     *    This requires the touch screen manufacturer to provide a firmware update, which is currently unavailable.
     * 2. Use polling registers instead of interrupts, but this will consume CPU
     */
+
     TouchPoints touch_points = touch.getTouchPoints();
     if (touch_points.hasPoints()) {
         for (int i = 0; i < touch_points.getPointCount(); ++i) {
@@ -119,4 +165,17 @@ void loop()
         }
         Serial.println();
     }
+    delay(50);
 }
+
+#else
+void setup()
+{
+    Serial.begin(115200);
+}
+void loop()
+{
+    Serial.println("Sketch only works with LilyGo-T-Display-P4 AMOLED(GT9895) Version");
+    delay(1000);
+}
+#endif

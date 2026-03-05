@@ -158,7 +158,14 @@ public:
      * @param  size: Number of touch points to retrieve
      * @retval Return the number of touch points retrieved
      */
-    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point = 1) override;
+    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point = 1) override __attribute__((deprecated("use getTouchPoints instead of getPoint")));
+
+    /**
+     * @brief  Get the touch points
+     * @note   This function will retrieve the touch points from the touch driver.
+     * @retval The touch points.
+     */
+    const TouchPoints& getTouchPoints() override;
 
     /**
     * @brief  Check if the touch point is pressed
@@ -291,6 +298,11 @@ private:
         }
         return nullptr;
     }
+
+    static constexpr size_t TOUCH_DRV_TYPE_VALID_COUNT = TouchDrv_UNKNOWN;
+
+    static_assert(sizeof(driverCreators) / sizeof(driverCreators[0]) == TOUCH_DRV_TYPE_VALID_COUNT,
+                  "driverCreators size mismatch");
 
     void setupDriver();
 

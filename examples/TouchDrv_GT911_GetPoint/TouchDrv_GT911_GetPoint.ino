@@ -49,9 +49,6 @@
 #endif
 
 TouchDrvGT911 touch;
-int16_t x[5], y[5];
-
-
 
 void setup()
 {
@@ -105,20 +102,19 @@ void setup()
 void loop()
 {
     if (touch.isPressed()) {
-        uint8_t touched = touch.getPoint(x, y, touch.getSupportTouchPoint());
-        if (touched > 0) {
-            Serial.print(millis());
-            Serial.print("ms ");
-            for (int i = 0; i < touched; ++i) {
+        TouchPoints touch_points = touch.getTouchPoints();
+        if (touch_points.hasPoints()) {
+            for (int i = 0; i < touch_points.getPointCount(); ++i) {
+                const TouchPoint &point = touch_points.getPoint(i);
                 Serial.print("X[");
                 Serial.print(i);
                 Serial.print("]:");
-                Serial.print(x[i]);
+                Serial.print(point.x);
                 Serial.print(" ");
                 Serial.print(" Y[");
                 Serial.print(i);
                 Serial.print("]:");
-                Serial.print(y[i]);
+                Serial.print(point.y);
                 Serial.print(" ");
             }
             Serial.println();

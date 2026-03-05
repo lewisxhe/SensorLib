@@ -49,7 +49,6 @@
 #endif
 
 TouchDrvCSTXXX touch;
-int16_t x[5], y[5];
 volatile bool isPressed = false;
 
 void scanDevices(void)
@@ -136,7 +135,7 @@ void setup()
     */
     // Can choose fixed touch model or automatic identification by ID
     // touch.setTouchDrvModel(TouchDrv_CST8XX);
-    // touch.setTouchDrvModel(TouchDrv_CST226);    
+    // touch.setTouchDrvModel(TouchDrv_CST226);
     // touch.setTouchDrvModel(TouchDrv_CST92XX);
 
     // For touchscreens without an RST pin, the actual model may not be
@@ -197,18 +196,19 @@ void loop()
 {
     if (isPressed) {
         isPressed = false;
-        uint8_t touched = touch.getPoint(x, y, touch.getSupportTouchPoint());
-        if (touched) {
-            for (int i = 0; i < touched; ++i) {
+        TouchPoints touch_points = touch.getTouchPoints();
+        if (touch_points.hasPoints()) {
+            for (int i = 0; i < touch_points.getPointCount(); ++i) {
+                const TouchPoint &point = touch_points.getPoint(i);
                 Serial.print("X[");
                 Serial.print(i);
                 Serial.print("]:");
-                Serial.print(x[i]);
+                Serial.print(point.x);
                 Serial.print(" ");
                 Serial.print(" Y[");
                 Serial.print(i);
                 Serial.print("]:");
-                Serial.print(y[i]);
+                Serial.print(point.y);
                 Serial.print(" ");
             }
             Serial.println();

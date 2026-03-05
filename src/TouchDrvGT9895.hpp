@@ -29,12 +29,15 @@
  */
 #pragma once
 
-#include "REG/GT9895Constants.h"
 #include "TouchDrvInterface.hpp"
 
-class TouchDrvGT9895 :  public TouchDrvInterface, public GT9895Constants
+#define GT9895_SLAVE_ADDRESS_H              (0x14)
+#define GT9895_SLAVE_ADDRESS_L              (0x5D)
+
+class TouchDrvGT9895 :  public TouchDrvInterface
 {
 public:
+    using TouchDrvInterface::getPoint;
     /**
      * @brief  Constructor for the touch driver
      * @retval None
@@ -56,8 +59,8 @@ public:
 
     /**
     * @brief Puts the touch driver to sleep
-    * @note This function puts the touch driver into sleep mode. 
-    *       If the device does not have a reset pin connected, it cannot be woken up after being put 
+    * @note This function puts the touch driver into sleep mode.
+    *       If the device does not have a reset pin connected, it cannot be woken up after being put
     *       into sleep mode and must be powered on again.
     * @retval None
     */
@@ -71,14 +74,14 @@ public:
     void wakeup() override;
 
     /**
-     * @brief  Get the touch point coordinates
-     * @note   This function will retrieve the touch point coordinates from the touch driver.
-     * @param  *x_array: Pointer to the array to store the X coordinates
-     * @param  *y_array: Pointer to the array to store the Y coordinates
-     * @param  size: Number of touch points to retrieve
-     * @retval None
-     */
-    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t size = 1) override;
+    * @brief  Get the touch points
+    * @note   This function will retrieve the touch points from the touch driver.
+    *         TouchPoints is configured with a 5-point touch point buffer by default,
+    *         so it can return touch data from a maximum of 5 points. Although the GT9895
+    *         supports 10-point touch
+    * @retval A reference to the touch points.
+    */
+    const TouchPoints &getTouchPoints() override;
 
     /**
      * @brief  Check if the touch point is pressed
@@ -95,20 +98,51 @@ public:
     const char *getModelName() override;
 
 private:
+
+    enum CheckSumMode {
+        CHECKSUM_MODE_U8_LE,
+        CHECKSUM_MODE_U16_LE,
+    };
+
     bool initImpl(uint8_t addr) override;
-    int is_risk_data(const uint8_t *data, int size);
-    int checksum_cmp(const uint8_t *data, int size, int mode);
-    int readVersion(ChipFirmwareVersion *version);
-    int convertChipInfo(ChipInfo *info, const uint8_t *data);
-    void printChipInfo(ChipInfo *ic_info);
-    int readChipInfo(ChipInfo *ic_info);
+
+    /**
+     * @brief  Compare the checksum of the data
+     * @note   This function will compare the checksum of the data with the expected value.
+     * @param  *data: Pointer to the data buffer
+     * @param  size: Size of the data buffer
+     * @param  mode: Checksum mode
+     * @retval 0 if the checksum is valid, -1 if it is invalid
+     */
+    int checksum(const uint8_t *data, int size, CheckSumMode mode);
+
+    /**
+     * @brief  Get chip pid
+     * @note   This function will retrieve the chip pid from the touch driver.
+     * @retval The chip pid.
+     */
+    uint32_t getChipPID();
+
+    /**
+     * @brief  Clear the touch driver status
+     * @note   This function will clear the touch driver status.
+     * @retval None
+     */
     void clearStatus();
-    int getTouchData( uint8_t *pre_buf, uint32_t pre_buf_len);
 
 protected:
-    ChipTsEvent          _ts_event;
-    ChipFirmwareVersion  _version;
-    ChipInfo             _ic_info;
+
+    static constexpr uint8_t MAX_FINGER_NUM             = (10);
+    static constexpr uint8_t IRQ_EVENT_HEAD_LEN         = (8);
+    static constexpr uint8_t BYTES_PER_POINT            = (8);
+    static constexpr uint8_t COORDS_DATA_CHECKSUM_SIZE  = (2);
+
+    static constexpr uint8_t POINT_TYPE_STYLUS_HOVER    = (1);
+    static constexpr uint8_t POINT_TYPE_STYLUS          = (3);
+
+    static constexpr uint32_t REG_FW_VERSION = (0x00010014u);
+    static constexpr uint32_t REG_INFO       = (0x00010070u);
+    static constexpr uint32_t REG_CMD        = (0x00010174u);
+    static constexpr uint32_t REG_POINT      = (0x00010308u);
+    static constexpr uint32_t CHIP_PID       = (0x9895);
 };
-
-

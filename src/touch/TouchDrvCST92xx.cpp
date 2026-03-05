@@ -42,104 +42,72 @@ void TouchDrvCST92xx::reset()
     }
 }
 
-void TouchDrvCST92xx::parseFingerData(uint8_t *data,  cst9xx_point_t *point)
+const TouchPoints &TouchDrvCST92xx::getTouchPoints()
 {
-    const uint8_t id = (data[0] >> 4);
-    const uint8_t pressed = (data[0] & 0x0F);
-    const uint16_t x = ((data[1] << 4) | (data[3] >> 4));
-    const uint16_t y = ((data[2] << 4) | (data[3] & 0x0F));
-
-    if (pressed == 0x06 && id < CST92XX_MAX_FINGER_NUM) {
-        point->finger_id = id;
-        point->evt = pressed;
-        point->x = x;
-        point->y = y;
-    }
-}
-
-uint8_t TouchDrvCST92xx::getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point)
-{
-    int16_t res = 0;
+    static TouchPoints points;
     uint8_t numPoints = 0;
-    uint8_t read_buffer[CST92XX_MAX_FINGER_NUM * 5 + 5] = {0};
+    uint8_t buffer[MAX_FINGER_NUM * 5 + 5] = {0};
     uint8_t write_buffer[4] = {0};
-    cst9xx_point_t point_info[CST92XX_MAX_FINGER_NUM];
 
-    if (!x_array || !y_array || !get_point) {
-        return 0;
-    }
-    memset(&point_info, 0, sizeof(point_info));
+    // Clear cached touch points
+    points.clear();
 
-    //Write read command
-    write_buffer[0] = highByte(CST92XX_READ_COMMAND);
-    write_buffer[1] = lowByte(CST92XX_READ_COMMAND);
-    res = comm->writeThenRead(write_buffer, 2, read_buffer, sizeof(read_buffer));
-    if (res != 0) {
-        log_e("Write read command error");
-        return 0;
-    }
-    // Write read ack
-    write_buffer[0] = highByte(CST92XX_READ_COMMAND);
-    write_buffer[1] = lowByte(CST92XX_READ_COMMAND);
-    write_buffer[2] = CST92XX_ACK;
-    res = comm->writeBuffer(write_buffer, 3);
-    if (res != 0) {
-        log_e("Write read ack error");
-        return 0;
-    }
+    // Write read command
+    write_buffer[0] = highByte(REG_READ);
+    write_buffer[1] = lowByte(REG_READ);
+    addrToBeBuf(REG_READ, buffer);
 
-    // check device ack
-    if (read_buffer[6] != CST92XX_ACK) {
-        // log_e("Check device ack error , response code is  0x%x", read_buffer[6]);
-        return 0;
-    }
+    if (comm->writeThenRead(buffer, 2, buffer, sizeof(buffer)) == 0) {
 
-    // palm + gesture
-    if (read_buffer[4] & 0xF0) {
-        log_d("read point read_buffer[4]=0x%x.\n", read_buffer[4]);
-        if ((read_buffer[4] >> 7) == 0x01) {
-            if (_HButtonCallback) {
-                _HButtonCallback(_userData);
+        // Write read ACK
+        write_buffer[0] = highByte(REG_READ);
+        write_buffer[1] = lowByte(REG_READ);
+        write_buffer[2] = CST92XX_ACK;
+
+        if (comm->writeBuffer(write_buffer, 3) != 0) {
+            return points;
+        }
+
+        if (buffer[0] == CST92XX_ACK || buffer[6] != CST92XX_ACK) {
+            return points;
+        }
+
+        // Check cover screen gesture
+        if (buffer[4] & 0xF0) {
+            if ((buffer[4] >> 7) == 0x01) {
+                if (_HButtonCallback) {
+                    _HButtonCallback(_userData);
+                }
+                // Cover screen gesture detected, return zero points
+                return points;
             }
-            // bool palm = true;
-        } else if (read_buffer[4] >> 4) {
-            //uint8_t gesture = read_buffer[4] >> 4;
         }
-    }
 
-    numPoints = (read_buffer[5] & 0x7F);
-    if (numPoints > CST92XX_MAX_FINGER_NUM || numPoints == 0) {
-        return 0;
-    }
-
-    /*
-    // button
-    if ((read_buffer[5] & 0x80) == 0x80) {
-        uint8_t *data = read_buffer + numPoints * 5;
-        if (numPoints > 0) {
-            data += 2;
+        numPoints = (buffer[5] & 0x7F); // Get number of touch points
+        if (numPoints > MAX_FINGER_NUM || numPoints == 0) {
+            return points;
         }
-        uint8_t key_id = data[0];
-        uint8_t key_status = data[1];
+
+        for (uint8_t i = 0; i < numPoints; ++i) {
+            uint8_t *pdat = buffer + (i * 5) + (i == 0 ? 0 : 2);
+            const uint8_t id = (pdat[0] >> 4);
+            const uint8_t event = (pdat[0] & 0x0F);
+            const uint16_t x = ((pdat[1] << 4) | (pdat[3] >> 4));
+            const uint16_t y = ((pdat[2] << 4) | (pdat[3] & 0x0F));
+            if (event == 0x06 && id < MAX_FINGER_NUM) {
+                points.addPoint(x, y, 0, id, event);
+            }
+        }
+
+        if (points.getPoint(0).event == 0x00) {
+            points.clear();
+            return points;
+        }
+        // Swap XY or mirroring coordinates,if set
+        updateXY(points);
     }
-    */
 
-    for (uint8_t i = 0; i < numPoints; ++i) {
-        uint8_t *data = read_buffer + (i * 5) + (i == 0 ? 0 : 2);
-        parseFingerData(data, &point_info[i]);
-        x_array[i] = point_info[i].x;
-        y_array[i] = point_info[i].y;
-        log_d("Finger %d: x %d, y %d, id %d, event 0x%x.", i, point_info[i].x, point_info[i].y, point_info[i].finger_id, point_info[i].evt);
-    }
-
-    if (point_info[0].evt == 0x00) {
-        log_d("Release finger ....");
-        return 0;
-    }
-
-    updateXY(numPoints, x_array, y_array);
-
-    return numPoints;
+    return points;
 }
 
 // CST9217/CST9217 touch level is once per second, not continuous low level
@@ -148,7 +116,7 @@ bool TouchDrvCST92xx::isPressed()
     if (_irq != -1) {
         return hal->digitalRead(_irq) == LOW;
     }
-    return getPoint(NULL, NULL, 1);
+    return getTouchPoints().hasPoints();
 }
 
 
@@ -168,13 +136,12 @@ const char *TouchDrvCST92xx::getModelName()
 void TouchDrvCST92xx::sleep()
 {
 
-    uint8_t write_buffer[2] = {0};
+    uint8_t buffer[2] = {0};
     // Enter command mode
-    setMode(CST92_MODE_DEBUG_INFO);
+    setMode(MODE_DEBUG_INFO);
     //Send sleep command
-    write_buffer[0] = highByte(CST92XX_REG_SLEEP_MODE);
-    write_buffer[1] = lowByte(CST92XX_REG_SLEEP_MODE);
-    comm->writeBuffer(write_buffer, 2);
+    addrToBeBuf(REG_SLEEP_MODE, buffer);
+    comm->writeBuffer(buffer, 2);
 #ifdef ARDUINO_ARCH_ESP32
     if (_irq != -1) {
         hal->pinMode(_irq, OPEN_DRAIN);
@@ -306,11 +273,6 @@ uint32_t TouchDrvCST92xx::getChipType()
 #else
     return chipType;
 #endif
-}
-
-uint32_t TouchDrvCST92xx::get_u32_from_ptr(const void *ptr)
-{
-    return *reinterpret_cast<const uint32_t *>(ptr);
 }
 
 /**
@@ -509,35 +471,35 @@ bool TouchDrvCST92xx::setMode(uint8_t mode)
     }
 
     switch (mode) {
-    case CST92_MODE_NORMAL: {
+    case MODE_NORMAL: {
         log_d("set_work_mode: ENUM_MODE_NORMAL");
-        write_buffer[0] = highByte(CST92XX_REG_NORMAL_MODE);
-        write_buffer[1] = lowByte(CST92XX_REG_NORMAL_MODE);
+        write_buffer[0] = highByte(REG_NORMAL_MODE);
+        write_buffer[1] = lowByte(REG_NORMAL_MODE);
         break;
     }
-    case CST92_MODE_DEBUG_DIFF: {
+    case MODE_DEBUG_DIFF: {
         log_d("set_work_mode: ENUM_MODE_DEBUG_DIFF");
-        write_buffer[0] = highByte(CST92XX_REG_DIFF_MODE);
-        write_buffer[1] = lowByte(CST92XX_REG_DIFF_MODE);
+        write_buffer[0] = highByte(REG_DIFF_MODE);
+        write_buffer[1] = lowByte(REG_DIFF_MODE);
         break;
     }
-    case CST92_MODE_DEBUG_RAWDATA: {
+    case MODE_DEBUG_RAWDATA: {
         log_d("set_work_mode: ENUM_MODE_DEBUG_RAWDATA");
-        write_buffer[0] = highByte(CST92XX_REG_RAW_MODE);
-        write_buffer[1] = lowByte(CST92XX_REG_RAW_MODE);
+        write_buffer[0] = highByte(REG_RAW_MODE);
+        write_buffer[1] = lowByte(REG_RAW_MODE);
         break;
     }
-    case CST92_MODE_DEBUG_INFO: {
+    case MODE_DEBUG_INFO: {
         log_d("set_work_mode: ENUM_MODE_DEBUG_INFO");
-        write_buffer[0] = highByte(CST92XX_REG_DEBUG_MODE);
-        write_buffer[1] = lowByte(CST92XX_REG_DEBUG_MODE);
+        write_buffer[0] = highByte(REG_DEBUG_MODE);
+        write_buffer[1] = lowByte(REG_DEBUG_MODE);
         break;
     }
-    case CST92_MODE_FACTORY: {
+    case MODE_FACTORY: {
         log_d("set_work_mode: ENUM_MODE_FACTORY");
         for (i = 0; i < 10; i++) {
-            write_buffer[0] = highByte(CST92XX_REG_FACTORY_MODE);
-            write_buffer[1] = lowByte(CST92XX_REG_FACTORY_MODE);
+            write_buffer[0] = highByte(REG_FACTORY_MODE);
+            write_buffer[1] = lowByte(REG_FACTORY_MODE);
             res = comm->writeBuffer(write_buffer, 2);
             if (res != 0) {
                 hal->delay(1);
@@ -563,19 +525,19 @@ bool TouchDrvCST92xx::setMode(uint8_t mode)
         }
         break;
     }
-    case CST92_MODE_FACTORY_LOWDRV: {
+    case MODE_FACTORY_LOW_DRV: {
         log_d("set_work_mode: ENUM_MODE_FACTORY_LOWDRV");
         write_buffer[0] = 0xD1;
         write_buffer[1] = 0x11;
         break;
     }
-    case CST92_MODE_FACTORY_HIGHDRV: {
+    case MODE_FACTORY_HIGH_DRV: {
         log_d("set_work_mode: ENUM_MODE_FACTORY_HIGHDRV");
         write_buffer[0] = 0xD1;
         write_buffer[1] = 0x10;
         break;
     }
-    case CST92_MODE_FACTORY_SHORT: {
+    case MODE_FACTORY_SHORT: {
         log_d("set_work_mode: ENUM_MODE_FACTORY_SHORT");
         write_buffer[0] = 0xD1;
         write_buffer[1] = 0x12;
@@ -631,13 +593,18 @@ bool TouchDrvCST92xx::initImpl(uint8_t addr)
 
     log_d("Touch type:%s", getModelName());
 
-    _maxTouchPoints = CST92XX_MAX_FINGER_NUM;
+    _maxTouchPoints = MAX_FINGER_NUM;
 
     return true;
 }
 
 
 #if 0  /*DISABLE UPDATE FIRMWARE*/
+
+uint32_t TouchDrvCST92xx::get_u32_from_ptr(const void *ptr)
+{
+    return *reinterpret_cast<const uint32_t *>(ptr);
+}
 
 void TouchDrvCST92xx::jumpCheck()
 {
@@ -652,7 +619,7 @@ bool TouchDrvCST92xx::getFirmwareInfo(void)
     int16_t res = -1;
     int32_t info_checksum = 0;
 
-    setMode(CST92_MODE_DEBUG_INFO);
+    setMode(MODE_DEBUG_INFO);
 
     hal->delay(1);
     write_buffer[0] = 0xD1;
@@ -730,7 +697,7 @@ bool TouchDrvCST92xx::getFirmwareInfo(void)
     uint32_t rx_num = write_buffer[2];
     uint32_t key_num = write_buffer[3];
     // Go back normal mode
-    setMode(CST92_MODE_NORMAL);
+    setMode(MODE_NORMAL);
     log_d("Chip firmware ic type: 0x%04lx", firmware_ic_type);
     log_d("Chip firmware version: 0x%04lx", firmware_version);
     log_d("Chip firmware project id: 0x%04lx", firmware_project_id);
@@ -803,7 +770,7 @@ ERROR:
 int16_t TouchDrvCST92xx::writeSRAM(uint8_t *buf, uint16_t len)
 {
 
-    uint8_t write_buffer[CST92XX_PROGRAM_PAGE_SIZE + 2] = {0};
+    uint8_t write_buffer[PROGRAM_PAGE_SIZE + 2] = {0};
     int16_t res = 0;
     uint16_t reg = 0xA018;
     uint16_t per_len = sizeof(write_buffer) - 2;
@@ -920,11 +887,11 @@ int16_t TouchDrvCST92xx::writeMemAll(void)
 
     while (remain_len > 0) {
         uint16_t cur_len = remain_len;
-        if (cur_len > CST92XX_PROGRAM_PAGE_SIZE) {
-            cur_len = CST92XX_PROGRAM_PAGE_SIZE;
+        if (cur_len > PROGRAM_PAGE_SIZE) {
+            cur_len = PROGRAM_PAGE_SIZE;
         }
         // if write fw 128 bytes every time,need update point
-        if (getFirmwareAddress(((CST92XX_MEM_SIZE - remain_len) / CST92XX_PROGRAM_PAGE_SIZE), CST92XX_PROGRAM_PAGE_SIZE) < 0) {
+        if (getFirmwareAddress(((CST92XX_MEM_SIZE - remain_len) / PROGRAM_PAGE_SIZE), PROGRAM_PAGE_SIZE) < 0) {
             log_e("getFirmwareAddress fail");
             return -1;
         }

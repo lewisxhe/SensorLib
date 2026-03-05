@@ -30,46 +30,7 @@
 #pragma once
 
 #include "SensorPlatform.hpp"
-
-typedef struct {
-    uint8_t  pos_id;
-    uint8_t  event;
-    uint16_t pos_x;
-    uint16_t pos_y;
-    uint8_t  pres_z;
-} TouchPoint_t;
-
-class TouchData
-{
-public:
-    TouchData() {}
-    ~TouchData() {};
-    uint8_t available;
-    uint8_t id[5];
-    int16_t x[5];
-    int16_t y[5];
-    uint8_t  status[5];
-    uint8_t  pressure[5];
-
-    uint16_t getX(uint8_t index = 0)
-    {
-        return x[index];
-    }
-    uint16_t getY(uint8_t index = 0)
-    {
-        return y[index];
-    }
-    uint16_t getPressure(uint8_t index = 0)
-    {
-        return pressure[index];
-    }
-    uint16_t getStatus(uint8_t index = 0)
-    {
-        return status[index];
-    }
-};
-
-
+#include "touch/TouchPoints.hpp"
 
 class TouchDrvInterface : public SensorHalCustom
 {
@@ -80,7 +41,8 @@ public:
      * @brief  Constructor for the touch driver
      * @retval None
      */
-    TouchDrvInterface() : comm(nullptr), hal(nullptr),
+    TouchDrvInterface() : comm(nullptr), hal(nullptr), _halModeCallback(nullptr),
+        _halWriteCallback(nullptr), _halReadCallback(nullptr),
         _resX(0), _resY(0), _xMax(0), _yMax(0),
         _swapXY(false), _mirrorX(false), _mirrorY(false), _rst(-1), _irq(-1),
         _chipID(0x00), _HButtonCallback(nullptr), _userData(nullptr), _maxTouchPoints(0),
@@ -110,11 +72,14 @@ public:
      * @param  scl: The SCL pin number
      * @retval True if the initialization was successful, false otherwise.
      */
-    virtual bool begin(TwoWire &wire, uint8_t addr, int sda, int scl)
+    virtual bool begin(TwoWire &wire, uint8_t addr, int sda = -1, int scl = -1)
     {
         if (!beginCommon<SensorCommI2C, HalArduino>(comm, hal, wire, addr, sda, scl)) {
             return false;
         }
+        hal->setCustomMode(_halModeCallback);
+        hal->setCustomWrite(_halWriteCallback);
+        hal->setCustomRead(_halReadCallback);
         return initImpl(addr);
     }
 
@@ -136,6 +101,9 @@ public:
         if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, port_num, addr, sda, scl)) {
             return false;
         }
+        hal->setCustomMode(_halModeCallback);
+        hal->setCustomWrite(_halWriteCallback);
+        hal->setCustomRead(_halReadCallback);
         return initImpl(addr);
     }
 
@@ -153,6 +121,9 @@ public:
         if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, handle, addr)) {
             return false;
         }
+        hal->setCustomMode(_halModeCallback);
+        hal->setCustomWrite(_halWriteCallback);
+        hal->setCustomRead(_halReadCallback);
         return initImpl(addr);
     }
 
@@ -187,9 +158,9 @@ public:
      * @retval None
      */
     virtual void setGpioCallback(CustomMode mode_cb, CustomWrite write_cb, CustomRead read_cb) {
-        SensorHalCustom::setCustomMode(mode_cb);
-        SensorHalCustom::setCustomWrite(write_cb);
-        SensorHalCustom::setCustomRead(read_cb);
+        _halModeCallback  = mode_cb;
+        _halWriteCallback = write_cb;
+        _halReadCallback  = read_cb;
     }
 
     /**
@@ -273,9 +244,32 @@ public:
     * @param  *x_array: Pointer to the array to store the X coordinates
     * @param  *y_array: Pointer to the array to store the Y coordinates
     * @param  size: Number of touch points to retrieve
-    * @retval None
+    * @retval Number of touch points retrieved
     */
-    virtual uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point) = 0;
+    virtual uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point) __attribute__((deprecated("use getTouchPoints instead of getPoint")))
+    {
+        TouchPoints data = getTouchPoints();
+
+        if (x_array == nullptr || y_array == nullptr) {
+            return data.getPointCount();
+        }
+        if (data.hasPoints()) {
+            uint8_t pointsToCopy = (get_point < data.getPointCount()) ? get_point : data.getPointCount();
+            for (int i = 0; i < pointsToCopy; i++) {
+               const TouchPoint &pt = data.getPoint(i);
+                x_array[i] = pt.x;
+                y_array[i] = pt.y;
+            }
+        }
+        return data.getPointCount();
+    }
+
+    /**
+     * @brief  Get the touch points
+     * @note   This function retrieves the touch points from the touch driver.
+     * @retval A reference to the touch points.
+     */
+    virtual const TouchPoints& getTouchPoints() = 0;
 
     /**
     * @brief  Check if the touch point is pressed
@@ -348,28 +342,35 @@ public:
     }
 
     /**
-     * @brief  Update the touch point coordinates
-     * @note   This function will update the touch point coordinates in the driver.
-     * @param  pointNum: The touch point number to update
-     * @param  *xBuffer: Pointer to the buffer containing the new X coordinates
-     * @param  *yBuffer: Pointer to the buffer containing the new Y coordinates
-     * @retval None
+     * @brief Applies coordinate transformations to all points in a TouchPoints object.
+     *
+     * Transformations are applied in the following order:
+     * 1. Swap X and Y (if _swapXY is true)
+     * 2. Mirror X (if _mirrorX is true) using _xMax as maximum X value
+     * 3. Mirror Y (if _mirrorY is true) using _yMax as maximum Y value
+     *
+     * @param points The TouchPoints object to transform (modified in-place).
      */
-    virtual void updateXY(uint8_t pointNum, int16_t *xBuffer, int16_t *yBuffer) {
-        if (!pointNum){
-            return;
-        }
-        for (int i = 0; i < pointNum; ++i) {
+    virtual void updateXY(TouchPoints &points) const
+    {
+        for (uint8_t i = 0; i < points.getPointCount(); ++i) {
+            TouchPoint &pt = points.getPoint(i);
+
+            // Swap XY
             if (_swapXY) {
-                uint16_t tmp = xBuffer[i];
-                xBuffer[i] = yBuffer[i];
-                yBuffer[i] = tmp;
+                uint16_t tmp = pt.x;
+                pt.x = pt.y;
+                pt.y = tmp;
             }
-            if (_mirrorX && _xMax ) {
-                xBuffer[i] = _xMax - xBuffer[i];
+
+            // Mirror X
+            if (_mirrorX && _xMax > 0) {
+                pt.x = _xMax - pt.x;
             }
-            if (_mirrorY && _yMax) {
-                yBuffer[i] = _yMax - yBuffer[i];
+
+            // Mirror Y
+            if (_mirrorY && _yMax > 0) {
+                pt.y = _yMax - pt.y;
             }
         }
     }
@@ -401,8 +402,11 @@ public:
 // *INDENT-ON*
 
 protected:
-    std::unique_ptr < SensorCommBase > comm;
-    std::unique_ptr < SensorHal > hal;
+    std::unique_ptr <SensorCommBase> comm;
+    std::unique_ptr <SensorHal> hal;
+    CustomMode  _halModeCallback;
+    CustomWrite _halWriteCallback;
+    CustomRead  _halReadCallback;
 
     uint16_t _resX, _resY, _xMax, _yMax;
     bool _swapXY, _mirrorX, _mirrorY;

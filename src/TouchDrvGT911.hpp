@@ -29,7 +29,6 @@
  */
 #pragma once
 
-#include "REG/GT911Constants.h"
 #include "TouchDrvInterface.hpp"
 
 #if defined(ARDUINO_ARCH_NRF52)
@@ -37,20 +36,14 @@
 #warning "NRF Platform I2C Buffer expansion is not implemented , GT911 requires at least 188 bytes to read all configurations"
 #endif
 
-#define GT911_GET_POINT(x)            (x & 0x0F)
-#define GT911_GET_BUFFER_STATUS(x)    (x & 0x80)
-#define GT911_GET_HAVE_KEY(x)         (x & 0x10)
+#define GT911_SLAVE_ADDRESS_H               (0x14)
+#define GT911_SLAVE_ADDRESS_L               (0x5D)
+#define GT911_SLAVE_ADDRESS_UNKNOWN          (0xFF)
 
-class TouchDrvGT911 :  public TouchDrvInterface, public GT911Constants
+class TouchDrvGT911 :  public TouchDrvInterface
 {
-    typedef struct {
-        uint8_t trackID;
-        int16_t x;
-        int16_t y;
-        int16_t size;
-    } PointReg;
-
 public:
+    using TouchDrvInterface::getPoint;
     /**
     * @brief  Constructor for the touch driver
     * @retval None
@@ -68,25 +61,7 @@ public:
     * @note   This function will reset the touch driver by toggling the reset pin.
     * @retval None
     */
-    void reset() override
-    {
-        if (_rst != -1) {
-            hal->pinMode(_rst, OUTPUT);
-            hal->digitalWrite(_rst, HIGH);
-            hal->delay(10);
-        }
-        if (_irq != -1) {
-            hal->pinMode(_irq, INPUT);
-        }
-        /*
-        * If you perform a software reset on a board without a reset pin connected,
-        * subsequent interrupt settings or re-writing of configurations will be invalid.
-        * For example, when debugging a LilyGo T-Deck, resetting the interrupt mode will
-        * be invalid after a software reset.
-        * */
-        // comm->writeRegister(GT911_COMMAND, 0x02);
-        // writeCommand(0x02);
-    }
+    void reset() override;
 
     /**
     * @brief Puts the touch driver to sleep
@@ -95,131 +70,35 @@ public:
     *       into sleep mode and must be powered on again.
     * @retval None
     */
-    void sleep() override
-    {
-        if (_irq != -1) {
-            hal->pinMode(_irq, OUTPUT);
-            hal->digitalWrite(_irq, LOW);
-        }
-        // comm->writeRegister(GT911_COMMAND, 0x05);
-        writeCommand(0x05);
-
-        /*
-        * Depending on the chip and platform, setting it to input after removing sleep will affect power consumption.
-        * The chip platform determines whether
-        *
-        * * */
-        // if (_irq != -1) {
-        //     hal->digitalWrite(_irq, INPUT);
-        // }
-    }
+    void sleep() override;
 
     /**
     * @brief  Wake up the touch driver
     * @note   This function will wake up the touch driver from sleep mode.
     * @retval None
     */
-    void wakeup() override
-    {
-        if (_irq != -1) {
-            hal->pinMode(_irq, OUTPUT);
-            hal->digitalWrite(_irq, HIGH);
-            hal->delay(8);
-            hal->pinMode(_irq, INPUT);
-        } else {
-            reset();
-        }
-    }
+    void wakeup() override;
 
     /**
-    * @brief  Get the touch point coordinates
-    * @note   This function will retrieve the touch point coordinates from the touch driver.
-    * @param  *x_array: Pointer to the array to store the X coordinates
-    * @param  *y_array: Pointer to the array to store the Y coordinates
-    * @param  size: Number of touch points to retrieve
-    * @retval Return the number of touch points retrieved
+    * @brief  Get the touch points
+    * @note   This function will retrieve the touch points from the touch driver.
+    * @retval A reference to the touch points.
     */
-    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t size = 1) override
-    {
-        uint8_t buffer[39];
-        uint8_t touchPoint = 0;
-        PointReg p[5];
-
-        if (!x_array || !y_array || size == 0)
-            return 0;
-
-        uint8_t val = readGT911(GT911_POINT_INFO);
-
-        bool haveKey = GT911_GET_HAVE_KEY(val);
-        // bool bufferStatus = GT911_GET_BUFFER_STATUS(val);
-        // log_i("REG:0x%X S:0X%d K:%d\n", val,bufferStatus,haveKey);
-
-        if (_HButtonCallback && haveKey) {
-            _HButtonCallback(_userData);
-        }
-
-        clearBuffer();
-
-        touchPoint = GT911_GET_POINT(val);
-        if (touchPoint == 0) {
-            return 0;
-        }
-
-        // GT911_POINT_1  0X814F
-        uint8_t write_buffer[2] = {0x81, 0x4F};
-        if (comm->writeThenRead(write_buffer, arraySize(write_buffer),
-                                buffer, 39) == -1) {
-            return 0;
-        }
-
-        for (uint8_t i = 0; i < size; i++) {
-            p[i].trackID = buffer[i * 8];
-            p[i].x =  buffer[0x01 + i * 8] ;
-            p[i].x |= (buffer[0x02 + i * 8] << 8 );
-            p[i].y =  buffer[0x03 + i * 8] ;
-            p[i].y |= (buffer[0x04 + i * 8] << 8);
-            p[i].size = buffer[0x05 + i * 8] ;
-            p[i].size |= (buffer[0x06 + i * 8] << 8) ;
-
-            x_array[i] = p[i].x;
-            y_array[i] = p[i].y;
-        }
-
-        updateXY(touchPoint, x_array, y_array);
-
-        return touchPoint;
-    }
+    const TouchPoints &getTouchPoints();
 
     /**
     * @brief  Check if the touch point is pressed
     * @note   This function will check if the touch point is currently pressed.
     * @retval True if the touch point is pressed, false otherwise.
     */
-    bool isPressed() override
-    {
-        if (_irq != -1) {
-            if (_irq_mode == FALLING) {
-                return hal->digitalRead(_irq) == LOW;
-            } else if (_irq_mode == RISING ) {
-                return hal->digitalRead(_irq) == HIGH;
-            } else if (_irq_mode == LOW_LEVEL_QUERY) {
-                return hal->digitalRead(_irq) == LOW;
-            }  else if (_irq_mode == HIGH_LEVEL_QUERY) {
-                return hal->digitalRead(_irq) == HIGH;
-            }
-        }
-        return getPoint();
-    }
+    bool isPressed() override;
 
     /**
     * @brief  Get the model name
     * @note   This function will retrieve the model name from the touch driver.
     * @retval The model name.
     */
-    const char *getModelName()
-    {
-        return "GT911";
-    }
+    const char *getModelName();
 
     /**
     * @brief  Set the interrupt mode
@@ -227,24 +106,7 @@ public:
     * @param  mode: The interrupt mode to set.
     * @retval True if the operation was successful, false otherwise.
     */
-    bool setInterruptMode(uint8_t mode)
-    {
-        // GT911_MODULE_SWITCH_1 0x804D
-        uint8_t val = readGT911(GT911_MODULE_SWITCH_1);
-        val &= 0XFC;
-        if (mode == FALLING) {
-            val |= 0x01;
-        } else if (mode == RISING ) {
-            val |= 0x00;
-        } else if (mode == LOW_LEVEL_QUERY ) {
-            val |= 0x02;
-        } else if (mode == HIGH_LEVEL_QUERY ) {
-            val |= 0x03;
-        }
-        _irq_mode = mode;
-        writeGT911(GT911_MODULE_SWITCH_1, val);
-        return reloadConfig();
-    }
+    bool setInterruptMode(uint8_t mode);
 
     /**
      * @brief  Get the interrupt mode
@@ -255,76 +117,35 @@ public:
      *          0x2: Low level query
      *          0x3: High level query
      */
-    uint8_t getInterruptMode()
-    {
-        uint8_t val = readGT911(GT911_MODULE_SWITCH_1);
-        // return val & 0x03;
-        val &= 0x03;
-        if (val == 0x00) {
-            _irq_mode = RISING;
-        } else if (val == 0x01) {
-            _irq_mode = FALLING;
-        } else if (val == 0x02) {
-            _irq_mode = LOW_LEVEL_QUERY;
-        } else if (val == 0x03) {
-            _irq_mode = HIGH_LEVEL_QUERY;
-        }
-        return val;
-    }
+    uint8_t getInterruptMode();
 
     /**
      * @brief  Get the touch point information
      * @note   This function will retrieve the touch point information from the touch driver.
      * @retval The touch point information.
      */
-    uint8_t getPoint()
-    {
-        // GT911_POINT_INFO 0X814E
-        uint8_t val = readGT911(GT911_POINT_INFO);
-        clearBuffer();
-        return GT911_GET_POINT(val);
-    }
-
+    uint8_t getPoint();
 
     /**
      * @brief  Get the chip ID
      * @note   This function will retrieve the chip ID from the touch driver.
      * @retval The chip ID.
      */
-    uint32_t getChipID() override
-    {
-        char product_id[4] = {0};
-        // GT911_PRODUCT_ID 0x8140
-        for (int i = 0; i < 4; ++i) {
-            product_id[i] = readGT911(GT911_PRODUCT_ID + i);
-        }
-        return atoi(product_id);
-    }
+    uint32_t getChipID() override;
 
     /**
      * @brief  Get the firmware version
      * @note   This function will retrieve the firmware version from the touch driver.
      * @retval The firmware version.
      */
-    uint16_t getFwVersion()
-    {
-        uint8_t fw_ver[2] = {0};
-        // GT911_FIRMWARE_VERSION 0x8144
-        for (int i = 0; i < 2; ++i) {
-            fw_ver[i] = readGT911(GT911_FIRMWARE_VERSION + i);
-        }
-        return fw_ver[0] | (fw_ver[1] << 8);
-    }
+    uint16_t getFwVersion();
 
     /**
      * @brief  Get the configuration version
      * @note   This function will retrieve the configuration version from the touch driver.
      * @retval The configuration version.
      */
-    uint8_t getConfigVersion()
-    {
-        return readGT911(GT911_CONFIG_VERSION);
-    }
+    uint8_t getConfigVersion();
 
     /**
      * @brief  Get the refresh rate
@@ -332,40 +153,23 @@ public:
      * @param  rate_ms: Pointer to store the refresh rate in milliseconds , 5 ~ 15 ms.
      * @retval None
      */
-    void updateRefreshRate(uint8_t rate_ms)
-    {
-        if ((rate_ms - 5) < 5) {
-            rate_ms = 5;
-        }
-        if (rate_ms > 15) {
-            rate_ms = 15;
-        }
-        rate_ms -= 5;
-        writeGT911(GT911_REFRESH_RATE, rate_ms);
-        reloadConfig();
-    }
+    void updateRefreshRate(uint8_t rate_ms);
 
     /**
      * @brief  Get the refresh rate
      * @note   This function will retrieve the current refresh rate from the touch driver.
      * @retval The refresh rate in milliseconds.
      */
-    uint8_t getRefreshRate()
-    {
-        uint8_t rate_ms  = readGT911(GT911_REFRESH_RATE);
-        return rate_ms + GT911_BASE_REF_RATE ;
-    }
+    uint8_t getRefreshRate();
 
     /**
      * @brief  Get the vendor ID
      * @note   This function will retrieve the vendor ID from the touch driver.
      * @retval The vendor ID.
      */
-    int getVendorID()
-    {
-        return readGT911(GT911_VENDOR_ID);
-    }
+    int getVendorID();
 
+#if 0   //TODO:
     /**
      * @brief  Set the home button callback
      * @note   This function will set the callback function for the home button.
@@ -373,33 +177,8 @@ public:
      * @param  buffer_size: Size of the configuration buffer.
      * @retval None
      */
-    bool writeConfig(const uint8_t *config_buffer, size_t buffer_size)
-    {
-#if 0   //TODO:
-        uint8_t check_sum = 0;
-        for (int i = 0; i < (GT911_REG_LENGTH - 2 ); i++) {
-            check_sum += config_buffer[i];
-        }
-        check_sum =  (~check_sum) + 1;
-        if (check_sum != config_buffer[GT911_REG_LENGTH - 2]) {
-            log_e("Config checksum error !");
-            return false;
-        }
-        log_d("Update touch config , write %lu Bytes check sum:0x%X", buffer_size, check_sum);
-        uint8_t cmd[] = {lowByte(GT911_CONFIG_VERSION), highByte(GT911_CONFIG_VERSION)};
-        int err =  comm->writeRegister(GT911_CONFIG_VERSION, (uint8_t *)config_buffer, buffer_size);
-
-
-#if 0
-        while (digitalRead(_irq)) {
-            log_i("Wait irq.."); hal->delay(500);
-        }
-        int err =   comm->writeBuffer((uint8_t *)config_buffer, buffer_size);
+    bool writeConfig(const uint8_t *config_buffer, size_t buffer_size);
 #endif
-        return err == 0;
-#endif
-        return false;
-    }
 
     /**
      * @brief  Load the configuration data
@@ -408,76 +187,14 @@ public:
      * @param  print_out: Flag to indicate whether to print the output.
      * @retval The pointer to the configuration data buffer.
      */
-    uint8_t *loadConfig(size_t *output_size, bool print_out = false)
-    {
-        *output_size = 0;
-        uint8_t   *buffer = (uint8_t * )malloc(GT911_REG_LENGTH * sizeof(uint8_t));
-        if (!buffer)return NULL;
-        uint8_t write_buffer[2] = {highByte(GT911_CONFIG_VERSION), lowByte(GT911_CONFIG_VERSION)};
-        if (comm->writeThenRead(write_buffer, arraySize(write_buffer), buffer, GT911_REG_LENGTH) == -1) {
-            free(buffer);
-            return NULL;
-        }
-        if (print_out) {
-            printf("const unsigned char config[186] = {");
-            for (int i = 0; i < GT911_REG_LENGTH; ++i) {
-                if ( (i % 8) == 0) {
-                    printf("\n");
-                }
-                printf(" 0x%02X", buffer[i]);
-                if ((i + 1) < GT911_REG_LENGTH) {
-                    printf(",");
-                }
-            }
-            printf("};\n");
-        }
-        *output_size = GT911_REG_LENGTH;
-        return buffer;
-    }
+    uint8_t *loadConfig(size_t *output_size, bool print_out = false);
 
     /**
      * @brief  Reload the configuration data
      * @note   This function will reload the configuration data from the touch driver.
      * @retval True if the operation was successful, false otherwise.
      */
-    bool reloadConfig()
-    {
-        uint8_t buffer[GT911_REG_LENGTH] = {highByte(GT911_CONFIG_VERSION), lowByte(GT911_CONFIG_VERSION)};
-        if (comm->writeThenRead(buffer, 2, buffer, GT911_REG_LENGTH - 2) == -1) {
-            return false;
-        }
-
-        uint8_t check_sum = 0;
-        for (int i = 0; i < (GT911_REG_LENGTH - 2 ); i++) {
-            check_sum += buffer[i];
-        }
-        check_sum =  (~check_sum) + 1;
-        log_d("reloadConfig check_sum : 0x%X\n", check_sum);
-        writeGT911(GT911_CONFIG_CHKSUM, check_sum);
-        writeGT911(GT911_CONFIG_FRESH, 0x01);
-        return true;
-    }
-
-    /**
-     * @brief  Dump the register values
-     * @note   This function will print the current register values.
-     * @retval None
-     */
-    void dumpRegister()
-    {
-        size_t output_size = 0;
-        uint8_t *buffer = loadConfig(&output_size, true);
-        if (output_size == 0) {
-            return;
-        }
-
-        if (buffer == NULL)return;
-        printf("----------Dump register------------\n");
-        for (size_t  i = 0; i < output_size; ++i) {
-            printf("[%d]  REG: 0x%X : 0x%02X\n", i, GT911_CONFIG_VERSION + i, buffer[i]);
-        }
-        free(buffer);
-    }
+    bool reloadConfig();
 
     /**
      * @brief  Set the maximum touch points
@@ -485,14 +202,7 @@ public:
      * @param  num: The maximum number of touch points (1-5).
      * @retval None
      */
-    void setMaxTouchPoint(uint8_t num)
-    {
-        if (num < 1)num = 1;
-        if (num > 5) num = 5;
-        writeGT911(GT911_TOUCH_NUMBER, num);
-        reloadConfig();
-    }
-
+    void setMaxTouchPoint(uint8_t num);
     /**
      * @brief  Set the configuration data
      * @note   This function will set the configuration data for the touch driver.
@@ -500,11 +210,7 @@ public:
      * @param  length: The length of the configuration data.
      * @retval None
      */
-    void setConfigData(uint8_t *data, uint16_t length)
-    {
-        _config = data;
-        _config_size = length;
-    }
+    void setConfigData(uint8_t *data, uint16_t length);
 
 private:
     /**
@@ -513,15 +219,7 @@ private:
      * @param  cmd: The register address to read.
      * @retval The value read from the register.
      */
-    uint8_t readGT911(uint16_t cmd)
-    {
-        uint8_t value = 0x00;
-        uint8_t write_buffer[2] = {highByte(cmd), lowByte(cmd)};
-        comm->writeThenRead(write_buffer, arraySize(write_buffer),
-                            &value, 1);
-        return value;
-    }
-
+    uint8_t readGT911(uint16_t cmd);
     /**
      * @brief  Write a register to the GT911 touch driver
      * @note   This function will write a register to the touch driver.
@@ -529,11 +227,7 @@ private:
      * @param  value: The value to write to the register.
      * @retval None
      */
-    int writeGT911(uint16_t cmd, uint8_t value)
-    {
-        uint8_t write_buffer[3] = {highByte(cmd), lowByte(cmd), value};
-        return comm->writeBuffer(write_buffer, arraySize(write_buffer));
-    }
+    int writeGT911(uint16_t cmd, uint8_t value);
 
     /**
      * @brief  Write a command to the GT911 touch driver
@@ -541,220 +235,159 @@ private:
      * @param  command: The command to write.
      * @retval None
      */
-    void writeCommand(uint8_t command)
-    {
-        // GT911_COMMAND 0x8040
-        uint8_t write_buffer[3] = {0x80, 0x40, command};
-        comm->writeBuffer(write_buffer, arraySize(write_buffer));
-    }
+    void writeCommand(uint8_t command);
 
     /**
      * @brief  Clear the touch buffer
      * @note   This function will clear the touch buffer.
      * @retval None
      */
-    void inline clearBuffer()
-    {
-        writeGT911(GT911_POINT_INFO, 0x00);
-    }
+    void clearBuffer();
 
     /**
      * @brief  Probe the I2C address of the GT911 touch driver
      * @note   This function will try to communicate with the touch driver at the specified I2C address.
      * @retval True if the device is found, false otherwise.
      */
-    bool probeAddress()
-    {
-        const uint8_t device_address[2]  = {GT911_SLAVE_ADDRESS_L, GT911_SLAVE_ADDRESS_H};
-        for (size_t i = 0; i < arraySize(device_address); ++i) {
-            I2CParam params(I2CParam::I2C_SET_ADDR, device_address[i]);
-            comm->setParams(params);
-            for (int retry = 0; retry < 3; ++retry) {
-                _chipID = getChipID();
-                if (_chipID == GT911_DEV_ID) {
-                    log_i("Touch device address found is : 0x%X", device_address[i]);
-                    return true;
-                }
-            }
-        }
-        log_e("GT911 not found, touch device 7-bit address should be 0x5D or 0x14");
-        return false;
-    }
+    bool probeAddress();
 
-    bool initImpl(uint8_t addr)
-    {
-        int16_t x = 0, y = 0;
+    bool initImpl(uint8_t addr);
 
-        if (addr == GT911_SLAVE_ADDRESS_H  && _rst != -1 && _irq != -1) {
-
-            log_i("Try using 0x14 as the device address");
-
-            hal->pinMode(_rst, OUTPUT);
-            hal->pinMode(_irq, OUTPUT);
-
-            hal->digitalWrite(_rst, LOW);
-            hal->digitalWrite(_irq, HIGH);
-            hal->delayMicroseconds(120);
-            hal->digitalWrite(_rst, HIGH);
-
-#if   defined(ARDUINO)
-            // In the Arduino ESP32 platform, the test delay is 8ms and the GT911
-            // can be accessed correctly. If the time is too long, it will not be accessible.
-            hal->delay(8);
-#elif defined(ESP_PLATFORM)
-            // For the variant of GPIO extended RST,
-            // communication and delay are carried out simultaneously, and 18 ms is measured in T-RGB esp-idf new api
-            hal->delay(18);
-#endif
-
-            hal->pinMode(_irq, INPUT);
-
-        } else if (addr == GT911_SLAVE_ADDRESS_L && _rst != -1 && _irq != -1) {
-
-            log_i("Try using 0x5D as the device address");
-
-            hal->pinMode(_rst, OUTPUT);
-            hal->pinMode(_irq, OUTPUT);
-
-            hal->digitalWrite(_rst, LOW);
-            hal->digitalWrite(_irq, LOW);
-            hal->delayMicroseconds(120);
-            hal->digitalWrite(_rst, HIGH);
-#if   defined(ARDUINO)
-            // In the Arduino ESP32 platform, the test hal->delay is 8ms and the GT911
-            // can be accessed correctly. If the time is too long, it will not be accessible.
-            hal->delay(8);
-#elif defined(ESP_PLATFORM)
-            // For the variant of GPIO extended RST,
-            // communication and hal->delay are carried out simultaneously, and 18 ms is measured in T-RGB esp-idf new api
-            hal->delay(18);
-#endif
-            hal->pinMode(_irq, INPUT);
-
-        } else {
-            if (!autoProbe()) {
-                return false;
-            }
-        }
-
-        // For variants where the GPIO is controlled by I2C, a hal->delay is required here
-        hal->delay(20);
-
-
-        /*
-        * For the ESP32 platform, the default buffer is 128.
-        * Need to re-apply for a larger buffer to fully read the configuration table.
-        *
-        * TODO: NEED FIX
-        if (!this->reallocBuffer(GT911_REG_LENGTH + 2)) {
-            log_e("realloc i2c buffer failed !");
-            return false;
-        }
-         */
-
-        _chipID = getChipID();
-
-        if (_chipID != GT911_DEV_ID) {
-            log_i("Not found device GT911,Try to found the GT911");
-            if (!autoProbe()) {
-                return false;
-            }
-        }
-
-
-#if 0
-        /*If the configuration is not written, the touch screen may be damaged. */
-        if (_config && _config_size != 0) {
-
-            log_d("Current version char :%x", getConfigVersion());
-            hal->delay(100);
-            writeConfig(_config, _config_size);
-            if (_irq != -1) {
-                hal->pinMode(_irq, INPUT);
-            }
-            log_d("WriteConfig version char :%x", getConfigVersion());
-            // hal->delay(1000);
-            // size_t output_size;
-            // loadConfig(&output_size, true);
-            // log_d("loadConfig version char :%x", version_char);
-        }
-#endif
-
-        uint8_t x_resolution[2] = {0}, y_resolution[2] = {0};
-        for (int i = 0; i < 2; ++i) {
-            x_resolution[i] = readGT911(GT911_X_RESOLUTION + i);
-        }
-        for (int i = 0; i < 2; ++i) {
-            y_resolution[i] = readGT911(GT911_Y_RESOLUTION + i);
-        }
-
-        _resX = x_resolution[0] | (x_resolution[1] << 8);
-        _resY = y_resolution[0] | (y_resolution[1] << 8);
-        log_d("Model:CST3530");
-        log_d("RST Pin:%d", _rst);
-        log_d("IRQ Pin:%d", _irq);
-        log_i("Product id:%ld", _chipID);
-        log_d("Firmware version: 0x%x", getFwVersion());
-        log_d("Resolution : X = %d Y = %d", _resX, _resY);
-        log_d("Vendor id:%d", getVendorID());
-        log_d("Refresh Rate:%d ms", getRefreshRate());
-        _maxTouchPoints = readGT911(GT911_TOUCH_NUMBER) & 0x0F;
-        log_d("MaxTouchPoint:%d", _maxTouchPoints);
-
-
-        // Get the default interrupt trigger mode of the current screen
-        getInterruptMode();
-
-        if ( _irq_mode == RISING) {
-            log_d("Interrupt Mode:  RISING");
-        } else if (_irq_mode == FALLING) {
-            log_d("Interrupt Mode:  FALLING");
-        } else if (_irq_mode == LOW_LEVEL_QUERY) {
-            log_d("Interrupt Mode:  LOW_LEVEL_QUERY");
-        } else if (_irq_mode == HIGH_LEVEL_QUERY) {
-            log_d("Interrupt Mode:  HIGH_LEVEL_QUERY");
-        } else {
-            log_e("UNKNOWN");
-        }
-
-        if (x == -1 || y == -1) {
-            log_e("The screen configuration is lost, please update the configuration file again !");
-            return false;
-        }
-
-
-        return true;
-    }
-
-    bool autoProbe()
-    {
-        if (_rst != -1) {
-            hal->pinMode(_rst, OUTPUT);
-            hal->digitalWrite(_rst, HIGH);
-            hal->delay(10);
-        }
-
-        // Automatically determine the current device
-        // address when using the reset pin without connection
-        if (!probeAddress()) {
-            return false;
-        }
-
-        // Reset Config
-        reset();
-
-        if (_irq != -1) {
-            hal->pinMode(_irq, INPUT);
-        }
-
-        return true;
-    }
+    bool autoProbe();
 
     static constexpr uint8_t LOW_LEVEL_QUERY  = 0x03;
     static constexpr uint8_t HIGH_LEVEL_QUERY = 0x04;
+    static constexpr uint8_t MAX_FINGER_NUM = (5);
+    static constexpr uint8_t BYTES_PER_POINT = (8);
 
 protected:
     int _irq_mode;
     uint8_t *_config = NULL;
     uint16_t _config_size = 0;
+
+    // Real-time command (Write only)
+    static constexpr uint16_t  GT911_COMMAND                 = (0x8040);
+    static constexpr uint16_t  GT911_ESD_CHECK               = (0x8041);
+    static constexpr uint16_t  GT911_COMMAND_CHECK           = (0x8046);
+
+    // Configuration information (R/W)
+    static constexpr uint16_t  GT911_CONFIG_START            = (0x8047);
+    static constexpr uint16_t  GT911_CONFIG_VERSION          = (0x8047);
+    static constexpr uint16_t  GT911_X_OUTPUT_MAX_LOW        = (0x8048);
+    static constexpr uint16_t  GT911_X_OUTPUT_MAX_HIGH       = (0x8049);
+    static constexpr uint16_t  GT911_Y_OUTPUT_MAX_LOW        = (0x804A);
+    static constexpr uint16_t  GT911_Y_OUTPUT_MAX_HIGH       = (0x804B);
+    static constexpr uint16_t  GT911_TOUCH_NUMBER            = (0x804C);
+    static constexpr uint16_t  GT911_MODULE_SWITCH_1         = (0x804D);
+    static constexpr uint16_t  GT911_MODULE_SWITCH_2         = (0x804E);
+    static constexpr uint16_t  GT911_SHAKE_COUNT             = (0x804F);
+    static constexpr uint16_t  GT911_FILTER                  = (0x8050);
+    static constexpr uint16_t  GT911_LARGE_TOUCH             = (0x8051);
+    static constexpr uint16_t  GT911_NOISE_REDUCTION         = (0x8052);
+    static constexpr uint16_t  GT911_SCREEN_TOUCH_LEVEL      = (0x8053);
+    static constexpr uint16_t  GT911_SCREEN_RELEASE_LEVEL    = (0x8054);
+    static constexpr uint16_t  GT911_LOW_POWER_CONTROL       = (0x8055);
+    static constexpr uint16_t  GT911_REFRESH_RATE            = (0x8056);
+    static constexpr uint16_t  GT911_X_THRESHOLD             = (0x8057);
+    static constexpr uint16_t  GT911_Y_THRESHOLD             = (0x8058);
+    static constexpr uint16_t  GT911_X_SPEED_LIMIT           = (0x8059); // Reserve
+    static constexpr uint16_t  GT911_Y_SPEED_LIMIT           = (0x805A); // Reserve
+    static constexpr uint16_t  GT911_SPACE_TOP_BOTTOM        = (0x805B);
+    static constexpr uint16_t  GT911_SPACE_LEFT_RIGHT        = (0x805C);
+    static constexpr uint16_t  GT911_MINI_FILTER             = (0x805D);
+    static constexpr uint16_t  GT911_STRETCH_R0              = (0x805E);
+    static constexpr uint16_t  GT911_STRETCH_R1              = (0x805F);
+    static constexpr uint16_t  GT911_STRETCH_R2              = (0x8060);
+    static constexpr uint16_t  GT911_STRETCH_RM              = (0x8061);
+    static constexpr uint16_t  GT911_DRV_GROUPA_NUM          = (0x8062);
+    static constexpr uint16_t  GT911_DRV_GROUPB_NUM          = (0x8063);
+    static constexpr uint16_t  GT911_SENSOR_NUM              = (0x8064);
+    static constexpr uint16_t  GT911_FREQ_A_FACTOR           = (0x8065);
+    static constexpr uint16_t  GT911_FREQ_B_FACTOR           = (0x8066);
+    static constexpr uint16_t  GT911_PANEL_BIT_FREQ_L        = (0x8067);
+    static constexpr uint16_t  GT911_PANEL_BIT_FREQ_H        = (0x8068);
+    static constexpr uint16_t  GT911_PANEL_SENSOR_TIME_L     = (0x8069); // Reserve
+    static constexpr uint16_t  GT911_PANEL_SENSOR_TIME_H     = (0x806A);
+    static constexpr uint16_t  GT911_PANEL_TX_GAIN           = (0x806B);
+    static constexpr uint16_t  GT911_PANEL_RX_GAIN           = (0x806C);
+    static constexpr uint16_t  GT911_PANEL_DUMP_SHIFT        = (0x806D);
+    static constexpr uint16_t  GT911_DRV_FRAME_CONTROL       = (0x806E);
+    static constexpr uint16_t  GT911_CHARGING_LEVEL_UP       = (0x806F);
+    static constexpr uint16_t  GT911_MODULE_SWITCH3          = (0x8070);
+    static constexpr uint16_t  GT911_GESTURE_DIS             = (0X8071);
+    static constexpr uint16_t  GT911_GESTURE_LONG_PRESS_TIME = (0x8072);
+    static constexpr uint16_t  GT911_X_Y_SLOPE_ADJUST        = (0X8073);
+    static constexpr uint16_t  GT911_GESTURE_CONTROL         = (0X8074);
+    static constexpr uint16_t  GT911_GESTURE_SWITCH1         = (0X8075);
+    static constexpr uint16_t  GT911_GESTURE_SWITCH2         = (0X8076);
+    static constexpr uint16_t  GT911_GESTURE_REFRESH_RATE    = (0x8077);
+    static constexpr uint16_t  GT911_GESTURE_TOUCH_LEVEL     = (0x8078);
+    static constexpr uint16_t  GT911_NEWGREENWAKEUPLEVEL     = (0x8079);
+    static constexpr uint16_t  GT911_FREQ_HOPPING_START      = (0x807A);
+    static constexpr uint16_t  GT911_FREQ_HOPPING_END        = (0X807B);
+    static constexpr uint16_t  GT911_NOISE_DETECT_TIMES      = (0x807C);
+    static constexpr uint16_t  GT911_HOPPING_FLAG            = (0X807D);
+    static constexpr uint16_t  GT911_HOPPING_THRESHOLD       = (0X807E);
+    static constexpr uint16_t  GT911_NOISE_THRESHOLD         = (0X807F); // Reserve
+    static constexpr uint16_t  GT911_NOISE_MIN_THRESHOLD     = (0X8080);
+    static constexpr uint16_t  GT911_HOPPING_SENSOR_GROUP    = (0X8082);
+    static constexpr uint16_t  GT911_HOPPING_SEG1_NORMALIZE  = (0X8083);
+    static constexpr uint16_t  GT911_HOPPING_SEG1_FACTOR     = (0X8084);
+    static constexpr uint16_t  GT911_MAIN_CLOCK_ADJUST       = (0X8085);
+    static constexpr uint16_t  GT911_HOPPING_SEG2_NORMALIZE  = (0X8086);
+    static constexpr uint16_t  GT911_HOPPING_SEG2_FACTOR     = (0X8087);
+    static constexpr uint16_t  GT911_HOPPING_SEG3_NORMALIZE  = (0X8089);
+    static constexpr uint16_t  GT911_HOPPING_SEG3_FACTOR     = (0X808A);
+    static constexpr uint16_t  GT911_HOPPING_SEG4_NORMALIZE  = (0X808C);
+    static constexpr uint16_t  GT911_HOPPING_SEG4_FACTOR     = (0X808D);
+    static constexpr uint16_t  GT911_HOPPING_SEG5_NORMALIZE  = (0X808F);
+    static constexpr uint16_t  GT911_HOPPING_SEG5_FACTOR     = (0X8090);
+    static constexpr uint16_t  GT911_HOPPING_SEG6_NORMALIZE  = (0X8092);
+    static constexpr uint16_t  GT911_KEY_1                   = (0X8093);
+    static constexpr uint16_t  GT911_KEY_2                   = (0X8094);
+    static constexpr uint16_t  GT911_KEY_3                   = (0X8095);
+    static constexpr uint16_t  GT911_KEY_4                   = (0X8096);
+    static constexpr uint16_t  GT911_KEY_AREA                = (0X8097);
+    static constexpr uint16_t  GT911_KEY_TOUCH_LEVEL         = (0X8098);
+    static constexpr uint16_t  GT911_KEY_LEAVE_LEVEL         = (0X8099);
+    static constexpr uint16_t  GT911_KEY_SENS_1_2            = (0X809A);
+    static constexpr uint16_t  GT911_KEY_SENS_3_4            = (0X809B);
+    static constexpr uint16_t  GT911_KEY_RESTRAIN            = (0X809C);
+    static constexpr uint16_t  GT911_KEY_RESTRAIN_TIME       = (0X809D);
+    static constexpr uint16_t  GT911_GESTURE_LARGE_TOUCH     = (0X809E);
+    static constexpr uint16_t  GT911_HOTKNOT_NOISE_MAP       = (0X80A1);
+    static constexpr uint16_t  GT911_LINK_THRESHOLD          = (0X80A2);
+    static constexpr uint16_t  GT911_PXY_THRESHOLD           = (0X80A3);
+    static constexpr uint16_t  GT911_GHOT_DUMP_SHIFT         = (0X80A4);
+    static constexpr uint16_t  GT911_GHOT_RX_GAIN            = (0X80A5);
+    static constexpr uint16_t  GT911_FREQ_GAIN0              = (0X80A6);
+    static constexpr uint16_t  GT911_FREQ_GAIN1              = (0X80A7);
+    static constexpr uint16_t  GT911_FREQ_GAIN2              = (0X80A8);
+    static constexpr uint16_t  GT911_FREQ_GAIN3              = (0X80A9);
+    static constexpr uint16_t  GT911_COMBINE_DIS             = (0X80B3);
+    static constexpr uint16_t  GT911_SPLIT_SET               = (0X80B4);
+    static constexpr uint16_t  GT911_SENSOR_CH0              = (0X80B7);
+    static constexpr uint16_t  GT911_DRIVER_CH0              = (0X80D5);
+    static constexpr uint16_t  GT911_CONFIG_CHKSUM           = (0X80FF);
+    static constexpr uint16_t  GT911_CONFIG_FRESH            = (0X8100);
+    static constexpr uint16_t  GT911_CONFIG_SIZE             = (0xFF - 0x46);
+    // Coordinate information
+    static constexpr uint16_t  GT911_PRODUCT_ID              = (0x8140);
+    static constexpr uint16_t  GT911_FIRMWARE_VERSION        = (0x8144);
+    static constexpr uint16_t  GT911_X_RESOLUTION            = (0x8146);
+    static constexpr uint16_t  GT911_Y_RESOLUTION            = (0x8148);
+
+    static constexpr uint16_t  GT911_VENDOR_ID               = (0X8140);
+    static constexpr uint16_t  GT911_INFORMATION             = (0X8140);
+    static constexpr uint16_t  GT911_POINT_INFO              = (0X814E);
+    static constexpr uint16_t  GT911_POINT_1                 = (0X814F);
+    static constexpr uint16_t  GT911_POINT_2                 = (0X8157);
+    static constexpr uint16_t  GT911_POINT_3                 = (0X815F);
+    static constexpr uint16_t  GT911_POINT_4                 = (0X8167);
+    static constexpr uint16_t  GT911_POINT_5                 = (0X816F);
+
+
+    static constexpr uint16_t  GT911_DEV_ID                   =  (911);
+    static constexpr uint8_t   GT911_BASE_REF_RATE             =  (5);
+    static constexpr uint8_t   GT911_REG_LENGTH                =  (186);
 };

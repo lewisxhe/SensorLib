@@ -51,7 +51,6 @@
 #endif
 
 TouchDrvCST3530 touch;
-int16_t x[5], y[5];
 volatile bool isPressed = false;
 
 void setup()
@@ -96,20 +95,19 @@ void setup()
     Serial.print("Model :"); Serial.println(touch.getModelName());
 
 
-    Serial.println("Enter touch sleep mode.");
-    touch.sleep();
+    // Serial.println("Enter touch sleep mode.");
+    // touch.sleep();
 
-    int i = 10;
-    while (i--) {
-        Serial.print("Wake up after ");
-        Serial.print(i);
-        Serial.println(" seconds");
-        delay(1000);
-    }
+    // int i = 10;
+    // while (i--) {
+    //     Serial.print("Wake up after ");
+    //     Serial.print(i);
+    //     Serial.println(" seconds");
+    //     delay(1000);
+    // }
 
-
-    Serial.println("Wakeup touch");
-    touch.wakeup();
+    // Serial.println("Wakeup touch");
+    // touch.wakeup();
 
     // Set touch max xy
     // touch.setMaxCoordinates(240, 296);
@@ -127,7 +125,7 @@ void setup()
 
     Serial.println("Touch Info:");
     Serial.print("Model: "); Serial.println(touch.getModelName());
-    Serial.print("ID: 0x"); Serial.println(touch.getChipID(),HEX);
+    Serial.print("ID: 0x"); Serial.println(touch.getChipID(), HEX);
     Serial.print("Max Touch Points: "); Serial.println(touch.getSupportTouchPoint());
     Serial.print("Resolution: "); Serial.print(touch.getResolutionX()); Serial.print("x"); Serial.println(touch.getResolutionY());
     delay(3000);
@@ -137,18 +135,19 @@ void loop()
 {
     if (isPressed) {
         isPressed = false;
-        uint8_t touched = touch.getPoint(x, y, touch.getSupportTouchPoint());
-        if (touched) {
-            for (int i = 0; i < touched; ++i) {
+        TouchPoints touch_points = touch.getTouchPoints();
+        if (touch_points.hasPoints()) {
+            for (int i = 0; i < touch_points.getPointCount(); ++i) {
+                const TouchPoint &point = touch_points.getPoint(i);
                 Serial.print("X[");
                 Serial.print(i);
                 Serial.print("]:");
-                Serial.print(x[i]);
+                Serial.print(point.x);
                 Serial.print(" ");
                 Serial.print(" Y[");
                 Serial.print(i);
                 Serial.print("]:");
-                Serial.print(y[i]);
+                Serial.print(point.y);
                 Serial.print(" ");
             }
             Serial.println();
