@@ -91,6 +91,25 @@ public:
         PORT_ALL = 0xFFFF
     };
 
+    enum IoExpanderGPIO {
+        IO0  __attribute__((deprecated("Use integer pin numbers (0-15) directly instead."))) ,
+        IO1  __attribute__((deprecated("Use integer pin numbers (0-15) directly instead."))) ,
+        IO2  __attribute__((deprecated("Use integer pin numbers (0-15) directly instead."))) ,
+        IO3  __attribute__((deprecated("Use integer pin numbers (0-15) directly instead."))) ,
+        IO4  __attribute__((deprecated("Use integer pin numbers (0-15) directly instead."))) ,
+        IO5  __attribute__((deprecated("Use integer pin numbers (0-15) directly instead."))) ,
+        IO6  __attribute__((deprecated("Use integer pin numbers (0-15) directly instead."))) ,
+        IO7  __attribute__((deprecated("Use integer pin numbers (0-15) directly instead."))) ,
+        IO8  __attribute__((deprecated("Use integer pin numbers (0-15) directly instead."))) ,
+        IO9  __attribute__((deprecated("Use integer pin numbers (0-15) directly instead."))) ,
+        IO10 __attribute__((deprecated("Use integer pin numbers (0-15) directly instead."))) ,
+        IO11 __attribute__((deprecated("Use integer pin numbers (0-15) directly instead."))) ,
+        IO12 __attribute__((deprecated("Use integer pin numbers (0-15) directly instead."))) ,
+        IO13 __attribute__((deprecated("Use integer pin numbers (0-15) directly instead."))) ,
+        IO14 __attribute__((deprecated("Use integer pin numbers (0-15) directly instead."))) ,
+        IO15 __attribute__((deprecated("Use integer pin numbers (0-15) directly instead."))) ,
+    };
+
     /**
      * @brief Construct a new IoExpanderXL9555 object.
      *
