@@ -128,7 +128,7 @@ void setup()
     // Wakeup touch
     // touch.wakeup();
 
-    // LilyGo-P4 chip cannot automatically obtain the resolution; 
+    // Set the original touch panel resolution, LilyGo-P4 chip cannot automatically obtain the resolution; 
     // the original resolution must be manually set.
     touch.setResolution(1060, 2400);
 
