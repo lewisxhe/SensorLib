@@ -93,6 +93,9 @@ bool TouchDrvHI8561::initImpl(uint8_t addr)
         return false;
     }
 
+    // Use fixed values ​​to identify chip models.
+    _chipID = 0x8561;
+
     log_d("HI8561 touch start address: 0x%08X", reg);
 
     return true;
