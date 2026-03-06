@@ -27,6 +27,7 @@ Support list:
 | QMC5883L        | Magnetic Sensor          | ✔️   | ❌   |
 | BMM150          | Magnetic Sensor          | ✔️   | ❌   |
 | XL9555          | I/O expander             | ✔️   | ❌   |
+| PCA9570         | I/O expander             | ✔️   | ❌   |
 | BMA422          | Accelerometer            | ✔️   | ❌   |
 | BMA423          | Accelerometer            | ✔️   | ❌   |
 | BMA456          | Accelerometer            | ✔️   | ❌   |
@@ -45,6 +46,7 @@ Support list:
 | CST9217         | Capacitive touch         | ✔️   | ❌   |
 | CST9220         | Capacitive touch         | ✔️   | ❌   |
 | GT9895          | Capacitive touch         | ✔️   | ❌   |
+| HI8561          | Capacitive touch         | ✔️   | ❌   |
 | AW9364          | Led Driver (GPIO)        | ❌   | ❌   |
 | BQ27220         | Gauge Meter              | ✔️   | ❌   |
 | AXP2602         | Gauge Meter              | ✔️   | ❌   |
