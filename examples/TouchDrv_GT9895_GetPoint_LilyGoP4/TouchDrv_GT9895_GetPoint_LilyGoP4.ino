@@ -32,6 +32,7 @@
 #include "IoExpanderXL9555.hpp"
 #include "SensorWireHelper.h"
 
+// Pin definitions for the LilyGo-P4
 #define P4_TOUCH_SDA  7
 #define P4_TOUCH_SCL  8
 #define P4_IO_EXPANDER_IRQ 5
@@ -87,8 +88,11 @@ void setup()
 
     Wire.begin(P4_TOUCH_SDA, P4_TOUCH_SCL);
 
+    // Scan I2C bus for devices
     SensorWireHelper::dumpDevices(Wire);
 
+    // The LilyGo-P4 relies on an external I/O extender to control the power supply of peripheral devices. 
+    // First, initialize the external extender.
     if (!expander.begin(Wire, XL9555_SLAVE_ADDRESS0)) {
         while (1) {
             Serial.println("Failed to find io expander - check your wiring!");
@@ -128,7 +132,7 @@ void setup()
     // Wakeup touch
     // touch.wakeup();
 
-    // Set the original touch panel resolution, LilyGo-P4 chip cannot automatically obtain the resolution; 
+    // Set the original touch panel resolution, LilyGo-P4 chip cannot automatically obtain the resolution;
     // the original resolution must be manually set.
     touch.setResolution(1060, 2400);
 
@@ -155,6 +159,9 @@ void loop()
     * 2. Use polling registers instead of interrupts, but this will consume CPU
     */
 
+    // * TouchPoints is configured with a 5-point touch point buffer by default,
+    // * so it can return touch data from a maximum of 5 points. Although the GT9895
+    // * supports 10-point touch
     TouchPoints touch_points = touch.getTouchPoints();
     if (touch_points.hasPoints()) {
         for (int i = 0; i < touch_points.getPointCount(); ++i) {
