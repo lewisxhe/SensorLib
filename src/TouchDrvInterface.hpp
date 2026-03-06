@@ -421,7 +421,11 @@ public:
      */
     virtual void updateXY(TouchPoints &points) const
     {
-        for (uint8_t i = 0; i < points.getPointCount(); ++i) {
+        uint8_t count = points.getPointCount();
+        if (count == 0){
+            return;
+        }
+        for (uint8_t i = 0; i < count; ++i) {
             TouchPoint &pt = points.getPoint(i);
 
             // Swap XY
@@ -448,8 +452,16 @@ public:
             }
 
             // Clamp to display bounds
-            if (pt.x > _xMax) pt.x = _xMax;
-            if (pt.y > _yMax) pt.y = _yMax;
+            if(_xMax != 0) {
+                if (pt.x > _xMax) {
+                    pt.x = _xMax;
+                }
+            }
+            if(_yMax != 0) {
+                if (pt.y > _yMax) {
+                    pt.y = _yMax;
+                }
+            }
         }
     }
 
