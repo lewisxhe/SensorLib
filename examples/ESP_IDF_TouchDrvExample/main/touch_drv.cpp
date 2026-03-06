@@ -197,22 +197,12 @@ esp_err_t touch_drv_init()
 
 void touch_drv_isr_handler()
 {
-    int16_t x[5], y[5];
-    uint8_t touched = touch.getPoint(x, y, touch.getSupportTouchPoint());
-    if (touched) {
-        for (int i = 0; i < touched; ++i) {
-            printf("X[");
-            printf("%d", i);
-            printf("]:");
-            printf("%d", x[i]);
-            printf(" ");
-            printf(" Y[");
-            printf("%d", i);
-            printf("]:");
-            printf("%d", y[i]);
-            printf(" ");
+    TouchPoints touch_points = touch.getTouchPoints();
+    if (touch_points.hasPoints()) {
+        for (int i = 0; i < touch_points.getPointCount(); ++i) {
+            const TouchPoint &point = touch_points.getPoint(i);
+            printf("Point %u: X=%u, Y=%u\n", i, point.x, point.y);
         }
-        printf("\n");
     }
 }
 
@@ -221,7 +211,7 @@ void touch_loop()
     uint32_t io_num;
     // if (xQueueReceive(xQueue, &io_num, pdMS_TO_TICKS(10))) {
     // if (gpio_get_level((gpio_num_t)CONFIG_SENSOR_IRQ) == 0) {
-    touch_drv_isr_handler();
+        touch_drv_isr_handler();
     // }
     // }
 }
