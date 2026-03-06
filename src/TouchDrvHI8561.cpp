@@ -89,14 +89,14 @@ bool TouchDrvHI8561::initImpl(uint8_t addr)
     }
     uint32_t reg = buffer[0] + (buffer[1] << 8) + (buffer[2] << 16) + (buffer[3] << 24);
     if (reg != TOUCH_INFO_START_ADDR) {
-        log_e("Invalid touch info start address: 0x%08X", reg);
+        log_e("Invalid touch info start address: 0x%08" PRIu32, reg);
         return false;
     }
 
     // Use fixed values ​​to identify chip models.
     _chipID = 0x8561;
 
-    log_d("HI8561 touch start address: 0x%08X", reg);
+    log_d("HI8561 touch start address: 0x%08" PRIu32, reg);
 
     return true;
 }
