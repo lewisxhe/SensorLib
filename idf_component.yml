@@ -1,0 +1,64 @@
+version: "0.4.0"
+description: "Commonly used I2C & SPI sensor drivers for ESP-IDF / Arduino"
+license: "MIT"
+url: "https://github.com/lewisxhe/SensorLib"
+repository: "https://github.com/lewisxhe/SensorLib.git"
+files:
+  use_gitignore: true
+  exclude:
+    - "tests/**/*"
+    - "**/.github/**/*"
+    - "docs/**/*"
+    - "filters/**/*"
+    - "tools/**/*"
+    - ".vscode/**/*"
+    - ".pio/**/*"
+    - "datasheet/**/*"
+    - "examples/**/*"
+    - "library.json"
+    - "keywords.txt"
+    - "platformio.ini"
+    - "library.properties"
+    - ".gitattributes"
+tags:
+  - PCF8563
+  - PCF85063
+  - QMI8658
+  - BHI260AP
+  - BHI360
+  - QMC6310N
+  - QMC6310U
+  - QMC5883P
+  - QMC5883L
+  - BMM150
+  - XL9555
+  - PCA9570
+  - BMA422
+  - BMA423
+  - BMA456
+  - DRV2605
+  - CM32181
+  - LTR553
+  - FT3267
+  - FT5206
+  - FT6206
+  - FT6236
+  - CST820
+  - CST816S
+  - CST816D
+  - CST816T
+  - CST226SE
+  - CHSC5816
+  - GT911
+  - CST9217
+  - CST9220
+  - GT9895
+  - HI8561
+  - AW9364
+  - BQ27220
+  - AXP2602
+dependencies:
+  idf:
+    version: ">=4.4"
+maintainers:
+  - Lewis He <lewishe@outlook.com>
