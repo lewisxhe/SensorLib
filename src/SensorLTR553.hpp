@@ -29,55 +29,108 @@
  */
 #pragma once
 
-#include "REG/LTR533Constants.h"
 #include "SensorPlatform.hpp"
 
-class SensorLTR553 :  public LTR553Constants
+// Unique I2C device address
+static constexpr uint8_t LTR553_SLAVE_ADDRESS = 0x23;
+
+/**
+ * @brief Driver for the LTR-553ALS-01 ambient light + proximity sensor (I2C).
+ *
+ * This class provides a lightweight register-level driver for:
+ * - ALS (Ambient Light Sensing) configuration and reading
+ * - PS (Proximity Sensing) configuration and reading
+ * - Threshold window configuration
+ * - Interrupt configuration (polarity + source selection)
+ *
+ * The register map and bit fields follow the LTR-553ALS-01 datasheet.
+ *
+ * @warning You must call begin() successfully before calling any other methods.
+ */
+class SensorLTR553
 {
 public:
-
+    /**
+     * @brief Interrupt pin active level.
+     */
     enum IrqLevel {
-        ALS_IRQ_ACTIVE_LOW, // INT pin is considered active when it is a logic 0 (default)
-        ALS_IRQ_ACTIVE_HIGH // INT pin is considered active when it is a logic 1
+        ALS_IRQ_ACTIVE_LOW,  //!< INT pin is active-low (default)
+        ALS_IRQ_ACTIVE_HIGH  //!< INT pin is active-high
     };
+
+    /**
+     * @brief Interrupt trigger source.
+     *
+     * This selects which measurement(s) can assert the interrupt pin.
+     */
     enum IrqMode {
-        ALS_IRQ_ONLY_PS = 1,    // Only PS measurement can trigger interrupt
-        ALS_IRQ_ONLY_ALS,   // Only ALS measurement can trigger interrupt
-        ALS_IRQ_BOTH,       // Both ALS and PS measurement can trigger interrupt
+        ALS_IRQ_DISABLE = 0,   //!< No measurement can trigger interrupt (default)
+        ALS_IRQ_ONLY_PS = 1,   //!< Only PS measurement can trigger interrupt
+        ALS_IRQ_ONLY_ALS = 2,  //!< Only ALS measurement can trigger interrupt
+        ALS_IRQ_BOTH = 3,      //!< Both ALS and PS measurement can trigger interrupt
     };
 
+    /**
+     * @brief ALS gain selection.
+     *
+     * Note: Actual lux range depends on gain and integration time.
+     */
     enum LightSensorGain {
-        ALS_GAIN_1X  = 0x00,    // 1 lux to 64k lux (default)
-        ALS_GAIN_2X  = 0x01,    // 0.5 lux to 32k lux
-        ALS_GAIN_4X  = 0x02,    // 0.25 lux to 16k lux
-        ALS_GAIN_8X  = 0x03,    // 0.125 lux to 8k lux
-        ALS_GAIN_48X = 0x06,    // 0.02 lux to 1.3k lux
-        ALS_GAIN_96X = 0x07,    // 0.01 lux to 600 lux
+        ALS_GAIN_1X  = 0x00,  //!< 1 lux to 64k lux (default)
+        ALS_GAIN_2X  = 0x01,  //!< 0.5 lux to 32k lux
+        ALS_GAIN_4X  = 0x02,  //!< 0.25 lux to 16k lux
+        ALS_GAIN_8X  = 0x03,  //!< 0.125 lux to 8k lux
+        ALS_GAIN_48X = 0x06,  //!< 0.02 lux to 1.3k lux
+        ALS_GAIN_96X = 0x07,  //!< 0.01 lux to 600 lux
     };
 
+    /**
+     * @brief PS LED pulse modulation frequency (REG_PS_LED bits 7:5).
+     *
+     * Datasheet: 000=30kHz ... 111=100kHz.
+     */
     enum PsLedPeriod {
-        PS_LED_PLUSE_30KHZ = 0x00,
-        PS_LED_PLUSE_40KHZ,
-        PS_LED_PLUSE_50KHZ,
-        PS_LED_PLUSE_60KHZ,
-        PS_LED_PLUSE_70KHZ,
-        PS_LED_PLUSE_80KHZ,
-        PS_LED_PLUSE_90KHZ,
-        PS_LED_PLUSE_100KHZ,
+        PS_LED_PLUSE_30KHZ,   //!< 30kHz
+        PS_LED_PLUSE_40KHZ,   //!< 40kHz
+        PS_LED_PLUSE_50KHZ,   //!< 50kHz
+        PS_LED_PLUSE_60KHZ,   //!< 60kHz (default)
+        PS_LED_PLUSE_70KHZ,   //!< 70kHz
+        PS_LED_PLUSE_80KHZ,   //!< 80kHz
+        PS_LED_PLUSE_90KHZ,   //!< 90kHz
+        PS_LED_PLUSE_100KHZ,  //!< 100kHz
     };
+
+    /**
+     * @brief PS LED duty cycle (REG_PS_LED bits 4:3).
+     *
+     * Datasheet: 00=25%, 01=50%, 10=75%, 11=100%.
+     */
     enum PsLedDuty {
-        PS_LED_DUTY_25 = 0x00,
-        PS_LED_DUTY_50,
-        PS_LED_DUTY_75,
-        PS_LED_DUTY_100,
+        PS_LED_DUTY_25,   //!< 25%
+        PS_LED_DUTY_50,   //!< 50%
+        PS_LED_DUTY_75,   //!< 75%
+        PS_LED_DUTY_100,  //!< 100% (default)
     };
+
+    /**
+     * @brief PS LED peak current selection (REG_PS_LED bits 2:0).
+     *
+     * @note The enum values are kept consistent with the original library design.
+     *       Please refer to the datasheet current encoding table if you need strict mapping.
+     */
     enum PsLedCurrent {
-        PS_LED_CUR_5MA = 0x00,
-        PS_LED_CUR_10MA,
-        PS_LED_CUR_20MA,
-        PS_LED_CUR_50MA,
-        PS_LED_CUR_100MA,
+        PS_LED_CUR_5MA,    //!< 5mA
+        PS_LED_CUR_10MA,   //!< 10mA
+        PS_LED_CUR_20MA,   //!< 20mA
+        PS_LED_CUR_50MA,   //!< 50mA
+        PS_LED_CUR_100MA,  //!< 100mA
     };
+
+    /**
+     * @brief PS measurement rate (REG_PS_MEAS_RATE field).
+     *
+     * @note PS_MEAS_RATE_10MS uses value 8, matching the original implementation.
+     */
     enum PsRate {
         PS_MEAS_RATE_50MS,
         PS_MEAS_RATE_70MS,
@@ -89,8 +142,21 @@ public:
         PS_MEAS_RATE_10MS = 8,
     };
 
+    /**
+     * @brief ALS integration time (REG_ALS_MEAS_RATE bits 5:3).
+     *
+     * Datasheet mapping (bits 5:3):
+     * - 000: 100ms (default)
+     * - 001: 50ms
+     * - 010: 200ms
+     * - 011: 400ms
+     * - 100: 150ms
+     * - 101: 250ms
+     * - 110: 300ms
+     * - 111: 350ms
+     */
     enum IntegrationTime {
-        ALS_INTEGRATION_TIME_100MS = 0x00,
+        ALS_INTEGRATION_TIME_100MS,
         ALS_INTEGRATION_TIME_50MS,
         ALS_INTEGRATION_TIME_200MS,
         ALS_INTEGRATION_TIME_400MS,
@@ -100,6 +166,19 @@ public:
         ALS_INTEGRATION_TIME_350MS,
     };
 
+    /**
+     * @brief ALS measurement repeat rate (REG_ALS_MEAS_RATE bits 2:0).
+     *
+     * Datasheet mapping (bits 2:0):
+     * - 000: 50ms
+     * - 001: 100ms
+     * - 010: 200ms
+     * - 011: 500ms (default)
+     * - 100: 1000ms
+     * - 110: 2000ms
+     *
+     * @note Some values may be reserved per datasheet.
+     */
     enum MeasurementRate {
         ALS_MEASUREMENT_TIME_50MS,
         ALS_MEASUREMENT_TIME_100MS,
@@ -109,8 +188,14 @@ public:
         ALS_MEASUREMENT_TIME_2000MS,
     };
 
+    /**
+     * @brief Construct an uninitialized driver instance.
+     */
     SensorLTR553() : comm(nullptr) {}
 
+    /**
+     * @brief Destructor. Deinitializes the communication backend if created.
+     */
     ~SensorLTR553()
     {
         if (comm) {
@@ -119,6 +204,14 @@ public:
     }
 
 #if defined(ARDUINO)
+    /**
+     * @brief Initialize the device on Arduino using TwoWire.
+     *
+     * @param wire TwoWire instance (e.g. Wire).
+     * @param sda  SDA pin (optional, -1 = default).
+     * @param scl  SCL pin (optional, -1 = default).
+     * @return true on success, false on failure (offline or ID mismatch).
+     */
     bool begin(TwoWire &wire, int sda = -1, int scl = -1)
     {
         comm = std::make_unique<SensorCommI2C>(wire, LTR553_SLAVE_ADDRESS, sda, scl);
@@ -131,6 +224,14 @@ public:
 #elif defined(ESP_PLATFORM)
 
 #if defined(USEING_I2C_LEGACY)
+    /**
+     * @brief Initialize the device on ESP-IDF (legacy I2C API).
+     *
+     * @param port_num I2C port number.
+     * @param sda      SDA pin (optional, -1 = default).
+     * @param scl      SCL pin (optional, -1 = default).
+     * @return true on success, false on failure.
+     */
     bool begin(i2c_port_t port_num, int sda = -1, int scl = -1)
     {
         comm = std::make_unique<SensorCommI2C>(port_num, LTR553_SLAVE_ADDRESS, sda, scl);
@@ -141,6 +242,12 @@ public:
         return initImpl();
     }
 #else
+    /**
+     * @brief Initialize the device on ESP-IDF (new I2C master bus handle).
+     *
+     * @param handle I2C master bus handle.
+     * @return true on success, false on failure.
+     */
     bool begin(i2c_master_bus_handle_t handle)
     {
         comm = std::make_unique<SensorCommI2C>(handle, LTR553_SLAVE_ADDRESS);
@@ -150,9 +257,15 @@ public:
         comm->init();
         return initImpl();
     }
-#endif  //ESP_PLATFORM
-#endif  //ARDUINO
+#endif  // USEING_I2C_LEGACY
+#endif  // ESP_PLATFORM
 
+    /**
+     * @brief Initialize the device using a custom I2C-like callback.
+     *
+     * @param callback Custom callback for SensorCommCustom.
+     * @return true on success, false on failure.
+     */
     bool begin(SensorCommCustom::CustomCallback callback)
     {
         comm = std::make_unique<SensorCommCustom>(callback, LTR553_SLAVE_ADDRESS);
@@ -163,85 +276,179 @@ public:
         return initImpl();
     }
 
+    /**
+     * @brief Set interrupt pin polarity.
+     *
+     * @param level Desired active level.
+     */
     void setIRQLevel(IrqLevel  level)
     {
-        level ? comm->setRegisterBit(REG_INTERRUPT, 2) : comm->clrRegisterBit(REG_INTERRUPT, 2);
+        if (level) {
+            comm->setRegisterBit(REG_INTERRUPT, 2);
+        } else {
+            comm->clrRegisterBit(REG_INTERRUPT, 2);
+        }
     }
 
+    /**
+     * @brief Enable interrupts and select which measurement sources can trigger them.
+     *
+     * @param mode Interrupt source mode.
+     */
     void enableIRQ(IrqMode mode)
     {
         comm->writeRegister(REG_INTERRUPT, 0xFC, mode);
     }
 
+    /**
+     * @brief Disable all interrupt sources (mode bits = 0).
+     */
     void disableIRQ()
     {
         comm->writeRegister(REG_INTERRUPT, 0xFC, 0x00);
     }
 
-    //! Light Sensor !
+    // -----------------------
+    // ALS (Ambient Light)
+    // -----------------------
+
+    /**
+     * @brief Check PS data ready flag.
+     *
+     * @return true if PS data is ready (REG_ALS_PS_STATUS bit0), false otherwise.
+     *
+     * @note Function name follows original implementation.
+     */
     bool psAvailable()
     {
         return comm->getRegisterBit(REG_ALS_PS_STATUS, 0);
     }
 
+    /**
+     * @brief Set ALS threshold window.
+     *
+     * If ALS measurement is outside [low, high], interrupt may be asserted depending on IRQ settings.
+     *
+     * @param low  Low threshold.
+     * @param high High threshold.
+     */
     void setLightSensorThreshold(uint16_t low, uint16_t high)
     {
-        uint8_t buffer[4] = {lowByte(high), highByte(high),
-                             lowByte(low), highByte(low)
-                            };
+        uint8_t buffer[4] = {
+            lowByte(high), highByte(high),
+            lowByte(low),  highByte(low)
+        };
         comm->writeRegister(REG_ALS_THRES_UP_0, buffer, 4);
     }
 
-    // Controls the N number of times the measurement data is outside the range
-    // defined by the upper and lower threshold limits before asserting the interrupt.
+    /**
+     * @brief Configure ALS interrupt persistence count.
+     *
+     * Datasheet (REG_INTERRUPT_PERSIST 0x9E):
+     * - ALS Persist bits [3:0]
+     *
+     * @param count Number of consecutive ALS out-of-range events before asserting interrupt.
+     *
+     * @warning Passing 0 will underflow due to (count - 1). Keep as-is to match original behavior.
+     */
     void setLightSensorPersists(uint8_t count)
     {
         comm->writeRegister(REG_INTERRUPT_PERSIST, 0xF0, count - 1);
     }
 
-    void setLightSensorRate(IntegrationTime integrationTime, MeasurementRate measurementRate)
+    /**
+     * @brief Configure ALS integration time and measurement repeat rate.
+     *
+     * Datasheet (REG_ALS_MEAS_RATE 0x85):
+     * - ALS integration time bits [5:3]
+     * - ALS measurement repeat rate bits [2:0]
+     *
+     * @param alsIntegrationTime ALS integration time.
+     * @param alsMeasurementRate ALS measurement repeat rate.
+     */
+    void setLightSensorRate(IntegrationTime alsIntegrationTime, MeasurementRate alsMeasurementRate)
     {
-        uint8_t value = (integrationTime & 0xF) << 8 | (measurementRate & 0xF);
-        comm->writeRegister(REG_ALS_MEAS_RATE, 0x00, value);
+        uint8_t value = (uint8_t)(((alsIntegrationTime & 0x07) << 3) | (alsMeasurementRate & 0x07));
+        comm->writeRegister(REG_ALS_MEAS_RATE, value);
     }
 
+    /**
+     * @brief Enable ALS measurement.
+     */
     void enableLightSensor()
     {
         comm->setRegisterBit(REG_ALS_CONTR, 0);
     }
 
+    /**
+     * @brief Disable ALS measurement.
+     */
     void disableLightSensor()
     {
         comm->clrRegisterBit(REG_ALS_CONTR, 0);
     }
 
+    /**
+     * @brief Set ALS gain.
+     *
+     * @param gain Gain selection.
+     */
     void setLightSensorGain(LightSensorGain gain)
     {
         comm->writeRegister(REG_ALS_CONTR, 0xE3, gain << 2);
     }
 
+    /**
+     * @brief Read ALS raw data from channel 0 or 1.
+     *
+     * @param ch Channel index (0 or 1). Any non-1 value will be treated as channel 0.
+     * @return Raw 16-bit value on success, -1 on invalid data or I2C error.
+     */
     int getLightSensor(uint8_t ch)
     {
         uint8_t buffer[2] = {0};
-        // Check ALS Data is Valid
+
+        // Check ALS Data is Valid (datasheet bit definition should be checked if needed)
         if (comm->getRegisterBit(REG_ALS_PS_STATUS, 7) != false) {
-            return 0;
+            return -1;
         }
+
         int val = comm->readRegister(ch == 1 ? REG_ALS_DATA_CH1_0 : REG_ALS_DATA_CH0_0, buffer, 2);
         if (val == -1) {
             return -1;
         }
-        return buffer[0] | (buffer[1] << 8);
+
+        return (int)buffer[0] | ((int)buffer[1] << 8);
     }
 
-    //!  Proximity sensor !
-    // Controls the N number of times the measurement data is outside the range
-    // defined by the upper and lower threshold limits before asserting the interrupt.
+    // -----------------------
+    // PS (Proximity)
+    // -----------------------
+
+    /**
+     * @brief Configure PS interrupt persistence count.
+     *
+     * Datasheet (REG_INTERRUPT_PERSIST 0x9E):
+     * - PS Persist bits [7:4]
+     *
+     * @param count Number of consecutive PS out-of-range events before asserting interrupt.
+     *              count=0 maps to register value 0 (every PS out of range).
+     */
     void setProximityPersists(uint8_t count)
     {
-        comm->writeRegister(REG_INTERRUPT_PERSIST, 0x0F, count == 0 ? 0 : count - 1);
+        uint8_t val = (count == 0) ? 0 : (count - 1);
+        if (val > 0x0F) {
+            val = 0x0F;
+        }
+        comm->writeRegister(REG_INTERRUPT_PERSIST, 0x0F, val << 4);
     }
 
+    /**
+     * @brief Set PS threshold window.
+     *
+     * @param low  Low threshold (12-bit effective).
+     * @param high High threshold (12-bit effective).
+     */
     void setProximityThreshold(uint16_t low, uint16_t high)
     {
         comm->writeRegister(REG_PS_THRES_UP_0, lowByte(high));
@@ -250,31 +457,58 @@ public:
         comm->writeRegister(REG_PS_THRES_LOW_1, lowByte(low >> 8) & 0x0F);
     }
 
+    /**
+     * @brief Set PS measurement rate.
+     *
+     * @param rate Proximity measurement rate selection.
+     */
     void setProximityRate(PsRate rate)
     {
         comm->writeRegister(REG_PS_MEAS_RATE, 0xF0, rate & 0x0F);
     }
 
+    /**
+     * @brief Enable proximity measurement.
+     */
     void enableProximity()
     {
-        comm->writeRegister(REG_PS_CONTR, 0xF3u, 0x03u);
+        comm->writeRegister(REG_PS_CONTR, 0xFC, 0x03);
     }
 
+    /**
+     * @brief Disable proximity measurement.
+     */
     void disableProximity()
     {
-        comm->writeRegister(REG_PS_CONTR, 0xF3u, 0x00u);
+        comm->writeRegister(REG_PS_CONTR, 0xFC, 0x00);
     }
 
+    /**
+     * @brief Enable PS indicator.
+     */
     void enablePsIndicator()
     {
         comm->setRegisterBit(REG_PS_CONTR, 5);
     }
 
+    /**
+     * @brief Disable PS indicator.
+     */
     void disablePsIndicator()
     {
         comm->clrRegisterBit(REG_PS_CONTR, 5);
     }
 
+    /**
+     * @brief Read proximity raw data.
+     *
+     * Proximity data is 11-bit:
+     * - Low 8 bits: REG_PS_DATA_0
+     * - High 3 bits: REG_PS_DATA_1 bits [2:0]
+     *
+     * @param saturated Optional pointer; will be set true if saturation flag is asserted (bit7).
+     * @return Proximity value on success, -1 on I2C error.
+     */
     int getProximity(bool *saturated = NULL )
     {
         uint8_t buffer[2] = {0};
@@ -283,31 +517,64 @@ public:
             return -1;
         }
         if (saturated) {
-            *saturated = buffer[1] & 0x80;
+            *saturated = (buffer[1] & 0x80) == 0x80;
         }
-        return buffer[0] | (buffer[1] & 0x07);
+        return (int)buffer[0] | ((int)(buffer[1] & 0x07) << 8);
     }
 
+    // -----------------------
+    // PS LED configuration
+    // -----------------------
+
+    /**
+     * @brief Set PS LED pulse modulation frequency (REG_PS_LED bits 7:5).
+     *
+     * @param period LED pulse modulation frequency selection.
+     */
     void setPsLedPulsePeriod(PsLedPeriod period)
     {
-        comm->writeRegister(REG_PS_LED, 0x1F, period);
+        comm->writeRegister(REG_PS_LED, 0x1F, static_cast<uint8_t>(period) << 5);
     }
 
+    /**
+     * @brief Set PS LED duty cycle (REG_PS_LED bits 4:3).
+     *
+     * @param duty LED duty cycle selection.
+     */
     void setPsLedDutyCycle(PsLedDuty duty)
     {
-        comm->writeRegister(REG_PS_LED, 0xE7, duty);
+        comm->writeRegister(REG_PS_LED, 0xE7, static_cast<uint8_t>(duty) << 3);
     }
 
+    /**
+     * @brief Set PS LED peak current (REG_PS_LED bits 2:0).
+     *
+     * @param cur LED peak current selection.
+     */
     void setPsLedCurrent(PsLedCurrent cur)
     {
         comm->writeRegister(REG_PS_LED, 0xF8, cur);
     }
 
+    /**
+     * @brief Set number of PS LED pulses (REG_PS_N_PULSES bits 3:0).
+     *
+     * @param pulesNum Number of pulses (0..15).
+     */
     void setPsLedPulses(uint8_t pulesNum)
     {
         comm->writeRegister(REG_PS_N_PULSES, 0xF0, pulesNum & 0x0F);
     }
 
+    // -----------------------
+    // Identification / reset
+    // -----------------------
+
+    /**
+     * @brief Get Part ID (REG_PART_ID high nibble).
+     *
+     * @return Part ID on success, -1 on error.
+     */
     int getPartID()
     {
         int val = comm->readRegister(REG_PART_ID);
@@ -317,6 +584,11 @@ public:
         return (val >> 4) & 0x0F;
     }
 
+    /**
+     * @brief Get Revision ID (REG_PART_ID low nibble).
+     *
+     * @return Revision ID on success, -1 on error.
+     */
     int getRevisionID()
     {
         int val = comm->readRegister(REG_PART_ID);
@@ -326,19 +598,35 @@ public:
         return (val) & 0x0F;
     }
 
+    /**
+     * @brief Read Manufacturer ID (REG_MANUFAC_ID).
+     *
+     * Expected value is LTR553_DEFAULT_MAN_ID.
+     *
+     * @return Manufacturer ID (or -1 on I2C error depending on backend).
+     */
     int getManufacturerID()
     {
         // Manufacturer ID (0x05H)
         return comm->readRegister(REG_MANUFAC_ID);
     }
 
+    /**
+     * @brief Software reset (REG_ALS_CONTR bit1).
+     */
     void reset()
     {
         comm->setRegisterBit(REG_ALS_CONTR, 1);
     }
 
 private:
-
+    /**
+     * @brief Internal initialization.
+     *
+     * - Configure I2C params
+     * - Reset device
+     * - Verify manufacturer ID
+     */
     bool initImpl()
     {
         I2CParam params(I2CParam::I2C_SET_FLAG, false);
@@ -349,7 +637,36 @@ private:
 
 protected:
     std::unique_ptr<SensorCommBase> comm;
+
+    // Register map
+    static constexpr uint8_t REG_ALS_CONTR = 0x80;
+    static constexpr uint8_t REG_PS_CONTR = 0x81;
+    static constexpr uint8_t REG_PS_LED = 0x82;
+    static constexpr uint8_t REG_PS_N_PULSES = 0x83;
+    static constexpr uint8_t REG_PS_MEAS_RATE = 0x84;
+    static constexpr uint8_t REG_ALS_MEAS_RATE = 0x85;
+    static constexpr uint8_t REG_PART_ID = 0x86;
+    static constexpr uint8_t REG_MANUFAC_ID = 0x87;
+    static constexpr uint8_t REG_ALS_DATA_CH1_0 = 0x88;
+    static constexpr uint8_t REG_ALS_DATA_CH1_1 = 0x89;
+    static constexpr uint8_t REG_ALS_DATA_CH0_0 = 0x8A;
+    static constexpr uint8_t REG_ALS_DATA_CH0_1 = 0x8B;
+    static constexpr uint8_t REG_ALS_PS_STATUS = 0x8C;
+    static constexpr uint8_t REG_PS_DATA_0 = 0x8D;
+    static constexpr uint8_t REG_PS_DATA_1 = 0x8E;
+    static constexpr uint8_t REG_INTERRUPT = 0x8F;
+    static constexpr uint8_t REG_PS_THRES_UP_0 = 0x90;
+    static constexpr uint8_t REG_PS_THRES_UP_1 = 0x91;
+    static constexpr uint8_t REG_PS_THRES_LOW_0 = 0x92;
+    static constexpr uint8_t REG_PS_THRES_LOW_1 = 0x93;
+    static constexpr uint8_t REG_PS_OFFSET_1 = 0x94;
+    static constexpr uint8_t REG_PS_OFFSET_0 = 0x95;
+    static constexpr uint8_t REG_ALS_THRES_UP_0 = 0x97;
+    static constexpr uint8_t REG_ALS_THRES_UP_1 = 0x98;
+    static constexpr uint8_t REG_ALS_THRES_LOW_0 = 0x99;
+    static constexpr uint8_t REG_ALS_THRES_LOW_1 = 0x9A;
+    static constexpr uint8_t REG_INTERRUPT_PERSIST = 0x9E;
+
+    /// Default manufacturer ID.
+    static constexpr uint8_t LTR553_DEFAULT_MAN_ID = 0x05;
 };
-
-
-
