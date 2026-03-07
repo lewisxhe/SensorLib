@@ -1,5 +1,4 @@
 /**
- *
  * @license MIT License
  *
  * Copyright (c) 2026 lewis he
@@ -28,15 +27,52 @@
  * @brief     Template-based sensor callback manager supporting registration, removal,
  *            and invocation of callbacks keyed by sensor ID.
  *
- * This class uses std::unordered_map for efficient lookup. It is not thread-safe;
- * external synchronization is required if used in a multithreaded environment.
+ * This class automatically selects an appropriate container based on the platform:
+ * - On ArduinoIDE nRF52 (or if BOSCH_FORCE_VECTOR_FALLBACK is defined), a std::vector-based
+ *   implementation is used for maximum compatibility.
+ * - On platformio platform uses unordered map by default.
+ * - Otherwise, std::unordered_map (or std::map if forced) is used for efficient lookup.
+ *
+ * Note: The vector-based implementation is not thread-safe and provides O(n) lookup.
+ *       The size() method returns the total number of registered callbacks, not the
+ *       number of distinct sensor IDs.
  */
 
 #pragma once
 
 #include <stdint.h>
-#include <unordered_map>
 #include <vector>
+
+// -----------------------------------------------------------------------------
+// Platform detection and container selection
+// -----------------------------------------------------------------------------
+
+// If we are on nRF52 and not explicitly forcing map usage, fall back to vector.
+#if (defined(ARDUINO_ARCH_NRF52) || defined(NRF52) || defined(__NRF52__)) && !defined(BOSCH_FORCE_USE_MAP) && !defined(PLATFORMIO)
+#define BOSCH_USE_VECTOR_FALLBACK
+#endif
+
+// User can force vector fallback regardless of platform.
+#ifdef BOSCH_FORCE_VECTOR_FALLBACK
+#define BOSCH_USE_VECTOR_FALLBACK
+#endif
+
+// If not using vector, decide between unordered_map and map.
+#ifndef BOSCH_USE_VECTOR_FALLBACK
+#if (defined(ARDUINO_ARCH_NRF52) || defined(NRF52) || defined(__NRF52__) || defined(BOSCH_FORCE_USE_MAP)) && !defined(PLATFORMIO)
+#include <map>
+template<typename Key, typename Value>
+using BoschCallbackMap = std::map<Key, Value>;
+#else
+#include <unordered_map>
+template<typename Key, typename Value>
+using BoschCallbackMap = std::unordered_map<Key, Value>;
+#endif
+#endif
+
+// -----------------------------------------------------------------------------
+// Callback type definitions
+// -----------------------------------------------------------------------------
 
 /**
  * @brief Callback type for sensor data parsing.
@@ -57,6 +93,10 @@ using SensorDataParseCallback = void (*)(uint8_t sensor_id, const uint8_t *data,
  */
 using SensorMetaEventCallback = void (*)(uint8_t sensor_id, uint8_t event_id, uint8_t event_data, void *user_data);
 
+// -----------------------------------------------------------------------------
+// Main template class
+// -----------------------------------------------------------------------------
+
 /**
  * @brief Template class that manages callbacks for sensors.
  * @tparam CallbackType The function pointer type of the callback, e.g.
@@ -70,6 +110,105 @@ template<typename CallbackType>
 class BoschSensorCallbackTemplate
 {
 private:
+    // -------------------------------------------------------------------------
+    // Internal storage (selected by platform)
+    // -------------------------------------------------------------------------
+#ifdef BOSCH_USE_VECTOR_FALLBACK
+    /**
+     * @brief Entry for vector-based storage.
+     */
+    struct Entry {
+        uint8_t sensor_id;      ///< Sensor identifier.
+        CallbackType callback;   ///< Function pointer to the callback.
+        void *user_data;         ///< User data to be passed to the callback.
+    };
+
+    std::vector<Entry> entries; ///< Linear list of all registered callbacks.
+
+public:
+    // -------------------------------------------------------------------------
+    // Vector-based implementation
+    // -------------------------------------------------------------------------
+    bool add(uint8_t sensor_id, CallbackType callback, void *user_data)
+    {
+        if (!callback) return false;
+        entries.push_back({sensor_id, callback, user_data});
+        return true;
+    }
+
+    bool remove(uint8_t sensor_id)
+    {
+        bool removed = false;
+        for (auto it = entries.begin(); it != entries.end(); ) {
+            if (it->sensor_id == sensor_id) {
+                it = entries.erase(it);
+                removed = true;
+            } else {
+                ++it;
+            }
+        }
+        return removed;
+    }
+
+    bool remove(uint8_t sensor_id, CallbackType callback)
+    {
+        for (auto it = entries.begin(); it != entries.end(); ++it) {
+            if (it->sensor_id == sensor_id && it->callback == callback) {
+                entries.erase(it);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void clear()
+    {
+        entries.clear();
+    }
+
+    void call(uint8_t sensor_id, const uint8_t *data, uint32_t size, uint64_t *timestamp) const
+    {
+        for (const auto &entry : entries) {
+            if (entry.sensor_id == sensor_id) {
+                entry.callback(sensor_id, data, size, timestamp, entry.user_data);
+            }
+        }
+    }
+
+    void call(uint8_t sensor_id, uint8_t event_id, uint8_t event_data) const
+    {
+        for (const auto &entry : entries) {
+            if (entry.sensor_id == sensor_id) {
+                entry.callback(sensor_id, event_id, event_data, entry.user_data);
+            }
+        }
+    }
+
+    bool contains(uint8_t sensor_id) const
+    {
+        for (const auto &entry : entries) {
+            if (entry.sensor_id == sensor_id) return true;
+        }
+        return false;
+    }
+
+    /**
+     * @brief Returns the total number of registered callbacks (not distinct sensor IDs).
+     */
+    size_t size() const
+    {
+        return entries.size();
+    }
+
+    bool empty() const
+    {
+        return entries.empty();
+    }
+
+#else  // !BOSCH_USE_VECTOR_FALLBACK
+    // -------------------------------------------------------------------------
+    // Map-based implementation (unordered_map or map)
+    // -------------------------------------------------------------------------
     /**
      * @brief Internal entry holding a callback and its associated user data.
      */
@@ -78,22 +217,9 @@ private:
         void *user_data;         ///< User data to be passed to the callback.
     };
 
-    std::unordered_map<uint8_t, std::vector<CallbackEntry>> callback_map; ///< Maps sensor ID to a list of callback entries.
+    BoschCallbackMap<uint8_t, std::vector<CallbackEntry>> callback_map; ///< Maps sensor ID to a list of callback entries.
 
 public:
-    /// @name Constructors / Destructor / Copy / Move control
-    BoschSensorCallbackTemplate() = default;
-    ~BoschSensorCallbackTemplate() = default;
-
-    // Non-copyable
-    BoschSensorCallbackTemplate(const BoschSensorCallbackTemplate &) = delete;
-    BoschSensorCallbackTemplate& operator = (const BoschSensorCallbackTemplate &) = delete;
-
-    // Movable (efficient)
-    BoschSensorCallbackTemplate(BoschSensorCallbackTemplate &&) noexcept = default;
-    BoschSensorCallbackTemplate& operator = (BoschSensorCallbackTemplate &&) noexcept = default;
-
-
     /**
      * @brief Add a callback for a specific sensor.
      * @param sensor_id  Sensor identifier.
@@ -104,8 +230,7 @@ public:
     bool add(uint8_t sensor_id, CallbackType callback, void *user_data)
     {
         if (!callback) return false;
-        CallbackEntry entry{callback, user_data};
-        callback_map[sensor_id].push_back(entry);
+        callback_map[sensor_id].push_back({callback, user_data});
         return true;
     }
 
@@ -204,8 +329,7 @@ public:
     }
 
     /**
-     * @brief Get the number of sensors that have at least one callback registered.
-     * @return Number of distinct sensor IDs present in the map.
+     * @brief Returns the number of distinct sensor IDs that have at least one callback registered.
      */
     size_t size() const
     {
@@ -220,7 +344,26 @@ public:
     {
         return callback_map.empty();
     }
+#endif // BOSCH_USE_VECTOR_FALLBACK
+
+    // -------------------------------------------------------------------------
+    // Common constructors / destructor / copy / move control
+    // -------------------------------------------------------------------------
+    BoschSensorCallbackTemplate() = default;
+    ~BoschSensorCallbackTemplate() = default;
+
+    // Non-copyable
+    BoschSensorCallbackTemplate(const BoschSensorCallbackTemplate &) = delete;
+    BoschSensorCallbackTemplate& operator = (const BoschSensorCallbackTemplate &) = delete;
+
+    // Movable (efficient)
+    BoschSensorCallbackTemplate(BoschSensorCallbackTemplate &&) noexcept = default;
+    BoschSensorCallbackTemplate& operator = (BoschSensorCallbackTemplate &&) noexcept = default;
 };
+
+// -----------------------------------------------------------------------------
+// Concrete type aliases
+// -----------------------------------------------------------------------------
 
 /**
  * @brief Concrete manager for SensorDataParseCallback callbacks.
