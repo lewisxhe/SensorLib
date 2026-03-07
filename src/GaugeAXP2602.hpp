@@ -29,13 +29,12 @@
 
 #pragma once
 
-#include "REG/AXP2602Constants.h"
 #include "SensorPlatform.hpp"
 
 // AXP2602 Unique device address
 static constexpr uint8_t AXP2602_SLAVE_ADDRESS  = (0x62);
 
-class GaugeAXP2602 : public AXP2602Constants
+class GaugeAXP2602
 {
 public:
     enum CurrentSenseResistor {
@@ -852,4 +851,38 @@ protected:
     std::unique_ptr<SensorCommBase> comm;
     std::unique_ptr<SensorHal> hal;
     GaugeData data;
+
+    static constexpr uint8_t REG_ID = 0x00;
+    static constexpr uint8_t REG_BROM = 0x01;
+    static constexpr uint8_t REG_MODE = 0x02;
+    static constexpr uint8_t REG_PARA_CONFIG = 0x03;
+    static constexpr uint8_t REG_VBAT_ADC_HIGH = 0x04;
+    static constexpr uint8_t REG_VBAT_ADC_LOW = 0x05;
+    static constexpr uint8_t REG_TEMP_RESULT = 0x06;
+    static constexpr uint8_t REG_SOH = 0x07;
+    static constexpr uint8_t REG_SOC = 0x08;
+
+    static constexpr uint8_t REG_TIME_TO_EMPTY_HIGH = 0x0A;
+    static constexpr uint8_t REG_TIME_TO_EMPTY_LOW = 0x0B;
+    static constexpr uint8_t REG_TIME_TO_FULL_HIGH = 0x0C;
+    static constexpr uint8_t REG_TIME_TO_FULL_LOW = 0x0D;
+    static constexpr uint8_t REG_LOW_SOC_THLD = 0x0E;
+    static constexpr uint8_t REG_OT_THLD = 0x0F;
+
+    static constexpr uint8_t REG_COMM_CONFIG = 0x11;
+    static constexpr uint8_t REG_IBAT_ADC_HIGH = 0x14;
+    static constexpr uint8_t REG_IBAT_ADC_LOW = 0x15;
+    static constexpr uint8_t REG_RDC25_CONFIG_HIGH = 0x1A;
+    static constexpr uint8_t REG_RDC25_CONFIG_LOW = 0x1B;
+    static constexpr uint8_t REG_QMAX_CONFIG_HIGH = 0x1E;
+    static constexpr uint8_t REG_QMAX_CONFIG_LOW = 0x1F;
+
+    static constexpr uint8_t REG_IRQ_STATUS = 0x20;
+    static constexpr uint8_t REG_IRQ_ENABLE = 0x21;
+    static constexpr uint8_t REG_TDIE_ADC_HIGH = 0xC2;
+    static constexpr uint8_t REG_TDIE_ADC_LOW = 0xC3;
+    static constexpr uint8_t REG_RDC25_QMAX_SEL = 0xC5;
+    static constexpr uint8_t REG_OPERATING_MODE = 0xC6;
+
+    static constexpr uint8_t AXP2602_CHIP_ID = 0x1C;
 };
