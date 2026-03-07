@@ -34,9 +34,9 @@
  * 
  */
 #include <Arduino.h>
+#include "TouchDrvHI8561.hpp"
 
 #ifdef ARDUINO_ESP32P4_DEV
-#include "TouchDrvHI8561.hpp"
 #include "IoExpanderXL9555.hpp"
 #include "SensorWireHelper.h"
 #include "esp_lcd_mipi_dsi.h"
