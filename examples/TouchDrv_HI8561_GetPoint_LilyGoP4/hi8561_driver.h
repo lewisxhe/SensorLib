@@ -7,6 +7,10 @@
  */
 #pragma once
 
+#include <Arduino.h>
+
+#if defined(ARDUINO)  && defined(ARDUINO_ESP32P4_DEV)
+
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
@@ -62,4 +66,5 @@ typedef struct
 esp_err_t esp_lcd_new_panel_hi8561(const esp_lcd_panel_io_handle_t io, const esp_lcd_panel_dev_config_t *panel_dev_config,
                                    esp_lcd_panel_handle_t *ret_panel);
 
+#endif
 #endif

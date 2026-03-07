@@ -3,6 +3,9 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+#include <Arduino.h>
+
+#if defined(ARDUINO)  && defined(ARDUINO_ESP32P4_DEV)
 
 #include "soc/soc_caps.h"
 
@@ -298,3 +301,6 @@ static esp_err_t panel_hi8561_invert_color(esp_lcd_panel_t *panel, bool invert_c
 }
 
 #endif
+
+#endif
+
