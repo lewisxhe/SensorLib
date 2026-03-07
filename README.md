@@ -8,10 +8,10 @@
 [![PlatformIO Registry](https://badges.registry.platformio.org/packages/lewisxhe/library/SensorLib.svg)](https://registry.platformio.org/libraries/lewisxhe/SensorLib)
 
 [![LICENSE](https://img.shields.io/github/license/lewisxhe/SensorLib)](https://github.com/lewisxhe/SensorLib/blob/master/LICENSE)
-[![ISSUES](https://img.shields.io/github/issues/lewisxhe/SensorsLib)](https://github.com/lewisxhe/SensorsLib/issues)
-[![FORK](https://img.shields.io/github/forks/lewisxhe/SensorsLib)](https://github.com/lewisxhe/SensorsLib/graphs/contributors)
-[![STAR](https://img.shields.io/github/stars/lewisxhe/SensorsLib)](https://github.com/lewisxhe/SensorsLib/stargazers)
-[![releases](https://img.shields.io/github/release/lewisxhe/SensorsLib)](https://github.com/lewisxhe/SensorLib/releases)
+[![ISSUES](https://img.shields.io/github/issues/lewisxhe/SensorLib)](https://github.com/lewisxhe/SensorLib/issues)
+[![FORK](https://img.shields.io/github/forks/lewisxhe/SensorLib)](https://github.com/lewisxhe/SensorLib/graphs/contributors)
+[![STAR](https://img.shields.io/github/stars/lewisxhe/SensorLib)](https://github.com/lewisxhe/SensorLib/stargazers)
+[![releases](https://img.shields.io/github/release/lewisxhe/SensorLib)](https://github.com/lewisxhe/SensorLib/releases)
 
 Support list:
 

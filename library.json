@@ -42,9 +42,9 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/lewisxhe/SensorsLib.git"
+    "url": "https://github.com/lewisxhe/SensorLib.git"
   },
-  "homepage": "https://github.com/lewisxhe/SensorsLib",
+  "homepage": "https://github.com/lewisxhe/SensorLib",
   "export": {
     "include": [
       "LICENSE",
