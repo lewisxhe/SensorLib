@@ -105,7 +105,7 @@ lib_deps =
 
 ### ESP-IDF
 
-SensorLib is now published in the official **ESP-IDF Component Registry** (`lewisxhe/sensorlib`), and supports ESP-IDF v4.4+ (recommended v5.1+).
+SensorLib is now published in the official **ESP-IDF Component Registry**, and supports ESP-IDF v4.4+ (recommended v5.1+).
 
 **1. Add Dependency (in project root `idf_component.yml`)**
 
