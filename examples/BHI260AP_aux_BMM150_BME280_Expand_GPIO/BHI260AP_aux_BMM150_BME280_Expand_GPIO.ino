@@ -142,26 +142,6 @@ void parse_bme280_sensor_data(uint8_t sensor_id, const uint8_t *data_ptr, uint32
     }
 }
 
-void sensor_event_callback(MetaEventType event, uint8_t sensor_id, uint8_t data)
-{
-    Serial.print("Sensor Event:");
-    const char  *sensorName = bhy.getSensorName(sensor_id);
-    switch (event) {
-    case MetaEventType::BOSCH_META_EVENT_SAMPLE_RATE_CHANGED:
-        Serial.print("Sample rate changed for ");
-        Serial.print(sensorName);
-        Serial.println(" sensor");
-        break;
-    case MetaEventType::BOSCH_META_EVENT_POWER_MODE_CHANGED:
-        Serial.print("Power mode changed for ");
-        Serial.print(sensorName);
-        Serial.println(" sensor");
-        break;
-    default:
-        break;
-    }
-}
-
 // Firmware update progress callback
 void progress_callback(uint32_t total, uint32_t transferred, void *user_data)
 {
@@ -223,9 +203,6 @@ void setup()
 #endif
 
     Serial.println("Initializing the sensor successfully!");
-
-    // Register sensor change event callback
-    bhy.onEvent(sensor_event_callback);
 
     // Register BME280 data parse callback function
     bhy.onResultEvent(BoschSensorID::TEMPERATURE, parse_bme280_sensor_data);
