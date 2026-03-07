@@ -10,7 +10,6 @@ set(src_dirs
 )
 set(include_dirs 
     src
-    src/REG
     src/touch
     src/platform
     src/bosch
