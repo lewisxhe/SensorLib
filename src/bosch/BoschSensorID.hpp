@@ -109,5 +109,6 @@ enum BoschSensorID {
     LIGHT_WAKE_UP                           = (148), /*BHY2_SENSOR_ID_LIGHT_WU: Light wake up */
     PROXIMITY_WAKE_UP                       = (149), /*BHY2_SENSOR_ID_PROX_WU: Proximity wake up */
     GPIO_EXP                                = (151), /*BHY2_SENSOR_ID_GPIO_EXP: GPIO_EXP*/
-    MULTI_TAP                               = (153)  /*BHY2_SENSOR_ID_MULTI_TAP: Multi tap only supported by BHI360 */
+    MULTI_TAP                               = (153), /*BHY2_SENSOR_ID_MULTI_TAP: Multi tap only supported by BHI360 */
+    NO_MOTION_LOW_POWER_WAKE_UP             = (159)  /*BHY2_SENSOR_ID_NO_MOTION_DET: No motion detect only supported by BHI360 */
 };

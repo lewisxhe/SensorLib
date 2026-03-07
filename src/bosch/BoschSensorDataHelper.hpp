@@ -189,11 +189,28 @@ protected:
                 result.iaq.gas_resistance = raw.raw_gas;
             }
             break;
+        case BHY2_SENSOR_ID_ANY_MOTION_LP:
+        case BHY2_SENSOR_ID_ANY_MOTION_LP_WU:
+            result.detected = true;
+            break;
         case BHI360_SENSOR_ID_MULTI_TAP:
             result.multi_tap = static_cast<bhi360_event_data_multi_tap>(data[0]);
             break;
+        case BHI360_SENSOR_ID_AR_WEAR_WU:
+            log_d("AR wear detected");
+            break;
+        case BHI360_SENSOR_ID_WRIST_GEST_DETECT_LP_WU:
+            log_d("Wrist gesture detected");
+            break;
+        case BHI360_SENSOR_ID_WRIST_WEAR_LP_WU:
+            log_d("Wrist wear detected");
+            break;
+        case BHI360_SENSOR_ID_NO_MOTION_LP_WU:
+            log_d("No motion detected");
+            result.detected = true;
+            break;
         default:
-            log_e("Sensor ID Undefined");
+            log_e("Sensor ID Undefined : %d", sensor_id);
             break;
         }
         return result;
@@ -235,8 +252,10 @@ public:
 
     bool hasUpdated()
     {
-        bool result =  _lastUpdateTime != _currentTime;
-        _lastUpdateTime = _currentTime;
+        // bool result =  _lastUpdateTime != _currentTime;
+        // _lastUpdateTime = _currentTime;
+        bool result = _hasNewData;
+        _hasNewData = false;
         return result;
     }
 
@@ -270,6 +289,7 @@ protected:
     DataType _value;
     uint64_t _lastUpdateTime;
     uint64_t _currentTime;
+    bool _hasNewData;
 private:
     uint64_t getNanosecondsFromCurrentTime() const
     {
@@ -282,6 +302,7 @@ private:
         self->updateValue(parsedData);
         self->_lastUpdateTime = self->_currentTime;
         self->_currentTime = *timestamp;
+        self->_hasNewData = true;
     }
 };
 
@@ -855,4 +876,76 @@ protected:
     {
         _value = data.multi_tap;
     }
+};
+
+
+enum class MotionMode : uint8_t {
+    OFF,
+    ONCE,
+    CONTINUOUS
+};
+
+template<typename Derived, BoschSensorID SensorID>
+class SensorMotionBase : public SensorTemplateBase<bool>
+{
+public:
+    SensorMotionBase(BoschSensorBase &handle)
+        : SensorTemplateBase<bool>(SensorID, handle), _mode(MotionMode::OFF)
+    {
+        if (_handle.getChipID() == BHI260_CHIP_ID) {
+            log_e("BHI260 does not support this motion sensor.");
+        }
+        _handle.onEvent(staticEventCallback, SensorID, this);
+    }
+
+    bool enable(MotionMode mode)
+    {
+        _mode = mode;
+        return SensorTemplateBase<bool>::enable(1, 0);
+    }
+
+    bool isEnabled() const
+    {
+        return _mode != MotionMode::OFF;
+    }
+
+    void setOnMotionCallback(std::function<void()> cb)
+    {
+        onMotion = std::move(cb);
+    }
+
+protected:
+    void updateValue(const SensorData &data) override
+    {
+        if (data.detected && onMotion) {
+            onMotion();
+        }
+        _value = data.detected;
+    }
+
+private:
+    static void staticEventCallback(uint8_t sensor_id, uint8_t event_id, uint8_t event_data, void *user_data)
+    {
+        auto self = static_cast<Derived *>(user_data);
+        if (sensor_id == static_cast<uint8_t>(SensorID) && event_data == 0x01) {
+            if (self->_mode != MotionMode::CONTINUOUS) {
+                self->_mode = MotionMode::OFF;
+            } else {
+                self->SensorTemplateBase<bool>::enable(1, 0);
+            }
+        }
+    }
+
+    MotionMode _mode;
+    std::function<void()> onMotion;
+};
+
+class SensorAnyMotion : public SensorMotionBase<SensorAnyMotion, BoschSensorID::ANY_MOTION_LOW_POWER_WAKE_UP>
+{
+    using SensorMotionBase::SensorMotionBase;
+};
+
+class SensorNoMotion : public SensorMotionBase<SensorNoMotion, BoschSensorID::NO_MOTION_LOW_POWER_WAKE_UP>
+{
+    using SensorMotionBase::SensorMotionBase;
 };
