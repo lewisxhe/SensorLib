@@ -133,7 +133,7 @@ public:
         return ret;
     }
 
-    int readRegister(uint8_t *buf, size_t len) override
+    int readBuffer(uint8_t *buf, size_t len) override
     {
         if (!buf || len == 0)return -1;
         hal->digitalWrite(csPin, LOW);

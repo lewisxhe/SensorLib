@@ -80,7 +80,7 @@ public:
         }
         // Read current output state
         uint8_t current;
-        if (comm->readRegister(&current, 1) < 0) {
+        if (comm->readBuffer(&current, 1) < 0) {
             log_e("Failed to read current output state");
             return;
         }
@@ -119,7 +119,7 @@ public:
     uint16_t digitalReadPort() override
     {
         uint8_t state;
-        if (comm->readRegister(&state, 1) < 0) {
+        if (comm->readBuffer(&state, 1) < 0) {
             log_e("Failed to read output state");
             return 0;
         }

@@ -129,7 +129,7 @@ public:
         return -1;
     }
 
-    int readRegister(uint8_t *buf, size_t len) override
+    int readBuffer(uint8_t *buf, size_t len) override
     {
 #if defined(USEING_I2C_LEGACY)
         if (ESP_OK == i2c_master_write_read_device(_i2cNum, addr, NULL, 0, buf, len,

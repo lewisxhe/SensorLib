@@ -122,7 +122,7 @@ public:
         return 0;
     }
 
-    int readRegister(uint8_t *buf, size_t len) override
+    int readBuffer(uint8_t *buf, size_t len) override
     {
         hal->digitalWrite(csPin, LOW);
         spi.beginTransaction(setting);

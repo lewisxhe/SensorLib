@@ -31,19 +31,6 @@
 #include "SensorLib.h"
 #include <memory>
 
-typedef struct {
-    uint8_t byte0 : 8;
-    uint8_t byte1 : 8;
-    uint8_t byte2 : 8;
-    uint8_t byte3 : 8;
-} ByteStruct;
-
-typedef union {
-    uint32_t value;
-    ByteStruct bytes;
-    uint8_t byte_array[4];
-} ByteUnion;
-
 #if __cplusplus == 201103L
 namespace std
 {
@@ -137,10 +124,10 @@ public:
     virtual bool init() = 0;
     virtual void deinit() = 0;
 
-    virtual int readRegister(uint8_t *buf,size_t len) = 0;
     virtual int readRegister(const uint8_t reg) = 0;
     virtual int readRegister(const uint8_t reg, uint8_t *buf, size_t len) = 0;
-
+    virtual int readBuffer(uint8_t *buf,size_t len) = 0;
+    
     virtual int writeRegister(const uint8_t reg, uint8_t val) = 0;
     virtual int writeRegister(const uint8_t reg, uint8_t *buf, size_t len) = 0;
     virtual int writeRegister(const uint8_t reg, uint8_t norVal, uint8_t orVal) = 0;
