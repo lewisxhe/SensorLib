@@ -223,14 +223,14 @@ uint16_t BoschSensorBase::getKernelVersion()
     return version;
 }
 
-void BoschSensorBase::onEvent(MetaEventCb callback)
+void BoschSensorBase::onEvent(SensorMetaEventCallback callback, uint8_t sensor_id, void *user_data)
 {
-    cbs.onEvent = std::move(callback);
+    _meta_event_callback_manager.add(sensor_id, callback, user_data);
 }
 
-void BoschSensorBase::removeEvent()
+void BoschSensorBase::removeEvent(uint8_t sensor_id)
 {
-    cbs.onEvent = nullptr;
+    _meta_event_callback_manager.remove(sensor_id);
 }
 
 bool BoschSensorBase::onResultEvent(uint8_t sensor_id, SensorDataParseCallback callback, void *user_data)
@@ -665,7 +665,9 @@ void BoschSensorBase::parseData(const struct bhy2_fifo_parse_data_info *fifo, vo
     log_i("ID:[%d]:%s: DATA LEN:%u", fifo->sensor_id, BoschSensorUtils::get_sensor_name(fifo->sensor_id), fifo->data_size);
     SensorLibDumpBuffer(fifo->data_ptr, fifo->data_size);
 #endif
-    _callback_manager.call(fifo->sensor_id, fifo->data_ptr, fifo->data_size, fifo->time_stamp);
+    if (_callback_manager.contains(fifo->sensor_id)) {
+        _callback_manager.call(fifo->sensor_id, fifo->data_ptr, fifo->data_size, fifo->time_stamp);
+    }
 }
 
 void BoschSensorBase::parseMetaEvent(const struct bhy2_fifo_parse_data_info *callback_info, void *user_data)
@@ -674,11 +676,11 @@ void BoschSensorBase::parseMetaEvent(const struct bhy2_fifo_parse_data_info *cal
         return;
     }
     uint8_t meta_event_type = callback_info->data_ptr[0];
-    uint8_t byte1 = callback_info->data_ptr[1];
+    uint8_t sensor_id = callback_info->data_ptr[1];
     uint8_t byte2 = callback_info->data_ptr[2];
     const char *event_text;
 
-    UNUSED(byte1);
+    UNUSED(sensor_id);
     UNUSED(byte2);
     UNUSED(event_text);
 
@@ -693,63 +695,63 @@ void BoschSensorBase::parseMetaEvent(const struct bhy2_fifo_parse_data_info *cal
     MetaEventType event = static_cast<MetaEventType>(meta_event_type);
     switch (event) {
     case MetaEventType::BOSCH_META_EVENT_FLUSH_COMPLETE:
-        log_i("%s Flush complete for sensor id %u", event_text, byte1);
+        log_d("%s Flush complete for sensor id %u", event_text, sensor_id);
         break;
     case MetaEventType::BOSCH_META_EVENT_SAMPLE_RATE_CHANGED:
-        log_i("%s Sample rate changed for sensor id %u", event_text, byte1);
+        log_d("%s Sample rate changed for sensor id %u", event_text, sensor_id);
         break;
     case MetaEventType::BOSCH_META_EVENT_POWER_MODE_CHANGED:
-        log_i("%s Power mode changed for sensor id %u", event_text, byte1);
+        log_d("%s Power mode changed for sensor id %u value: %u", event_text, sensor_id, byte2);
         break;
     case MetaEventType::BOSCH_META_EVENT_ALGORITHM_EVENTS:
-        log_i("%s Algorithm event", event_text);
+        log_d("%s Algorithm event", event_text);
         break;
     case MetaEventType::BOSCH_META_EVENT_SENSOR_STATUS:
-        log_i("%s Accuracy for sensor id %u changed to %u", event_text, byte1, byte2);
+        log_d("%s Accuracy for sensor id %u changed to %u", event_text, sensor_id, byte2);
         _accuracy = byte2;
         break;
     case MetaEventType::BOSCH_META_EVENT_BSX_DO_STEPS_MAIN:
-        log_i("%s BSX event (do steps main)", event_text);
+        log_d("%s BSX event (do steps main)", event_text);
         break;
     case MetaEventType::BOSCH_META_EVENT_BSX_DO_STEPS_CALIB:
-        log_i("%s BSX event (do steps calibration)", event_text);
+        log_d("%s BSX event (do steps calibration)", event_text);
         break;
     case MetaEventType::BOSCH_META_EVENT_BSX_GET_OUTPUT_SIGNAL:
-        log_i("%s BSX event (get output signal)", event_text);
+        log_d("%s BSX event (get output signal)", event_text);
         break;
     case MetaEventType::BOSCH_META_EVENT_SENSOR_ERROR:
-        log_i("%s Sensor id %u reported error 0x%02X", event_text, byte1, byte2);
+        log_d("%s Sensor id %u reported error 0x%02X", event_text, sensor_id, byte2);
         break;
     case MetaEventType::BOSCH_META_EVENT_FIFO_OVERFLOW:
-        log_i("%s FIFO overflow", event_text);
+        log_d("%s FIFO overflow", event_text);
         break;
     case MetaEventType::BOSCH_META_EVENT_DYNAMIC_RANGE_CHANGED:
-        log_i("%s Dynamic range changed for sensor id %u", event_text, byte1);
+        log_d("%s Dynamic range changed for sensor id %u", event_text, sensor_id);
         break;
     case MetaEventType::BOSCH_META_EVENT_FIFO_WATERMARK:
-        log_i("%s FIFO watermark reached", event_text);
+        log_d("%s FIFO watermark reached", event_text);
         break;
     case MetaEventType::BOSCH_META_EVENT_INITIALIZED:
-        log_i("%s Firmware initialized. Firmware version %u", event_text, ((uint16_t)byte2 << 8) | byte1);
+        log_d("%s Firmware initialized. Firmware version %u", event_text, ((uint16_t)byte2 << 8) | sensor_id);
         break;
     case MetaEventType::BOSCH_META_TRANSFER_CAUSE:
-        log_i("%s Transfer cause for sensor id %u", event_text, byte1);
+        log_d("%s Transfer cause for sensor id %u", event_text, sensor_id);
         break;
     case MetaEventType::BOSCH_META_EVENT_SENSOR_FRAMEWORK:
-        log_i("%s Sensor framework event for sensor id %u", event_text, byte1);
+        log_d("%s Sensor framework event for sensor id %u", event_text, sensor_id);
         break;
     case MetaEventType::BOSCH_META_EVENT_RESET:
-        log_i("%s Reset event", event_text);
+        log_d("%s Reset event", event_text);
         break;
     case MetaEventType::BOSCH_META_EVENT_SPACER:
         return;
     default:
-        log_i("%s Unknown meta event with id: %u", event_text, meta_event_type);
+        log_d("%s Unknown meta event with id: %u", event_text, meta_event_type);
         break;
     }
 
-    if (cbs.onEvent) {
-        cbs.onEvent(event, byte1, byte2);
+    if (_meta_event_callback_manager.contains(sensor_id)) {
+        _meta_event_callback_manager.call(sensor_id, meta_event_type, byte2);
     }
 }
 

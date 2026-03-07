@@ -92,17 +92,12 @@ public:
      */
     using KernelDebugCb = std::function<void(const char *message)>;
 
-    /**
-     * @brief Callback type for meta events from the sensor.
-     */
-    using MetaEventCb = std::function<void(MetaEventType event, uint8_t sensor_id, uint8_t data)>;
 
     /**
      * @brief Structure to hold event callback functions.
      */
     struct EventCallbacks {
         KernelDebugCb onDebug = nullptr;  ///< Callback for debug messages
-        MetaEventCb onEvent = nullptr;    ///< Callback for meta events
     };
 
 
@@ -251,15 +246,24 @@ public:
     uint16_t getKernelVersion();
 
     /**
-     * @brief Register a callback for sensor meta events.
-     * @param callback Callback function to handle meta events.
+     * @brief  Register a callback for sensor meta events.
+     * @note   This function allows the user to register a callback that will be called
+     *         when a meta event occurs for the specified sensor.
+     * @param  callback: Callback function to handle meta events.
+     * @param  sensor_id: ID of the sensor to register the callback for.
+     * @param  *user_data: Optional user data to pass to the callback.
+     * @retval None
      */
-    void onEvent(MetaEventCb callback);
+    void onEvent(SensorMetaEventCallback callback, uint8_t sensor_id, void *user_data = nullptr);
 
     /**
-     * @brief Remove the registered meta event callback.
+     * @brief  Remove a registered meta event callback.
+     * @note   This function allows the user to remove a previously registered callback
+     *         for a specific sensor's meta events.
+     * @param  sensor_id: ID of the sensor to remove the callback from.
+     * @retval None
      */
-    void removeEvent();
+    void removeEvent(uint8_t sensor_id);
 
     /**
      * @brief Register a callback for sensor data results.
@@ -542,6 +546,7 @@ protected:
     void               *_process_callback_user_data; ///< User data for progress callback
     BoschParseCallbackManager  _callback_manager; ///< Callback manager for sensor data
     uint8_t             _sensor_available_nums; ///< Number of available sensors
+    BoschMetaEventCallbackManager _meta_event_callback_manager; ///< Callback manager for meta events
     char                _err_buffer[128];       ///< Buffer for error messages
     EventCallbacks cbs;                         ///< Event callback functions
 };
