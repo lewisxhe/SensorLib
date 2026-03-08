@@ -49,6 +49,7 @@ public:
     bool init() override
     {
         if (!hal) {
+            setError(SENSOR_ERR_INVALID_ARG);
             return false;
         }
         if (mosi != -1 && miso != -1 && sck != -1) {
@@ -78,10 +79,16 @@ public:
 
             esp_err_t ret;
             ret = spi_bus_initialize(host, &buscfg, SPI_DMA_CH_AUTO);
-            if (ret != ESP_OK)return false;
+            if (ret != ESP_OK) {
+                setError(SENSOR_ERR_COMM_INIT);
+                return false;
+            }
 
             ret = spi_bus_add_device(host, &devcfg, &spi);
-            if (ret != ESP_OK)return false;
+            if (ret != ESP_OK) {
+                setError(SENSOR_ERR_COMM_INIT);
+                return false;
+            }
         }
 
         hal->pinMode(csPin, OUTPUT);
@@ -105,7 +112,7 @@ public:
     {
         int val = readRegister(reg);
         if (val < 0) {
-            return -1;
+            return SENSOR_ERR_COMM_NACK;
         }
         val &= norVal;
         val |= orVal;
@@ -114,6 +121,10 @@ public:
 
     int writeRegister(const uint8_t reg, uint8_t *buf, size_t len) override
     {
+        if (hal == nullptr) {
+            return SENSOR_ERR_INVALID_ARG;
+        }
+
         hal->digitalWrite(csPin, LOW);
 
         spi_transaction_t trans;
@@ -130,12 +141,15 @@ public:
 
         hal->digitalWrite(csPin, HIGH);
 
-        return ret;
+        return ret == ESP_OK ? SENSOR_OK : SENSOR_ERR_COMM_NACK;
     }
 
     int readBuffer(uint8_t *buf, size_t len) override
     {
-        if (!buf || len == 0)return -1;
+        if (!buf || len == 0 || hal == nullptr) {
+            return SENSOR_ERR_INVALID_ARG;
+        }
+
         hal->digitalWrite(csPin, LOW);
         spi_transaction_t trans;
         memset(&trans, 0, sizeof(trans));
@@ -145,21 +159,23 @@ public:
         trans.rx_buffer = buf;
         esp_err_t ret = spi_device_transmit(spi, &trans);
         hal->digitalWrite(csPin, HIGH);
-        return ret == ESP_OK ? 0 : -1;
+        return ret == ESP_OK ? SENSOR_OK : SENSOR_ERR_COMM_NACK;
     }
 
     int readRegister(const uint8_t reg) override
     {
         uint8_t value = 0x00;
         if (readRegister(reg, &value, 1) < 0) {
-            return -1;
+            return SENSOR_ERR_COMM_NACK;
         }
         return value;
     }
 
     int writeBuffer(uint8_t *buf, size_t len)
     {
-        if (!buf || len == 0)return -1;
+        if (!buf || len == 0 || hal == nullptr) {
+            return SENSOR_ERR_INVALID_ARG;
+        }
 
         hal->digitalWrite(csPin, LOW);
 
@@ -176,7 +192,9 @@ public:
     int readRegister(const uint8_t reg, uint8_t *buf, size_t len) override
     {
 
-        if (!buf || len == 0)return -1;
+        if (!buf || len == 0 || hal == nullptr) {
+            return SENSOR_ERR_INVALID_ARG;
+        }
 
         hal->digitalWrite(csPin, LOW);
 
@@ -189,12 +207,14 @@ public:
         esp_err_t ret = spi_device_transmit(spi, &trans);
 
         hal->digitalWrite(csPin, HIGH);
-        return ret == ESP_OK ? 0 : -1;
+        return ret == ESP_OK ? SENSOR_OK : SENSOR_ERR_COMM_NACK;
     }
 
     int writeThenRead(const uint8_t *write_buffer, size_t write_len, uint8_t *read_buffer, size_t read_len) override
     {
-        if (!write_buffer || write_len == 0 || !read_buffer || read_len == 0) return -1;
+        if (!write_buffer || write_len == 0 || !read_buffer || read_len == 0 || hal == nullptr) {
+            return SENSOR_ERR_INVALID_ARG;
+        }
 
         hal->digitalWrite(csPin, LOW);
 
@@ -219,21 +239,21 @@ public:
 
         hal->digitalWrite(csPin, HIGH);
 
-        return ret == ESP_OK ? 0 : -1;
+        return ret == ESP_OK ? SENSOR_OK : SENSOR_ERR_COMM_NACK;
     }
 
     bool setRegisterBit(const uint8_t reg, uint8_t bit) override
     {
         uint8_t value = readRegister(reg);
         value |= (1 << bit);
-        return writeRegister(reg, reinterpret_cast<uint8_t *>(&value), 1) == 0;
+        return writeRegister(reg, reinterpret_cast<uint8_t *>(&value), 1) == SENSOR_OK;
     }
 
     bool clrRegisterBit(const uint8_t reg, uint8_t bit) override
     {
         uint8_t value = readRegister(reg);
         value &= ~(1 << bit);
-        return writeRegister(reg, reinterpret_cast<uint8_t *>(&value), 1) == 0;
+        return writeRegister(reg, reinterpret_cast<uint8_t *>(&value), 1) == SENSOR_OK;
     }
 
     bool getRegisterBit(const uint8_t reg, uint8_t bit) override

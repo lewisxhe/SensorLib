@@ -77,35 +77,35 @@ public:
             wire.write(buf, len);
         }
         if (wire.endTransmission() == 0) {
-            return 0;
+            return SENSOR_OK;
         } else {
-            return -1;
+            return SENSOR_ERR_COMM_NACK;
         }
     }
 
     int writeBuffer(uint8_t *buffer, size_t len) override
     {
-        if (!buffer || len == 0)return -1;
+        if (!buffer || len == 0)return SENSOR_ERR_INVALID_ARG;
         wire.beginTransmission(addr);
         wire.write(buffer, len);
         if (wire.endTransmission() == 0) {
-            return 0;
+            return SENSOR_OK;
         } else {
-            return -1;
+            return SENSOR_ERR_COMM_NACK;
         }
     }
 
     int readBuffer(uint8_t *buf, size_t len) override
     {
         wire.requestFrom(addr, static_cast<uint8_t>(len));
-        return wire.readBytes(buf, len) == len ? 0 : -1;
+        return wire.readBytes(buf, len) == len ? SENSOR_OK : SENSOR_ERR_COMM_NACK;
     }
 
     int readRegister(const uint8_t reg) override
     {
         uint8_t value = 0x00;
         if (readRegister(reg, &value, 1) < 0) {
-            return -1;
+            return SENSOR_ERR_COMM_NACK;
         }
         return value;
     }
@@ -117,7 +117,7 @@ public:
         wire.write(reg);
         wire.endTransmission(sendStopFlag);
         wire.requestFrom(addr, static_cast<uint8_t>(len));
-        return wire.readBytes(buf, len) == len ? 0 : -1;
+        return wire.readBytes(buf, len) == len ? SENSOR_OK : SENSOR_ERR_COMM_NACK;
     }
 
     int writeThenRead(const uint8_t *write_buffer, size_t write_len, uint8_t *read_buffer, size_t read_len) override
@@ -125,24 +125,24 @@ public:
         wire.beginTransmission(addr);
         wire.write(write_buffer, write_len);
         if (wire.endTransmission(sendStopFlag) != 0) {
-            return -1;
+            return SENSOR_ERR_COMM_NACK;
         }
         wire.requestFrom(addr, read_len);
-        return wire.readBytes(read_buffer, read_len) == read_len ? 0 : -1;
+        return wire.readBytes(read_buffer, read_len) == read_len ? SENSOR_OK : SENSOR_ERR_COMM_NACK;
     }
 
     bool setRegisterBit(const uint8_t reg, uint8_t bit) override
     {
         uint8_t value = readRegister(reg);
         value |= (1 << bit);
-        return writeRegister(reg, reinterpret_cast<uint8_t *>(&value), 1) == 0;
+        return writeRegister(reg, reinterpret_cast<uint8_t *>(&value), 1) == SENSOR_OK;
     }
 
     bool clrRegisterBit(const uint8_t reg, uint8_t bit) override
     {
         uint8_t value = readRegister(reg);
         value &= ~(1 << bit);
-        return writeRegister(reg, reinterpret_cast<uint8_t *>(&value), 1) == 0;
+        return writeRegister(reg, reinterpret_cast<uint8_t *>(&value), 1) == SENSOR_OK;
     }
 
     bool getRegisterBit(const uint8_t reg, uint8_t bit) override

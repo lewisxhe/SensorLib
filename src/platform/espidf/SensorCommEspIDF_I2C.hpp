@@ -89,7 +89,7 @@ public:
     {
         int val = readRegister(reg);
         if (val < 0) {
-            return -1;
+            return SENSOR_ERR_COMM_NACK;
         }
         val &= norVal;
         val |= orVal;
@@ -101,7 +101,7 @@ public:
         size_t totalLength = sizeof(uint8_t) + len;
         uint8_t *write_buffer = (uint8_t *)malloc(totalLength);
         if (!write_buffer) {
-            return -1;
+            return SENSOR_ERR_NO_MEMORY;
         }
         write_buffer[0] = reg;
         if (buf && len > 0) {
@@ -118,15 +118,15 @@ public:
 #if defined(USEING_I2C_LEGACY)
         if (ESP_OK == i2c_master_write_to_device(_i2cNum, addr, buffer, len,
                 SENSORLIB_I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS)) {
-            return 0;
+            return SENSOR_OK;
         }
 #else //ESP_IDF_VERSION
         if (ESP_OK == i2c_master_transmit(_i2cDevice, buffer, len, -1)) {
-            return 0;
+            return SENSOR_OK;
         }
 
 #endif //ESP_IDF_VERSION
-        return -1;
+        return SENSOR_ERR_COMM_NACK;
     }
 
     int readBuffer(uint8_t *buf, size_t len) override
@@ -134,21 +134,21 @@ public:
 #if defined(USEING_I2C_LEGACY)
         if (ESP_OK == i2c_master_write_read_device(_i2cNum, addr, NULL, 0, buf, len,
                 SENSORLIB_I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS)) {
-            return 0;
+            return SENSOR_OK;
         }
 #else //ESP_IDF_VERSION
         if (ESP_OK == i2c_master_transmit_receive(_i2cDevice, NULL, 0, buf, len, -1)) {
-            return 0;
+            return SENSOR_OK;
         }
 #endif //ESP_IDF_VERSION
-        return -1;
+        return SENSOR_ERR_COMM_NACK;
     }
 
     int readRegister(const uint8_t reg) override
     {
         uint8_t value = 0x00;
         if (readRegister(reg, &value, 1) < 0) {
-            return -1;
+            return SENSOR_ERR_COMM_NACK;
         }
         return value;
     }
@@ -158,14 +158,14 @@ public:
 #if defined(USEING_I2C_LEGACY)
         if (ESP_OK == i2c_master_write_read_device(_i2cNum, addr, (uint8_t *)&reg, 1, buf, len,
                 SENSORLIB_I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS)) {
-            return 0;
+            return SENSOR_OK;
         }
 #else //ESP_IDF_VERSION
         if (ESP_OK == i2c_master_transmit_receive(_i2cDevice, (const uint8_t *)&reg, 1, buf, len, -1)) {
-            return 0;
+            return SENSOR_OK;
         }
 #endif //ESP_IDF_VERSION
-        return -1;
+        return SENSOR_ERR_COMM_NACK;
     }
 
     int writeThenRead(const uint8_t *write_buffer, size_t write_len, uint8_t *read_buffer, size_t read_len) override
@@ -179,7 +179,7 @@ public:
                     read_buffer,
                     read_len,
                     SENSORLIB_I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS)) {
-            return 0;
+            return SENSOR_OK;
         }
 #else //ESP_IDF_VERSION
         if (ESP_OK == i2c_master_transmit_receive(
@@ -189,24 +189,24 @@ public:
                     read_buffer,
                     read_len,
                     -1)) {
-            return 0;
+            return SENSOR_OK;
         }
 #endif //ESP_IDF_VERSION
-        return -1;
+        return SENSOR_ERR_COMM_NACK;
     }
 
     bool setRegisterBit(const uint8_t reg, uint8_t bit) override
     {
         uint8_t value = readRegister(reg);
         value |= (1 << bit);
-        return writeRegister(reg, reinterpret_cast<uint8_t *>(&value), 1) == 0;
+        return writeRegister(reg, reinterpret_cast<uint8_t *>(&value), 1) == SENSOR_OK;
     }
 
     bool clrRegisterBit(const uint8_t reg, uint8_t bit) override
     {
         uint8_t value = readRegister(reg);
         value &= ~(1 << bit);
-        return writeRegister(reg, reinterpret_cast<uint8_t *>(&value), 1) == 0;
+        return writeRegister(reg, reinterpret_cast<uint8_t *>(&value), 1) == SENSOR_OK;
     }
 
     bool getRegisterBit(const uint8_t reg, uint8_t bit) override
@@ -269,7 +269,10 @@ private:
         // static const IDF_RX_BUF_DISABLE =  0;  /*!< I2C master doesn't need buffer */
 
         i2c_param_config(_i2cNum, &i2c_conf);
-        i2c_driver_install(_i2cNum, i2c_conf.mode, 0, 0, 0);
+        if(ESP_OK != i2c_driver_install(_i2cNum, i2c_conf.mode, 0, 0, 0)) {
+            setError(SENSOR_ERR_COMM_INIT);
+            return false;
+        }
         return true;
     }
 
@@ -297,6 +300,7 @@ private:
 
         if (ESP_OK != i2c_master_bus_add_device(_busHandle, &devConf, &_i2cDevice)) {
             log_i("i2c_master_bus_add_device failed !");
+            setError(SENSOR_ERR_COMM_INIT);
             return false;
         }
         log_i("Added Device Address : 0x%X  New Dev Address: %p Speed :%lu ", addr, _i2cDevice, devConf.scl_speed_hz);
