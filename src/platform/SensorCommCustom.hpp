@@ -79,7 +79,7 @@ public:
         }
     }
 
-    int readRegister(uint8_t *buf, size_t len) override
+    int readBuffer(uint8_t *buf, size_t len) override
     {
         if (customCallback(addr, 0x00, buf, len, false, false)) {
             return 0;
