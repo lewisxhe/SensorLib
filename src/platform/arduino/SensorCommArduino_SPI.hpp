@@ -55,7 +55,6 @@ public:
 
     bool init() override
     {
-        log_d("SensorCommSPI");
         if (!hal) {
             log_e("hal pointer is null");
             setError(SENSOR_ERR_INVALID_ARG);
@@ -82,6 +81,9 @@ public:
 #else
 #warning "SPI custom GPIO mapping function is not implemented"
 #endif
+        } else {
+            // Use default pins
+            spi.begin();
         }
         hal->pinMode(csPin, OUTPUT);
         hal->digitalWrite(csPin, HIGH);
