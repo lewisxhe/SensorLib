@@ -37,7 +37,8 @@
 class SensorCommI2C : public SensorCommBase
 {
 public:
-    SensorCommI2C(TwoWire &wire, uint8_t addr, int sda, int scl, SensorHal *hal = nullptr) : hal(hal), wire(wire), addr(addr), sda(sda), scl(scl), sendStopFlag(true) {}
+    SensorCommI2C(TwoWire &wire, uint8_t addr, int sda, int scl, SensorHal *hal = nullptr)
+        : hal(hal), wire(wire), addr(addr), sda(sda), scl(scl), sendStopFlag(true) {}
 
     bool init() override
     {
@@ -70,29 +71,22 @@ public:
 
     int writeRegister(const uint8_t reg, uint8_t *buf, size_t len) override
     {
-        // log_d("ADDR:0x%02X REG:0x%02X, LEN:%u", addr, reg, len);
         wire.beginTransmission(addr);
         wire.write(reg);
         if (buf && len > 0) {
             wire.write(buf, len);
         }
-        if (wire.endTransmission() == 0) {
-            return SENSOR_OK;
-        } else {
-            return SENSOR_ERR_COMM_NACK;
-        }
+        uint8_t err = wire.endTransmission();
+        return getErrorCode(err);
     }
 
     int writeBuffer(uint8_t *buffer, size_t len) override
     {
-        if (!buffer || len == 0)return SENSOR_ERR_INVALID_ARG;
+        if (!buffer || len == 0) return SENSOR_ERR_INVALID_ARG;
         wire.beginTransmission(addr);
         wire.write(buffer, len);
-        if (wire.endTransmission() == 0) {
-            return SENSOR_OK;
-        } else {
-            return SENSOR_ERR_COMM_NACK;
-        }
+        uint8_t err = wire.endTransmission();
+        return getErrorCode(err);
     }
 
     int readBuffer(uint8_t *buf, size_t len) override
@@ -112,10 +106,12 @@ public:
 
     int readRegister(const uint8_t reg, uint8_t *buf, size_t len) override
     {
-        // log_d("ADDR:0x%02X REG:0x%02X, LEN:%u", addr, reg, len);
         wire.beginTransmission(addr);
         wire.write(reg);
-        wire.endTransmission(sendStopFlag);
+        uint8_t err = wire.endTransmission(sendStopFlag);
+        if (err != 0) {
+            return getErrorCode(err);
+        }
         wire.requestFrom(addr, static_cast<uint8_t>(len));
         return wire.readBytes(buf, len) == len ? SENSOR_OK : SENSOR_ERR_COMM_NACK;
     }
@@ -124,8 +120,9 @@ public:
     {
         wire.beginTransmission(addr);
         wire.write(write_buffer, write_len);
-        if (wire.endTransmission(sendStopFlag) != 0) {
-            return SENSOR_ERR_COMM_NACK;
+        uint8_t err = wire.endTransmission(sendStopFlag);
+        if (err != 0) {
+            return getErrorCode(err);
         }
         wire.requestFrom(addr, read_len);
         return wire.readBytes(read_buffer, read_len) == read_len ? SENSOR_OK : SENSOR_ERR_COMM_NACK;
@@ -172,6 +169,21 @@ public:
     }
 
 private:
+
+    // https://docs.arduino.cc/language-reference/en/functions/communication/wire/endTransmission/
+    int inline getErrorCode(int err)
+    {
+        switch (err) {
+        case 0: break;
+        case 1: return SENSOR_ERR_COMM_DATA_TOO_LONG;      ///< data too long to fit in transmit buffer.
+        case 2: return SENSOR_ERR_COMM_NACK;      ///< received NACK on transmit of address.
+        case 3: return SENSOR_ERR_COMM_NACK;      ///< received NACK on transmit of data.
+        case 4: return SENSOR_ERR_COMM_BUS;       ///< other error.
+        case 5: return SENSOR_ERR_COMM_TIMEOUT;   ///< timeout.
+        default: return SENSOR_ERR_UNKNOWN;
+        }
+        return SENSOR_OK; ///< success.
+    }
 
     void setPins()
     {
