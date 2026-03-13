@@ -96,22 +96,6 @@ public:
         // spi.end();
     }
 
-    int writeRegister(const uint8_t reg, uint8_t val) override
-    {
-        return writeRegister(reg, &val, 1);
-    }
-
-    int writeRegister(const uint8_t reg, uint8_t norVal, uint8_t orVal) override
-    {
-        int val = readRegister(reg);
-        if (val < 0) {
-            return SENSOR_ERR_COMM_NACK;
-        }
-        val &= norVal;
-        val |= orVal;
-        return writeRegister(reg, reinterpret_cast<uint8_t *>(&val), 1);
-    }
-
     int writeRegister(const uint8_t reg, uint8_t *buf, size_t len) override
     {
         if (hal == nullptr) {
@@ -142,15 +126,6 @@ public:
         spi.endTransaction();
         hal->digitalWrite(csPin, HIGH);
         return SENSOR_OK;
-    }
-
-    int readRegister(const uint8_t reg) override
-    {
-        uint8_t value = 0x00;
-        if (readRegister(reg, &value, 1) < 0) {
-            return SENSOR_ERR_COMM_NACK;
-        }
-        return value;
     }
 
     int writeBuffer(uint8_t *buffer, size_t len) override
@@ -209,26 +184,6 @@ public:
         spi.endTransaction();
         hal->digitalWrite(csPin, HIGH);
         return SENSOR_OK;
-    }
-
-    bool setRegisterBit(const uint8_t reg, uint8_t bit) override
-    {
-        uint8_t value = readRegister(reg);
-        value |= (1 << bit);
-        return writeRegister(reg, reinterpret_cast<uint8_t *>(&value), 1) == SENSOR_OK;
-    }
-
-    bool clrRegisterBit(const uint8_t reg, uint8_t bit) override
-    {
-        uint8_t value = readRegister(reg);
-        value &= ~(1 << bit);
-        return writeRegister(reg, reinterpret_cast<uint8_t *>(&value), 1) == SENSOR_OK;
-    }
-
-    bool getRegisterBit(const uint8_t reg, uint8_t bit) override
-    {
-        uint8_t value = readRegister(reg);
-        return (value & (1 << bit)) != 0;
     }
 
     void setParams(const CommParamsBase &params) override

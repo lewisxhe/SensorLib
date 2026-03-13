@@ -28,7 +28,7 @@
  * @note
  *      This header provides utility functions and base classes for sensor
  *      communication and hardware abstraction.
- *      
+ *
  *      It includes:
  *        - A fallback std::make_unique for C++11.
  *        - A compile-time array size helper.
@@ -241,7 +241,16 @@ public:
      * @param reg  Register address.
      * @return int  The byte value on success, or a negative error code.
      */
-    virtual int readRegister(const uint8_t reg) = 0;
+    virtual int readRegister(const uint8_t reg)
+    {
+        int err = 0;
+        uint8_t value = 0x00;
+        err = readRegister(reg, &value, 1);
+        if (err < 0) {
+            return err; // Propagate read error
+        }
+        return value;
+    }
 
     /**
      * @brief  Read multiple bytes from a register into a buffer.
@@ -269,7 +278,10 @@ public:
      * @param val  Value to write.
      * @return int  0 on success, negative error code otherwise.
      */
-    virtual int writeRegister(const uint8_t reg, uint8_t val) = 0;
+    virtual int writeRegister(const uint8_t reg, uint8_t val)
+    {
+        return writeRegister(reg, &val, 1);
+    }
 
     /**
      * @brief  Write multiple bytes to a register.
@@ -288,7 +300,16 @@ public:
      * @param orVal   Bits to set (OR mask).
      * @return int    0 on success, negative error code otherwise.
      */
-    virtual int writeRegister(const uint8_t reg, uint8_t norVal, uint8_t orVal) = 0;
+    virtual int writeRegister(const uint8_t reg, uint8_t norVal, uint8_t orVal)
+    {
+        int val = readRegister(reg);
+        if (val < 0) {
+            return val; // Propagate read error
+        }
+        val &= norVal;
+        val |= orVal;
+        return writeRegister(reg, reinterpret_cast<uint8_t *>(&val), 1);
+    }
 
     /**
      * @brief  Write a buffer directly to the device (no register address).
@@ -321,7 +342,14 @@ public:
      * @param bit  Bit index (0‑based, LSB).
      * @return true if the operation succeeded, false otherwise.
      */
-    virtual bool setRegisterBit(const uint8_t reg, uint8_t bit) = 0;
+    virtual bool setRegisterBit(const uint8_t reg, uint8_t bit)
+    {
+        int value = readRegister(reg);
+        if (value < 0)
+            return false;
+        value |= (1 << bit);
+        return writeRegister(reg, reinterpret_cast<uint8_t *>(&value), 1) == 0;
+    }
 
     /**
      * @brief  Clear a specific bit in a register.
@@ -329,7 +357,14 @@ public:
      * @param bit  Bit index (0‑based, LSB).
      * @return true if the operation succeeded, false otherwise.
      */
-    virtual bool clrRegisterBit(const uint8_t reg, uint8_t bit) = 0;
+    virtual bool clrRegisterBit(const uint8_t reg, uint8_t bit)
+    {
+        int value = readRegister(reg);
+        if (value < 0)
+            return false;
+        value &= ~(1 << bit);
+        return writeRegister(reg, reinterpret_cast<uint8_t *>(&value), 1) == 0;
+    }
 
     /**
      * @brief  Read the state of a specific bit in a register.
@@ -337,7 +372,28 @@ public:
      * @param bit  Bit index (0‑based, LSB).
      * @return true if the bit is set, false if cleared or on error.
      */
-    virtual bool getRegisterBit(const uint8_t reg, uint8_t bit) = 0;
+    virtual bool getRegisterBit(const uint8_t reg, uint8_t bit)
+    {
+        int value = readRegister(reg);
+        if (value < 0)
+            return false;
+        return (value & (1 << bit)) != 0;
+    }
+
+    /**
+     * @brief  Update specific bits in a register.
+     * @param reg  Register address.
+     * @param mask Bitmask to select bits to update.
+     * @param value_shifted New values for the selected bits (must be shifted into position).
+     * @return int  0 on success, negative error code otherwise.
+     */
+    virtual int updateBits(uint8_t reg, uint8_t mask, uint8_t value_shifted)
+    {
+        int cur = readRegister(reg);
+        if (cur < 0) return cur; // Propagate read error
+        uint8_t newv = (uint8_t(cur) & ~mask) | (value_shifted & mask);
+        return writeRegister(reg, newv);
+    }
 
     //----------------------------------------------------------------------
     // Parameter configuration
