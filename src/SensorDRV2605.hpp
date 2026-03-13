@@ -29,7 +29,8 @@
  */
 #pragma once
 
-#include "SensorPlatform.hpp"
+#include "platform/comm/I2CDeviceNoHal.hpp"
+#include "sensor/HapticBase.hpp"
 
 /**
  * @brief Default I2C address for DRV2605/DRV2604 haptic driver.
@@ -55,117 +56,18 @@ static const uint8_t DRV2605_SLAVE_ADDRESS = 0x5A;
  *
  * @warning You must call begin() successfully before using any other API.
  */
-class SensorDRV2605
+class SensorDRV2605 : public HapticBase, public I2CDeviceNoHal
 {
 public:
-    // -----------------------
-    // Mode register values
-    // -----------------------
-
-    /** @brief Internal trigger mode. */
-    static constexpr uint8_t MODE_INTTRIG = 0x00;
-    /** @brief External edge trigger mode. */
-    static constexpr uint8_t MODE_EXTTRIGEDGE = 0x01;
-    /** @brief External level trigger mode. */
-    static constexpr uint8_t MODE_EXTTRIGLVL = 0x02;
-    /** @brief PWM/Analog input mode. */
-    static constexpr uint8_t MODE_PWMANALOG = 0x03;
-    /** @brief Audio-to-vibe mode. */
-    static constexpr uint8_t MODE_AUDIOVIBE = 0x04;
-    /** @brief Real-time playback (RTP) mode. */
-    static constexpr uint8_t MODE_REALTIME = 0x05;
-    /** @brief Diagnostics mode. */
-    static constexpr uint8_t MODE_DIAGNOS = 0x06;
-    /** @brief Auto-calibration mode. */
-    static constexpr uint8_t MODE_AUTOCAL = 0x07;
-
     /**
      * @brief Construct an uninitialized driver instance.
      */
-    SensorDRV2605() : comm(nullptr) {}
+    SensorDRV2605() = default;
 
     /**
      * @brief Destructor. Deinitializes communication backend if created.
      */
-    ~SensorDRV2605()
-    {
-        if (comm) {
-            comm->deinit();
-        }
-    }
-
-#if defined(ARDUINO)
-    /**
-     * @brief Initialize the device using Arduino Wire (I2C).
-     *
-     * @param wire TwoWire instance (e.g. Wire).
-     * @param sda  SDA pin (optional, -1 = default).
-     * @param scl  SCL pin (optional, -1 = default).
-     * @return true if chip ID matches a supported device, false otherwise.
-     */
-    bool begin(TwoWire &wire, int sda = -1, int scl = -1)
-    {
-        comm = std::make_unique<SensorCommI2C>(wire, DRV2605_SLAVE_ADDRESS, sda, scl);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl();
-    }
-#elif defined(ESP_PLATFORM)
-
-#if defined(USEING_I2C_LEGACY)
-    /**
-     * @brief Initialize the device using ESP-IDF legacy I2C API.
-     *
-     * @param port_num I2C port number.
-     * @param sda      SDA pin (optional, -1 = default).
-     * @param scl      SCL pin (optional, -1 = default).
-     * @return true if chip ID matches a supported device, false otherwise.
-     */
-    bool begin(i2c_port_t port_num, int sda = -1, int scl = -1)
-    {
-        comm = std::make_unique<SensorCommI2C>(port_num, DRV2605_SLAVE_ADDRESS, sda, scl);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl();
-    }
-#else
-    /**
-     * @brief Initialize the device using ESP-IDF new I2C master bus handle.
-     *
-     * @param handle I2C master bus handle.
-     * @return true if chip ID matches a supported device, false otherwise.
-     */
-    bool begin(i2c_master_bus_handle_t handle)
-    {
-        comm = std::make_unique<SensorCommI2C>(handle, DRV2605_SLAVE_ADDRESS);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl();
-    }
-#endif  // USEING_I2C_LEGACY
-#endif  // ESP_PLATFORM
-
-    /**
-     * @brief Initialize the device using a custom transport callback.
-     *
-     * @param callback Custom callback used by SensorCommCustom.
-     * @return true if chip ID matches a supported device, false otherwise.
-     */
-    bool begin(SensorCommCustom::CustomCallback callback)
-    {
-        comm = std::make_unique<SensorCommCustom>(callback, DRV2605_SLAVE_ADDRESS);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl();
-    }
+    ~SensorDRV2605() = default;
 
     /**
      * @brief Set a waveform entry in the playback sequence table.
@@ -180,6 +82,9 @@ public:
      */
     void setWaveform(uint8_t slot, uint8_t w)
     {
+        if (!ensureValid()) {
+            return;
+        }
         comm->writeRegister((uint8_t)(DRV2605_REG_WAVESEQ1 + slot), w);
     }
 
@@ -195,39 +100,88 @@ public:
      */
     void selectLibrary(uint8_t lib)
     {
+        if (!ensureValid()) {
+            return;
+        }
         comm->writeRegister(DRV2605_REG_LIBRARY, lib);
     }
 
     /**
      * @brief Start playback (GO=1).
      */
-    void run()
+    bool run() override
     {
-        comm->writeRegister(DRV2605_REG_GO, 1);
+        if (!ensureValid()) {
+            return false;
+        }
+        return comm->writeRegister(DRV2605_REG_GO, 1) == SENSOR_OK;
     }
 
     /**
      * @brief Stop playback (GO=0).
      */
-    void stop()
+    bool stop() override
     {
-        comm->writeRegister(DRV2605_REG_GO, (uint8_t)0);
+        if (!ensureValid()) {
+            return false;
+        }
+        return comm->writeRegister(DRV2605_REG_GO, (uint8_t)0) == SENSOR_OK;
     }
 
     /**
-     * @brief Set the device operating mode.
-     *
-     * @param mode Mode value (MODE_* constants).
-     *
-     * Common modes:
-     * - MODE_INTTRIG: internal trigger, call run() to start
-     * - MODE_REALTIME: RTP mode (setRealtimeValue())
-     * - MODE_AUDIOVIBE: audio-to-vibe
-     * - MODE_AUTOCAL: auto calibration
+     * @brief  Set the haptic mode.
+     * @note   This function configures the haptic driver mode.
+     * @param  mode: Mode value (MODE_* constants).
+     * @retval None
      */
-    void setMode(uint8_t mode)
+    bool setMode(HapticMode mode) override
     {
-        comm->writeRegister(DRV2605_REG_MODE, mode);
+        uint8_t value = 0;
+        if (!ensureValid()) {
+            return false;
+        }
+        switch (mode) {
+        case HapticMode::INTERNAL_TRIGGER:
+            value = 0x00;
+            break;
+        case HapticMode::EXT_TRIGGER_EDGE:
+            value = 0x01;
+            break;
+        case HapticMode::EXT_TRIGGER_LEVEL:
+            value = 0x02;
+            break;
+        case HapticMode::PWM_ANALOG:
+            value = 0x03;
+            break;
+        case HapticMode::AUDIO_TO_VIBE:
+            value = 0x04;
+            break;
+        case HapticMode::REAL_TIME_PLAYBACK:
+            value = 0x05;
+            break;
+        case HapticMode::DIAGNOSTICS:
+            value = 0x06;
+            break;
+        case HapticMode::AUTO_CALIBRATE:
+            value = 0x07;
+            break;
+        }
+        return comm->writeRegister(DRV2605_REG_MODE, value) == SENSOR_OK;
+    }
+
+    /** @brief Get the current operating mode.
+     *  @return Current operating mode (HapticMode).
+     */
+    HapticMode getMode() const override
+    {
+        if (!ensureValid()) {
+            return HapticMode::INTERNAL_TRIGGER; // default/fallback
+        }
+        int value = comm->readRegister(DRV2605_REG_MODE);
+        if (value < 0) {
+            return HapticMode::INTERNAL_TRIGGER; // default/fallback
+        }
+        return static_cast<HapticMode>(value & 0x07);
     }
 
     /**
@@ -237,9 +191,83 @@ public:
      *
      * @note Only meaningful when MODE_REALTIME is selected.
      */
-    void setRealtimeValue(uint8_t rtp)
+    bool setRealtimeValue(uint8_t rtp) override
     {
-        comm->writeRegister(DRV2605_REG_RTPIN, rtp);
+        if (!ensureValid()) {
+            return false;
+        }
+        return comm->writeRegister(DRV2605_REG_RTPIN, rtp) == SENSOR_OK;
+    }
+
+    /**
+     * @brief  Set the actuator type.
+     * @note   This function configures the haptic actuator type (ERM or LRA).
+     * @param  type: Actuator type to set.
+     * @retval True if successful, false otherwise.
+     */
+    bool setActuatorType(HapticActuatorType type) override
+    {
+        if (!ensureValid()) {
+            return false;
+        }
+        if (type == HapticActuatorType::ERM) {
+            // Set ERM library
+            comm->writeRegister(DRV2605_REG_LIBRARY, 1);
+            comm->updateBits(DRV2605_REG_FEEDBACK, 0x80, 0x00);
+        } else {
+            // Set LRA library
+            comm->writeRegister(DRV2605_REG_LIBRARY, 6);
+            comm->updateBits(DRV2605_REG_FEEDBACK, 0x80, 0x80);
+        }
+        return true;
+    }
+
+    /**
+     * @brief Get the current actuator type.
+     *  @return Current actuator type (ERM or LRA).
+     */
+    HapticActuatorType getActuatorType() const override
+    {
+        if (!ensureValid()) {
+            return HapticActuatorType::ERM; // default/fallback
+        }
+        int value = comm->readRegister(DRV2605_REG_FEEDBACK);
+        if (value < 0) {
+            return HapticActuatorType::ERM; // default/fallback
+        }
+        return (value & 0x80) ? HapticActuatorType::LRA : HapticActuatorType::ERM;
+    }
+
+    /**
+     *  @brief Play a haptic effect.
+     *  @param effect Effect ID to play.
+     *  @return True if successful, false otherwise.
+     */
+    bool playEffect(HapticEffectId effect)  override
+    {
+        // For DRV2605, we can just set the effect ID in the first slot and run.
+        setWaveform(0, static_cast<uint8_t>(effect));
+        setWaveform(1, 0); // Terminate sequence after one effect
+        return run();
+    }
+
+    /**
+    * @brief Set the haptic mode.
+    *
+    * @param mode Mode value (MODE_* constants).
+    *
+    * Common modes:
+    * - MODE_INTTRIG: internal trigger, call run() to start
+    * - MODE_REALTIME: RTP mode (setRealtimeValue())
+    * - MODE_AUDIOVIBE: audio-to-vibe
+    * - MODE_AUTOCAL: auto calibration
+    */
+    void setMode(uint8_t mode) __attribute__((deprecated("use setMode(HapticMode::XXX) instead")))
+    {
+        if (!ensureValid()) {
+            return;
+        }
+        comm->writeRegister(DRV2605_REG_MODE, mode);
     }
 
     /**
@@ -247,14 +275,9 @@ public:
      *
      * Clears N_ERM_LRA bit in FEEDBACK register.
      */
-    void useERM()
+    void useERM() __attribute__((deprecated("use setActuatorType(HapticActuatorType::ERM) instead")))
     {
-        int value = comm->readRegister(DRV2605_REG_FEEDBACK);
-        if (value == -1) {
-            return;
-        }
-        comm->writeRegister(DRV2605_REG_FEEDBACK,
-                            (uint8_t)(value & 0x7F));
+        setActuatorType(HapticActuatorType::ERM);
     }
 
     /**
@@ -262,14 +285,9 @@ public:
      *
      * Sets N_ERM_LRA bit in FEEDBACK register.
      */
-    void useLRA()
+    void useLRA() __attribute__((deprecated("use setActuatorType(HapticActuatorType::LRA) instead")))
     {
-        int value = comm->readRegister(DRV2605_REG_FEEDBACK);
-        if (value == -1) {
-            return;
-        }
-        comm->writeRegister(DRV2605_REG_FEEDBACK,
-                            (uint8_t)(value | 0x80));
+        setActuatorType(HapticActuatorType::LRA);
     }
 
 private:
@@ -282,7 +300,7 @@ private:
      *
      * @return true if device is supported and configured, false otherwise.
      */
-    bool initImpl()
+    bool initImpl(uint8_t param) override
     {
         int chipID = comm->readRegister(DRV2605_REG_STATUS);
         if (chipID < 0) {
@@ -292,11 +310,14 @@ private:
         // Chip ID is encoded in the top bits of STATUS.
         chipID >>= 5;
 
-        if (chipID != DRV2604_CHIP_ID &&
-                chipID != DRV2605_CHIP_ID &&
-                chipID != DRV2604L_CHIP_ID &&
-                chipID != DRV2605L_CHIP_ID &&
-                chipID != DRV2605X_CHIP_ID) {
+        switch (chipID) {
+        case DRV2604_CHIP_ID:
+        case DRV2605_CHIP_ID:
+        case DRV2604L_CHIP_ID:
+        case DRV2605L_CHIP_ID:
+        case DRV2605X_CHIP_ID:
+            break;
+        default:
             log_e("ChipID:0x%x should be 0x03 or 0x04 or 0x06 or 0x07 or 0x05\n", chipID);
             return false;
         }
@@ -341,9 +362,6 @@ private:
     }
 
 protected:
-    /// Communication backend (I2C or custom callback).
-    std::unique_ptr<SensorCommBase> comm;
-
     // -----------------------
     // Chip IDs (STATUS[7:5])
     // -----------------------
