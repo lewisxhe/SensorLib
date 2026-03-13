@@ -33,11 +33,11 @@
 #include "SensorDRV2605.hpp"
 
 #ifndef SENSOR_SDA
-#define SENSOR_SDA  21
+#define SENSOR_SDA  10
 #endif
 
 #ifndef SENSOR_SCL
-#define SENSOR_SCL  22
+#define SENSOR_SCL  11
 #endif
 
 
@@ -48,10 +48,10 @@ uint8_t effect = 1;
 void setup()
 {
     Serial.begin(115200);
+
     while (!Serial);
 
-
-    if (!drv.begin(Wire, SENSOR_SDA, SENSOR_SCL)) {
+    if (!drv.begin(Wire, DRV2605_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
         Serial.println("Failed to find DRV2605 - check your wiring!");
         while (1) {
             delay(1000);
@@ -59,12 +59,14 @@ void setup()
     }
     Serial.println("Init DRV2605 Sensor success!");
 
+    // Set driver type is ERM(Eccentric rotating mass)
+    drv.setActuatorType(HapticActuatorType::ERM);
 
-    drv.selectLibrary(1);
+    // Set driver type is LRA(Linear Resonant Actuator)
+    // drv.setActuatorType(HapticActuatorType::LRA);
 
-    // I2C trigger by sending 'run' command
-    // default, internal trigger when sending RUN command
-    drv.setMode(SensorDRV2605::MODE_INTTRIG);
+    // Default, internal trigger when sending RUN command
+    drv.setMode(HapticMode::INTERNAL_TRIGGER);
 }
 
 
@@ -446,12 +448,8 @@ void loop()
         Serial.println(F("123 - Smooth Hum 5 (No kick or brake pulse) - 10%"));
     }
 
-    // set the effect to play
-    drv.setWaveform(0, effect);  // play effect
-    drv.setWaveform(1, 0);       // end waveform
-
     // play the effect!
-    drv.run();
+    drv.playEffect(effect);
 
     // wait a bit
     delay(500);
@@ -459,6 +457,3 @@ void loop()
     effect++;
     if (effect > 117) effect = 1;
 }
-
-
-
