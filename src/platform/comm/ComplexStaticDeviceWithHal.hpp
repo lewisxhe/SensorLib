@@ -135,4 +135,14 @@ public:
         _addr = addr; _iface = interface;
         return initImpl(static_cast<uint8_t>(interface));
     }
+protected:
+    /** 
+    * @brief Ensure the communication interface is valid.
+    *  @return True if valid, false otherwise.
+    */
+    bool ensureValid() const
+    {
+        if (!comm || !hal) return false;
+        return true;
+    }
 };

@@ -107,4 +107,15 @@ public:
         afterInitSuccess(COMM_CUSTOM);
         return true;
     }
+
+protected:
+    /**
+    * @brief Ensure the communication interface is valid.
+    *  @return True if valid, false otherwise.
+    */
+    bool ensureValid() const
+    {
+        if (!comm || !hal) return false;
+        return true;
+    }
 };
