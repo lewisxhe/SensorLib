@@ -477,7 +477,7 @@ bool TouchDrvGT911::initImpl(uint8_t addr)
 
     _resX = x_resolution[0] | (x_resolution[1] << 8);
     _resY = y_resolution[0] | (y_resolution[1] << 8);
-    log_d("Model:CST3530");
+    log_d("Model:GT911");
     log_d("RST Pin:%d", _rst);
     log_d("IRQ Pin:%d", _irq);
     log_i("Product id:%ld", _chipID);
