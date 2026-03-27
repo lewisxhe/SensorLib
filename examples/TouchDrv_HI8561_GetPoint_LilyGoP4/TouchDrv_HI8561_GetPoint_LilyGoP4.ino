@@ -154,7 +154,7 @@ void setup()
     esp_ldo_channel_handle_t ldo_channel_handle = NULL;
     esp_ldo_channel_config_t ldo_channel_config = {
         .chan_id = 3,
-        .voltage_mv = 1830,
+        .voltage_mv = 2500,
     };
     if (esp_ldo_acquire_channel(&ldo_channel_config, &ldo_channel_handle) != ESP_OK) {
         Serial.println("Set LDO channel failed");
