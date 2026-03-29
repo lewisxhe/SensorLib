@@ -317,7 +317,7 @@ struct bma456_tablet_orientation_config
     /*! Blocking mode
      * Sets the blocking mode.
      * If blocking is set, no Orientation interrupt will be triggered.
-     * Default value is 3 – the most restrictive blocking mode.
+     * Default value is 3 ï¿½ the most restrictive blocking mode.
      */
     uint8_t blocking;
 
