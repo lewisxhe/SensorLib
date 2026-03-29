@@ -30,7 +30,7 @@
 
 #include "TouchDrvInterface.hpp"
 
-#define CST816_SLAVE_ADDRESS    (0x15)
+static constexpr uint8_t  CST816_SLAVE_ADDRESS  = (0x15);
 
 class TouchDrvCST816 : public TouchDrvInterface
 {

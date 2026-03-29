@@ -31,7 +31,7 @@
 #include "TouchDrvInterface.hpp"
 
 // The device address is not fixed and is determined by the manufacturer.
-#define CS3530_SLAVE_ADDRESS      (0x1A)
+static constexpr uint8_t   CS3530_SLAVE_ADDRESS = (0x1A);
 
 
 class TouchDrvCST3530 : public TouchDrvInterface

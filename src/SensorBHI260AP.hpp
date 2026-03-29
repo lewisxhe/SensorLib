@@ -33,9 +33,10 @@
 
 // The BHI260 I2C address can be either 0x28 or 0x29, depending on the state of the HSDO pin.
 // HSDO pin set low
-#define BHI260AP_SLAVE_ADDRESS_L          0x28
+static constexpr uint8_t  BHI260AP_SLAVE_ADDRESS_L = (0x28);
 // HSDO pin set high
-#define BHI260AP_SLAVE_ADDRESS_H          0x29
+static constexpr uint8_t  BHI260AP_SLAVE_ADDRESS_H = (0x29);
+
 
 class SensorBHI260AP final: public BoschSensorBase
 {

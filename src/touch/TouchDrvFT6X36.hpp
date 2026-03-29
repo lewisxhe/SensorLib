@@ -31,9 +31,9 @@
 
 #include "TouchDrvInterface.hpp"
 
-#define FT3267_SLAVE_ADDRESS        (0x38)
-#define FT5206_SLAVE_ADDRESS        (0x38)
-#define FT6X36_SLAVE_ADDRESS        (0x38)
+static constexpr uint8_t FT3267_SLAVE_ADDRESS = (0x38);
+static constexpr uint8_t FT5206_SLAVE_ADDRESS = (0x38);
+static constexpr uint8_t FT6X36_SLAVE_ADDRESS = (0x38);
 
 class TouchDrvFT6X36 :  public TouchDrvInterface
 {

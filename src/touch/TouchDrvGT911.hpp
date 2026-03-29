@@ -36,9 +36,9 @@
 #warning "NRF Platform I2C Buffer expansion is not implemented , GT911 requires at least 188 bytes to read all configurations"
 #endif
 
-#define GT911_SLAVE_ADDRESS_H               (0x14)
-#define GT911_SLAVE_ADDRESS_L               (0x5D)
-#define GT911_SLAVE_ADDRESS_UNKNOWN          (0xFF)
+static constexpr uint8_t   GT911_SLAVE_ADDRESS_H =  (0x14);
+static constexpr uint8_t   GT911_SLAVE_ADDRESS_L =  (0x5D);
+static constexpr uint8_t   GT911_SLAVE_ADDRESS_UNKNOWN =  (0xFF);
 
 class TouchDrvGT911 :  public TouchDrvInterface
 {

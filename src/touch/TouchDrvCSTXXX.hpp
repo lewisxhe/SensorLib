@@ -35,8 +35,8 @@
 #include "touch/TouchDrvCST92xx.h"
 #include "touch/TouchDrvCST3530.h"
 
-#define CSTXXX_SLAVE_ADDRESS        (0x15)
-#define CST328_SLAVE_ADDRESS        (0x1A)
+static constexpr uint8_t CSTXXX_SLAVE_ADDRESS = (0x15);
+static constexpr uint8_t CST328_SLAVE_ADDRESS = (0x1A);
 
 enum TouchDrvType {
     TouchDrv_CST226,

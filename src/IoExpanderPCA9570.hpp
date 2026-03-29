@@ -32,7 +32,7 @@
 #include "IoExpanderBase.hpp"
 
 /** @brief Default I2C slave address for PCA9570 (hardwired, cannot be changed). */
-#define PCA9570_SLAVE_ADDRESS         (0x24)
+static constexpr uint8_t  PCA9570_SLAVE_ADDRESS = (0x24);
 
 /**
  * @class IoExpanderPCA9570

@@ -31,7 +31,7 @@
 
 #include "TouchDrvInterface.hpp"
 
-#define HI8561_SLAVE_ADDRESS     (0x68)
+static constexpr uint8_t HI8561_SLAVE_ADDRESS = (0x68);
 
 /**
 * @brief HI8561 Touchscreen Display Chip Touch Class

@@ -31,8 +31,8 @@
 
 #include "TouchDrvInterface.hpp"
 
-#define GT9895_SLAVE_ADDRESS_H              (0x14)
-#define GT9895_SLAVE_ADDRESS_L              (0x5D)
+static constexpr uint8_t  GT9895_SLAVE_ADDRESS_H = (0x14);
+static constexpr uint8_t  GT9895_SLAVE_ADDRESS_L = (0x5D);
 
 class TouchDrvGT9895 :  public TouchDrvInterface
 {

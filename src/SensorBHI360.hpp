@@ -39,9 +39,9 @@
 
 // The BHI360 I2C address can be either 0x28 or 0x29, depending on the state of the HSDO pin.
 // HSDO pin set low
-#define BHI360_SLAVE_ADDRESS_L          0x28
+static constexpr uint8_t  BHI360_SLAVE_ADDRESS_L = (0x28);
 // HSDO pin set high
-#define BHI360_SLAVE_ADDRESS_H          0x29
+static constexpr uint8_t  BHI360_SLAVE_ADDRESS_H = (0x29);
 
 using MultiTapDataType = bhi360_event_data_multi_tap;
 using StepCounterConfig = bhi360_phy_sensor_ctrl_param_step_counter;

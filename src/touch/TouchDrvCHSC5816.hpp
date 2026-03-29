@@ -31,7 +31,7 @@
 
 #include "TouchDrvInterface.hpp"
 
-#define CHSC5816_SLAVE_ADDRESS     (0x2E)
+static constexpr uint8_t  CHSC5816_SLAVE_ADDRESS = (0x2E);
 
 class TouchDrvCHSC5816 :  public TouchDrvInterface
 {

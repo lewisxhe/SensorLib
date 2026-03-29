@@ -29,8 +29,8 @@
 #pragma once
 
 #include "TouchDrvInterface.hpp"
-
-#define CST92XX_SLAVE_ADDRESS      (0x5A)
+    
+static constexpr uint8_t   CST92XX_SLAVE_ADDRESS = (0x5A);
 
 class TouchDrvCST92xx : public TouchDrvInterface
 {
