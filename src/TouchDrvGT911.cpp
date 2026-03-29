@@ -236,7 +236,7 @@ int TouchDrvGT911::getVendorID()
     return readGT911(GT911_VENDOR_ID);
 }
 
-#if 0   //TODO:
+#if 0   //TODO: Dangerous operation, comment it out.
 bool TouchDrvGT911::writeConfig(const uint8_t *config_buffer, size_t buffer_size)
 {
     uint8_t check_sum = 0;
@@ -260,10 +260,10 @@ bool TouchDrvGT911::writeConfig(const uint8_t *config_buffer, size_t buffer_size
     int err =   comm->writeBuffer((uint8_t *)config_buffer, buffer_size);
 #endif
     return err == 0;
-    return false;
 }
 #endif
 
+// Load touch configuration ,need manual release memory
 uint8_t *TouchDrvGT911::loadConfig(size_t *output_size, bool print_out)
 {
     *output_size = 0;

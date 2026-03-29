@@ -12,6 +12,7 @@ void TouchDrvHI8561::reset()
 
 void TouchDrvHI8561::sleep()
 {
+    // Unable to achieve, relies on screen sleep
 }
 
 void TouchDrvHI8561::wakeup()

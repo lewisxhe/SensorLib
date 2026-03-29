@@ -45,15 +45,15 @@ void TouchDrvCST226::reset()
 const TouchPoints &TouchDrvCST226::getTouchPoints()
 {
     static TouchPoints points;
-    const uint8_t  statusReg   =  (0x00);
-    const uint8_t  bufferSize =   (28);
-    uint8_t buffer[bufferSize];
+    static constexpr uint8_t STATUS_REG   = 0x00;
+    static constexpr uint8_t STATUS_BUFFER_SIZE   = 28;
+    uint8_t buffer[STATUS_BUFFER_SIZE];
     uint8_t index = 0;
 
     // Clear cached touch points
     points.clear();
 
-    if (comm->readRegister(statusReg, buffer, bufferSize) == 0) {
+    if (comm->readRegister(STATUS_REG, buffer, STATUS_BUFFER_SIZE) == 0) {
 
         if (buffer[0] == 0x83 && buffer[1] == 0x17 && buffer[5] == 0x80) {
             if (_HButtonCallback) {
@@ -94,12 +94,15 @@ bool TouchDrvCST226::isPressed()
 {
     static uint32_t lastPulse = 0;
     if (_irq != -1) {
-        int val = hal->digitalRead(_irq) == LOW;
-        if (val) {
+        if (hal->digitalRead(_irq) == LOW) {
+            uint32_t now = hal->millis();
             //Filter low levels with intervals greater than 1000ms
-            val = (hal->millis() - lastPulse > 1000) ?  false : true;
-            lastPulse = hal->millis();
-            return val;
+            if(now - lastPulse > 1000){
+                lastPulse = now;
+                return false;
+            }
+            lastPulse = now;
+            return false;
         }
         return false;
     }
@@ -112,10 +115,8 @@ const char *TouchDrvCST226::getModelName()
     switch (_chipID) {
     case CST226SE_CHIPTYPE:
         return "CST226SE";
-        break;
     case CST328_CHIPTYPE:
         return "CST328";
-        break;
     default:
         break;
     }
@@ -170,15 +171,15 @@ bool TouchDrvCST226::initImpl(uint8_t addr)
 
     log_i("Chip checkcode:0x%lx.", checkcode);
 
-    write_buffer[0] = {0xD1};
-    write_buffer[1] = {0xF8};
+    write_buffer[0] = 0xD1;
+    write_buffer[1] = 0xF8;
     comm->writeThenRead(write_buffer, 2, buffer, 4);
     _resX = ( buffer[1] << 8) | buffer[0];
     _resY = ( buffer[3] << 8) | buffer[2];
     log_i("Chip resolution X:%u Y:%u", _resX, _resY);
 
-    write_buffer[0] = {0xD2};
-    write_buffer[1] = {0x04};
+    write_buffer[0] = 0xD2;
+    write_buffer[1] = 0x04;
     comm->writeThenRead(write_buffer, 2, buffer, 4);
     // uint32_t chipType = buffer[3];
     // chipType <<= 8;
@@ -193,8 +194,8 @@ bool TouchDrvCST226::initImpl(uint8_t addr)
           chipType, ProjectID);
 
 
-    write_buffer[0] = {0xD2};
-    write_buffer[1] = {0x08};
+    write_buffer[0] = 0xD2;
+    write_buffer[1] = 0x08;
     comm->writeThenRead(write_buffer, 2, buffer, 8);
 
     uint32_t fwVersion = buffer[3];

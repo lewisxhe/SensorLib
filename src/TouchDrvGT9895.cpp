@@ -160,10 +160,8 @@ bool TouchDrvGT9895::isPressed()
 {
     if (_irq != -1) {
         return hal->digitalRead(_irq) == LOW;
-    } else {
-        return getTouchPoints().hasPoints();
     }
-    return false;
+    return getTouchPoints().hasPoints();
 }
 
 const char *TouchDrvGT9895::getModelName()

@@ -83,12 +83,15 @@ bool TouchDrvCST816::isPressed()
 {
     static uint32_t lastPulse = 0;
     if (_irq != -1) {
-        int val = hal->digitalRead(_irq) == LOW;
-        if (val) {
+        if (hal->digitalRead(_irq) == LOW) {
+            uint32_t now = hal->millis();
             //Filter low levels with intervals greater than 1000ms
-            val = (hal->millis() - lastPulse > 1000) ?  false : true;
-            lastPulse = hal->millis();
-            return val;
+            if(now - lastPulse > 1000){
+                lastPulse = now;
+                return false;
+            }
+            lastPulse = now;
+            return false;
         }
         return false;
     }

@@ -49,7 +49,7 @@ void TouchDrvFT6X36::sleep()
     comm->writeRegister(FT6X36_REG_POWER_MODE, PMODE_DEEP_SLEEP);
 }
 
-void TouchDrvFT6X36::TouchDrvFT6X36::wakeup()
+void TouchDrvFT6X36::wakeup()
 {
     reset();
 }

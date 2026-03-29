@@ -1007,7 +1007,7 @@ public:
             return  comm->getRegisterBit(QMI8658_REG_STATUS_INT, 1);
         case ASYNC_MODE:
             //TODO: When Accel and Gyro are configured with different rates, this will always be false
-            if (_accel_enabled & _gyro_enabled) {
+            if (_accel_enabled && _gyro_enabled) {
                 return comm->readRegister(QMI8658_REG_STATUS0) & 0x03;
             } else if (_gyro_enabled) {
                 return comm->readRegister(QMI8658_REG_STATUS0) & 0x02;
@@ -1052,7 +1052,7 @@ public:
     {
         enableSyncSampleMode();
         if (comm->writeRegister(QMI8658_REG_CAL1_L, 0x01) != 0) {
-            return -1;
+            return false;
         }
         return writeCommand(CTRL_CMD_AHB_CLOCK_GATING) == 0;
     }

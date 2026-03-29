@@ -375,15 +375,15 @@ bool TouchDrvCST92xx::getAttribute()
 
     log_i("Chip checkcode:0x%lx.", checkcode);
 
-    write_buffer[0] = {0xD1};
-    write_buffer[1] = {0xF8};
+    write_buffer[0] = 0xD1;
+    write_buffer[1] = 0xF8;
     comm->writeThenRead(write_buffer, 2, buffer, 4);
     _resX = ( buffer[1] << 8) | buffer[0];
     _resY = ( buffer[3] << 8) | buffer[2];
     log_i("Chip resolution X:%u Y:%u", _resX, _resY);
 
-    write_buffer[0] = {0xD2};
-    write_buffer[1] = {0x04};
+    write_buffer[0] = 0xD2;
+    write_buffer[1] = 0x04;
     comm->writeThenRead(write_buffer, 2, buffer, 4);
     chipType = buffer[3];
     chipType <<= 8;
@@ -396,8 +396,8 @@ bool TouchDrvCST92xx::getAttribute()
     log_i("Chip type :0x%x, ProjectID:0X%lx",
           chipType, ProjectID);
 
-    write_buffer[0] = {0xD2};
-    write_buffer[1] = {0x08};
+    write_buffer[0] = 0xD2;
+    write_buffer[1] = 0x08;
     comm->writeThenRead(write_buffer, 2, buffer, 8);
 
     uint32_t fwVersion = buffer[3];
