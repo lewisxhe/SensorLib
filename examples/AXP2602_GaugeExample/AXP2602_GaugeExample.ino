@@ -33,11 +33,11 @@
 #include <GaugeAXP2602.hpp>
 
 #ifndef SENSOR_SDA
-#define SENSOR_SDA  2
+#define SENSOR_SDA  3
 #endif
 
 #ifndef SENSOR_SCL
-#define SENSOR_SCL  3
+#define SENSOR_SCL  2
 #endif
 
 GaugeAXP2602 gauge;

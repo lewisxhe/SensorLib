@@ -66,7 +66,7 @@ void setup()
 
     // Try to initialize the RTC module using I2C with specified SDA and SCL pins
     if (!rtc.begin(Wire, SENSOR_SDA, SENSOR_SCL)) {
-        Serial.println("Failed to find PCF85063 - check your wiring!");
+        Serial.println("Failed to find PCF8563 - check your wiring!");
         // Enter an infinite loop to halt the program
         while (1) {
             delay(1000);

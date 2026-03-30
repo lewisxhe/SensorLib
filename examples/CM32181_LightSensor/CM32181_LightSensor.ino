@@ -33,11 +33,11 @@
 #include "SensorCM32181.hpp"
 
 #ifndef SENSOR_SDA
-#define SENSOR_SDA  39
+#define SENSOR_SDA  1
 #endif
 
 #ifndef SENSOR_SCL
-#define SENSOR_SCL  40
+#define SENSOR_SCL  2
 #endif
 
 #ifndef SENSOR_IRQ
@@ -54,7 +54,7 @@ void setup()
 
     pinMode(SENSOR_IRQ, INPUT_PULLUP);
 
-    if (!light.begin(Wire, CM32181_ADDR_PRIMARY, SENSOR_SDA, SENSOR_SCL)) {
+    if (!light.begin(Wire, CM32181_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
         Serial.println("Failed to find CM32181 - check your wiring!");
         while (1) {
             delay(1000);

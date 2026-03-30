@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      AXP2602_GaugeExample_TCP.ino
+ * @file      AXP2602_GaugeExample_UDP.ino
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2026-01-14
  *
@@ -37,11 +37,11 @@
 
 
 #ifndef SENSOR_SDA
-#define SENSOR_SDA  2
+#define SENSOR_SDA  3
 #endif
 
 #ifndef SENSOR_SCL
-#define SENSOR_SCL  3
+#define SENSOR_SCL  2
 #endif
 
 
