@@ -29,8 +29,9 @@
  */
 #pragma once
 #include "../../SensorPlatform.hpp"
+#include "../SensorCommWrapper.hpp"
 
-class DeviceBeginCommon
+class DeviceBeginCommon : public SensorCommWrapper
 {
 public:
     virtual ~DeviceBeginCommon()
@@ -47,6 +48,17 @@ protected:
     DeviceBeginCommon() = default;
 
     virtual bool initImpl(uint8_t param) = 0;
+
+    virtual bool ensureValid() const override
+    {
+        if (!comm) return false;
+        return true;
+    }
+
+    virtual SensorCommBase* getComm() const override
+    {
+        return comm.get();
+    }
 
     // ---- Hooks functions  ----
     

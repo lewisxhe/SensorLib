@@ -102,15 +102,4 @@ public:
         _addr = addr; _iface = COMM_CUSTOM;
         return initImpl(addr);
     }
-
-protected:
-    /** 
-    * @brief Ensure the communication interface is valid.
-    *  @return True if valid, false otherwise.
-    */
-    bool ensureValid() const
-    {
-        if (!comm) return false;
-        return true;
-    }
 };

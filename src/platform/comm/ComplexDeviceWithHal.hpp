@@ -141,7 +141,7 @@ protected:
     * @brief Ensure the communication interface is valid.
     *  @return True if valid, false otherwise.
     */
-    bool ensureValid() const
+    bool ensureValid() const override
     {
         if (!comm || !hal) return false;
         return true;
