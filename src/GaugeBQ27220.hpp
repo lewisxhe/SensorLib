@@ -28,7 +28,7 @@
  */
 #pragma once
 
-#include "SensorPlatform.hpp"
+#include "platform/comm/I2CDeviceWithHal.hpp"
 
 // BQ27220 Unique device address
 static constexpr uint8_t BQ27220_SLAVE_ADDRESS  = (0x55);
@@ -584,7 +584,7 @@ public:
 };
 // *INDENT-ON*
 
-class GaugeBQ27220
+class GaugeBQ27220 : public I2CDeviceWithHal
 {
 private:
     typedef struct {
@@ -634,22 +634,14 @@ public:
         SEALED_ACCESS,
     };
 
-    GaugeBQ27220() : comm(nullptr), hal(nullptr), accessKey(0xFFFFFFFF) {}
+    GaugeBQ27220() : accessKey(0xFFFFFFFF) {}
 
-    ~GaugeBQ27220()
-    {
-        if (comm) {
-            comm->deinit();
-        }
-    }
+    ~GaugeBQ27220() = default;
 
 #if defined(ARDUINO)
     bool begin(TwoWire &wire, int sda = -1, int scl = -1)
     {
-        if (!beginCommon<SensorCommI2C, HalArduino>(comm, hal, wire, BQ27220_SLAVE_ADDRESS, sda, scl)) {
-            return false;
-        }
-        return initImpl();
+        return I2CDeviceWithHal::begin(wire, BQ27220_SLAVE_ADDRESS, sda, scl);
     }
 
 #elif defined(ESP_PLATFORM)
@@ -657,18 +649,12 @@ public:
 #if defined(USEING_I2C_LEGACY)
     bool begin(i2c_port_t port_num, int sda = -1, int scl = -1)
     {
-        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, port_num, BQ27220_SLAVE_ADDRESS, sda, scl)) {
-            return false;
-        }
-        return initImpl();
+        return I2CDeviceWithHal::begin(port_num, BQ27220_SLAVE_ADDRESS, sda, scl);
     }
 #else
     bool begin(i2c_master_bus_handle_t handle)
     {
-        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, handle, BQ27220_SLAVE_ADDRESS)) {
-            return false;
-        }
-        return initImpl();
+        return I2CDeviceWithHal::begin(handle, BQ27220_SLAVE_ADDRESS);
     }
 #endif  //ESP_PLATFORM
 #endif  //ARDUINO
@@ -676,11 +662,7 @@ public:
     bool begin(SensorCommCustom::CustomCallback callback,
                SensorCommCustomHal::CustomHalCallback hal_callback)
     {
-        if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(COMM_CUSTOM,
-                callback, hal_callback, BQ27220_SLAVE_ADDRESS, comm, hal)) {
-            return false;
-        }
-        return initImpl();
+        return I2CDeviceWithHal::begin(callback, hal_callback, BQ27220_SLAVE_ADDRESS);
     }
 
 
@@ -693,7 +675,7 @@ public:
     bool refresh()
     {
         uint8_t buffer[REGISTER_COUNT];
-        if (comm->readRegister(START_REGISTER, buffer, REGISTER_COUNT) < 0) {
+        if (readRegBuff(START_REGISTER, buffer, REGISTER_COUNT) < 0) {
             return false;
         }
         uint8_t *ptr = (uint8_t *)&data;
@@ -703,7 +685,7 @@ public:
             ptr += 2;
         }
 
-        if (comm->readRegister(0x3A, buffer, 4) < 0) {
+        if (readRegBuff(0x3A, buffer, 4) < 0) {
             return false;
         }
         data.OperationStatus =  (buffer[1] << 8) | buffer[0];
@@ -966,12 +948,12 @@ public:
     OperationConfig getOperationConfig()
     {
         return performConfigUpdate<OperationConfig>([this]() {
-            comm->writeRegister(BQ27220_REG_ROM_START, lowByte(BQ27220_ROM_OPERATION_CONFIG_A));
+            writeReg(BQ27220_REG_ROM_START, lowByte(BQ27220_ROM_OPERATION_CONFIG_A));
             hal->delay(10);
-            comm->writeRegister(BQ27220_REG_ROM_START + 1, highByte(BQ27220_ROM_OPERATION_CONFIG_A));
+            writeReg(BQ27220_REG_ROM_START + 1, highByte(BQ27220_ROM_OPERATION_CONFIG_A));
             hal->delay(10);
             uint8_t buffer[4];
-            comm->readRegister(0x40, buffer, 4);
+            readRegBuff(0x40, buffer, 4);
             uint16_t bitmapsA = (buffer[0] << 8) | buffer[1];
             uint16_t bitmapsB = (buffer[2] << 8) | buffer[3];
             OperationConfig value((bitmapsA << 16) | bitmapsB);
@@ -1008,7 +990,7 @@ public:
     {
         uint8_t buffer[2];
         constexpr uint8_t value = 0x00;
-        comm->writeRegister(BQ27220_SUB_CMD_HW_VERSION, value);
+        writeReg(BQ27220_SUB_CMD_HW_VERSION, value);
         if (this->getMACData(buffer, arraySize(buffer)) < 0) {
             return -1;
         }
@@ -1073,7 +1055,7 @@ private:
             return -1;
         }
         uint8_t reg = BQ27220_REG_MAC_BUFFER_START;
-        return comm->writeThenRead(&reg, 1, buffer, request_len);
+        return writeThenRead(&reg, 1, buffer, request_len);
     }
 
     // This read and write function returns the checksum of the current subcommand and data block.
@@ -1081,7 +1063,7 @@ private:
     uint16_t getMACDataSum()
     {
         uint8_t sum = 0x00;
-        if (comm->readRegister(BQ27220_REG_MAC_DATA_SUM, &sum, 1) < 0) {
+        if (readRegBuff(BQ27220_REG_MAC_DATA_SUM, &sum, 1) < 0) {
             return 0;
         }
         return sum;
@@ -1092,7 +1074,7 @@ private:
     uint16_t getMACDataLen()
     {
         uint8_t length = 0x00;
-        if (comm->readRegister(BQ27220_REG_MAC_DATA_LEN, &length, 1) < 0) {
+        if (readRegBuff(BQ27220_REG_MAC_DATA_LEN, &length, 1) < 0) {
             return 0;
         }
         return length;
@@ -1105,7 +1087,7 @@ private:
         buffer[0] = 0x00;
         buffer[1] = lowByte(subCmd);
         buffer[2] = highByte(subCmd);
-        if (comm->writeBuffer(buffer, arraySize(buffer)) < 0) {
+        if (writeBuff(buffer, arraySize(buffer)) < 0) {
             return -1;
         }
         if (!waitConfirm) {
@@ -1116,7 +1098,7 @@ private:
         int waitCount = 20;
         hal->delay(10);
         while (waitCount--) {
-            comm->writeThenRead(&statusReg, 1, buffer, 2);
+            writeThenRead(&statusReg, 1, buffer, 2);
             uint16_t *value = reinterpret_cast<uint16_t *>(buffer);
             if (*value == 0xFFA5) {
                 return 0;
@@ -1131,12 +1113,12 @@ private:
     int unsealDevice()
     {
         uint8_t cmd1[] = {0x00, 0x14, 0x04};
-        if (comm->writeBuffer(cmd1, arraySize(cmd1)) < 0) {
+        if (writeBuff(cmd1, arraySize(cmd1)) < 0) {
             return -1;
         }
         hal->delay(10);
         uint8_t cmd2[] = {0x00, 0x72, 0x36};
-        if (comm->writeBuffer(cmd2, arraySize(cmd2)) < 0) {
+        if (writeBuff(cmd2, arraySize(cmd2)) < 0) {
             return -1;
         }
         hal->delay(10);
@@ -1150,13 +1132,13 @@ private:
         buffer[0] = 0x00;
         buffer[1] = lowByte((accessKey >> 24));
         buffer[2] = lowByte((accessKey >> 16));
-        if (comm->writeBuffer(buffer, arraySize(buffer)) < 0) {
+        if (writeBuff(buffer, arraySize(buffer)) < 0) {
             return -1;
         }
         hal->delay(10);
         buffer[1] = lowByte((accessKey >> 8));
         buffer[2] = lowByte((accessKey));
-        if (comm->writeBuffer(buffer, arraySize(buffer)) < 0) {
+        if (writeBuff(buffer, arraySize(buffer)) < 0) {
             return -1;
         }
         hal->delay(10);
@@ -1247,27 +1229,27 @@ private:
         constexpr uint8_t fixedDataLength = 0x06;
 
         // Write to access the MSB of Capacity
-        comm->writeRegister(BQ27220_REG_ROM_START, msbAccessValue);
+        writeReg(BQ27220_REG_ROM_START, msbAccessValue);
         hal->delay(10);
 
         // Write to access the LSB of Capacity
-        comm->writeRegister(BQ27220_REG_ROM_START + 1, lsbAccessValue);
+        writeReg(BQ27220_REG_ROM_START + 1, lsbAccessValue);
         hal->delay(10);
 
         // Write two Capacity bytes starting from 0x40
         uint8_t newCapacityMsb = highByte(newCapacity);
         uint8_t newCapacityLsb = lowByte(newCapacity);
         uint8_t capacityRaw[] = {newCapacityMsb, newCapacityLsb};
-        comm->writeRegister(BQ27220_REG_MAC_BUFFER_START, capacityRaw, 2);
+        writeRegBuff(BQ27220_REG_MAC_BUFFER_START, capacityRaw, 2);
 
         // Calculate new checksum
         uint8_t newChksum = 0xFF - ((msbAccessValue + lsbAccessValue + newCapacityMsb + newCapacityLsb) & 0xFF);
 
         // Write new checksum (0x60)
-        comm->writeRegister(BQ27220_REG_MAC_DATA_SUM, newChksum);
+        writeReg(BQ27220_REG_MAC_DATA_SUM, newChksum);
 
         // Write the block length
-        comm->writeRegister(BQ27220_REG_MAC_DATA_LEN, fixedDataLength);
+        writeReg(BQ27220_REG_MAC_DATA_LEN, fixedDataLength);
 
         return true;
     }
@@ -1275,14 +1257,14 @@ private:
     int getHalfWord(uint8_t reg)
     {
         uint8_t buffer[2] = {0};
-        if (comm->writeThenRead(&reg, 1, buffer, arraySize(buffer)) < 0) {
+        if (writeThenRead(&reg, 1, buffer, arraySize(buffer)) < 0) {
             log_e("Read register %02X failed!", reg);
             return UINT16_MAX;
         }
         return (buffer[1] << 8) | buffer[0];
     }
 
-    bool initImpl()
+    bool initImpl(uint8_t param) override
     {
         int chipID = getChipID();
         if (chipID != BQ27220_CHIP_ID) {
@@ -1308,8 +1290,6 @@ private:
     }
 
 protected:
-    std::unique_ptr<SensorCommBase> comm;
-    std::unique_ptr<SensorHal> hal;
     uint32_t accessKey;
     BatteryData data;
     const uint8_t START_REGISTER  = 0x02;

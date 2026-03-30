@@ -90,8 +90,6 @@ protected:
      * @note Constructor is protected to prevent direct instantiation of abstract base class
      */
     SensorBase(SensorType sensor_type = SensorType::UNKNOWN)
-        : comm(nullptr),
-          hal(nullptr)
     {
         _info.type = sensor_type;
     }
@@ -105,84 +103,6 @@ public:
     // Delete copy operations to prevent slicing
     SensorBase(const SensorBase &) = delete;
     SensorBase &operator=(const SensorBase &) = delete;
-
-#if defined(ARDUINO)
-    /**
-     * @brief Initialize sensor for Arduino platform using I2C
-     *
-     * @param wire    TwoWire I2C interface instance
-     * @param addr    I2C device address
-     * @param sda     SDA pin number (-1 for default)
-     * @param scl     SCL pin number (-1 for default)
-     * @return true   Initialization successful
-     * @return false  Initialization failed
-     */
-    virtual bool begin(TwoWire &wire, uint8_t addr, int sda = -1, int scl = -1)
-    {
-        if (!beginCommon<SensorCommI2C, HalArduino>(comm, hal, wire, addr, sda, scl)) {
-            return false;
-        }
-        return initImpl(addr);
-    }
-
-#elif defined(ESP_PLATFORM)
-#if defined(USEING_I2C_LEGACY)
-    /**
-     * @brief Initialize sensor for ESP-IDF platform (legacy I2C driver)
-     *
-     * @param port_num I2C port number
-     * @param addr     I2C device address
-     * @param sda      SDA pin number (-1 for default)
-     * @param scl      SCL pin number (-1 for default)
-     * @return true    Initialization successful
-     * @return false   Initialization failed
-     */
-    virtual bool begin(i2c_port_t port_num, uint8_t addr, int sda = -1, int scl = -1)
-    {
-        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, port_num, addr, sda, scl)) {
-            return false;
-        }
-        return initImpl(addr);
-    }
-#else
-    /**
-     * @brief Initialize sensor for ESP-IDF platform (I2C master driver)
-     *
-     * @param handle   I2C master bus handle
-     * @param addr     I2C device address
-     * @return true    Initialization successful
-     * @return false   Initialization failed
-     */
-    virtual bool begin(i2c_master_bus_handle_t handle, uint8_t addr)
-    {
-        // Note: sda and scl parameters removed as they're configured in the handle
-        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, handle, addr, -1, -1)) {
-            return false;
-        }
-        return initImpl(addr);
-    }
-#endif
-#endif
-
-    /**
-     * @brief Initialize sensor using custom communication callbacks
-     *
-     * @param callback     Custom read/write callback function
-     * @param hal_callback Custom hardware abstraction callback
-     * @param addr         I2C device address
-     * @return true        Initialization successful
-     * @return false       Initialization failed
-     */
-    virtual bool begin(SensorCommCustom::CustomCallback callback,
-                       SensorCommCustomHal::CustomHalCallback hal_callback,
-                       uint8_t addr)
-    {
-        if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(
-                    COMM_CUSTOM, callback, hal_callback, addr, comm, hal)) {
-            return false;
-        }
-        return initImpl(addr);
-    }
 
     /**
      * @brief Set sensor calibration offsets
@@ -274,8 +194,6 @@ private:
     virtual bool initImpl(uint8_t addr) = 0;
 
 protected:
-    std::unique_ptr<SensorCommBase> comm;   ///< Communication interface
-    std::unique_ptr<SensorHal> hal;         ///< Hardware abstraction layer
     SensorConfig _config;                   ///< Current configuration
     SensorInfo _info;                       ///< Sensor information
     int16_t _x_offset;

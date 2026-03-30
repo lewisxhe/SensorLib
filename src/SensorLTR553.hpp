@@ -29,7 +29,7 @@
  */
 #pragma once
 
-#include "SensorPlatform.hpp"
+#include "platform/comm/I2CDeviceNoHal.hpp"
 
 // Unique I2C device address
 static constexpr uint8_t LTR553_SLAVE_ADDRESS = 0x23;
@@ -47,7 +47,7 @@ static constexpr uint8_t LTR553_SLAVE_ADDRESS = 0x23;
  *
  * @warning You must call begin() successfully before calling any other methods.
  */
-class SensorLTR553
+class SensorLTR553 : public I2CDeviceNoHal
 {
 public:
     /**
@@ -191,90 +191,12 @@ public:
     /**
      * @brief Construct an uninitialized driver instance.
      */
-    SensorLTR553() : comm(nullptr) {}
+    SensorLTR553() = default;
 
     /**
      * @brief Destructor. Deinitializes the communication backend if created.
      */
-    ~SensorLTR553()
-    {
-        if (comm) {
-            comm->deinit();
-        }
-    }
-
-#if defined(ARDUINO)
-    /**
-     * @brief Initialize the device on Arduino using TwoWire.
-     *
-     * @param wire TwoWire instance (e.g. Wire).
-     * @param sda  SDA pin (optional, -1 = default).
-     * @param scl  SCL pin (optional, -1 = default).
-     * @return true on success, false on failure (offline or ID mismatch).
-     */
-    bool begin(TwoWire &wire, int sda = -1, int scl = -1)
-    {
-        comm = std::make_unique<SensorCommI2C>(wire, LTR553_SLAVE_ADDRESS, sda, scl);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl();
-    }
-#elif defined(ESP_PLATFORM)
-
-#if defined(USEING_I2C_LEGACY)
-    /**
-     * @brief Initialize the device on ESP-IDF (legacy I2C API).
-     *
-     * @param port_num I2C port number.
-     * @param sda      SDA pin (optional, -1 = default).
-     * @param scl      SCL pin (optional, -1 = default).
-     * @return true on success, false on failure.
-     */
-    bool begin(i2c_port_t port_num, int sda = -1, int scl = -1)
-    {
-        comm = std::make_unique<SensorCommI2C>(port_num, LTR553_SLAVE_ADDRESS, sda, scl);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl();
-    }
-#else
-    /**
-     * @brief Initialize the device on ESP-IDF (new I2C master bus handle).
-     *
-     * @param handle I2C master bus handle.
-     * @return true on success, false on failure.
-     */
-    bool begin(i2c_master_bus_handle_t handle)
-    {
-        comm = std::make_unique<SensorCommI2C>(handle, LTR553_SLAVE_ADDRESS);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl();
-    }
-#endif  // USEING_I2C_LEGACY
-#endif  // ESP_PLATFORM
-
-    /**
-     * @brief Initialize the device using a custom I2C-like callback.
-     *
-     * @param callback Custom callback for SensorCommCustom.
-     * @return true on success, false on failure.
-     */
-    bool begin(SensorCommCustom::CustomCallback callback)
-    {
-        comm = std::make_unique<SensorCommCustom>(callback, LTR553_SLAVE_ADDRESS);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl();
-    }
+    ~SensorLTR553() = default;
 
     /**
      * @brief Set interrupt pin polarity.
@@ -284,9 +206,9 @@ public:
     void setIRQLevel(IrqLevel  level)
     {
         if (level) {
-            comm->setRegisterBit(REG_INTERRUPT, 2);
+            setRegBit(REG_INTERRUPT, 2);
         } else {
-            comm->clrRegisterBit(REG_INTERRUPT, 2);
+            clrRegBit(REG_INTERRUPT, 2);
         }
     }
 
@@ -297,7 +219,10 @@ public:
      */
     void enableIRQ(IrqMode mode)
     {
-        comm->writeRegister(REG_INTERRUPT, 0xFC, mode);
+        // RESERVED:7:3
+        // Interrupt Polarity : 2
+        // Interrupt Mode : 1:0
+        updateBits(REG_INTERRUPT, 0x03, mode);
     }
 
     /**
@@ -305,7 +230,7 @@ public:
      */
     void disableIRQ()
     {
-        comm->writeRegister(REG_INTERRUPT, 0xFC, 0x00);
+        updateBits(REG_INTERRUPT, 0x03, 0x00);
     }
 
     // -----------------------
@@ -321,7 +246,7 @@ public:
      */
     bool psAvailable()
     {
-        return comm->getRegisterBit(REG_ALS_PS_STATUS, 0);
+        return getRegBit(REG_ALS_PS_STATUS, 0);
     }
 
     /**
@@ -338,7 +263,7 @@ public:
             lowByte(high), highByte(high),
             lowByte(low),  highByte(low)
         };
-        comm->writeRegister(REG_ALS_THRES_UP_0, buffer, 4);
+        writeRegBuff(REG_ALS_THRES_UP_0, buffer, 4);
     }
 
     /**
@@ -353,7 +278,7 @@ public:
      */
     void setLightSensorPersists(uint8_t count)
     {
-        comm->writeRegister(REG_INTERRUPT_PERSIST, 0xF0, count - 1);
+        updateBits(REG_INTERRUPT_PERSIST, 0x0F, count - 1);
     }
 
     /**
@@ -369,7 +294,7 @@ public:
     void setLightSensorRate(IntegrationTime alsIntegrationTime, MeasurementRate alsMeasurementRate)
     {
         uint8_t value = (uint8_t)(((alsIntegrationTime & 0x07) << 3) | (alsMeasurementRate & 0x07));
-        comm->writeRegister(REG_ALS_MEAS_RATE, value);
+        writeReg(REG_ALS_MEAS_RATE, value);
     }
 
     /**
@@ -377,7 +302,7 @@ public:
      */
     void enableLightSensor()
     {
-        comm->setRegisterBit(REG_ALS_CONTR, 0);
+        setRegBit(REG_ALS_CONTR, 0);
     }
 
     /**
@@ -385,7 +310,7 @@ public:
      */
     void disableLightSensor()
     {
-        comm->clrRegisterBit(REG_ALS_CONTR, 0);
+        clrRegBit(REG_ALS_CONTR, 0);
     }
 
     /**
@@ -395,7 +320,7 @@ public:
      */
     void setLightSensorGain(LightSensorGain gain)
     {
-        comm->writeRegister(REG_ALS_CONTR, 0xE3, gain << 2);
+        updateBits(REG_ALS_CONTR, 0x1C, gain << 2);
     }
 
     /**
@@ -409,11 +334,11 @@ public:
         uint8_t buffer[2] = {0};
 
         // Check ALS Data is Valid (datasheet bit definition should be checked if needed)
-        if (comm->getRegisterBit(REG_ALS_PS_STATUS, 7) != false) {
+        if (getRegBit(REG_ALS_PS_STATUS, 7) != false) {
             return -1;
         }
 
-        int val = comm->readRegister(ch == 1 ? REG_ALS_DATA_CH1_0 : REG_ALS_DATA_CH0_0, buffer, 2);
+        int val = readRegBuff(ch == 1 ? REG_ALS_DATA_CH1_0 : REG_ALS_DATA_CH0_0, buffer, 2);
         if (val == -1) {
             return -1;
         }
@@ -440,7 +365,7 @@ public:
         if (val > 0x0F) {
             val = 0x0F;
         }
-        comm->writeRegister(REG_INTERRUPT_PERSIST, 0x0F, val << 4);
+        updateBits(REG_INTERRUPT_PERSIST, 0xF0, val << 4);
     }
 
     /**
@@ -451,10 +376,10 @@ public:
      */
     void setProximityThreshold(uint16_t low, uint16_t high)
     {
-        comm->writeRegister(REG_PS_THRES_UP_0, lowByte(high));
-        comm->writeRegister(REG_PS_THRES_UP_1, lowByte(high >> 8) & 0x0F);
-        comm->writeRegister(REG_PS_THRES_LOW_0, lowByte(low));
-        comm->writeRegister(REG_PS_THRES_LOW_1, lowByte(low >> 8) & 0x0F);
+        writeReg(REG_PS_THRES_UP_0, lowByte(high));
+        writeReg(REG_PS_THRES_UP_1, lowByte(high >> 8) & 0x0F);
+        writeReg(REG_PS_THRES_LOW_0, lowByte(low));
+        writeReg(REG_PS_THRES_LOW_1, lowByte(low >> 8) & 0x0F);
     }
 
     /**
@@ -464,7 +389,7 @@ public:
      */
     void setProximityRate(PsRate rate)
     {
-        comm->writeRegister(REG_PS_MEAS_RATE, 0xF0, rate & 0x0F);
+        updateBits(REG_PS_MEAS_RATE, 0x0F, rate & 0x0F);
     }
 
     /**
@@ -472,7 +397,7 @@ public:
      */
     void enableProximity()
     {
-        comm->writeRegister(REG_PS_CONTR, 0xFC, 0x03);
+        updateBits(REG_PS_CONTR, 0x03, 0x03);
     }
 
     /**
@@ -480,7 +405,7 @@ public:
      */
     void disableProximity()
     {
-        comm->writeRegister(REG_PS_CONTR, 0xFC, 0x00);
+        updateBits(REG_PS_CONTR, 0x03, 0x00);
     }
 
     /**
@@ -488,7 +413,7 @@ public:
      */
     void enablePsIndicator()
     {
-        comm->setRegisterBit(REG_PS_CONTR, 5);
+        setRegBit(REG_PS_CONTR, 5);
     }
 
     /**
@@ -496,7 +421,7 @@ public:
      */
     void disablePsIndicator()
     {
-        comm->clrRegisterBit(REG_PS_CONTR, 5);
+        clrRegBit(REG_PS_CONTR, 5);
     }
 
     /**
@@ -512,7 +437,7 @@ public:
     int getProximity(bool *saturated = NULL )
     {
         uint8_t buffer[2] = {0};
-        int val = comm->readRegister(REG_PS_DATA_0, buffer, 2);
+        int val = readRegBuff(REG_PS_DATA_0, buffer, 2);
         if (val == -1) {
             return -1;
         }
@@ -533,7 +458,7 @@ public:
      */
     void setPsLedPulsePeriod(PsLedPeriod period)
     {
-        comm->writeRegister(REG_PS_LED, 0x1F, static_cast<uint8_t>(period) << 5);
+        updateBits(REG_PS_LED, 0xE0, static_cast<uint8_t>(period) << 5);
     }
 
     /**
@@ -543,7 +468,7 @@ public:
      */
     void setPsLedDutyCycle(PsLedDuty duty)
     {
-        comm->writeRegister(REG_PS_LED, 0xE7, static_cast<uint8_t>(duty) << 3);
+        updateBits(REG_PS_LED, 0x18, static_cast<uint8_t>(duty) << 3);
     }
 
     /**
@@ -553,7 +478,7 @@ public:
      */
     void setPsLedCurrent(PsLedCurrent cur)
     {
-        comm->writeRegister(REG_PS_LED, 0xF8, cur);
+        updateBits(REG_PS_LED, 0x07, static_cast<uint8_t>(cur));
     }
 
     /**
@@ -563,7 +488,7 @@ public:
      */
     void setPsLedPulses(uint8_t pulesNum)
     {
-        comm->writeRegister(REG_PS_N_PULSES, 0xF0, pulesNum & 0x0F);
+        updateBits(REG_PS_N_PULSES, 0x0F, pulesNum & 0x0F);
     }
 
     // -----------------------
@@ -577,7 +502,7 @@ public:
      */
     int getPartID()
     {
-        int val = comm->readRegister(REG_PART_ID);
+        int val = readReg(REG_PART_ID);
         if (val == -1) {
             return -1;
         }
@@ -591,7 +516,7 @@ public:
      */
     int getRevisionID()
     {
-        int val = comm->readRegister(REG_PART_ID);
+        int val = readReg(REG_PART_ID);
         if (val == -1) {
             return -1;
         }
@@ -608,7 +533,7 @@ public:
     int getManufacturerID()
     {
         // Manufacturer ID (0x05H)
-        return comm->readRegister(REG_MANUFAC_ID);
+        return readReg(REG_MANUFAC_ID);
     }
 
     /**
@@ -616,7 +541,7 @@ public:
      */
     void reset()
     {
-        comm->setRegisterBit(REG_ALS_CONTR, 1);
+        setRegBit(REG_ALS_CONTR, 1);
     }
 
 private:
@@ -627,17 +552,14 @@ private:
      * - Reset device
      * - Verify manufacturer ID
      */
-    bool initImpl()
+    bool initImpl(uint8_t param)
     {
-        I2CParam params(I2CParam::I2C_SET_FLAG, false);
-        comm->setParams(params);
+        setAck(false);
         reset();
         return getManufacturerID() == LTR553_DEFAULT_MAN_ID;
     }
 
 protected:
-    std::unique_ptr<SensorCommBase> comm;
-
     // Register map
     static constexpr uint8_t REG_ALS_CONTR = 0x80;
     static constexpr uint8_t REG_PS_CONTR = 0x81;

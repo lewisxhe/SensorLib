@@ -29,7 +29,7 @@
  */
 #pragma once
 
-#include "SensorPlatform.hpp"
+#include "platform/comm/I2CDeviceNoHal.hpp"
 
 /**
  * @brief I2C addresses for CM32181.
@@ -66,7 +66,7 @@ static constexpr uint8_t CM32181_SLAVE_ADDRESS = 0x10;
  *
  * @warning Always call begin() and ensure it returns true before using other APIs.
  */
-class SensorCM32181
+class SensorCM32181 : public I2CDeviceNoHal
 {
 public:
     /**
@@ -133,94 +133,12 @@ public:
     /**
      * @brief Construct a CM32181 driver instance.
      */
-    SensorCM32181() : comm(nullptr) {}
+    SensorCM32181() = default;
 
     /**
      * @brief Destructor. Deinitializes communication backend if created.
      */
-    ~SensorCM32181()
-    {
-        if (comm) {
-            comm->deinit();
-        }
-    }
-
-#if defined(ARDUINO)
-    /**
-     * @brief Initialize sensor using Arduino TwoWire (I2C).
-     *
-     * @param wire TwoWire instance (e.g. Wire).
-     * @param addr I2C address (CM32181_ADDR_PRIMARY or CM32181_ADDR_SECONDARY).
-     * @param sda  SDA pin; -1 keeps default.
-     * @param scl  SCL pin; -1 keeps default.
-     * @return true if chip is detected and chip ID matches, false otherwise.
-     */
-    bool begin(TwoWire &wire, uint8_t addr = CM32181_ADDR_PRIMARY, int sda = -1, int scl = -1)
-    {
-        comm = std::make_unique<SensorCommI2C>(wire, addr, sda, scl);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl();
-    }
-#elif defined(ESP_PLATFORM)
-
-#if defined(USEING_I2C_LEGACY)
-    /**
-     * @brief Initialize sensor using ESP-IDF legacy I2C API.
-     *
-     * @param port_num I2C port number.
-     * @param addr     I2C address (CM32181_ADDR_PRIMARY or CM32181_ADDR_SECONDARY).
-     * @param sda      SDA pin; -1 keeps default.
-     * @param scl      SCL pin; -1 keeps default.
-     * @return true if chip is detected and chip ID matches, false otherwise.
-     */
-    bool begin(i2c_port_t port_num, uint8_t addr = CM32181_ADDR_PRIMARY, int sda = -1, int scl = -1)
-    {
-        comm = std::make_unique<SensorCommI2C>(port_num, addr, sda, scl);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl();
-    }
-#else
-    /**
-     * @brief Initialize sensor using ESP-IDF new I2C master bus handle.
-     *
-     * @param handle I2C master bus handle.
-     * @param addr   I2C address (CM32181_ADDR_PRIMARY or CM32181_ADDR_SECONDARY).
-     * @return true if chip is detected and chip ID matches, false otherwise.
-     */
-    bool begin(i2c_master_bus_handle_t handle, uint8_t addr = CM32181_ADDR_PRIMARY)
-    {
-        comm = std::make_unique<SensorCommI2C>(handle, addr);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl();
-    }
-#endif  // USEING_I2C_LEGACY
-#endif  // ESP_PLATFORM
-
-    /**
-     * @brief Initialize sensor using a custom transport callback.
-     *
-     * @param callback Custom callback used by SensorCommCustom.
-     * @param addr     I2C address (CM32181_ADDR_PRIMARY or CM32181_ADDR_SECONDARY).
-     * @return true if chip is detected and chip ID matches, false otherwise.
-     */
-    bool begin(SensorCommCustom::CustomCallback callback, uint8_t addr = CM32181_ADDR_PRIMARY)
-    {
-        comm = std::make_unique<SensorCommCustom>(callback, addr);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl();
-    }
+    ~SensorCM32181() = default;
 
     /**
      * @brief Configure ALS sensitivity and integration time.
@@ -236,7 +154,7 @@ public:
                      IntegrationTime int_time = INTEGRATION_TIME_200MS)
     {
         uint16_t data = 0;
-        comm->readRegister(REG_ALS_CONF, (uint8_t *)&data, 2);
+        readRegBuff(REG_ALS_CONF, (uint8_t *)&data, 2);
 
         // Sensitivity bits [12:11]
         data &= (uint16_t)~ALS_CONF_SENS_MASK;
@@ -247,7 +165,7 @@ public:
         data |= (uint16_t)(int_time & 0x0Fu) << ALS_CONF_IT_SHIFT;
 
         // FIX: Write back configuration (original code mistakenly read instead of write)
-        comm->writeRegister(REG_ALS_CONF, (uint8_t *)&data, 2);
+        writeRegBuff(REG_ALS_CONF, (uint8_t *)&data, 2);
     }
 
     /**
@@ -263,12 +181,12 @@ public:
         // High threshold window (REG_ALS_THDH)
         buffer[1] = highByte(high_threshold);
         buffer[0] = lowByte(high_threshold);
-        comm->writeRegister(REG_ALS_THDH, buffer, 2);
+        writeRegBuff(REG_ALS_THDH, buffer, 2);
 
         // Low threshold window (REG_ALS_THDL)
         buffer[1] = highByte(low_threshold);
         buffer[0] = lowByte(low_threshold);
-        comm->writeRegister(REG_ALS_THDL, buffer, 2);
+        writeRegBuff(REG_ALS_THDL, buffer, 2);
     }
 
     /**
@@ -284,7 +202,7 @@ public:
     void powerSave(PowerSaveMode mode, bool enable)
     {
         uint16_t data = 0;
-        comm->readRegister(REG_ALS_PSM, (uint8_t *)&data, 2);
+        readRegBuff(REG_ALS_PSM, (uint8_t *)&data, 2);
 
         // Clear mode bits [2:1] and enable bit [0]
         data &= (uint16_t)~ALS_PSM_MODE_MASK;
@@ -298,7 +216,7 @@ public:
             data |= ALS_PSM_EN_BIT;
         }
 
-        comm->writeRegister(REG_ALS_PSM, (uint8_t *)&data, 2);
+        writeRegBuff(REG_ALS_PSM, (uint8_t *)&data, 2);
     }
 
     /**
@@ -309,7 +227,7 @@ public:
     InterruptEvent getIrqStatus()
     {
         uint16_t data = 0;
-        comm->readRegister(REG_ALS_STATUS, (uint8_t *)&data, 2);
+        readRegBuff(REG_ALS_STATUS, (uint8_t *)&data, 2);
 
         // Keep original mapping:
         // bit15 => low threshold trigger
@@ -329,9 +247,9 @@ public:
     void enableINT()
     {
         uint16_t data = 0;
-        comm->readRegister(REG_ALS_CONF, (uint8_t *)&data, 2);
+        readRegBuff(REG_ALS_CONF, (uint8_t *)&data, 2);
         bitWrite(data, 1, 1);
-        comm->writeRegister(REG_ALS_CONF, (uint8_t *)&data, 2);
+        writeRegBuff(REG_ALS_CONF, (uint8_t *)&data, 2);
     }
 
     /**
@@ -340,9 +258,9 @@ public:
     void disableINT()
     {
         uint16_t data = 0;
-        comm->readRegister(REG_ALS_CONF, (uint8_t *)&data, 2);
+        readRegBuff(REG_ALS_CONF, (uint8_t *)&data, 2);
         bitWrite(data, 1, 0);
-        comm->writeRegister(REG_ALS_CONF, (uint8_t *)&data, 2);
+        writeRegBuff(REG_ALS_CONF, (uint8_t *)&data, 2);
     }
 
     /**
@@ -351,9 +269,9 @@ public:
     void powerOn()
     {
         uint16_t data = 0;
-        comm->readRegister(REG_ALS_CONF, (uint8_t *)&data, 2);
+        readRegBuff(REG_ALS_CONF, (uint8_t *)&data, 2);
         bitClear(data, 0);
-        comm->writeRegister(REG_ALS_CONF, (uint8_t *)&data, 2);
+        writeRegBuff(REG_ALS_CONF, (uint8_t *)&data, 2);
     }
 
     /**
@@ -362,9 +280,9 @@ public:
     void powerDown()
     {
         uint16_t data = 0;
-        comm->readRegister(REG_ALS_CONF, (uint8_t *)&data, 2);
+        readRegBuff(REG_ALS_CONF, (uint8_t *)&data, 2);
         bitSet(data, 0);
-        comm->writeRegister(REG_ALS_CONF, (uint8_t *)&data, 2);
+        writeRegBuff(REG_ALS_CONF, (uint8_t *)&data, 2);
     }
 
     /**
@@ -375,7 +293,7 @@ public:
     uint16_t getRaw()
     {
         uint8_t buffer[2] = {0};
-        comm->readRegister(REG_ALS_DATA, buffer, 2);
+        readRegBuff(REG_ALS_DATA, buffer, 2);
         return (uint16_t)buffer[0] | (uint16_t)(buffer[1] << 8);
     }
 
@@ -397,7 +315,7 @@ public:
     int getChipID()
     {
         uint8_t buffer[2] = {0};
-        comm->readRegister(REG_ID, buffer, 2);
+        readRegBuff(REG_ID, buffer, 2);
         return lowByte(buffer[0]);
     }
 
@@ -430,10 +348,9 @@ private:
     /**
      * @brief Internal initialization: configure I2C params and verify chip ID.
      */
-    bool initImpl()
+    bool initImpl(uint8_t param) override
     {
-        I2CParam params(I2CParam::I2C_SET_FLAG, false);
-        comm->setParams(params);
+        setAck(false);
 
         int chipID = getChipID();
         log_i("chipID:%d\n", chipID);
@@ -448,11 +365,6 @@ private:
     }
 
 protected:
-    /**
-     * @brief Communication backend (I2C or custom callback).
-     */
-    std::unique_ptr<SensorCommBase> comm;
-
     /**
      * @brief Fixed raw-to-lux conversion factor (datasheet/manual derived).
      */

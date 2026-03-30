@@ -30,8 +30,8 @@
  */
 #pragma once
 
+#include "platform/comm/I2CDeviceNoHal.hpp"
 #include "SensorRTC.h"
-#include "SensorPlatform.hpp"
 
 /**
  * @class PCF8563 I2C addresses.
@@ -43,11 +43,12 @@ static const uint8_t PCF8563_SLAVE_ADDRESS = 0x51;
  * @class SensorPCF8563
  * @brief Driver for the PCF8563 real-time clock (RTC) over I2C.
  */
-class SensorPCF8563 : public SensorRTC
+class SensorPCF8563 : public SensorRTC, public I2CDeviceNoHal
 {
 public:
     using SensorRTC::setDateTime;
     using SensorRTC::getDateTime;
+    using I2CDeviceNoHal::begin;
 
     /**
      * @brief Clock output frequencies for the CLKOUT pin.
@@ -63,19 +64,14 @@ public:
     /**
      * @brief Construct a PCF8563 driver instance.
      */
-    SensorPCF8563() : comm(nullptr) {}
+    SensorPCF8563() = default;
 
     /**
      * @brief Destructor.
      *
      * Deinitializes the underlying communication bus if it has been created.
      */
-    ~SensorPCF8563()
-    {
-        if (comm) {
-            comm->deinit();
-        }
-    }
+    ~SensorPCF8563() = default;
 
 #if defined(ARDUINO)
     /**
@@ -88,12 +84,7 @@ public:
      */
     bool begin(TwoWire &wire, int sda = -1, int scl = -1)
     {
-        comm = std::make_unique<SensorCommI2C>(wire, PCF8563_SLAVE_ADDRESS, sda, scl);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl();
+        return I2CDeviceNoHal::begin(wire, PCF8563_SLAVE_ADDRESS, sda, scl);
     }
 #elif defined(ESP_PLATFORM)
 
@@ -108,12 +99,7 @@ public:
      */
     bool begin(i2c_port_t port_num, int sda = -1, int scl = -1)
     {
-        comm = std::make_unique<SensorCommI2C>(port_num, PCF8563_SLAVE_ADDRESS, sda, scl);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl();
+        return I2CDeviceNoHal::begin(port_num, PCF8563_SLAVE_ADDRESS, sda, scl);
     }
 #else
     /**
@@ -124,12 +110,7 @@ public:
      */
     bool begin(i2c_master_bus_handle_t handle)
     {
-        comm = std::make_unique<SensorCommI2C>(handle, PCF8563_SLAVE_ADDRESS);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl();
+        return I2CDeviceNoHal::begin(handle, PCF8563_SLAVE_ADDRESS);
     }
 #endif  // USEING_I2C_LEGACY
 #endif  // ESP_PLATFORM
@@ -142,12 +123,7 @@ public:
      */
     bool begin(SensorCommCustom::CustomCallback callback)
     {
-        comm = std::make_unique<SensorCommCustom>(callback, PCF8563_SLAVE_ADDRESS);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl();
+        return I2CDeviceNoHal::begin(callback, PCF8563_SLAVE_ADDRESS);
     }
 
     /**
@@ -174,7 +150,7 @@ public:
         } else {
             buffer[5] |= 0x80;
         }
-        comm->writeRegister(SEC_REG, buffer, 7);
+        writeRegBuff(SEC_REG, buffer, 7);
     }
 
     /**
@@ -187,7 +163,7 @@ public:
     RTC_DateTime getDateTime()
     {
         uint8_t buffer[7];
-        comm->readRegister(SEC_REG, buffer, 7);
+        readRegBuff(SEC_REG, buffer, 7);
         uint8_t second = BCD2DEC(buffer[0] & 0x7F);
         uint8_t minute = BCD2DEC(buffer[1] & 0x7F);
         uint8_t hour   = BCD2DEC(buffer[2] & 0x3F);
@@ -211,7 +187,7 @@ public:
      */
     bool isClockIntegrityGuaranteed()
     {
-        return comm->getRegisterBit(SEC_REG, 7) == 0;
+        return getRegBit(SEC_REG, 7) == 0;
     }
 
     /**
@@ -225,7 +201,7 @@ public:
     RTC_Alarm getAlarm()
     {
         uint8_t buffer[4];
-        comm->readRegister(ALRM_MIN_REG, buffer, 4);
+        readRegBuff(ALRM_MIN_REG, buffer, 4);
         buffer[0] = BCD2DEC(buffer[0] & 0x80); // minute
         buffer[1] = BCD2DEC(buffer[1] & 0x40); // hour
         buffer[2] = BCD2DEC(buffer[2] & 0x40); // day
@@ -239,7 +215,7 @@ public:
      */
     void enableAlarm()
     {
-        comm->setRegisterBit(STAT2_REG, 1);
+        setRegBit(STAT2_REG, 1);
     }
 
     /**
@@ -247,7 +223,7 @@ public:
      */
     void disableAlarm()
     {
-        comm->clrRegisterBit(STAT2_REG, 1);
+        clrRegBit(STAT2_REG, 1);
     }
 
     /**
@@ -255,7 +231,7 @@ public:
      */
     void resetAlarm()
     {
-        comm->clrRegisterBit(STAT2_REG, 3);
+        clrRegBit(STAT2_REG, 3);
     }
 
     /**
@@ -264,7 +240,7 @@ public:
      */
     bool isAlarmActive()
     {
-        return comm->getRegisterBit(STAT2_REG, 3);
+        return getRegBit(STAT2_REG, 3);
     }
 
     /**
@@ -328,7 +304,7 @@ public:
         } else {
             buffer[3] = ALARM_ENABLE;
         }
-        comm->writeRegister(ALRM_MIN_REG, buffer, 4);
+        writeRegBuff(ALRM_MIN_REG, buffer, 4);
     }
 
     /**
@@ -378,8 +354,8 @@ public:
     bool isCountdownTimerEnable()
     {
         uint8_t buffer[2];
-        buffer[0] = comm->readRegister(STAT2_REG);
-        buffer[1] = comm->readRegister(TIMER1_REG);
+        buffer[0] = readReg(STAT2_REG);
+        buffer[1] = readReg(TIMER1_REG);
         if (buffer[0] & TIMER_TIE) {
             return buffer[1] & TIMER_TE ? true : false;
         }
@@ -392,7 +368,7 @@ public:
      */
     bool isCountdownTimerActive()
     {
-        return comm->getRegisterBit(STAT2_REG, 2);
+        return getRegBit(STAT2_REG, 2);
     }
 
     /**
@@ -400,7 +376,7 @@ public:
      */
     void enableCountdownTimer()
     {
-        comm->setRegisterBit(STAT2_REG, 0);
+        setRegBit(STAT2_REG, 0);
     }
 
     /**
@@ -408,7 +384,7 @@ public:
      */
     void disableCountdownTimer()
     {
-        comm->clrRegisterBit(STAT2_REG, 0);
+        clrRegBit(STAT2_REG, 0);
     }
 
     /**
@@ -420,11 +396,11 @@ public:
     void setCountdownTimer(uint8_t val, uint8_t freq)
     {
         uint8_t buffer[3];
-        buffer[1] = comm->readRegister(TIMER1_REG);
+        buffer[1] = readReg(TIMER1_REG);
         buffer[1] |= (freq & TIMER_TD10);
         buffer[2] = val;
-        comm->writeRegister(TIMER1_REG, buffer[1]);
-        comm->writeRegister(TIMER2_REG, buffer[2]);
+        writeReg(TIMER1_REG, buffer[1]);
+        writeReg(TIMER2_REG, buffer[2]);
     }
 
     /**
@@ -433,11 +409,11 @@ public:
     void clearCountdownTimer()
     {
         uint8_t val;
-        val = comm->readRegister(STAT2_REG);
+        val = readReg(STAT2_REG);
         val &= ~(TIMER_TF | TIMER_TIE);
         val |= ALARM_AF;
-        comm->writeRegister(STAT2_REG, val);
-        comm->writeRegister(TIMER1_REG, (uint8_t)0x00);
+        writeReg(STAT2_REG, val);
+        writeReg(TIMER1_REG, (uint8_t)0x00);
     }
 
     /**
@@ -447,9 +423,9 @@ public:
     void setClockOutput(ClockHz freq)
     {
         if (freq == CLK_DISABLE) {
-            comm->clrRegisterBit(SQW_REG, 7);
+            clrRegBit(SQW_REG, 7);
         } else {
-            comm->writeRegister(SQW_REG, freq | CLK_ENABLE);
+            writeReg(SQW_REG, freq | CLK_ENABLE);
         }
     }
 
@@ -470,10 +446,10 @@ private:
      *
      * @return true if the device responds and the register contents are sane.
      */
-    bool initImpl()
+    bool initImpl(uint8_t param) override
     {
         // Check device is online.
-        int ret = comm->readRegister(SEC_REG);
+        int ret = readReg(SEC_REG);
         if (ret < 0) {
             return false;
         }
@@ -484,11 +460,6 @@ private:
     }
 
 protected:
-    /**
-     * @brief Communication backend used by this driver.
-     */
-    std::unique_ptr<SensorCommBase> comm;
-
     // Register addresses
     static constexpr uint8_t STAT1_REG = 0x00;
     static constexpr uint8_t STAT2_REG = 0x01;

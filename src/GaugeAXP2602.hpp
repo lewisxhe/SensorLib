@@ -29,12 +29,12 @@
 
 #pragma once
 
-#include "SensorPlatform.hpp"
+#include "platform/comm/I2CDeviceWithHal.hpp"
 
 // AXP2602 Unique device address
 static constexpr uint8_t AXP2602_SLAVE_ADDRESS  = (0x62);
 
-class GaugeAXP2602
+class GaugeAXP2602 : public I2CDeviceWithHal
 {
 public:
     enum CurrentSenseResistor {
@@ -123,14 +123,9 @@ public:
         {}
     };
 
-    GaugeAXP2602() : comm(nullptr), hal(nullptr) {}
+    GaugeAXP2602() = default;
 
-    ~GaugeAXP2602()
-    {
-        if (comm) {
-            comm->deinit();
-        }
-    }
+    ~GaugeAXP2602() = default;
 
 #if defined(ARDUINO)
     /**
@@ -143,10 +138,7 @@ public:
      */
     bool begin(TwoWire &wire, int sda = -1, int scl = -1)
     {
-        if (!beginCommon<SensorCommI2C, HalArduino>(comm, hal, wire, AXP2602_SLAVE_ADDRESS, sda, scl)) {
-            return false;
-        }
-        return initImpl();
+        return I2CDeviceWithHal::begin(wire, AXP2602_SLAVE_ADDRESS, sda, scl);
     }
 
 #elif defined(ESP_PLATFORM)
@@ -162,10 +154,7 @@ public:
      */
     bool begin(i2c_port_t port_num, int sda = -1, int scl = -1)
     {
-        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, port_num, AXP2602_SLAVE_ADDRESS, sda, scl)) {
-            return false;
-        }
-        return initImpl();
+        return I2CDeviceWithHal::begin(port_num, AXP2602_SLAVE_ADDRESS, sda, scl);
     }
 #else
     /**
@@ -176,10 +165,7 @@ public:
      */
     bool begin(i2c_master_bus_handle_t handle)
     {
-        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, handle, AXP2602_SLAVE_ADDRESS)) {
-            return false;
-        }
-        return initImpl();
+        return I2CDeviceWithHal::begin(handle, AXP2602_SLAVE_ADDRESS);
     }
 #endif  //ESP_PLATFORM
 #endif  //ARDUINO
@@ -194,11 +180,7 @@ public:
     bool begin(SensorCommCustom::CustomCallback callback,
                SensorCommCustomHal::CustomHalCallback hal_callback)
     {
-        if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(COMM_CUSTOM,
-                callback, hal_callback, AXP2602_SLAVE_ADDRESS, comm, hal)) {
-            return false;
-        }
-        return initImpl();
+        return I2CDeviceWithHal::begin(callback, hal_callback, AXP2602_SLAVE_ADDRESS);
     }
 
     /**
@@ -221,15 +203,15 @@ public:
         }
 
         // Read voltage (14-bit ADC, 0-4500mV)
-        int vbatHigh = comm->readRegister(REG_VBAT_ADC_HIGH);
-        int vbatLow = comm->readRegister(REG_VBAT_ADC_LOW);
+        int vbatHigh = readReg(REG_VBAT_ADC_HIGH);
+        int vbatLow = readReg(REG_VBAT_ADC_LOW);
         if (vbatHigh >= 0 && vbatLow >= 0) {
             data.voltage = ((vbatHigh & 0x3F) << 8) | vbatLow;  // High 6 bits + Low 8 bits
         }
 
         // Read current (16-bit ADC, two's complement)
-        int ibatHigh = comm->readRegister(REG_IBAT_ADC_HIGH);
-        int ibatLow = comm->readRegister(REG_IBAT_ADC_LOW);
+        int ibatHigh = readReg(REG_IBAT_ADC_HIGH);
+        int ibatLow = readReg(REG_IBAT_ADC_LOW);
         if (ibatHigh >= 0 && ibatLow >= 0) {
             uint16_t raw = (ibatHigh << 8) | ibatLow;
             data.currentRaw = static_cast<int16_t>(raw);  // Convert to signed 16-bit
@@ -240,15 +222,15 @@ public:
         }
 
         // Read temperature
-        int temp = comm->readRegister(REG_TEMP_RESULT);
+        int temp = readReg(REG_TEMP_RESULT);
         if (temp >= 0) {
             // 1 LSB = 1°C, range -128°C to +127°C
             data.temperature = static_cast<int8_t>(temp);
         }
 
         // Read die temperature (13-bit ADC)
-        int tdieHigh = comm->readRegister(REG_TDIE_ADC_HIGH);
-        int tdieLow = comm->readRegister(REG_TDIE_ADC_LOW);
+        int tdieHigh = readReg(REG_TDIE_ADC_HIGH);
+        int tdieLow = readReg(REG_TDIE_ADC_LOW);
         if (tdieHigh >= 0 && tdieLow >= 0) {
             data.tdieTemperatureRaw = ((tdieHigh & 0x1F) << 8) | tdieLow;  // High 5 bits + Low 8 bits
             // Formula on page 10 of the manual: Temperature (°C) = (3415 - xDie) * 10 / 95 + 26
@@ -260,30 +242,30 @@ public:
         }
 
         // Read battery status
-        data.soc = comm->readRegister(REG_SOC);
-        data.soh = comm->readRegister(REG_SOH);
+        data.soc = readReg(REG_SOC);
+        data.soh = readReg(REG_SOH);
 
         // Read time to empty estimation
-        int timeEmptyHigh = comm->readRegister(REG_TIME_TO_EMPTY_HIGH);
-        int timeEmptyLow = comm->readRegister(REG_TIME_TO_EMPTY_LOW);
+        int timeEmptyHigh = readReg(REG_TIME_TO_EMPTY_HIGH);
+        int timeEmptyLow = readReg(REG_TIME_TO_EMPTY_LOW);
         if (timeEmptyHigh >= 0 && timeEmptyLow >= 0) {
             data.timeToEmpty = (timeEmptyHigh << 8) | timeEmptyLow;
         }
 
-        int timeFullHigh = comm->readRegister(REG_TIME_TO_FULL_HIGH);
-        int timeFullLow = comm->readRegister(REG_TIME_TO_FULL_LOW);
+        int timeFullHigh = readReg(REG_TIME_TO_FULL_HIGH);
+        int timeFullLow = readReg(REG_TIME_TO_FULL_LOW);
         if (timeFullHigh >= 0 && timeFullLow >= 0) {
             data.timeToFull = (timeFullHigh << 8) | timeFullLow;
         }
 
         // Read IRQ status
-        int irqStatus = comm->readRegister(REG_IRQ_STATUS);
+        int irqStatus = readReg(REG_IRQ_STATUS);
         if (irqStatus >= 0) {
             data.irqStatus = static_cast<IRQStatus>(irqStatus & 0x0F);
         }
 
         // Read configuration
-        int config = comm->readRegister(REG_COMM_CONFIG);
+        int config = readReg(REG_COMM_CONFIG);
         if (config >= 0) {
             data.thermalDieEnabled = (config & _BV(6)) != 0;
             data.currentMeasurementEnabled = (config & _BV(5)) != 0;
@@ -325,7 +307,7 @@ public:
      */
     int getChipID()
     {
-        return comm->readRegister(REG_ID);
+        return readReg(REG_ID);
     }
 
     /**
@@ -379,7 +361,7 @@ public:
      */
     uint8_t getLowBatterySOCThreshold()
     {
-        int lowSoc = comm->readRegister(REG_LOW_SOC_THLD);
+        int lowSoc = readReg(REG_LOW_SOC_THLD);
         if (lowSoc >= 0) {
             return lowSoc & 0x3F;  // Low 6 bits valid
         }
@@ -392,7 +374,7 @@ public:
      */
     uint8_t getOverTemperatureThreshold()
     {
-        int otThld = comm->readRegister(REG_OT_THLD);
+        int otThld = readReg(REG_OT_THLD);
         if (otThld >= 0) {
             return otThld & 0x7F;  // Low 7 bits valid
         }
@@ -495,9 +477,9 @@ public:
      */
     void reset()
     {
-        comm->setRegisterBit(REG_MODE, 5);
+        setRegBit(REG_MODE, 5);
         hal->delay(50);
-        comm->clrRegisterBit(REG_MODE, 5);
+        clrRegBit(REG_MODE, 5);
         hal->delay(100);
     }
 
@@ -506,7 +488,7 @@ public:
      */
     void sleep()
     {
-        if (comm->setRegisterBit(REG_MODE, 0)) {
+        if (setRegBit(REG_MODE, 0)) {
             data.sleepModeEnabled = true;
         }
     }
@@ -517,7 +499,7 @@ public:
      */
     bool isSleepModeEnabled()
     {
-        return comm->getRegisterBit(REG_MODE, 0);
+        return getRegBit(REG_MODE, 0);
     }
 
     /**
@@ -525,7 +507,7 @@ public:
      */
     void wakeup()
     {
-        if (comm->clrRegisterBit(REG_MODE, 0)) {
+        if (clrRegBit(REG_MODE, 0)) {
             data.sleepModeEnabled = false;
         }
     }
@@ -540,11 +522,11 @@ public:
             threshold = 63;
         }
         // Read low SOC threshold
-        int lowSoc = comm->readRegister(REG_LOW_SOC_THLD);
+        int lowSoc = readReg(REG_LOW_SOC_THLD);
         if (lowSoc >= 0) {
             lowSoc &= 0xC0;
             lowSoc |= (threshold & 0x3F); // Low 6 bits valid
-            comm->writeRegister(REG_LOW_SOC_THLD, lowSoc);
+            writeReg(REG_LOW_SOC_THLD, lowSoc);
         }
     }
 
@@ -557,7 +539,7 @@ public:
         if (threshold > 127) {
             threshold = 127;
         }
-        comm->writeRegister(REG_OT_THLD, threshold & 0x7F);
+        writeReg(REG_OT_THLD, threshold & 0x7F);
     }
 
     /**
@@ -567,9 +549,9 @@ public:
     void setThermalDieMeasurement(bool enable)
     {
         if (enable) {
-            comm->setRegisterBit(REG_COMM_CONFIG, 6);
+            setRegBit(REG_COMM_CONFIG, 6);
         } else {
-            comm->clrRegisterBit(REG_COMM_CONFIG, 6);
+            clrRegBit(REG_COMM_CONFIG, 6);
         }
         data.thermalDieEnabled = enable;
     }
@@ -590,9 +572,9 @@ public:
     void setCurrentMeasurement(bool enable)
     {
         if (enable) {
-            comm->setRegisterBit(REG_COMM_CONFIG, 5);
+            setRegBit(REG_COMM_CONFIG, 5);
         } else {
-            comm->clrRegisterBit(REG_COMM_CONFIG, 5);
+            clrRegBit(REG_COMM_CONFIG, 5);
         }
         data.currentMeasurementEnabled = enable;
     }
@@ -613,9 +595,9 @@ public:
     void setBatteryDetection(bool enable)
     {
         if (enable) {
-            comm->setRegisterBit(REG_COMM_CONFIG, 4);
+            setRegBit(REG_COMM_CONFIG, 4);
         } else {
-            comm->clrRegisterBit(REG_COMM_CONFIG, 4);
+            clrRegBit(REG_COMM_CONFIG, 4);
         }
         data.batteryDetectionEnabled = enable;
     }
@@ -635,11 +617,11 @@ public:
      */
     void setCurrentSenseResistor(CurrentSenseResistor resistorValue)
     {
-        int val = comm->readRegister(REG_COMM_CONFIG);
+        int val = readReg(REG_COMM_CONFIG);
         if (val < 0) return;
 
         val = (val & ~0x03) | (resistorValue & 0x03);
-        comm->writeRegister(REG_COMM_CONFIG, val);
+        writeReg(REG_COMM_CONFIG, val);
         data.senseResistor = resistorValue;
     }
 
@@ -686,7 +668,7 @@ public:
      */
     void disableAllIRQ()
     {
-        comm->writeRegister(REG_IRQ_ENABLE, 0x00);
+        writeReg(REG_IRQ_ENABLE, 0x00);
     }
 
     /**
@@ -697,7 +679,7 @@ public:
     */
     void enableIRQ(IRQEnable irq, bool enable, bool low_level_trigger = true)
     {
-        int val = comm->readRegister(REG_IRQ_ENABLE);
+        int val = readReg(REG_IRQ_ENABLE);
         if (val < 0) {
             return;
         }
@@ -713,7 +695,7 @@ public:
         } else {
             val &= ~irq;
         }
-        comm->writeRegister(REG_IRQ_ENABLE, val);
+        writeReg(REG_IRQ_ENABLE, val);
     }
 
     /**
@@ -721,9 +703,9 @@ public:
      */
     void clearIRQStatus()
     {
-        comm->writeRegister(REG_IRQ_STATUS, 0x00);
+        writeReg(REG_IRQ_STATUS, 0x00);
         hal->delay(2);
-        comm->writeRegister(REG_IRQ_STATUS, 0x0F);
+        writeReg(REG_IRQ_STATUS, 0x0F);
         data.irqStatus = IRQ_STATUS_NONE;
     }
 
@@ -741,7 +723,7 @@ public:
         default:
             return;
         }
-        comm->writeRegister(REG_OPERATING_MODE, mode);
+        writeReg(REG_OPERATING_MODE, mode);
         data.operatingMode = mode;
     }
 
@@ -752,7 +734,7 @@ public:
     OperatingMode getOperatingMode()
     {
         // Read operating mode
-        int opMode = comm->readRegister(REG_OPERATING_MODE);
+        int opMode = readReg(REG_OPERATING_MODE);
         if (opMode >= 0) {
             data.operatingMode = static_cast<OperatingMode>(opMode & 0x07);
         }
@@ -770,22 +752,22 @@ public:
     {
         if (len != 128 || data == NULL)return false;
         // Reset gauge first
-        comm->writeRegister(REG_MODE, 0x01);
+        writeReg(REG_MODE, 0x01);
         hal->delay(50);
-        comm->writeRegister(REG_MODE, 0x00);
+        writeReg(REG_MODE, 0x00);
         hal->delay(50);
 
         // Enabled BROM register
-        comm->clrRegisterBit(REG_PARA_CONFIG, 0);
-        comm->setRegisterBit(REG_PARA_CONFIG, 0);
+        clrRegBit(REG_PARA_CONFIG, 0);
+        setRegBit(REG_PARA_CONFIG, 0);
         // Write data to buffer
         for (uint8_t i = 0; i < 128; i++) {
-            comm->writeRegister(REG_BROM, data[i]);
+            writeReg(REG_BROM, data[i]);
         }
 
         // Reenable ROM register
-        comm->clrRegisterBit(REG_PARA_CONFIG, 0);
-        comm->setRegisterBit(REG_PARA_CONFIG, 0);
+        clrRegBit(REG_PARA_CONFIG, 0);
+        setRegBit(REG_PARA_CONFIG, 0);
 
         return compareGaugeData(data, len);
     }
@@ -804,34 +786,34 @@ public:
         uint8_t buffer[128];
         memset(buffer, 0, sizeof(buffer));
         // Reenable BROM register
-        comm->clrRegisterBit(REG_PARA_CONFIG, 0);
-        comm->setRegisterBit(REG_PARA_CONFIG, 0);
+        clrRegBit(REG_PARA_CONFIG, 0);
+        setRegBit(REG_PARA_CONFIG, 0);
         for (uint8_t i = 0; i < 128; i++) {
-            buffer[i] = comm->readRegister(REG_BROM);
+            buffer[i] = readReg(REG_BROM);
         }
         // Disable BROM register
-        comm->clrRegisterBit(REG_PARA_CONFIG, 0);
+        clrRegBit(REG_PARA_CONFIG, 0);
         // Set data interface
-        comm->setRegisterBit(REG_PARA_CONFIG, 4);
+        setRegBit(REG_PARA_CONFIG, 4);
         // Reset gauge
-        comm->setRegisterBit(REG_MODE, 5);
-        comm->clrRegisterBit(REG_MODE, 5);
+        setRegBit(REG_MODE, 5);
+        clrRegBit(REG_MODE, 5);
 
         return memcmp(data, buffer, 128) == 0;
     }
 
     void enableWDT()
     {
-        comm->setRegisterBit(REG_PARA_CONFIG, 5);
+        setRegBit(REG_PARA_CONFIG, 5);
     }
 
     void disableWDT()
     {
-        comm->clrRegisterBit(REG_PARA_CONFIG, 5);
+        clrRegBit(REG_PARA_CONFIG, 5);
     }
 
 private:
-    bool initImpl()
+    bool initImpl(uint8_t param) override
     {
         data.chipID = getChipID();
         if (data.chipID != AXP2602_CHIP_ID) {
@@ -848,8 +830,6 @@ private:
     }
 
 protected:
-    std::unique_ptr<SensorCommBase> comm;
-    std::unique_ptr<SensorHal> hal;
     GaugeData data;
 
     static constexpr uint8_t REG_ID = 0x00;

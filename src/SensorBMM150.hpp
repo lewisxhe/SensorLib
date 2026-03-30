@@ -30,19 +30,16 @@
  */
 #pragma once
 
+#include "platform/comm/ComplexStaticDeviceWithHal.hpp"
 #include "bosch/BMM150/bmm150.h"
-#include "SensorPlatform.hpp"
-
-#if defined(ARDUINO)
 
 /*! @name I2C ADDRESS       */
-#define BMM150_DEFAULT_I2C_ADDRESS                UINT8_C(0x10)
-#define BMM150_I2C_ADDRESS_CSB_LOW_SDO_HIGH       UINT8_C(0x11)
-#define BMM150_I2C_ADDRESS_CSB_HIGH_SDO_LOW       UINT8_C(0x12)
-#define BMM150_I2C_ADDRESS_CSB_HIGH_SDO_HIGH      UINT8_C(0x13)
+static constexpr uint8_t BMM150_DEFAULT_I2C_ADDRESS = (0x10);
+static constexpr uint8_t BMM150_I2C_ADDRESS_CSB_LOW_SDO_HIGH = (0x11);
+static constexpr uint8_t BMM150_I2C_ADDRESS_CSB_HIGH_SDO_LOW = (0x12);
+static constexpr uint8_t BMM150_I2C_ADDRESS_CSB_HIGH_SDO_HIGH = (0x13);
 
-
-class SensorBMM150
+class SensorBMM150 : public ComplexStaticDeviceWithHal
 {
 public:
     enum  PowerMode {
@@ -57,74 +54,15 @@ public:
         INTERRUPT_LOW_ACTIVE,
     };
 
-    SensorBMM150(): comm(nullptr),
-        hal(nullptr),
-        staticComm(nullptr),
-        dev(nullptr),
-        _rst(-1),
-        _error_code(0)
+    SensorBMM150():  dev(nullptr), _rst(-1), _error_code(0)
     {
     }
 
-    ~SensorBMM150()
-    {
-    }
+    ~SensorBMM150() = default;
 
     void setPins(int rst)
     {
         _rst = rst;
-    }
-
-#if defined(ARDUINO)
-    bool begin(TwoWire &wire, uint8_t addr, int sda, int scl)
-    {
-        if (!beginCommonStatic<SensorCommI2C, HalArduino>(comm, staticComm, hal, wire, addr, sda, scl)) {
-            return false;
-        }
-        return initImpl(BMM150_I2C_INTF);
-    }
-
-    bool begin(SPIClass &spi, uint8_t csPin, int mosi, int miso, int sck)
-    {
-        if (!beginCommonStatic<SensorCommSPI, HalArduino>(comm,
-                staticComm, hal,
-                spi, csPin, mosi, miso, sck)) {
-            return false;
-        }
-        return initImpl(BMM150_I2C_INTF);
-    }
-
-#elif defined(ESP_PLATFORM)
-
-#if defined(USEING_I2C_LEGACY)
-    bool begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
-    {
-        if (!beginCommonStatic<SensorCommI2C, HalEspIDF>(comm, staticComm, hal, port_num, addr, sda, scl)) {
-            return false;
-        }
-        return initImpl(BHY2_I2C_INTERFACE);
-    }
-#else
-    bool begin(i2c_master_bus_handle_t handle, uint8_t addr)
-    {
-        if (!beginCommonStatic<SensorCommI2C, HalEspIDF>(comm, staticComm, hal, handle, addr)) {
-            return false;
-        }
-        return initImpl(BHY2_I2C_INTERFACE);
-    }
-#endif  //ESP_PLATFORM
-#endif  //ARDUINO
-
-    bool begin(CommInterface interface,
-               SensorCommCustom::CustomCallback callback,
-               SensorCommCustomHal::CustomHalCallback hal_callback,
-               uint8_t addr)
-    {
-        if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(interface,
-                callback, hal_callback, addr, comm, hal)) {
-            return false;
-        }
-        return initImpl(static_cast<bmm150_intf>(interface));
     }
 
     void reset()
@@ -234,8 +172,7 @@ public:
 
 private:
 
-
-    bool initImpl(bmm150_intf interface)
+    bool initImpl(uint8_t param) override
     {
         memset(&settings, 0, sizeof(settings));
 
@@ -251,7 +188,16 @@ private:
             return false;
         }
 
-        dev->intf = interface;
+        switch (_iface) {
+        case COMM_I2C:
+            dev->intf = BMM150_I2C_INTF;
+            break;
+        case COMM_SPI:
+            dev->intf = BMM150_SPI_INTF;
+            break;
+        default:
+            return false;
+        }
         dev->read = SensorCommStatic::sensor_static_read_data;
         dev->write = SensorCommStatic::sensor_static_write_data;
         dev->intf_ptr = staticComm.get();
@@ -269,19 +215,9 @@ private:
         return _error_code == BMM150_OK;
     }
 
-    std::unique_ptr<SensorCommBase> comm;
-    std::unique_ptr<SensorHal> hal;
-    std::unique_ptr<SensorCommStatic> staticComm;
     std::unique_ptr<struct bmm150_dev> dev;
     int                     _rst;
     int8_t                  _error_code;
     struct bmm150_settings  settings;
 
 };
-
-
-#endif /*defined(ARDUINO)*/
-
-
-
-

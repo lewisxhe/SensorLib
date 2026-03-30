@@ -29,11 +29,12 @@
  */
 #pragma once
 
+#include "platform/comm/I2CDeviceWithHal.hpp"
 #include "sensor/MagnetometerBase.hpp"
 
 static constexpr uint8_t QMC6309_SLAVE_ADDRESS = (0x7C);
 
-class SensorQMC6309 : public MagnetometerBase
+class SensorQMC6309 : public MagnetometerBase , public I2CDeviceWithHal
 {
 public:
 
@@ -543,7 +544,7 @@ private:
     static constexpr uint8_t MASK_RNG = 0x0C;
     static constexpr uint8_t MASK_SET_RESET_MODE = 0x03;
 
-    bool initImpl(uint8_t addr) override
+    bool initImpl(uint8_t param) override
     {
         reset();
 
@@ -553,7 +554,7 @@ private:
         _info.manufacturer = "QSTMagnetic";
         _info.type = SensorType::MAGNETOMETER;
         _info.model = "QMC6309";
-        _info.i2c_address = addr;
+        _info.i2c_address = _addr;
         _info.version = 1;  // Set a default version
 
 

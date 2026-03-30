@@ -29,7 +29,7 @@
  */
 #pragma once
 
-#include "SensorPlatform.hpp"
+#include "platform/comm/ComplexStaticDeviceWithHal.hpp"
 
 static constexpr uint8_t  QMI8658_L_SLAVE_ADDRESS = (0x6B);
 static constexpr uint8_t  QMI8658_H_SLAVE_ADDRESS = (0x6A);
@@ -40,7 +40,7 @@ typedef struct {
     float z;
 } IMUdata;
 
-class SensorQMI8658
+class SensorQMI8658 : public ComplexStaticDeviceWithHal
 {
 public:
     typedef void (*EventCallBack_t)(void);
@@ -214,7 +214,7 @@ public:
      * @note   This function initializes the SensorQMI8658 object.
      * @retval None
      */
-    SensorQMI8658() : comm(nullptr), hal(nullptr) {}
+    SensorQMI8658()  = default;
 
     /**
      * @brief  Destructor for SensorQMI8658.
@@ -223,9 +223,6 @@ public:
      */
     ~SensorQMI8658()
     {
-        if (comm) {
-            comm->deinit();
-        }
         if (fifo_buffer) {
             free(fifo_buffer);
             fifo_buffer = NULL;
@@ -241,122 +238,6 @@ public:
     void setPins(int _irq)
     {
         this->_irq = _irq;
-    }
-
-#if defined(ARDUINO)
-    /**
-     * @brief  Begin with Arduino TwoWire instance.
-     * @note   This function initializes the QMI8658 chip with the specified I2C parameters.
-     * @param  &wire: The TwoWire instance to use for I2C communication.
-     * @param  sda: The SDA pin number (default is -1).
-     * @param  scl: The SCL pin number (default is -1).
-     * @retval True if initialization is successful, false otherwise.
-     */
-    bool begin(TwoWire &wire, uint8_t addr = QMI8658_L_SLAVE_ADDRESS, int sda = -1, int scl = -1)
-    {
-        if (!beginCommon<SensorCommI2C, HalArduino>(comm, hal, wire, addr, sda, scl)) {
-            return false;
-        }
-        return initImpl();
-    }
-
-    /**
-     * @brief  Begin with Arduino SPIClass instance.
-     * @note   This function initializes the QMI8658 chip with the specified SPI parameters.
-     * @param  &spi: The SPIClass instance to use for SPI communication.
-     * @param  csPin: The chip select pin number.
-     * @param  mosi: The MOSI pin number (default is -1).
-     * @param  miso: The MISO pin number (default is -1).
-     * @param  sck: The SCK pin number (default is -1).
-     * @retval True if initialization is successful, false otherwise.
-     */
-    bool begin(SPIClass &spi, uint8_t csPin, int mosi = -1, int miso = -1, int sck = -1)
-    {
-        if (!beginCommon<SensorCommSPI, HalArduino>(comm, hal, spi, csPin, mosi, miso, sck)) {
-            return false;
-        }
-        return initImpl();
-    }
-
-#elif defined(ESP_PLATFORM)
-
-#if defined(USEING_I2C_LEGACY)
-
-    /**
-     * @brief  Begin with ESP-IDF I2C port number.
-     * @note   This function initializes the QMI8658 chip with the specified I2C parameters.
-     * @param  port_num: The I2C port number to use.
-     * @param  sda: The SDA pin number (default is -1).
-     * @param  scl: The SCL pin number (default is -1).
-     * @retval True if initialization is successful, false otherwise.
-     */
-    bool begin(i2c_port_t port_num, uint8_t addr = QMI8658_L_SLAVE_ADDRESS, int sda = -1, int scl = -1)
-    {
-        hal = std::make_unique<HalEspIDF>();
-        if (!hal) {
-            return false;
-        }
-        comm = std::make_unique<SensorCommI2C>(port_num, addr, sda, scl);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl();
-    }
-#else
-    /**
-     * @brief  Begin with ESP-IDF I2C master bus handle.
-     * @note   This function initializes the QMI8658 chip with the specified I2C parameters.
-     * @param  handle: The I2C master bus handle to use.
-     * @retval True if initialization is successful, false otherwise.
-     */
-    bool begin(i2c_master_bus_handle_t handle, uint8_t addr = QMI8658_L_SLAVE_ADDRESS)
-    {
-        hal = std::make_unique<HalEspIDF>();
-        if (!hal) {
-            return false;
-        }
-        comm = std::make_unique<SensorCommI2C>(handle, addr);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl();
-    }
-#endif  //ESP_PLATFORM
-
-    /**
-     * @brief  Begin with ESP-IDF I2C master bus handle.
-     * @note   This function initializes the QMI8658 chip with the specified I2C parameters.
-     * @param  handle: The I2C master bus handle to use.
-     * @retval True if initialization is successful, false otherwise.
-     */
-    bool begin(spi_host_device_t host, spi_device_handle_t handle, uint8_t csPin, int mosi, int miso, int sck)
-    {
-        if (!beginCommon<SensorCommSPI, HalEspIDF>(comm, hal,
-                host, handle, csPin, mosi, miso, sck)) {
-            return false;
-        }
-        return initImpl();
-    }
-#endif  //ARDUINO
-
-    /**
-    * @brief  Begin with custom callback functions.
-    * @note   This function initializes the QMI8658 chip with user-defined callback functions.
-    * @param  callback: The custom callback function for communication.
-    * @param  hal_callback: The custom callback function for hardware abstraction layer.
-    * @retval True if initialization is successful, false otherwise.
-    */
-    bool begin(SensorCommCustom::CustomCallback callback,
-               SensorCommCustomHal::CustomHalCallback hal_callback,
-               uint8_t addr = QMI8658_L_SLAVE_ADDRESS)
-    {
-        if (!beginCommCustomCallback <SensorCommCustom, SensorCommCustomHal>(COMM_CUSTOM,
-                callback, hal_callback, addr, comm, hal)) {
-            return false;
-        }
-        return initImpl();
     }
 
     /**
@@ -2356,7 +2237,7 @@ private:
 
 protected:
 
-    bool initImpl()
+    bool initImpl(uint8_t param) override
     {
         uint8_t buffer[6] = {0};
 
@@ -2403,10 +2284,6 @@ protected:
 
         return true;
     }
-
-    std::unique_ptr<SensorCommBase> comm;
-    std::unique_ptr<SensorHal> hal;
-
 
     // @brief  registers default value
     static constexpr uint8_t QMI8658_REG_WHOAMI_DEFAULT = 0x05;

@@ -82,10 +82,7 @@ public:
      */
     void setWaveform(uint8_t slot, uint8_t w)
     {
-        if (!ensureValid()) {
-            return;
-        }
-        comm->writeRegister((uint8_t)(DRV2605_REG_WAVESEQ1 + slot), w);
+        writeReg((uint8_t)(DRV2605_REG_WAVESEQ1 + slot), w);
     }
 
     /**
@@ -100,10 +97,7 @@ public:
      */
     void selectLibrary(uint8_t lib)
     {
-        if (!ensureValid()) {
-            return;
-        }
-        comm->writeRegister(DRV2605_REG_LIBRARY, lib);
+        writeReg(DRV2605_REG_LIBRARY, lib);
     }
 
     /**
@@ -111,10 +105,7 @@ public:
      */
     bool run() override
     {
-        if (!ensureValid()) {
-            return false;
-        }
-        return comm->writeRegister(DRV2605_REG_GO, 1) == SENSOR_OK;
+        return writeReg(DRV2605_REG_GO, 1) == SENSOR_OK;
     }
 
     /**
@@ -122,10 +113,7 @@ public:
      */
     bool stop() override
     {
-        if (!ensureValid()) {
-            return false;
-        }
-        return comm->writeRegister(DRV2605_REG_GO, (uint8_t)0) == SENSOR_OK;
+        return writeReg(DRV2605_REG_GO, (uint8_t)0) == SENSOR_OK;
     }
 
     /**
@@ -137,9 +125,6 @@ public:
     bool setMode(HapticMode mode) override
     {
         uint8_t value = 0;
-        if (!ensureValid()) {
-            return false;
-        }
         switch (mode) {
         case HapticMode::INTERNAL_TRIGGER:
             value = 0x00;
@@ -166,7 +151,7 @@ public:
             value = 0x07;
             break;
         }
-        return comm->writeRegister(DRV2605_REG_MODE, value) == SENSOR_OK;
+        return writeReg(DRV2605_REG_MODE, value) == SENSOR_OK;
     }
 
     /** @brief Get the current operating mode.
@@ -174,10 +159,7 @@ public:
      */
     HapticMode getMode() const override
     {
-        if (!ensureValid()) {
-            return HapticMode::INTERNAL_TRIGGER; // default/fallback
-        }
-        int value = comm->readRegister(DRV2605_REG_MODE);
+        int value = readReg(DRV2605_REG_MODE);
         if (value < 0) {
             return HapticMode::INTERNAL_TRIGGER; // default/fallback
         }
@@ -193,10 +175,7 @@ public:
      */
     bool setRealtimeValue(uint8_t rtp) override
     {
-        if (!ensureValid()) {
-            return false;
-        }
-        return comm->writeRegister(DRV2605_REG_RTPIN, rtp) == SENSOR_OK;
+        return writeReg(DRV2605_REG_RTPIN, rtp) == SENSOR_OK;
     }
 
     /**
@@ -207,17 +186,14 @@ public:
      */
     bool setActuatorType(HapticActuatorType type) override
     {
-        if (!ensureValid()) {
-            return false;
-        }
         if (type == HapticActuatorType::ERM) {
             // Set ERM library
-            comm->writeRegister(DRV2605_REG_LIBRARY, 1);
-            comm->updateBits(DRV2605_REG_FEEDBACK, 0x80, 0x00);
+            writeReg(DRV2605_REG_LIBRARY, 1);
+            updateBits(DRV2605_REG_FEEDBACK, 0x80, 0x00);
         } else {
             // Set LRA library
-            comm->writeRegister(DRV2605_REG_LIBRARY, 6);
-            comm->updateBits(DRV2605_REG_FEEDBACK, 0x80, 0x80);
+            writeReg(DRV2605_REG_LIBRARY, 6);
+            updateBits(DRV2605_REG_FEEDBACK, 0x80, 0x80);
         }
         return true;
     }
@@ -228,10 +204,7 @@ public:
      */
     HapticActuatorType getActuatorType() const override
     {
-        if (!ensureValid()) {
-            return HapticActuatorType::ERM; // default/fallback
-        }
-        int value = comm->readRegister(DRV2605_REG_FEEDBACK);
+        int value = readReg(DRV2605_REG_FEEDBACK);
         if (value < 0) {
             return HapticActuatorType::ERM; // default/fallback
         }
@@ -264,10 +237,7 @@ public:
     */
     void setMode(uint8_t mode) __attribute__((deprecated("use setMode(HapticMode::XXX) instead")))
     {
-        if (!ensureValid()) {
-            return;
-        }
-        comm->writeRegister(DRV2605_REG_MODE, mode);
+        writeReg(DRV2605_REG_MODE, mode);
     }
 
     /**
@@ -302,7 +272,7 @@ private:
      */
     bool initImpl(uint8_t param) override
     {
-        int chipID = comm->readRegister(DRV2605_REG_STATUS);
+        int chipID = readReg(DRV2605_REG_STATUS);
         if (chipID < 0) {
             return false;
         }
@@ -323,40 +293,39 @@ private:
         }
 
         // Exit standby (MODE=0)
-        comm->writeRegister(DRV2605_REG_MODE, (uint8_t)0x00);
+        writeReg(DRV2605_REG_MODE, (uint8_t)0x00);
 
         // Disable RTP by default
-        comm->writeRegister(DRV2605_REG_RTPIN, (uint8_t)0x00);
+        writeReg(DRV2605_REG_RTPIN, (uint8_t)0x00);
 
         // Default waveform sequence: strong click then end
-        comm->writeRegister(DRV2605_REG_WAVESEQ1, (uint8_t)1);
-        comm->writeRegister(DRV2605_REG_WAVESEQ2, (uint8_t)0);
+        writeReg(DRV2605_REG_WAVESEQ1, (uint8_t)1);
+        writeReg(DRV2605_REG_WAVESEQ2, (uint8_t)0);
 
         // No overdrive by default
-        comm->writeRegister(DRV2605_REG_OVERDRIVE, (uint8_t)0);
+        writeReg(DRV2605_REG_OVERDRIVE, (uint8_t)0);
 
         // Default sustain/break/audio settings (matching original/Adafruit defaults)
-        comm->writeRegister(DRV2605_REG_SUSTAINPOS, (uint8_t)0);
-        comm->writeRegister(DRV2605_REG_SUSTAINNEG, (uint8_t)0);
-        comm->writeRegister(DRV2605_REG_BREAK, (uint8_t)0);
-        comm->writeRegister(DRV2605_REG_AUDIOMAX, (uint8_t)0x64);
+        writeReg(DRV2605_REG_SUSTAINPOS, (uint8_t)0);
+        writeReg(DRV2605_REG_SUSTAINNEG, (uint8_t)0);
+        writeReg(DRV2605_REG_BREAK, (uint8_t)0);
+        writeReg(DRV2605_REG_AUDIOMAX, (uint8_t)0x64);
 
         // Default: ERM open loop
         // - clear N_ERM_LRA (ERM selected)
-        int value = comm->readRegister(DRV2605_REG_FEEDBACK);
+        int value = readReg(DRV2605_REG_FEEDBACK);
         if (value == -1) {
             return false;
         }
-        comm->writeRegister(DRV2605_REG_FEEDBACK,
-                            (uint8_t)(value & 0x7F));
+        writeReg(DRV2605_REG_FEEDBACK,
+                 (uint8_t)(value & 0x7F));
 
         // - set ERM_OPEN_LOOP (CONTROL3 bit 5)
-        int control3 = comm->readRegister(DRV2605_REG_CONTROL3);
+        int control3 = readReg(DRV2605_REG_CONTROL3);
         if (control3 == -1) {
             return false;
         }
-        comm->writeRegister(DRV2605_REG_CONTROL3,
-                            (uint8_t)(control3 | 0x20));
+        writeReg(DRV2605_REG_CONTROL3, (uint8_t)(control3 | 0x20));
 
         return true;
     }

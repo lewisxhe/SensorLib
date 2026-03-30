@@ -29,8 +29,8 @@
  */
 #pragma once
 
+#include "platform/comm/I2CDeviceNoHal.hpp"
 #include "SensorRTC.h"
-#include "SensorPlatform.hpp"
 
 /**
  * @class PCF85063 I2C addresses.
@@ -42,7 +42,7 @@ const uint8_t PCF85063_SLAVE_ADDRESS = 0x51;
  * @class SensorPCF85063
  * @brief Driver for the PCF85063 real-time clock (RTC) over I2C.
  */
-class SensorPCF85063 : public SensorRTC
+class SensorPCF85063 : public SensorRTC, public I2CDeviceNoHal
 {
 public:
     using SensorRTC::setDateTime;
@@ -69,17 +69,12 @@ public:
      *
      * The instance is not usable until begin() succeeds.
      */
-    SensorPCF85063() : comm(nullptr) {}
+    SensorPCF85063() = default;
 
     /**
      * @brief Destructor. Deinitializes the communication backend if created.
      */
-    ~SensorPCF85063()
-    {
-        if (comm) {
-            comm->deinit();
-        }
-    }
+    ~SensorPCF85063() = default;
 
 #if defined(ARDUINO)
     /**
@@ -92,12 +87,7 @@ public:
      */
     bool begin(TwoWire &wire, int sda = -1, int scl = -1)
     {
-        comm = std::make_unique<SensorCommI2C>(wire, PCF85063_SLAVE_ADDRESS, sda, scl);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl();
+        return I2CDeviceNoHal::begin(wire, PCF85063_SLAVE_ADDRESS, sda, scl);
     }
 #elif defined(ESP_PLATFORM)
 
@@ -112,12 +102,7 @@ public:
      */
     bool begin(i2c_port_t port_num, int sda = -1, int scl = -1)
     {
-        comm = std::make_unique<SensorCommI2C>(port_num, PCF85063_SLAVE_ADDRESS, sda, scl);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl();
+        return I2CDeviceNoHal::begin(port_num, PCF85063_SLAVE_ADDRESS, sda, scl);
     }
 #else
     /**
@@ -128,12 +113,7 @@ public:
      */
     bool begin(i2c_master_bus_handle_t handle)
     {
-        comm = std::make_unique<SensorCommI2C>(handle, PCF85063_SLAVE_ADDRESS);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl();
+        return I2CDeviceNoHal::begin(handle, PCF85063_SLAVE_ADDRESS);
     }
 #endif  // USEING_I2C_LEGACY
 #endif  // ESP_PLATFORM
@@ -146,12 +126,7 @@ public:
      */
     bool begin(SensorCommCustom::CustomCallback callback)
     {
-        comm = std::make_unique<SensorCommCustom>(callback, PCF85063_SLAVE_ADDRESS);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl();
+        return I2CDeviceNoHal::begin(callback, PCF85063_SLAVE_ADDRESS);
     }
 
     /**
@@ -173,7 +148,7 @@ public:
         buffer[5] = DEC2BCD(datetime.getMonth());          // month
         buffer[6] = DEC2BCD(datetime.getYear() % 100);     // year (00-99)
 
-        comm->writeRegister(PCF85063_SEC_REG, buffer, 7);
+        writeRegBuff(PCF85063_SEC_REG, buffer, 7);
     }
 
     /**
@@ -192,7 +167,7 @@ public:
         uint8_t buffer[7];
         uint8_t hour = 0;
 
-        comm->readRegister(PCF85063_SEC_REG, buffer, 7);
+        readRegBuff(PCF85063_SEC_REG, buffer, 7);
 
         uint8_t second = BCD2DEC(buffer[0] & 0x7F);
         uint8_t minute = BCD2DEC(buffer[1] & 0x7F);
@@ -222,7 +197,7 @@ public:
      */
     bool isClockIntegrityGuaranteed()
     {
-        return comm->getRegisterBit(PCF85063_SEC_REG, 7) == 0;
+        return getRegBit(PCF85063_SEC_REG, 7) == 0;
     }
 
     /*
@@ -237,7 +212,7 @@ public:
      */
     void stop()
     {
-        comm->setRegisterBit(PCF85063_CTRL1_REG, 5);
+        setRegBit(PCF85063_CTRL1_REG, 5);
     }
 
     /**
@@ -247,7 +222,7 @@ public:
      */
     void start()
     {
-        comm->clrRegisterBit(PCF85063_CTRL1_REG, 5);
+        clrRegBit(PCF85063_CTRL1_REG, 5);
     }
 
     /**
@@ -257,7 +232,7 @@ public:
      */
     bool isRunning()
     {
-        return !comm->getRegisterBit(PCF85063_CTRL1_REG, 5);
+        return !getRegBit(PCF85063_CTRL1_REG, 5);
     }
 
     /**
@@ -265,7 +240,7 @@ public:
      */
     void enableAlarm()
     {
-        comm->setRegisterBit(PCF85063_CTRL2_REG, 7);
+        setRegBit(PCF85063_CTRL2_REG, 7);
     }
 
     /**
@@ -273,7 +248,7 @@ public:
      */
     void disableAlarm()
     {
-        comm->clrRegisterBit(PCF85063_CTRL2_REG, 7);
+        clrRegBit(PCF85063_CTRL2_REG, 7);
     }
 
     /**
@@ -281,7 +256,7 @@ public:
      */
     void resetAlarm()
     {
-        comm->clrRegisterBit(PCF85063_CTRL2_REG, 6);
+        clrRegBit(PCF85063_CTRL2_REG, 6);
     }
 
     /**
@@ -291,7 +266,7 @@ public:
      */
     bool isAlarmActive()
     {
-        return comm->getRegisterBit(PCF85063_CTRL2_REG, 6);
+        return getRegBit(PCF85063_CTRL2_REG, 6);
     }
 
     /**
@@ -305,7 +280,7 @@ public:
     RTC_Alarm getAlarm()
     {
         uint8_t buffer[5];
-        comm->readRegister(PCF85063_ALRM_MIN_REG, buffer, 5);
+        readRegBuff(PCF85063_ALRM_MIN_REG, buffer, 5);
         buffer[0] = BCD2DEC(buffer[0] & 0x80);  // second
         buffer[1] = BCD2DEC(buffer[1] & 0x40);  // minute
         buffer[2] = BCD2DEC(buffer[2] & 0x40);  // hour
@@ -400,7 +375,7 @@ public:
         }
 
         // Write alarm registers
-        comm->writeRegister(PCF85063_ALRM_SEC_REG, buffer, 4);
+        writeRegBuff(PCF85063_ALRM_SEC_REG, buffer, 4);
     }
 
     /**
@@ -480,12 +455,12 @@ public:
      */
     void setClockOutput(ClockHz hz)
     {
-        int val = comm->readRegister(PCF85063_CTRL2_REG);
+        int val = readReg(PCF85063_CTRL2_REG);
         if (val == -1) return;
 
         val &= 0xF8;  // clear frequency bits
         val |= hz;    // set new frequency
-        comm->writeRegister(PCF85063_CTRL2_REG, val);
+        writeReg(PCF85063_CTRL2_REG, val);
     }
 
     /**
@@ -509,27 +484,27 @@ private:
      *
      * @return true if initialization succeeds and RTC is running, false otherwise.
      */
-    bool initImpl()
+    bool initImpl(uint8_t param) override
     {
         // Check device is online
-        int val = comm->readRegister(PCF85063_RAM_REG);
+        int val = readReg(PCF85063_RAM_REG);
         if (val < 0) {
             log_e("Device is offline!");
             return false;
         }
 
         // Backup original RAM register value
-        uint8_t tmp = comm->readRegister(PCF85063_RAM_REG);
+        uint8_t tmp = readReg(PCF85063_RAM_REG);
 
         bool rlst = false;
 
         // Determine whether this is PCF85063 by testing RAM register bit writability:
         // If bit 7 can be set/cleared, it is likely PCF85063.
-        comm->writeRegister(PCF85063_RAM_REG, val | _BV(7));
-        val = comm->readRegister(PCF85063_RAM_REG);
+        writeReg(PCF85063_RAM_REG, val | _BV(7));
+        val = readReg(PCF85063_RAM_REG);
         if (val & 0x80) {
-            comm->writeRegister(PCF85063_RAM_REG, val & ~_BV(7));
-            val = comm->readRegister(PCF85063_RAM_REG);
+            writeReg(PCF85063_RAM_REG, val & ~_BV(7));
+            val = readReg(PCF85063_RAM_REG);
             if ((val & 0x80) == 0) {
                 rlst = true;
             }
@@ -541,13 +516,13 @@ private:
         }
 
         // Restore RAM register
-        comm->writeRegister(PCF85063_RAM_REG, tmp);
+        writeReg(PCF85063_RAM_REG, tmp);
 
         // Default to 24-hour mode
-        is24Hour = !comm->getRegisterBit(PCF85063_CTRL1_REG, 1);
+        is24Hour = !getRegBit(PCF85063_CTRL1_REG, 1);
         if (!is24Hour) {
             // Force 24H Mode
-            comm->clrRegisterBit(PCF85063_CTRL1_REG, 1);
+            clrRegBit(PCF85063_CTRL1_REG, 1);
             is24Hour = true;
         }
 
@@ -558,11 +533,6 @@ private:
     }
 
 protected:
-    /**
-     * @brief Communication backend (I2C or custom).
-     */
-    std::unique_ptr<SensorCommBase> comm;
-
     /**
      * @brief Hour mode flag (true = 24-hour mode).
      *

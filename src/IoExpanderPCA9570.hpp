@@ -29,6 +29,7 @@
 
 #pragma once
 
+#include "platform/comm/I2CDeviceNoHal.hpp"
 #include "IoExpanderBase.hpp"
 
 /** @brief Default I2C slave address for PCA9570 (hardwired, cannot be changed). */
@@ -42,7 +43,7 @@ static constexpr uint8_t  PCA9570_SLAVE_ADDRESS = (0x24);
  * by default; pinMode() will accept only OUTPUT. Reading a pin returns the
  * last written value (output register).
  */
-class IoExpanderPCA9570 : public IoExpanderBase
+class IoExpanderPCA9570 : public IoExpanderBase, public I2CDeviceNoHal
 {
 public:
 
@@ -74,13 +75,9 @@ public:
     */
     void digitalWritePort(uint16_t mask, uint16_t values) override
     {
-        if (!comm) {
-            log_e("Expander not initialized (call begin() first)");
-            return;
-        }
         // Read current output state
         uint8_t current;
-        if (comm->readBuffer(&current, 1) < 0) {
+        if (readBuff(&current, 1) < 0) {
             log_e("Failed to read current output state");
             return;
         }
@@ -98,7 +95,7 @@ public:
         }
 
         // Write back the new value
-        if (comm->writeRegister(newVal, nullptr, 0) < 0) {
+        if (writeRegBuff(newVal, nullptr, 0) < 0) {
             log_e("Failed to write output state");
             return;
         }
@@ -119,7 +116,7 @@ public:
     uint16_t digitalReadPort() override
     {
         uint8_t state;
-        if (comm->readBuffer(&state, 1) < 0) {
+        if (readBuff(&state, 1) < 0) {
             log_e("Failed to read output state");
             return 0;
         }
@@ -194,7 +191,7 @@ protected:
         } else {
             current &= ~(1 << pin);
         }
-        comm->writeRegister(current, nullptr, 0);  // Write back to output register
+        writeRegBuff(current, nullptr, 0);  // Write back to output register
     }
 
     /**
@@ -226,7 +223,7 @@ protected:
     bool initImpl(uint8_t param) override
     {
         uint8_t buffer[3] = {};
-        if (comm->readRegister(PCA9570_DEVICE_ID_READ, buffer, 3) < 0 ) {
+        if (readRegBuff(PCA9570_DEVICE_ID_READ, buffer, 3) < 0 ) {
             log_e("Failed to read device ID");
             return false;
         }

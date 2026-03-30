@@ -28,6 +28,7 @@
  */
 #pragma once
 
+#include "platform/comm/I2CDeviceNoHal.hpp"
 #include "IoExpanderBase.hpp"
 
 /**
@@ -36,24 +37,32 @@
  */
 
 /** @brief Unknown / auto‑discovery address marker. */
-#define XL9555_UNKNOWN_ADDRESS       (0xFF)
+static constexpr uint8_t  XL9555_UNKNOWN_ADDRESS = (0xFF);
 
 /** @brief I2C slave address when ADDR pins are 000. */
-#define XL9555_SLAVE_ADDRESS0        (0x20)
+static constexpr uint8_t  XL9555_SLAVE_ADDRESS0 = (0x20);
+
 /** @brief I2C slave address when ADDR pins are 001. */
-#define XL9555_SLAVE_ADDRESS1        (0x21)
+static constexpr uint8_t  XL9555_SLAVE_ADDRESS1 = (0x21);
+
 /** @brief I2C slave address when ADDR pins are 010. */
-#define XL9555_SLAVE_ADDRESS2        (0x22)
+static constexpr uint8_t  XL9555_SLAVE_ADDRESS2 = (0x22);
+
 /** @brief I2C slave address when ADDR pins are 011. */
-#define XL9555_SLAVE_ADDRESS3        (0x23)
+static constexpr uint8_t  XL9555_SLAVE_ADDRESS3 = (0x23);
+
 /** @brief I2C slave address when ADDR pins are 100. */
-#define XL9555_SLAVE_ADDRESS4        (0x24)
+static constexpr uint8_t  XL9555_SLAVE_ADDRESS4 = (0x24);
+
 /** @brief I2C slave address when ADDR pins are 101. */
-#define XL9555_SLAVE_ADDRESS5        (0x25)
+static constexpr uint8_t  XL9555_SLAVE_ADDRESS5 = (0x25);
+
 /** @brief I2C slave address when ADDR pins are 110. */
-#define XL9555_SLAVE_ADDRESS6        (0x26)
+static constexpr uint8_t  XL9555_SLAVE_ADDRESS6 = (0x26);
+
 /** @brief I2C slave address when ADDR pins are 111. */
-#define XL9555_SLAVE_ADDRESS7        (0x27)
+static constexpr uint8_t  XL9555_SLAVE_ADDRESS7 = (0x27);
+
 
 /** @} */ // end of XL9555_Constants
 
@@ -82,7 +91,7 @@ static const int XL9555_UNKOWN_ADDRESS DEPRECATED_ATTR = XL9555_UNKNOWN_ADDRESS;
  * This class implements the hardware‑specific operations required by the
  * IoExpanderBase interface using I2C communication.
  */
-class IoExpanderXL9555 : public IoExpanderBase
+class IoExpanderXL9555 : public IoExpanderBase, public I2CDeviceNoHal
 {
 public:
     enum  Port {
@@ -135,19 +144,15 @@ public:
     {
         uint8_t lowByte = values & 0xFF;
         uint8_t highByte = (values >> 8) & 0xFF;
-        if (!comm) {
-            log_e("Expander not initialized (call begin() first)");
-            return;
-        }
         if (!_outputStates) {
             log_e("Output states array not initialized");
             return;
         }
         if (mask & 0x00FF) {
-            comm->writeRegister(XL9555_CTRL_OUTP0, lowByte);
+            writeReg(XL9555_CTRL_OUTP0, lowByte);
         }
         if (mask & 0xFF00) {
-            comm->writeRegister(XL9555_CTRL_OUTP1, highByte);
+            writeReg(XL9555_CTRL_OUTP1, highByte);
         }
         for (uint8_t i = 0; i < XL9555_PINS_COUNT; i++) {
             if (mask & (1UL << i)) {
@@ -169,12 +174,8 @@ public:
     uint16_t digitalReadPort() override
     {
         uint16_t result = 0;
-        if (!comm) {
-            log_e("Expander not initialized (call begin() first)");
-            return 0;
-        }
-        uint8_t lowByte = comm->readRegister(XL9555_CTRL_INP0);
-        uint8_t highByte = comm->readRegister(XL9555_CTRL_INP1);
+        uint8_t lowByte = readReg(XL9555_CTRL_INP0);
+        uint8_t highByte = readReg(XL9555_CTRL_INP1);
         result = (highByte << 8) | lowByte;
         return result;
     }
@@ -199,9 +200,9 @@ protected:
         uint8_t reg = (pin < 8) ? XL9555_CTRL_CFG0 : XL9555_CTRL_CFG1;
         uint8_t bit = pin % 8;
         if (mode == OUTPUT) {
-            comm->clrRegisterBit(reg, bit);
+            clrRegBit(reg, bit);
         } else {
-            comm->setRegisterBit(reg, bit);
+            setRegBit(reg, bit);
         }
     }
 
@@ -233,7 +234,7 @@ protected:
         // --- Configure Port 0 (CFG0) ---
         if (lowMask) {
             // Read current configuration
-            uint8_t cur = comm->readRegister(XL9555_CTRL_CFG0);
+            uint8_t cur = readReg(XL9555_CTRL_CFG0);
             // Modify only the bits specified in lowMask
             if (mode == INPUT) {
                 cur |= lowMask;          // Set bits to 1 for INPUT
@@ -241,7 +242,7 @@ protected:
                 cur &= ~lowMask;         // Clear bits to 0 for OUTPUT
             }
             // Write back updated value
-            comm->writeRegister(XL9555_CTRL_CFG0, cur);
+            writeReg(XL9555_CTRL_CFG0, cur);
 
             // Update the internal pin mode cache for Port 0 pins
             for (uint8_t i = 0; i < 8; i++) {
@@ -253,13 +254,13 @@ protected:
 
         // --- Configure Port 1 (CFG1) ---
         if (highMask) {
-            uint8_t cur = comm->readRegister(XL9555_CTRL_CFG1);
+            uint8_t cur = readReg(XL9555_CTRL_CFG1);
             if (mode == INPUT) {
                 cur |= highMask;
             } else {
                 cur &= ~highMask;
             }
-            comm->writeRegister(XL9555_CTRL_CFG1, cur);
+            writeReg(XL9555_CTRL_CFG1, cur);
 
             // Update the internal pin mode cache for Port 1 pins
             for (uint8_t i = 0; i < 8; i++) {
@@ -288,9 +289,9 @@ protected:
         uint8_t reg = (pin < 8) ? XL9555_CTRL_OUTP0 : XL9555_CTRL_OUTP1;
         uint8_t bit = pin % 8;
         if (value) {
-            comm->setRegisterBit(reg, bit);
+            setRegBit(reg, bit);
         } else {
-            comm->clrRegisterBit(reg, bit);
+            clrRegBit(reg, bit);
         }
     }
 
@@ -309,9 +310,12 @@ protected:
             log_e("Invalid pin number, pin range is 0-%d", XL9555_PINS_COUNT - 1);
             return false;
         }
+        if (!ensureValid()) {
+            return false;
+        }
         uint8_t reg = (pin < 8) ? XL9555_CTRL_INP0 : XL9555_CTRL_INP1;
         uint8_t bit = pin % 8;
-        uint8_t value = comm->readRegister(reg);
+        uint8_t value = readReg(reg);
         return (value >> bit) & 1;
     }
 
@@ -323,27 +327,26 @@ protected:
      * I2C addresses (0x20‑0x27). Otherwise, it verifies communication by
      * reading the input port 0 register.
      *
-     * @param addr I2C device address, or XL9555_UNKNOWN_ADDRESS for auto‑discovery.
+     * @param param I2C device address, or XL9555_UNKNOWN_ADDRESS for auto‑discovery.
      * @return true  Initialization successful.
      * @return false Initialization failed (device not found or communication error).
      */
-    bool initImpl(uint8_t addr)
+    bool initImpl(uint8_t param) override
     {
-        if (addr == XL9555_UNKNOWN_ADDRESS) {
+        if (param == XL9555_UNKNOWN_ADDRESS) {
             log_d("Try to automatically discover the device");
-            for (uint8_t a = XL9555_SLAVE_ADDRESS0; a <= XL9555_SLAVE_ADDRESS7; ++a) {
-                I2CParam params(I2CParam::I2C_SET_ADDR, a);
-                comm->setParams(params);
-                log_d("Try to use 0x%02x address.", a);
-                if (comm->readRegister(XL9555_CTRL_INP0) != -1) {
-                    log_d("Found the xl9555 chip address is 0x%X", a);
+            for (uint8_t address = XL9555_SLAVE_ADDRESS0; address <= XL9555_SLAVE_ADDRESS7; ++address) {
+                setAddress(address);
+                log_d("Try to use 0x%02x address.", address);
+                if (readReg(XL9555_CTRL_INP0) != -1) {
+                    log_d("Found the xl9555 chip address is 0x%X", address);
                     return true;
                 }
             }
             log_e("No found xl9555 chip ...");
             return false;
         }
-        if (comm->readRegister(XL9555_CTRL_INP0) < 0 ) {
+        if (readReg(XL9555_CTRL_INP0) < 0 ) {
             return false;
         }
         return true;

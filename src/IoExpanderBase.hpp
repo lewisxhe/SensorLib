@@ -51,7 +51,7 @@ public:
      *
      * @param pinCount Number of GPIO pins provided by the expander.
      */
-    IoExpanderBase(uint8_t pinCount) : comm(nullptr), _pinCount(pinCount)
+    IoExpanderBase(uint8_t pinCount) :  _pinCount(pinCount)
     {
         _pinModes = std::unique_ptr<uint8_t[]>(new (std::nothrow) uint8_t[pinCount]());
         _outputStates = std::unique_ptr<bool[]>(new (std::nothrow) bool[pinCount]());
@@ -67,98 +67,6 @@ public:
      * automatically release their memory.
      */
     virtual ~IoExpanderBase() = default;
-
-#if defined(ARDUINO)
-    /**
-     * @brief Initialize the expander for Arduino platform using I2C.
-     *
-     * This overload uses the Arduino TwoWire library. It creates an I2C
-     * communication object and calls the platform‑specific initialization.
-     *
-     * @param wire Reference to the TwoWire instance (e.g., Wire, Wire1).
-     * @param addr I2C device address.
-     * @param sda  SDA pin number. Use -1 for the default Wire pins.
-     * @param scl  SCL pin number. Use -1 for the default Wire pins.
-     * @return true  Initialization successful.
-     * @return false Initialization failed (communication or device not found).
-     */
-    bool begin(TwoWire &wire, uint8_t addr, int sda = -1, int scl = -1)
-    {
-        comm = std::make_unique<SensorCommI2C>(wire, addr, sda, scl);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl(addr);
-    }
-
-#elif defined(ESP_PLATFORM)
-#if defined(USEING_I2C_LEGACY)
-    /**
-     * @brief Initialize the expander for ESP-IDF platform using legacy I2C driver.
-     *
-     * This overload uses the legacy ESP-IDF I2C driver (i2c_param_config, etc.).
-     *
-     * @param port_num I2C port number (I2C_NUM_0, I2C_NUM_1).
-     * @param addr     I2C device address.
-     * @param sda      SDA pin number. Use -1 for default pins configured elsewhere.
-     * @param scl      SCL pin number. Use -1 for default pins.
-     * @return true    Initialization successful.
-     * @return false   Initialization failed.
-     */
-    bool begin(i2c_port_t port_num, uint8_t addr, int sda = -1, int scl = -1)
-    {
-        comm = std::make_unique<SensorCommI2C>(port_num, addr, sda, scl);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl(addr);
-    }
-#else
-    /**
-     * @brief Initialize the expander for ESP-IDF platform using the new I2C master driver.
-     *
-     * This overload uses the new I2C master driver with a bus handle.
-     *
-     * @param handle I2C master bus handle (obtained from i2c_new_master_bus()).
-     * @param addr   I2C device address.
-     * @return true  Initialization successful.
-     * @return false Initialization failed.
-     */
-    bool begin(i2c_master_bus_handle_t handle, uint8_t addr)
-    {
-        // Note: sda and scl parameters removed as they're configured in the handle
-        comm = std::make_unique<SensorCommI2C>(handle, addr);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl(addr);
-    }
-#endif
-#endif
-
-    /**
-     * @brief Initialize the expander using custom communication callbacks.
-     *
-     * This overload is intended for platforms not covered by the built‑in
-     * I2C implementations, or when a custom HAL is needed.
-     *
-     * @param callback     Custom read/write callback function.
-     * @param addr         I2C device address.
-     * @return true        Initialization successful.
-     * @return false       Initialization failed.
-     */
-    bool begin(SensorCommCustom::CustomCallback callback, uint8_t addr)
-    {
-        comm = std::make_unique<SensorCommCustom>(callback, addr);
-        if (!comm) {
-            return false;
-        }
-        comm->init();
-        return initImpl(addr);
-    }
 
     /**
     * @brief Deinitialize the expander.
@@ -190,10 +98,6 @@ public:
      */
     void configPins(uint16_t pinMask, uint8_t mode)
     {
-        if (!comm) {
-            log_e("Expander not initialized (call begin() first)");
-            return;
-        }
         if (_pinModes == nullptr) {
             log_e("Pin modes array not initialized");
             return;
@@ -217,10 +121,6 @@ public:
     */
     void pinMode(uint8_t pin, uint8_t mode)
     {
-        if (!comm) {
-            log_e("Expander not initialized (call begin() first)");
-            return;
-        }
         if (pin >= _pinCount) {
             log_e("Invalid pin number");
             return;
@@ -249,10 +149,6 @@ public:
     */
     void digitalWrite(uint8_t pin, bool value)
     {
-        if (!comm) {
-            log_e("Expander not initialized (call begin() first)");
-            return;
-        }
         if (pin >= _pinCount) {
             log_e("Invalid pin number");
             return;
@@ -285,10 +181,6 @@ public:
     */
     bool digitalRead(uint8_t pin)
     {
-        if (!comm) {
-            log_e("Expander not initialized (call begin() first)");
-            return false;
-        }
         if (pin >= _pinCount) {
             log_e("Invalid pin number");
             return false;
@@ -452,7 +344,6 @@ protected:
      */
     virtual bool digitalReadImpl(uint8_t pin) = 0;
 
-    std::unique_ptr<SensorCommBase> comm;   ///< Communication object (I2C, SPI, or custom)
     uint8_t _pinCount;                      ///< Number of GPIO pins
     std::unique_ptr<uint8_t[]> _pinModes;   ///< Cached pin modes (INPUT/OUTPUT)
     std::unique_ptr<bool[]> _outputStates;  ///< Cached output states (true = HIGH)

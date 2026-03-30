@@ -28,13 +28,15 @@
  *
  */
 #pragma once
+
+#include "platform/comm/I2CDeviceWithHal.hpp"
 #include "sensor/MagnetometerBase.hpp"
 
 static constexpr uint8_t QMC6310U_SLAVE_ADDRESS = 0x1C;
 static constexpr uint8_t QMC6310N_SLAVE_ADDRESS = 0x3C;
 static constexpr uint8_t QMC5883P_SLAVE_ADDRESS = 0x2C;
 
-class SensorQSTMagnetic : public MagnetometerBase
+class SensorQSTMagnetic : public MagnetometerBase , public I2CDeviceWithHal
 {
 public:
     /**
@@ -461,7 +463,7 @@ private:
 
     ChipType _type;
 
-    bool initImpl(uint8_t addr)
+    bool initImpl(uint8_t param) override
     {
         reset();
 
@@ -470,10 +472,10 @@ private:
         _info.uid = comm->readRegister(REG_0x00_CHIP_ID);
         _info.manufacturer = "QSTMagnetic";
         _info.type = SensorType::MAGNETOMETER;
-        _info.i2c_address = addr;
+        _info.i2c_address = _addr;
         _info.version = 1;  // Set a default version
 
-        switch (addr) {
+        switch (_addr) {
         case QMC6310U_SLAVE_ADDRESS:
             _type = CHIP_QMC6310U;
             _info.model = "QMC6310U";

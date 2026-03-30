@@ -30,7 +30,7 @@
  */
 #pragma once
 
-#include "SensorPlatform.hpp"
+#include "platform/comm/ComplexStaticDeviceWithHal.hpp"
 #include "sensor/AccelerometerBase.hpp"
 #include "bosch/bma4xx/bma4.h"
 
@@ -123,7 +123,7 @@ enum class ActivityType {
  *
  * @see SensorBMA422, SensorBMA423, SensorBMA456
  */
-class SensorBMA4XX : public AccelerometerBase
+class SensorBMA4XX : public AccelerometerBase, public ComplexStaticDeviceWithHal
 {
 public:
 
@@ -147,8 +147,7 @@ protected:
      * @brief  Constructor for the SensorBMA4XX class
      * @note   Initializes the communication interfaces and hardware abstraction layer.
      */
-    SensorBMA4XX(): comm(nullptr), hal(nullptr), staticComm(nullptr),
-        dev(nullptr),  _remap_reg_offset(0),  _half_scale(0), _interface(COMM_I2C)
+    SensorBMA4XX(): dev(nullptr),  _remap_reg_offset(0),  _half_scale(0)
     {
     }
 
@@ -160,111 +159,6 @@ protected:
 
 
 public:
-
-#if defined(ARDUINO)
-    /**
-     * @brief  Initialization using the Arduino Wire Interface
-     * @note   This function sets up the I2C communication parameters for the sensor.
-     * @param  &wire: Reference to the TwoWire I2C interface.
-     * @param  addr: I2C address of the sensor.
-     * @param  sda: SDA pin number, default is -1 (use board default)
-     * @param  scl: SCL pin number, default is -1 (use board default)
-     * @retval True if initialization is successful, false otherwise.
-     */
-    bool begin(TwoWire &wire, uint8_t addr, int sda = -1, int scl = -1) override
-    {
-        if (!beginCommonStatic<SensorCommI2C, HalArduino>(comm, staticComm, hal, wire, addr, sda, scl)) {
-            return false;
-        }
-        _interface = COMM_I2C;
-        return initImpl(addr);
-    }
-
-
-    /**
-     * @brief  Initialization using the Arduino SPI Interface
-     * @note   This function sets up the SPI communication parameters for the sensor.
-     * @param  &spi: Reference to the SPIClass instance.
-     * @param  csPin: Chip select pin number.
-     * @param  mosi: Master Out Slave In pin number, default is -1 (use board default)
-     * @param  miso: Master In Slave Out pin number, default is -1 (use board default)
-     * @param  sck: Serial Clock pin number, default is -1 (use board default)
-     * @retval True if initialization is successful, false otherwise.
-     */
-    bool begin(SPIClass &spi, uint8_t csPin, int mosi = -1, int miso = -1, int sck = -1)
-    {
-        if (!beginCommonStatic<SensorCommSPI, HalArduino>(comm,
-                staticComm, hal,
-                spi, csPin, mosi, miso, sck)) {
-            return false;
-        }
-        _interface = COMM_SPI;
-        return initImpl(0x00);
-    }
-
-#elif defined(ESP_PLATFORM)
-
-#if defined(USEING_I2C_LEGACY)
-
-    /**
-     * @brief  Initialization using the ESP-IDF I2C Legacy Interface
-     * @note   This function sets up the I2C communication parameters for the sensor.
-     * @param  port_num: I2C port number.
-     * @param  addr: I2C address of the sensor.
-     * @param  sda: SDA pin number, default is -1 (use board default)
-     * @param  scl: SCL pin number, default is -1 (use board default)
-     * @retval True if initialization is successful, false otherwise.
-     */
-    bool begin(i2c_port_t port_num, uint8_t addr, int sda = -1, int scl = -1) override
-    {
-        if (!beginCommonStatic<SensorCommI2C, HalEspIDF>(comm, staticComm, hal, port_num, addr, sda, scl)) {
-            return false;
-        }
-        _interface = COMM_I2C;
-        return initImpl(addr);
-    }
-#else
-
-    /**
-     * @brief  Initialization using the ESP-IDF I2C LL Interface idf version > 5.0.0
-     * @note   This function sets up the I2C communication parameters for the sensor.
-     * @param  handle: I2C master bus handle.
-     * @param  addr: I2C address of the sensor.
-     * @retval True if initialization is successful, false otherwise.
-     */
-    bool begin(i2c_master_bus_handle_t handle, uint8_t addr) override
-    {
-        if (!beginCommonStatic<SensorCommI2C, HalEspIDF>(comm, staticComm, hal, handle, addr)) {
-            return false;
-        }
-        _interface = COMM_I2C;
-        return initImpl(addr);
-    }
-#endif  //ESP_PLATFORM
-#endif  //ARDUINO
-
-    /**
-     * @brief  Initialization using a custom communication interface.
-     * @note   This function sets up the communication parameters for the sensor.
-     * @param  interface: Communication mode, COMM_SPI or COMM_I2C
-     * @param  callback: Custom callback function for communication.
-     * @param  hal_callback: Hardware abstraction layer callback function.
-     * @param  addr: I2C address of the sensor.
-     * @retval True if initialization is successful, false otherwise.
-     */
-    bool begin(CommInterface interface,
-               SensorCommCustom::CustomCallback callback,
-               SensorCommCustomHal::CustomHalCallback hal_callback,
-               uint8_t addr)
-    {
-        if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(interface,
-                callback, hal_callback, addr, comm, hal)) {
-            return false;
-        }
-        _interface = interface;
-        return initImpl(addr);
-    }
-
     /**
      * @brief  Get the accelerometer data.
      * @note   This function retrieves the current accelerometer data from the sensor.
@@ -846,17 +740,17 @@ private:
      * @brief  Bosch sensor initialization implementation.
      * @note   This function is called during the initialization process to perform
      *         any Bosch-specific setup.
-     * @param  addr: The I2C address of the sensor.
+     * @param  param: Interface-specific parameter (e.g., I2C or SPI CS).
      * @retval True if initialization is successful, false otherwise.
      */
-    bool initImpl(uint8_t addr)
+    bool initImpl(uint8_t param) override
     {
         dev = std::make_unique<struct bma4_dev>();
         if (!dev) {
             log_e(" Device handler malloc failed!");
             return false;
         }
-        switch (_interface) {
+        switch (_iface) {
         case COMM_I2C:
             dev->intf = BMA4_I2C_INTF;
             break;
@@ -889,7 +783,7 @@ private:
         _info.manufacturer = "Bosch-Sensortec";
         _info.model = getModelName();
         _info.type = SensorType::ACCELEROMETER;
-        _info.i2c_address = addr;
+        _info.i2c_address = _addr;
         _info.version = 1;  // Set a default version
 
         // Set default axis remapping
@@ -936,12 +830,8 @@ private:
     }
 
 protected:
-    std::unique_ptr<SensorCommBase> comm;
-    std::unique_ptr<SensorHal> hal;
-    std::unique_ptr<SensorCommStatic> staticComm;
     std::unique_ptr<struct bma4_dev> dev;
     struct bma4_accel_config _accel_conf;
     uint8_t  _remap_reg_offset;
     float    _half_scale;
-    CommInterface _interface;
 };
