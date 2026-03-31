@@ -32,7 +32,7 @@
 #include "esp_err.h"
 #include "i2c_driver.h"
 #include "freertos/FreeRTOS.h"
-#include "TouchDrvCSTXXX.hpp"
+#include <TouchDrv.hpp>
 
 static const char *TAG = "TOUCH";
 

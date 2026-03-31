@@ -27,10 +27,9 @@
  * @date      2026-03-05
  *
  */
-#include <Arduino.h>
-#include "TouchDrvGT9895.hpp"
-#include "IoExpanderXL9555.hpp"
-#include "SensorWireHelper.h"
+#include <TouchDrv.hpp>
+#include <IoExpanderXL9555.hpp>
+#include <SensorWireHelper.h>
 
 // Pin definitions for the LilyGo-P4
 #define P4_TOUCH_SDA  7
@@ -91,7 +90,7 @@ void setup()
     // Scan I2C bus for devices
     SensorWireHelper::dumpDevices(Wire);
 
-    // The LilyGo-P4 relies on an external I/O extender to control the power supply of peripheral devices. 
+    // The LilyGo-P4 relies on an external I/O extender to control the power supply of peripheral devices.
     // First, initialize the external extender.
     if (!expander.begin(Wire, XL9555_SLAVE_ADDRESS0)) {
         while (1) {
@@ -164,20 +163,24 @@ void loop()
     // * supports 10-point touch
     TouchPoints touch_points = touch.getTouchPoints();
     if (touch_points.hasPoints()) {
-        for (int i = 0; i < touch_points.getPointCount(); ++i) {
-            const TouchPoint &point = touch_points.getPoint(i);
-            Serial.print("X[");
-            Serial.print(i);
-            Serial.print("]:");
-            Serial.print(point.x);
-            Serial.print(" ");
-            Serial.print(" Y[");
-            Serial.print(i);
-            Serial.print("]:");
-            Serial.print(point.y);
-            Serial.print(" ");
+        if (touch_points.hasPoints()) {
+            for (int i = 0; i < touch_points.getPointCount(); ++i) {
+                const TouchPoint &point = touch_points.getPoint(i);
+                Serial.print("ID: ");
+                Serial.print(point.id);
+                Serial.print(" ");
+                Serial.print("X: ");
+                Serial.print(point.x);
+                Serial.print(" ");
+                Serial.print("Y: ");
+                Serial.print(point.y);
+                Serial.print(" ");
+                Serial.print("Pressure: ");
+                Serial.print(point.pressure);
+                Serial.println();
+            }
+            Serial.println();
         }
-        Serial.println();
     }
     delay(50);
 }

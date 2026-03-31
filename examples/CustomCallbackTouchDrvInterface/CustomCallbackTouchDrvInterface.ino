@@ -30,14 +30,9 @@
  *            The example demonstrates using custom callbacks to read touch or sensors. This method is also applicable to other platforms.
  *            The prerequisite compilation platform must support C++11.
  */
-#include <Wire.h>
-#include <SPI.h>
-#include <Arduino.h>
-#include "TouchDrvFT6X36.hpp"
-#include "TouchDrvCSTXXX.hpp"
-#include "TouchDrvGT911.hpp"
-#include "IoExpanderXL9555.hpp"
-#include "SensorWireHelper.h"
+#include <TouchDrv.hpp>
+#include <IoExpanderXL9555.hpp>
+#include <SensorWireHelper.h>
 
 #ifndef TOUCH_SDA
 #define TOUCH_SDA  8
@@ -273,18 +268,19 @@ void setup()
 void loop()
 {
     if (touchDrv->isPressed()) {
-        uint8_t touched = touchDrv->getPoint(x, y, touchDrv->getSupportTouchPoint());
-        if (touched) {
-            for (int i = 0; i < touched; ++i) {
+        TouchPoints touch_points = touchDrv->getTouchPoints();
+        if (touch_points.hasPoints()) {
+            for (int i = 0; i < touch_points.getPointCount(); ++i) {
+                const TouchPoint &point = touch_points.getPoint(i);
                 Serial.print("X[");
                 Serial.print(i);
                 Serial.print("]:");
-                Serial.print(x[i]);
+                Serial.print(point.x);
                 Serial.print(" ");
                 Serial.print(" Y[");
                 Serial.print(i);
                 Serial.print("]:");
-                Serial.print(y[i]);
+                Serial.print(point.y);
                 Serial.print(" ");
             }
             Serial.println();

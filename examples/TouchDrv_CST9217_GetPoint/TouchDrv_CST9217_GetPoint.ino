@@ -27,12 +27,8 @@
  * @date      2024-07-27
  *
  */
-#include <Wire.h>
-#include <SPI.h>
-#include <Arduino.h>
-#include "TouchDrvCSTXXX.hpp"
-#include "SensorWireHelper.h"
-
+#include <TouchDrv.hpp>
+#include <SensorWireHelper.h>
 
 #ifndef TOUCH_SDA
 #define TOUCH_SDA  8

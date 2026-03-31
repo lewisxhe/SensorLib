@@ -28,14 +28,9 @@
  * @note      TouchDrvInterface_Example use LilyGo T-RGB,T-RGB has three types of screens, each of which uses different touch driver chips.
  *            The example demonstrates using the touch interface class and one sketch is suitable for three types of touch chips.
  */
-#include <Wire.h>
-#include <SPI.h>
-#include <Arduino.h>
-#include "TouchDrvFT6X36.hpp"
-#include "TouchDrvCSTXXX.hpp"
-#include "TouchDrvGT911.hpp"
-#include "IoExpanderXL9555.hpp"
-#include "SensorWireHelper.h"
+#include <TouchDrv.hpp>
+#include <IoExpanderXL9555.hpp>
+#include <SensorWireHelper.h>
 
 #ifndef TOUCH_SDA
 #define TOUCH_SDA  8

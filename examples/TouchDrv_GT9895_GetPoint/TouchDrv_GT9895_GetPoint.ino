@@ -27,8 +27,7 @@
  * @date      2024-09-21
  *
  */
-#include <Arduino.h>
-#include "TouchDrvGT9895.hpp"
+#include <TouchDrv.hpp>
 
 #ifndef TOUCH_SDA
 #define TOUCH_SDA  2

@@ -27,10 +27,7 @@
  * @date      2023-04-02
  *
  */
-#include <Wire.h>
-#include <SPI.h>
-#include <Arduino.h>
-#include "TouchDrvFT6X36.hpp"
+#include <TouchDrv.hpp>
 
 #ifndef TOUCH_SDA
 #define TOUCH_SDA  23
@@ -47,10 +44,31 @@
 TouchDrvFT6X36 touch;
 
 
+#ifdef ARDUINO_T_WATCH
+#include <XPowersAXP202.tpp>   //PMU Library https://github.com/lewisxhe/XPowersLib.git
+XPowersAXP202 power;
+#endif
+
+void beginPower()
+{
+    // T_AMOLED_147 The PMU voltage needs to be turned on to use the sensor
+#if defined(ARDUINO_T_WATCH)
+    bool ret = power.begin(Wire1, AXP202_SLAVE_ADDRESS, 21, 22);
+    if (!ret) {
+        Serial.println("PMU NOT FOUND!\n");
+    }
+    power.disableLDO2();
+    power.setLDO2Voltage(3300); power.enableLDO2();
+#endif
+}
+
+
 void setup()
 {
     Serial.begin(115200);
     while (!Serial);
+
+    beginPower();
 
     pinMode(TOUCH_IRQ, INPUT);
 
@@ -74,8 +92,21 @@ void setup()
     Serial.println("Touch Info:");
     Serial.print("Model: "); Serial.println(touch.getModelName());
     Serial.print("ID: 0x"); Serial.println(touch.getChipID(), HEX);
+    /*
+    * The default maximum number of touch fingers is the number of touch
+    * fingers supported by the chip, not the maximum number of touch fingers
+    * supported by the current device. The actual maximum number of touch
+    * fingers is determined by the touch chip firmware and hardware.
+    * */
     Serial.print("Max Touch Points: "); Serial.println(touch.getSupportTouchPoint());
-    Serial.print("Resolution: "); Serial.print(touch.getResolutionX()); Serial.print("x"); Serial.println(touch.getResolutionY());
+    uint16_t resX = touch.getResolutionX();
+    uint16_t resY = touch.getResolutionY();
+    if (resX == 0 || resY == 0) {
+        Serial.println("The touch driver not support get touch resolution,please use setResolution() to set touch resolution.");
+        // touch.setResolution(480, 320);
+    } else {
+        Serial.print("Resolution: "); Serial.print(resX); Serial.print(" x "); Serial.println(resY);
+    }
     delay(3000);
 }
 
@@ -87,16 +118,26 @@ void loop()
         if (touch_points.hasPoints()) {
             for (int i = 0; i < touch_points.getPointCount(); ++i) {
                 const TouchPoint &point = touch_points.getPoint(i);
-                Serial.print("X[");
-                Serial.print(i);
-                Serial.print("]:");
+                Serial.print("ID: ");
+                Serial.print(point.id);
+                Serial.print(" ");
+                Serial.print("X: ");
                 Serial.print(point.x);
                 Serial.print(" ");
-                Serial.print(" Y[");
-                Serial.print(i);
-                Serial.print("]:");
+                Serial.print("Y: ");
                 Serial.print(point.y);
                 Serial.print(" ");
+                Serial.print("Pressure: ");
+                Serial.print(point.pressure);
+                Serial.print(" ");
+                Serial.print("Event: ");
+                switch (point.event) {
+                case 0: Serial.print("Put Down"); break;
+                case 1: Serial.print("Put Up"); break;
+                case 2: Serial.print("Contact"); break;
+                default: Serial.print("Unknown"); break;
+                }
+                Serial.println();
             }
             Serial.println();
         }

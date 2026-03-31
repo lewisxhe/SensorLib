@@ -27,10 +27,7 @@
  * @date      2023-04-12
  *
  */
-#include <Wire.h>
-#include <SPI.h>
-#include <Arduino.h>
-#include "TouchDrvGT911.hpp"
+#include <TouchDrv.hpp>
 
 #ifndef TOUCH_SDA
 #define TOUCH_SDA  18
@@ -94,7 +91,14 @@ void setup()
     Serial.print("Model: "); Serial.println(touch.getModelName());
     Serial.print("ID: 0x"); Serial.println(touch.getChipID(), HEX);
     Serial.print("Max Touch Points: "); Serial.println(touch.getSupportTouchPoint());
-    Serial.print("Resolution: "); Serial.print(touch.getResolutionX()); Serial.print("x"); Serial.println(touch.getResolutionY());
+    uint16_t resX = touch.getResolutionX();
+    uint16_t resY = touch.getResolutionY();
+    if (resX == 0 || resY == 0) {
+        Serial.println("The touch driver not support get touch resolution,please use setResolution() to set touch resolution.");
+        // touch.setResolution(480, 320);
+    } else {
+        Serial.print("Resolution: "); Serial.print(resX); Serial.print(" x "); Serial.println(resY);
+    }
     delay(3000);
 }
 
