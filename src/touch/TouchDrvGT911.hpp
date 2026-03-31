@@ -48,6 +48,14 @@ class TouchDrvGT911 :  public TouchDrvInterface
 {
 public:
     using TouchDrvInterface::getPoint;
+
+    enum InterruptMode {
+        RISING_EDGE = 0x00,
+        FALLING_EDGE = 0x01,
+        LOW_LEVEL_QUERY = 0x02,
+        HIGH_LEVEL_QUERY = 0x03
+    };
+
     /**
     * @brief  Constructor for the touch driver
     * @retval None
@@ -93,10 +101,10 @@ public:
     /**
     * @brief  Set the interrupt mode
     * @note   This function will set the interrupt mode for the touch driver.
-    * @param  mode: The interrupt mode to set.
+    * @param  mode: The interrupt mode to set , see InterruptMode.
     * @retval True if the operation was successful, false otherwise.
     */
-    bool setInterruptMode(uint8_t mode);
+    bool setInterruptMode(InterruptMode mode);
 
     /**
      * @brief  Get the interrupt mode
@@ -107,7 +115,7 @@ public:
      *          0x2: Low level query
      *          0x3: High level query
      */
-    uint8_t getInterruptMode();
+    InterruptMode getInterruptMode();
 
     /**
      * @brief  Get the chip ID
@@ -232,8 +240,8 @@ private:
 
     bool autoProbe();
 
-    static constexpr uint8_t LOW_LEVEL_QUERY  = 0x03;
-    static constexpr uint8_t HIGH_LEVEL_QUERY = 0x04;
+
+
     static constexpr uint8_t MAX_FINGER_NUM = (5);
     static constexpr uint8_t BYTES_PER_POINT = (8);
 
