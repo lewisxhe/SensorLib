@@ -52,10 +52,10 @@ public:
         _addr = 0;
         _iface = COMM_SPI;
         afterCommReady();
-        if (!initImpl(COMM_SPI)) {
+        if (!initImpl(_iface)) {
             return fail();
         }
-        afterInitSuccess(COMM_SPI);
+        afterInitSuccess(_iface);
         return true;
     }
 #elif defined(ESP_PLATFORM)
@@ -75,10 +75,10 @@ public:
         _addr = 0;
         _iface = COMM_SPI;
         afterCommReady();
-        if (!initImpl(COMM_SPI)) {
+        if (!initImpl(_iface)) {
             return fail();
         }
-        afterInitSuccess(COMM_SPI);
+        afterInitSuccess(_iface);
         return true;
     }
 #endif
@@ -101,10 +101,10 @@ public:
         _addr = 0x00;
         _iface = COMM_CUSTOM;
         afterCommReady();
-        if (!initImpl(COMM_CUSTOM)) {
+        if (!initImpl(_iface)) {
             return fail();
         }
-        afterInitSuccess(COMM_CUSTOM);
+        afterInitSuccess(_iface);
         return true;
     }
 

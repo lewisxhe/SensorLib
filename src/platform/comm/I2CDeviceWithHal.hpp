@@ -45,9 +45,15 @@ public:
      */
     bool begin(TwoWire &wire, uint8_t addr, int sda = -1, int scl = -1)
     {
+        beforeBegin();
         if (!beginCommon<SensorCommI2C, HalArduino>(comm, hal, wire, addr, sda, scl)) return false;
         _addr = addr; _iface = COMM_I2C;
-        return initImpl(addr);
+        afterCommReady();
+        if (!initImpl(_addr)) {
+            return fail();
+        }
+        afterInitSuccess(_addr);
+        return true;
     }
 
 #elif defined(ESP_PLATFORM)
@@ -62,9 +68,15 @@ public:
      */
     bool begin(i2c_port_t port, uint8_t addr, int sda = -1, int scl = -1)
     {
+        beforeBegin();
         if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, port, addr, sda, scl)) return false;
         _addr = addr; _iface = COMM_I2C;
-        return initImpl(addr);
+        afterCommReady();
+        if (!initImpl(_addr)) {
+            return fail();
+        }
+        afterInitSuccess(_addr);
+        return true;
     }
 #else
     /**
@@ -75,12 +87,18 @@ public:
      */
     bool begin(i2c_master_bus_handle_t handle, uint8_t addr)
     {
+        beforeBegin();
         if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, handle, addr, -1, -1)) return false;
         _addr = addr; _iface = COMM_I2C;
-        return initImpl(addr);
+        afterCommReady();
+        if (!initImpl(_addr)) {
+            return fail();
+        }
+        afterInitSuccess(_addr);
+        return true;
     }
-#endif
-#endif
+#endif  //USEING_I2C_LEGACY
+#endif  //ARDUINO
     /**
      * @brief Initialize the sensor using custom callback interface.
      * @note Suitable for other platforms not covered by standard implementations.
@@ -94,13 +112,19 @@ public:
                SensorCommCustomHal::CustomHalCallback hal_cb,
                uint8_t addr)
     {
+        beforeBegin();
         if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(COMM_CUSTOM, cb, hal_cb, addr, comm, hal))
             return false;
         _addr = addr; _iface = COMM_CUSTOM;
-        return initImpl(addr);
+        afterCommReady();
+        if (!initImpl(_addr)) {
+            return fail();
+        }
+        afterInitSuccess(_addr);
+        return true;
     }
 protected:
-    /** 
+    /**
     * @brief Ensure the communication interface is valid.
     *  @return True if valid, false otherwise.
     */

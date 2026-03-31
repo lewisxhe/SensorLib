@@ -45,11 +45,17 @@ public:
      */
     bool begin(TwoWire &wire, uint8_t addr, int sda = -1, int scl = -1)
     {
+        beforeBegin();
         comm = std::make_unique<SensorCommI2C>(wire, addr, sda, scl);
         if (!comm) return false;
         comm->init();
         _addr = addr; _iface = COMM_I2C;
-        return initImpl(addr);
+        afterCommReady();
+        if (!initImpl(_addr)) {
+            return fail();
+        }
+        afterInitSuccess(_addr);
+        return true;
     }
 #elif defined(ESP_PLATFORM)
 #if defined(USEING_I2C_LEGACY)
@@ -63,11 +69,17 @@ public:
      */
     bool begin(i2c_port_t port_num, uint8_t addr, int sda = -1, int scl = -1)
     {
+        beforeBegin();
         comm = std::make_unique<SensorCommI2C>(port_num, addr, sda, scl);
         if (!comm) return false;
         comm->init();
         _addr = addr; _iface = COMM_I2C;
-        return initImpl(addr);
+        afterCommReady();
+        if (!initImpl(_addr)) {
+            return fail();
+        }
+        afterInitSuccess(_addr);
+        return true;
     }
 #else
     /**
@@ -78,11 +90,17 @@ public:
      */
     bool begin(i2c_master_bus_handle_t handle, uint8_t addr)
     {
+        beforeBegin();
         comm = std::make_unique<SensorCommI2C>(handle, addr);
         if (!comm) return false;
         comm->init();
         _addr = addr; _iface = COMM_I2C;
-        return initImpl(addr);
+        afterCommReady();
+        if (!initImpl(_addr)) {
+            return fail();
+        }
+        afterInitSuccess(_addr);
+        return true;
     }
 #endif
 #endif
@@ -96,10 +114,16 @@ public:
      */
     bool begin(SensorCommCustom::CustomCallback callback, uint8_t addr)
     {
+        beforeBegin();
         comm = std::make_unique<SensorCommCustom>(callback, addr);
         if (!comm) return false;
         comm->init();
         _addr = addr; _iface = COMM_CUSTOM;
-        return initImpl(addr);
+        afterCommReady();
+        if (!initImpl(_addr)) {
+            return fail();
+        }
+        afterInitSuccess(_addr);
+        return true;
     }
 };
