@@ -51,13 +51,6 @@ public:
     ~TouchDrvGT9895() = default;
 
     /**
-     * @brief  Reset the touch driver
-     * @note   This function will reset the touch driver by toggling the reset pin.
-     * @retval None
-     */
-    void reset() override;
-
-    /**
     * @brief Puts the touch driver to sleep
     * @note This function puts the touch driver into sleep mode.
     *       If the device does not have a reset pin connected, it cannot be woken up after being put
@@ -84,13 +77,6 @@ public:
     const TouchPoints &getTouchPoints() override;
 
     /**
-     * @brief  Check if the touch point is pressed
-     * @note   This function will check if the touch point is currently pressed.
-     * @retval True if the touch point is pressed, false otherwise.
-     */
-    bool isPressed() override;
-
-    /**
      * @brief  Get the model name
      * @note   This function will retrieve the model name from the touch driver.
      * @retval The model name.
@@ -104,7 +90,7 @@ private:
         CHECKSUM_MODE_U16_LE,
     };
 
-    bool initImpl(uint8_t addr) override;
+    bool initImpl(uint8_t) override;
 
     /**
      * @brief  Compare the checksum of the data
@@ -114,7 +100,7 @@ private:
      * @param  mode: Checksum mode
      * @retval 0 if the checksum is valid, -1 if it is invalid
      */
-    int checksum(const uint8_t *data, int size, CheckSumMode mode);
+    int calculateChecksum(const uint8_t *data, int size, CheckSumMode mode);
 
     /**
      * @brief  Get chip pid
@@ -140,9 +126,11 @@ protected:
     static constexpr uint8_t POINT_TYPE_STYLUS_HOVER    = (1);
     static constexpr uint8_t POINT_TYPE_STYLUS          = (3);
 
-    static constexpr uint32_t REG_FW_VERSION = (0x00010014u);
-    static constexpr uint32_t REG_INFO       = (0x00010070u);
-    static constexpr uint32_t REG_CMD        = (0x00010174u);
-    static constexpr uint32_t REG_POINT      = (0x00010308u);
+    static constexpr uint32_t REG_FW_VERSION = (0x010014);
+    static constexpr uint32_t REG_INFO       = (0x010070);
+    static constexpr uint32_t REG_CMD        = (0x010174);
+    static constexpr uint32_t REG_POINT      = (0x010308);
+    static constexpr uint32_t REG_NUM_POINT  = (0x01030A);
+    
     static constexpr uint32_t CHIP_PID       = (0x9895);
 };

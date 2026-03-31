@@ -49,13 +49,6 @@ public:
     ~TouchDrvCHSC5816() = default;
 
     /**
-    * @brief  Reset the touch driver
-    * @note   This function will reset the touch driver by toggling the reset pin.
-    * @retval None
-    */
-    void reset() override;
-
-    /**
     * @brief Puts the touch driver to sleep
     * @note This function puts the touch driver into sleep mode.
     *       If the device does not have a reset pin connected, it cannot be woken up after being put
@@ -65,25 +58,11 @@ public:
     void sleep() override;
 
     /**
-     * @brief  Wake up the touch driver
-     * @note   This function will wake up the touch driver from sleep mode.
-     * @retval None
-     */
-    void wakeup() override;
-
-    /**
      * @brief  Get the touch points
      * @note   This function retrieves the touch points from the touch driver.
      * @retval The touch points.
      */
     const TouchPoints &getTouchPoints() override;
-
-    /**
-    * @brief  Check if the touch point is pressed
-    * @note   This function will check if the touch point is currently pressed.
-    * @retval True if the touch point is pressed, false otherwise.
-    */
-    bool isPressed() override;
 
     /**
     * @brief  Get the model name
@@ -94,12 +73,15 @@ public:
 
 private:
 
-    bool checkOnline();
-
-    bool initImpl(uint8_t addr) override;
+    bool initImpl(uint8_t) override;
 
 protected:
-    static constexpr uint32_t CHSC5816_SIG_VALUE = (0x43534843U);
-    static constexpr uint32_t REG_POINT = 0x2000002C;
-    static constexpr uint8_t  MAX_FINGER_NUM = (1);
+    static constexpr uint32_t REG_BOOT_STATE  = 0x20000018;
+    static constexpr uint32_t REG_IMG_HEAD    = 0x20000014;
+    static constexpr uint32_t REG_POINT_EVENT = 0x2000002C;
+    static constexpr uint32_t REG_POINT       = 0x2000002E;
+    static constexpr uint8_t  MAX_FINGER_NUM  = (1);
+    static constexpr uint8_t  BYTES_PER_POINT = (5);
+    static constexpr uint8_t  POINT_BUFFER_SIZE = (MAX_FINGER_NUM * BYTES_PER_POINT + 3);
+    static constexpr uint8_t  COMMAND_SIZE = (4);
 };

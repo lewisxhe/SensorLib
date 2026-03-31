@@ -65,13 +65,6 @@ public:
     ~TouchDrvCST92xx() = default;
 
     /**
-    * @brief  Reset the touch driver
-    * @note   This function will reset the touch driver by toggling the reset pin.
-    * @retval None
-    */
-    void reset() override;
-
-    /**
     * @brief Puts the touch driver to sleep
     * @note This function puts the touch driver into sleep mode.
     *       If the device does not have a reset pin connected, it cannot be woken up after being put
@@ -81,25 +74,11 @@ public:
     void sleep() override;
 
     /**
-     * @brief  Wake up the touch driver
-     * @note   This function will wake up the touch driver from sleep mode.
-     * @retval None
-     */
-    void wakeup() override;
-
-    /**
      * @brief  Get the touch points
      * @note   This function will retrieve the touch points from the touch driver.
      * @retval A reference to the touch points.
      */
     const TouchPoints &getTouchPoints() override;
-
-    /**
-    * @brief  Check if the touch point is pressed
-    * @note   This function will check if the touch point is currently pressed.
-    * @retval True if the touch point is pressed, false otherwise.
-    */
-    bool isPressed() override;
 
     /**
     * @brief  Get the model name
@@ -118,7 +97,7 @@ public:
     void setCoverScreenCallback(HomeButtonCallback cb, void *user_data = NULL);
 
 private:
-    bool initImpl(uint8_t addr) override;
+    bool initImpl(uint8_t) override;
     bool setMode(uint8_t mode);
     bool enterBootloader();
     bool getAttribute();
@@ -149,41 +128,4 @@ protected:
 
     static constexpr uint8_t   MAX_FINGER_NUM              = (2);
     static constexpr uint8_t   PROGRAM_PAGE_SIZE           = (128);
-
-#if 0  /*DISABLE UPDATE FIRMWARE*/
-
-    struct {
-        bool firmware_info_ok;
-        uint32_t firmware_ic_type;
-        uint32_t firmware_version;
-        uint32_t firmware_checksum;
-        uint32_t firmware_project_id;
-        uint8_t tx_num;
-        uint8_t rx_num;
-        uint8_t key_num;
-    } IC_firmware;
-
-    struct {
-        bool ok;
-        uint8_t *head_data;
-        uint8_t *data;
-        uint32_t checksum;
-        uint32_t version;
-        uint32_t project_id;
-        uint32_t chip_type;
-    } bin_data;
-    uint32_t get_u32_from_ptr(const void *ptr);
-    bool getFirmwareInfo(void);
-    int16_t eraseMem(void);
-    int16_t writeSRAM(uint8_t *buf, uint16_t len);
-    int16_t writeMemPage(uint16_t addr, uint8_t *buf, uint16_t len) ;
-    int16_t writeMemAll(void) ;
-    int16_t calculateVerifyChecksum(void) ;
-    int16_t upgradeFirmware(void);
-    uint32_t verifyFirmware(uint8_t *pdata, uint16_t order);
-    int16_t parseFirmware(void);
-    int16_t upgradeFirmwareJudge(void);
-    int16_t getFirmwareAddress(uint8_t data_seq, uint16_t data_len) ;
-    int16_t updateFirmware(void);
-#endif
 };

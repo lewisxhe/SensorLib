@@ -30,85 +30,64 @@
 
 void TouchDrvCST226::reset()
 {
-    if (_rst != -1) {
-        hal->pinMode(_rst, OUTPUT);
-        hal->digitalWrite(_rst, LOW);
+    if (_pinsCfg.rstPin != -1) {
+        hal->pinMode(_pinsCfg.rstPin, OUTPUT);
+        hal->digitalWrite(_pinsCfg.rstPin, LOW);
         hal->delay(100);
-        hal->digitalWrite(_rst, HIGH);
+        hal->digitalWrite(_pinsCfg.rstPin, HIGH);
         hal->delay(100);
     } else {
-        comm->writeRegister(0xD1, 0x0E);
+        writeReg(0xD1, 0x0E);
         hal->delay(20);
     }
 }
 
 const TouchPoints &TouchDrvCST226::getTouchPoints()
 {
-    static TouchPoints points;
+    static constexpr uint8_t POINT_BUFFER_SIZE = 28;
     static constexpr uint8_t STATUS_REG   = 0x00;
-    static constexpr uint8_t STATUS_BUFFER_SIZE   = 28;
-    uint8_t buffer[STATUS_BUFFER_SIZE];
+    uint8_t buffer[POINT_BUFFER_SIZE] = {0};
     uint8_t index = 0;
 
     // Clear cached touch points
-    points.clear();
+    _touchPoints.clear();
 
-    if (comm->readRegister(STATUS_REG, buffer, STATUS_BUFFER_SIZE) == 0) {
+    if (readRegBuff(STATUS_REG, buffer, POINT_BUFFER_SIZE) == 0) {
 
         if (buffer[0] == 0x83 && buffer[1] == 0x17 && buffer[5] == 0x80) {
             if (_HButtonCallback) {
                 _HButtonCallback(_userData);
             }
-            return points;
+            return _touchPoints;
         }
 
-        if (buffer[6] != 0xAB)return points; // Return zero points
-        if (buffer[0] == 0xAB)return points; // Return zero points
-        if (buffer[5] == 0x80)return points; // Return zero points
+        if (buffer[6] != 0xAB)return _touchPoints; // Return zero points
+        if (buffer[0] == 0xAB)return _touchPoints; // Return zero points
+        if (buffer[5] == 0x80)return _touchPoints; // Return zero points
 
         uint8_t numPoints = buffer[5] & 0x7F; // Get number of touch points (lower 7 bits)
 
         // Validate number of touch points
-        if (numPoints > MAX_FINGER_NUM  || !numPoints) {
-            comm->writeRegister(0x00, 0xAB);
-            return points; // Return zero points
+        if (numPoints == 0 || numPoints > MAX_FINGER_NUM) {
+            writeReg(0x00, 0xAB);
+            return _touchPoints; // Return zero points
         }
 
         // If not center button, add point
         for (int i = 0; i < numPoints; i++) {
-            points.addPoint((buffer[index + 1] << 4) | ((buffer[index + 3] >> 4) & 0x0F), ///< X coordinate
-                            (buffer[index + 2] << 4) | (buffer[index + 3] & 0x0F),    ///< Y coordinate
-                            buffer[index + 4],      ///< Pressure
-                            buffer[index] >> 4,     ///< Touch point ID
-                            buffer[index] & 0x0F    ///< Status/event type
-                           );
+            const uint16_t x = (buffer[index + 1] << 4) | ((buffer[index + 3] >> 4) & 0x0F);
+            const uint16_t y = (buffer[index + 2] << 4) | (buffer[index + 3] & 0x0F);
+            const uint16_t pressure = buffer[index + 4];
+            const uint8_t id = (buffer[index] & 0xF0) >> 4;
+            const uint8_t event = buffer[index] & 0x0F;
+            _touchPoints.addPoint(x, y, pressure, id, event);
             index = (i == 0) ?  (index + 7) :  (index + 5);
         }
         // Swap XY or mirroring coordinates,if set
-        updateXY(points);
+        updateXY(_touchPoints);
     }
-    return points;
+    return _touchPoints;
 }
-
-bool TouchDrvCST226::isPressed()
-{
-    static uint32_t lastPulse = 0;
-    if (_irq != -1) {
-        if (hal->digitalRead(_irq) == LOW) {
-            uint32_t now = hal->millis();
-            //Filter low levels with intervals greater than 1000ms
-            if(now - lastPulse > 1000){
-                lastPulse = now;
-                return false;
-            }
-            lastPulse = now;
-            return false;
-        }
-        return false;
-    }
-    return getTouchPoints().hasPoints();
-}
-
 
 const char *TouchDrvCST226::getModelName()
 {
@@ -125,62 +104,39 @@ const char *TouchDrvCST226::getModelName()
 
 void TouchDrvCST226::sleep()
 {
-    comm->writeRegister(0xD1, 0x05);
+    writeReg(0xD1, 0x05);
 #ifdef ARDUINO_ARCH_ESP32
-    if (_irq != -1) {
-        hal->pinMode(_irq, OPEN_DRAIN);
+    if (_pinsCfg.irqPin != -1) {
+        hal->pinMode(_pinsCfg.irqPin, OPEN_DRAIN);
     }
-    if (_rst != -1) {
-        hal->pinMode(_rst, OPEN_DRAIN);
+    if (_pinsCfg.rstPin != -1) {
+        hal->pinMode(_pinsCfg.rstPin, OPEN_DRAIN);
     }
 #endif
 }
 
-void TouchDrvCST226::wakeup()
+bool TouchDrvCST226::initImpl(uint8_t)
 {
-    reset();
-}
-
-bool TouchDrvCST226::initImpl(uint8_t addr)
-{
-
-    if (_rst != -1) {
-        hal->pinMode(_rst, OUTPUT);
-    }
-
-    if (_irq != -1) {
-        hal->pinMode(_irq, INPUT);
-    }
-
-    reset();
-
     uint8_t buffer[8];
     // Enter Command mode
-    comm->writeRegister(0xD1, 0x01);
+    writeReg(0xD1, 0x01);
     hal->delay(10);
     uint8_t write_buffer[2] = {0xD1, 0xFC};
-    comm->writeThenRead(write_buffer, 2, buffer, 4);
-    uint32_t checkcode = 0;
-    checkcode = buffer[3];
-    checkcode <<= 8;
-    checkcode |= buffer[2];
-    checkcode <<= 8;
-    checkcode |= buffer[1];
-    checkcode <<= 8;
-    checkcode |= buffer[0];
+    writeThenRead(write_buffer, 2, buffer, 4);
 
-    log_i("Chip checkcode:0x%lx.", checkcode);
+    uint32_t checkcode = (buffer[3] << 24) | (buffer[2] << 16) | (buffer[1] << 8) | buffer[0];
+    log_i("Chip checkcode:0x%lX.", checkcode);
 
     write_buffer[0] = 0xD1;
     write_buffer[1] = 0xF8;
-    comm->writeThenRead(write_buffer, 2, buffer, 4);
-    _resX = ( buffer[1] << 8) | buffer[0];
-    _resY = ( buffer[3] << 8) | buffer[2];
-    log_i("Chip resolution X:%u Y:%u", _resX, _resY);
+    writeThenRead(write_buffer, 2, buffer, 4);
+    _touchConfig.resolutionX = ( buffer[1] << 8) | buffer[0];
+    _touchConfig.resolutionY = ( buffer[3] << 8) | buffer[2];
+    log_i("Chip resolution X:%u Y:%u", _touchConfig.resolutionX, _touchConfig.resolutionY);
 
     write_buffer[0] = 0xD2;
     write_buffer[1] = 0x04;
-    comm->writeThenRead(write_buffer, 2, buffer, 4);
+    writeThenRead(write_buffer, 2, buffer, 4);
     // uint32_t chipType = buffer[3];
     // chipType <<= 8;
     // chipType |= buffer[2];
@@ -196,7 +152,7 @@ bool TouchDrvCST226::initImpl(uint8_t addr)
 
     write_buffer[0] = 0xD2;
     write_buffer[1] = 0x08;
-    comm->writeThenRead(write_buffer, 2, buffer, 8);
+    writeThenRead(write_buffer, 2, buffer, 8);
 
     uint32_t fwVersion = buffer[3];
     fwVersion <<= 8;
@@ -234,7 +190,7 @@ bool TouchDrvCST226::initImpl(uint8_t addr)
     _chipID = chipType;
 
     // Exit Command mode
-    comm->writeRegister(0xD1, 0x09);
+    writeReg(0xD1, 0x09);
 
     _maxTouchPoints = 5;
 

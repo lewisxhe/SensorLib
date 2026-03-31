@@ -29,27 +29,11 @@
  */
 #include "TouchDrvGT9895.hpp"
 
-void TouchDrvGT9895::reset()
-{
-    if (_rst != -1) {
-        hal->pinMode(_rst, OUTPUT);
-        hal->digitalWrite(_rst, HIGH);
-        hal->delay(10);
-        hal->digitalWrite(_rst, LOW);
-        hal->delay(30);
-        hal->digitalWrite(_rst, HIGH);
-        hal->delay(100);
-    }
-    if (_irq != -1) {
-        hal->pinMode(_irq, INPUT);
-    }
-}
-
 void TouchDrvGT9895::sleep()
 {
-    if (_irq != -1) {
-        hal->pinMode(_irq, OUTPUT);
-        hal->digitalWrite(_irq, LOW);
+    if (_pinsCfg.irqPin != -1) {
+        hal->pinMode(_pinsCfg.irqPin, OUTPUT);
+        hal->digitalWrite(_pinsCfg.irqPin, LOW);
     }
 
     uint8_t sleep_cmd[10] = {0};
@@ -60,14 +44,14 @@ void TouchDrvGT9895::sleep()
     sleep_cmd[7] = 0x84;
     sleep_cmd[8] = 0x88;
     sleep_cmd[9] = 0x00;
-    comm->writeBuffer(sleep_cmd, sizeof(sleep_cmd));
+    writeBuff(sleep_cmd, sizeof(sleep_cmd));
 }
 
 void TouchDrvGT9895::wakeup()
 {
-    if (_irq != -1) {
-        hal->pinMode(_irq, OUTPUT);
-        hal->digitalWrite(_irq, HIGH);
+    if (_pinsCfg.irqPin != -1) {
+        hal->pinMode(_pinsCfg.irqPin, OUTPUT);
+        hal->digitalWrite(_pinsCfg.irqPin, HIGH);
         hal->delay(8);
     }
     reset();
@@ -75,93 +59,65 @@ void TouchDrvGT9895::wakeup()
 
 const TouchPoints &TouchDrvGT9895::getTouchPoints()
 {
-    static TouchPoints points;
     uint8_t type = 0;
-    uint16_t length = IRQ_EVENT_HEAD_LEN + BYTES_PER_POINT * 2 + COORDS_DATA_CHECKSUM_SIZE;
     uint8_t write_buffer[4];
-    uint8_t buffer[IRQ_EVENT_HEAD_LEN + BYTES_PER_POINT * MAX_FINGER_NUM + 2] = {0};
+    uint8_t buffer[IRQ_EVENT_HEAD_LEN + MAX_FINGER_NUM * BYTES_PER_POINT + 2] = {0};
 
-    // Clear cached touch points
-    points.clear();
+    _touchPoints.clear();
 
+    // Read the event header (8 bytes) to get the number of fingers.
     addrToBeBuf(REG_POINT, write_buffer);
-
-    if (comm->writeThenRead(write_buffer, 4, buffer, length) == 0) {
-
-        // Check if touch event is valid
-        if (buffer[0] == 0x00) {
-            return points;
-        }
-
-        if (checksum(buffer, IRQ_EVENT_HEAD_LEN, CHECKSUM_MODE_U8_LE)) {
-            // If checksum fails, clear points and return
-            return points;
-        }
-
-        // Check if touch event is valid
-        if (buffer[0] & 0x80) {
-
-            uint8_t numPoints = buffer[2] & 0x0F;
-
-            // Check if the number of touch points is valid
-            if (numPoints > MAX_FINGER_NUM || numPoints == 0) {
-                clearStatus();
-                return points;
-            }
-
-            // Read additional touch points if necessary
-            if (numPoints > 2) {
-                addrToBeBuf(REG_POINT + length, write_buffer);
-                if (comm->writeThenRead(write_buffer, 4, &buffer[length], (numPoints - 2) * BYTES_PER_POINT) == -1) {
-                    log_e("Failed to get additional touch data");
-                    clearStatus();
-                    return points;
-                }
-            }
-
-            // Check point type
-            type = buffer[IRQ_EVENT_HEAD_LEN] & 0x0F;
-            if (type == POINT_TYPE_STYLUS || type == POINT_TYPE_STYLUS_HOVER) {
-                if (checksum(&buffer[IRQ_EVENT_HEAD_LEN], BYTES_PER_POINT * 2 + 2, CHECKSUM_MODE_U8_LE)) {
-                    // If stylus touch data checksum fails
-                    clearStatus();
-                    return points;
-                }
-            } else {
-                if (checksum(&buffer[IRQ_EVENT_HEAD_LEN], numPoints * BYTES_PER_POINT + 2, CHECKSUM_MODE_U8_LE)) {
-                    // If touch data checksum fails
-                    clearStatus();
-                    return points;
-                }
-            }
-
-            // Add touch points
-            for (int i = 0; i < numPoints; i++) {
-                int base = IRQ_EVENT_HEAD_LEN + i * BYTES_PER_POINT;
-                uint16_t x = buffer[base + 2] | (buffer[base + 3] << 8);
-                uint16_t y = buffer[base + 4] | (buffer[base + 5] << 8);
-                uint16_t w = buffer[base + 6] | (buffer[base + 7] << 8);
-                uint8_t id = (buffer[base] >> 4) & 0x0F;
-                points.addPoint(x, y, w, id);
-            }
-
-            // Swap XY or mirroring coordinates,if set
-            updateXY(points);
-
-        }
-        // Clear touch points if no valid touch event
+    if (writeThenRead(write_buffer, 4, buffer, IRQ_EVENT_HEAD_LEN) != 0) {
+        return _touchPoints;
+    }
+    // Check if touch event is valid
+    if (buffer[0] == 0x00) {
+        return _touchPoints;
+    }
+    // Check if the number of touch points is valid
+    uint8_t numPoints = buffer[2] & 0x0F;
+    if (numPoints == 0 || numPoints > MAX_FINGER_NUM) {
         clearStatus();
+        return _touchPoints;
+    }
+    // Read the remaining data from the offset address.
+    uint16_t remaining_len = numPoints * BYTES_PER_POINT + COORDS_DATA_CHECKSUM_SIZE;
+    addrToBeBuf(REG_POINT + IRQ_EVENT_HEAD_LEN, write_buffer);
+    if (writeThenRead(write_buffer, 4, &buffer[IRQ_EVENT_HEAD_LEN], remaining_len) != 0) {
+        return _touchPoints;
     }
 
-    return points;
-}
-
-bool TouchDrvGT9895::isPressed()
-{
-    if (_irq != -1) {
-        return hal->digitalRead(_irq) == LOW;
+    if (calculateChecksum(buffer, IRQ_EVENT_HEAD_LEN, CHECKSUM_MODE_U8_LE)) {
+        // If touch data checksum fails
+        clearStatus();
+        return _touchPoints;
     }
-    return getTouchPoints().hasPoints();
+
+    if (buffer[0] & 0x80) {
+        type = buffer[IRQ_EVENT_HEAD_LEN] & 0x0F;
+        uint16_t checksum_size = (type == POINT_TYPE_STYLUS || type == POINT_TYPE_STYLUS_HOVER) ?
+                                 (BYTES_PER_POINT * 2 + 2) : (numPoints * BYTES_PER_POINT + 2);
+
+        if (calculateChecksum(&buffer[IRQ_EVENT_HEAD_LEN], checksum_size, CHECKSUM_MODE_U8_LE)) {
+            // If touch data checksum fails
+            clearStatus();
+            return _touchPoints;
+        }
+        // Add touch points
+        for (int i = 0; i < numPoints; i++) {
+            uint8_t offset = IRQ_EVENT_HEAD_LEN + i * BYTES_PER_POINT;
+            uint16_t x = buffer[offset + 2] | (buffer[offset + 3] << 8);
+            uint16_t y = buffer[offset + 4] | (buffer[offset + 5] << 8);
+            uint16_t w = buffer[offset + 6] | (buffer[offset + 7] << 8);
+            uint8_t id = (buffer[offset] >> 4) & 0x0F;
+            _touchPoints.addPoint(x, y, w, id);
+        }
+        // Swap XY or mirroring coordinates,if set
+        updateXY(_touchPoints);
+    }
+
+    clearStatus();
+    return _touchPoints;
 }
 
 const char *TouchDrvGT9895::getModelName()
@@ -169,7 +125,7 @@ const char *TouchDrvGT9895::getModelName()
     return "GT9895";
 }
 
-int TouchDrvGT9895::checksum(const uint8_t *data, int size, CheckSumMode mode)
+int TouchDrvGT9895::calculateChecksum(const uint8_t *data, int size, CheckSumMode mode)
 {
     uint32_t cal_checksum = 0;
     uint32_t r_checksum = 0;
@@ -210,13 +166,13 @@ uint32_t TouchDrvGT9895::getChipPID()
     uint8_t buffer[28] = {0};
     addrToBeBuf(REG_FW_VERSION, buffer);
     for (int i = 0; i < 2; i++) {
-        if (comm->writeThenRead(buffer, 4, buffer, sizeof(buffer)) == -1) {
+        if (writeThenRead(buffer, 4, buffer, sizeof(buffer)) == -1) {
             log_e("Failed to read firmware version");
             ret = -1;
             hal->delay(5);
             continue;
         }
-        if (!checksum(buffer, sizeof(buffer), CHECKSUM_MODE_U8_LE)) {
+        if (!calculateChecksum(buffer, sizeof(buffer), CHECKSUM_MODE_U8_LE)) {
             ret = 0;
             break;
         }
@@ -246,17 +202,11 @@ uint32_t TouchDrvGT9895::getChipPID()
 void TouchDrvGT9895::clearStatus()
 {
     uint8_t buffer[5] =  { 0x00, 0x01, 0x03, 0x08, 0x00};
-    comm->writeBuffer(buffer, 5);
+    writeBuff(buffer, 5);
 }
 
-bool TouchDrvGT9895::initImpl(uint8_t addr)
+bool TouchDrvGT9895::initImpl(uint8_t)
 {
-    if (_irq != -1) {
-        hal->pinMode(_irq, INPUT);
-    }
-
-    reset();
-
     if (getChipPID() != 0x9895) {
         return false;
     }

@@ -31,6 +31,10 @@
 
 #include "TouchDrvInterface.hpp"
 
+//! Dangerous operation! If power is lost during the writing process, all parameters will be lost due to the absence of the original parameters, resulting in touch screen errors.
+// #define ENABLE_GT911_CONFIG
+
+
 #if defined(ARDUINO_ARCH_NRF52)
 // NRF52840 I2C BUFFER : 64 Bytes ,
 #warning "NRF Platform I2C Buffer expansion is not implemented , GT911 requires at least 188 bytes to read all configurations"
@@ -57,13 +61,6 @@ public:
     ~TouchDrvGT911() = default;
 
     /**
-    * @brief  Reset the touch driver
-    * @note   This function will reset the touch driver by toggling the reset pin.
-    * @retval None
-    */
-    void reset() override;
-
-    /**
     * @brief Puts the touch driver to sleep
     * @note This function puts the touch driver into sleep mode.
     *       If the device does not have a reset pin connected, it cannot be woken up after being put
@@ -84,21 +81,14 @@ public:
     * @note   This function will retrieve the touch points from the touch driver.
     * @retval A reference to the touch points.
     */
-    const TouchPoints &getTouchPoints();
-
-    /**
-    * @brief  Check if the touch point is pressed
-    * @note   This function will check if the touch point is currently pressed.
-    * @retval True if the touch point is pressed, false otherwise.
-    */
-    bool isPressed() override;
+    const TouchPoints &getTouchPoints() override;
 
     /**
     * @brief  Get the model name
     * @note   This function will retrieve the model name from the touch driver.
     * @retval The model name.
     */
-    const char *getModelName();
+    const char *getModelName() override;
 
     /**
     * @brief  Set the interrupt mode
@@ -118,13 +108,6 @@ public:
      *          0x3: High level query
      */
     uint8_t getInterruptMode();
-
-    /**
-     * @brief  Get the touch point information
-     * @note   This function will retrieve the touch point information from the touch driver.
-     * @retval The touch point information.
-     */
-    uint8_t getPoint();
 
     /**
      * @brief  Get the chip ID
@@ -169,7 +152,7 @@ public:
      */
     int getVendorID();
 
-#if 0   //TODO:
+#ifdef ENABLE_GT911_CONFIG
     /**
      * @brief  Set the home button callback
      * @note   This function will set the callback function for the home button.
@@ -183,6 +166,7 @@ public:
     /**
      * @brief  Load the configuration data
      * @note   This function will load the configuration data from the touch driver.
+     *         Memory allocation is automatically managed within the class and does not require manual deallocation.
      * @param  *output_size: Pointer to store the size of the output data.
      * @param  print_out: Flag to indicate whether to print the output.
      * @retval The pointer to the configuration data buffer.
@@ -203,14 +187,7 @@ public:
      * @retval None
      */
     void setMaxTouchPoint(uint8_t num);
-    /**
-     * @brief  Set the configuration data
-     * @note   This function will set the configuration data for the touch driver.
-     * @param  *data: Pointer to the configuration data buffer.
-     * @param  length: The length of the configuration data.
-     * @retval None
-     */
-    void setConfigData(uint8_t *data, uint16_t length);
+
 
 private:
     /**
@@ -251,7 +228,7 @@ private:
      */
     bool probeAddress();
 
-    bool initImpl(uint8_t addr);
+    bool initImpl(uint8_t) override;
 
     bool autoProbe();
 
@@ -261,14 +238,11 @@ private:
     static constexpr uint8_t BYTES_PER_POINT = (8);
 
 protected:
-    int _irq_mode;
-    uint8_t *_config = NULL;
-    uint16_t _config_size = 0;
-
     // Real-time command (Write only)
     static constexpr uint16_t  GT911_COMMAND                 = (0x8040);
     static constexpr uint16_t  GT911_ESD_CHECK               = (0x8041);
     static constexpr uint16_t  GT911_COMMAND_CHECK           = (0x8046);
+    static constexpr uint8_t   IRQ_TRIGGER_MASK              = (0x03);
 
     // Configuration information (R/W)
     static constexpr uint16_t  GT911_CONFIG_START            = (0x8047);
@@ -386,6 +360,7 @@ protected:
     static constexpr uint16_t  GT911_POINT_4                 = (0X8167);
     static constexpr uint16_t  GT911_POINT_5                 = (0X816F);
 
+    static constexpr uint16_t  COMMAND_SIZE                  = (2);
 
     static constexpr uint16_t  GT911_DEV_ID                   =  (911);
     static constexpr uint8_t   GT911_BASE_REF_RATE             =  (5);

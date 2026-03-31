@@ -28,12 +28,9 @@
  */
 #include "TouchPoints.hpp"
 
-TouchPoint TouchPoints::emptyPoint;  /**< Empty touch point. */
+TouchPoint TouchPoints::emptyPoint = {};  /**< Empty touch point. */
 
-TouchPoints::TouchPoints() : pointCount(0), gestureValid(false), gesture(Gesture::NONE)
-{
-
-}
+TouchPoints::TouchPoints() : pointCount(0), gestureValid(false), gesture(Gesture::NONE) {}
 
 void TouchPoints::clear()
 {
@@ -68,12 +65,14 @@ uint8_t TouchPoints::getPointCount() const
 TouchPoint &TouchPoints::getPoint(uint8_t index)
 {
     if (index < pointCount) return points[index];
+    log_e("Invalid touch point index: %u", index);
     return emptyPoint;
 }
 
 const TouchPoint &TouchPoints::getPoint(uint8_t index) const
 {
     if (index < pointCount) return points[index];
+    log_e("Invalid touch point index: %u", index);
     return emptyPoint;
 }
 

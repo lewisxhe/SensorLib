@@ -38,7 +38,7 @@ struct TouchPoint {
     uint16_t y;        /**< Y coordinate of the touch point. */
     uint16_t pressure; /**< Pressure value (0 if not supported by the chip). */
     uint8_t id;        /**< Touch point ID for multi‑touch tracking. */
-    uint8_t event;     /**< Event type: 0 = none, 1 = down, 2 = move, 3 = up. */
+    uint8_t event;     /**< Event type based on actual hardware feedback, most touch devices do not support. */
 };
 
 /**
@@ -106,8 +106,20 @@ public:
      */
     uint8_t getPointCount() const;
 
+    /**
+     * @brief  Gets a reference to a touch point at the specified index.
+     * @note   The index must be valid (0 to getPointCount()-1).
+     * @param  index: The index of the touch point to retrieve.
+     * @retval A reference to the touch point at the specified index.
+     */
     TouchPoint &getPoint(uint8_t index);
 
+    /**
+     * @brief  Gets a constant reference to a touch point at the specified index.
+     * @note   The index must be valid (0 to getPointCount()-1).
+     * @param  index: The index of the touch point to retrieve.
+     * @retval A constant reference to the touch point at the specified index.
+     */
     const TouchPoint &getPoint(uint8_t index) const;
 
     /**
@@ -130,6 +142,14 @@ public:
      * @return The gesture value. Valid only if hasGesture() returns true.
      */
     Gesture getGesture() const;
+
+    TouchPoint& operator[](uint8_t index) { return getPoint(index); }
+    const TouchPoint& operator[](uint8_t index) const { return getPoint(index); }
+
+    TouchPoint* begin() { return points; }
+    TouchPoint* end() { return points + pointCount; }
+    const TouchPoint* begin() const { return points; }
+    const TouchPoint* end() const { return points + pointCount; }
 
 private:
     TouchPoint points[MAX_POINTS]; /**< Array of touch points. */

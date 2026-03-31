@@ -51,13 +51,6 @@ public:
     ~TouchDrvCST3530() = default;
 
     /**
-    * @brief  Reset the touch driver
-    * @note   This function will reset the touch driver by toggling the reset pin.
-    * @retval None
-    */
-    void reset() override;
-
-    /**
     * @brief Puts the touch driver to sleep
     * @note This function puts the touch driver into sleep mode.
     *       If the device does not have a reset pin connected, it cannot be woken up after being put
@@ -81,22 +74,21 @@ public:
     const TouchPoints &getTouchPoints() override;
 
     /**
-    * @brief  Check if the touch point is pressed
-    * @note   This function will check if the touch point is currently pressed.
-    * @retval True if the touch point is pressed, false otherwise.
-    */
-    bool isPressed() override;
-
-    /**
     * @brief  Get the model name
     * @note   This function will retrieve the model name from the touch driver.
     * @retval The model name.
     */
-    const char *getModelName();
+    const char *getModelName() override;
 
 private:
 
-    bool initImpl(uint8_t addr) override;
+    bool initImpl(uint8_t) override;
+
+    void beforeBegin() override
+    {
+        _pinsCfg.rstHoldTimeMs = 30;
+        _pinsCfg.rstReleaseTimeMs = 50;
+    }
 
     bool writeCommand(uint32_t cmd, uint8_t *read_buffer = nullptr, size_t read_size = 0)
     {
@@ -106,9 +98,9 @@ private:
         write_buffer[2] = (cmd >> 8) & 0xFF;
         write_buffer[3] = (cmd >> 0) & 0xFF;
         if (read_buffer) {
-            return 0 == comm->writeThenRead(write_buffer, arraySize(write_buffer), read_buffer, read_size);
+            return 0 == writeThenRead(write_buffer, arraySize(write_buffer), read_buffer, read_size);
         } else {
-            return 0 == comm->writeBuffer(write_buffer, arraySize(write_buffer));
+            return 0 == writeBuff(write_buffer, arraySize(write_buffer));
         }
     }
 

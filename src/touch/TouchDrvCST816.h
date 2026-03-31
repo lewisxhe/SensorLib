@@ -49,13 +49,6 @@ public:
     ~TouchDrvCST816() = default;
 
     /**
-    * @brief  Reset the touch driver
-    * @note   This function will reset the touch driver by toggling the reset pin.
-    * @retval None
-    */
-    void reset() override;
-
-    /**
     * @brief Puts the touch driver to sleep
     * @note This function puts the touch driver into sleep mode.
     *       If the device does not have a reset pin connected, it cannot be woken up after being put
@@ -65,25 +58,11 @@ public:
     void sleep() override;
 
     /**
-     * @brief  Wake up the touch driver
-     * @note   This function will wake up the touch driver from sleep mode.
-     * @retval None
-     */
-    void wakeup() override;
-
-    /**
      * @brief  Get the touch points
      * @note   This function will retrieve the touch points from the touch driver.
      * @retval A reference to the touch points.
      */
     const TouchPoints &getTouchPoints() override;
-
-    /**
-    * @brief  Check if the touch point is pressed
-    * @note   This function will check if the touch point is currently pressed.
-    * @retval True if the touch point is pressed, false otherwise.
-    */
-    bool isPressed() override;
 
     /**
     * @brief  Get the model name
@@ -108,7 +87,13 @@ public:
     void enableAutoSleep() ;
 
 private:
-    bool initImpl(uint8_t addr);
+    bool initImpl(uint8_t) override;
+
+    void beforeBegin() override
+    {
+        _pinsCfg.rstHoldTimeMs = 30;
+        _pinsCfg.rstReleaseTimeMs = 50;
+    }
 
 protected:
     static constexpr uint8_t  CST8xx_REG_STATUS         = (0x00);

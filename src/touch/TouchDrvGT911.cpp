@@ -29,33 +29,12 @@
  */
 #include "TouchDrvGT911.hpp"
 
-void TouchDrvGT911::reset()
-{
-    if (_rst != -1) {
-        hal->pinMode(_rst, OUTPUT);
-        hal->digitalWrite(_rst, HIGH);
-        hal->delay(10);
-    }
-    if (_irq != -1) {
-        hal->pinMode(_irq, INPUT);
-    }
-    /*
-    * If you perform a software reset on a board without a reset pin connected,
-    * subsequent interrupt settings or re-writing of configurations will be invalid.
-    * For example, when debugging a LilyGo T-Deck, resetting the interrupt mode will
-    * be invalid after a software reset.
-    * */
-    // comm->writeRegister(GT911_COMMAND, 0x02);
-    // writeCommand(0x02);
-}
-
 void TouchDrvGT911::sleep()
 {
-    if (_irq != -1) {
-        hal->pinMode(_irq, OUTPUT);
-        hal->digitalWrite(_irq, LOW);
+    if (_pinsCfg.irqPin != -1) {
+        hal->pinMode(_pinsCfg.irqPin, OUTPUT);
+        hal->digitalWrite(_pinsCfg.irqPin, LOW);
     }
-    // comm->writeRegister(GT911_COMMAND, 0x05);
     writeCommand(0x05);
 
     /*
@@ -63,18 +42,18 @@ void TouchDrvGT911::sleep()
     * The chip platform determines whether
     *
     * * */
-    // if (_irq != -1) {
-    //     hal->digitalWrite(_irq, INPUT);
+    // if (_pinsCfg.irqPin != -1) {
+    //     hal->digitalWrite(_pinsCfg.irqPin, INPUT);
     // }
 }
 
 void TouchDrvGT911::wakeup()
 {
-    if (_irq != -1) {
-        hal->pinMode(_irq, OUTPUT);
-        hal->digitalWrite(_irq, HIGH);
+    if (_pinsCfg.irqPin != -1) {
+        hal->pinMode(_pinsCfg.irqPin, OUTPUT);
+        hal->digitalWrite(_pinsCfg.irqPin, HIGH);
         hal->delay(8);
-        hal->pinMode(_irq, INPUT);
+        hal->pinMode(_pinsCfg.irqPin, INPUT);
     } else {
         reset();
     }
@@ -82,18 +61,19 @@ void TouchDrvGT911::wakeup()
 
 const TouchPoints &TouchDrvGT911::getTouchPoints()
 {
-    static TouchPoints points;
-    uint8_t buffer[39];
-    uint8_t numPoints = 0;
+    static constexpr uint8_t POINT_BUFFER_SIZE = (MAX_FINGER_NUM * BYTES_PER_POINT);
+    uint8_t buffer[POINT_BUFFER_SIZE] = {0};
+    int numPoints = 0;
 
     // Clear cached touch points
-    points.clear();
+    _touchPoints.clear();
 
     numPoints = readGT911(GT911_POINT_INFO);
     // If there is a home button callback and the home button is pressed
     if (_HButtonCallback && (numPoints & 0x10)) {
         _HButtonCallback(_userData);
-        return points;
+        clearBuffer();
+        return _touchPoints;
     }
 
     // Clear the buffer
@@ -101,42 +81,29 @@ const TouchPoints &TouchDrvGT911::getTouchPoints()
 
     // Mask the number of points
     numPoints &= 0x0F;
-    if (numPoints == 0 || numPoints > MAX_FINGER_NUM) {
-        return points;
+    if (numPoints <= 0 || numPoints > MAX_FINGER_NUM) {
+        return _touchPoints;
     }
+
+    uint8_t expectedBytes = numPoints * BYTES_PER_POINT; // 8 bytes per touch point
 
     // GT911_POINT_1  0X814F
     addrToBeBuf(GT911_POINT_1, buffer);
 
-    if (comm->writeThenRead(buffer, 2, buffer, 39) == 0) {
+    if (writeThenRead(buffer, COMMAND_SIZE, buffer, expectedBytes) == 0) {
         for (int i = 0; i < numPoints; i++) {
-            points.addPoint(buffer[1 + i * BYTES_PER_POINT] | (buffer[2 + i * BYTES_PER_POINT] << 8),   ///< Touch point X
-                            buffer[3 + i * BYTES_PER_POINT] | (buffer[4 + i * BYTES_PER_POINT] << 8),   ///< Touch point Y
-                            buffer[5 + i * BYTES_PER_POINT] | (buffer[6 + i * BYTES_PER_POINT] << 8),   ///< Touch point size fill pressure
-                            buffer[i * BYTES_PER_POINT]);                                 ///< Touch point ID
+            const uint8_t id = buffer[i * BYTES_PER_POINT];
+            const uint16_t x = buffer[1 + i * BYTES_PER_POINT] | (buffer[2 + i * BYTES_PER_POINT] << 8);
+            const uint16_t y = buffer[3 + i * BYTES_PER_POINT] | (buffer[4 + i * BYTES_PER_POINT] << 8);
+            const uint16_t pressure = buffer[5 + i * BYTES_PER_POINT] | (buffer[6 + i * BYTES_PER_POINT] << 8);
+            _touchPoints.addPoint(x, y, pressure, id);
         }
 
         // Swap XY or mirroring coordinates,if set
-        updateXY(points);
+        updateXY(_touchPoints);
     }
 
-    return points;
-}
-
-bool TouchDrvGT911::isPressed()
-{
-    if (_irq != -1) {
-        if (_irq_mode == FALLING) {
-            return hal->digitalRead(_irq) == LOW;
-        } else if (_irq_mode == RISING ) {
-            return hal->digitalRead(_irq) == HIGH;
-        } else if (_irq_mode == LOW_LEVEL_QUERY) {
-            return hal->digitalRead(_irq) == LOW;
-        }  else if (_irq_mode == HIGH_LEVEL_QUERY) {
-            return hal->digitalRead(_irq) == HIGH;
-        }
-    }
-    return getPoint();
+    return _touchPoints;
 }
 
 const char *TouchDrvGT911::getModelName()
@@ -147,44 +114,56 @@ const char *TouchDrvGT911::getModelName()
 bool TouchDrvGT911::setInterruptMode(uint8_t mode)
 {
     // GT911_MODULE_SWITCH_1 0x804D
-    uint8_t val = readGT911(GT911_MODULE_SWITCH_1);
-    val &= 0XFC;
-    if (mode == FALLING) {
-        val |= 0x01;
-    } else if (mode == RISING ) {
-        val |= 0x00;
-    } else if (mode == LOW_LEVEL_QUERY ) {
-        val |= 0x02;
-    } else if (mode == HIGH_LEVEL_QUERY ) {
-        val |= 0x03;
+    uint8_t oldTriggerLevel = _pinsCfg.irqTriggerLevel;
+    uint8_t irqMode = readGT911(GT911_MODULE_SWITCH_1);
+    irqMode &= (~IRQ_TRIGGER_MASK);
+    switch (mode) {
+    case FALLING:
+        irqMode |= 0x01;
+        _pinsCfg.irqTriggerLevel = LOW;
+        break;
+    case RISING:
+        irqMode |= 0x00;
+        _pinsCfg.irqTriggerLevel = HIGH;
+        break;
+    case LOW_LEVEL_QUERY:
+        irqMode |= 0x02;
+        _pinsCfg.irqTriggerLevel = LOW;
+        break;
+    case HIGH_LEVEL_QUERY:
+        irqMode |= 0x03;
+        _pinsCfg.irqTriggerLevel = HIGH;
+        break;
     }
-    _irq_mode = mode;
-    writeGT911(GT911_MODULE_SWITCH_1, val);
-    return reloadConfig();
+    writeGT911(GT911_MODULE_SWITCH_1, irqMode);
+    if (!reloadConfig()) {
+        _pinsCfg.irqTriggerLevel = oldTriggerLevel;
+        return false;
+    }
+    return true;
 }
 
 uint8_t TouchDrvGT911::getInterruptMode()
 {
-    uint8_t val = readGT911(GT911_MODULE_SWITCH_1);
-    // return val & 0x03;
-    val &= 0x03;
-    if (val == 0x00) {
-        _irq_mode = RISING;
-    } else if (val == 0x01) {
-        _irq_mode = FALLING;
-    } else if (val == 0x02) {
-        _irq_mode = LOW_LEVEL_QUERY;
-    } else if (val == 0x03) {
-        _irq_mode = HIGH_LEVEL_QUERY;
+    uint8_t irqMode = readGT911(GT911_MODULE_SWITCH_1);
+    irqMode &= IRQ_TRIGGER_MASK;
+    switch (irqMode) {
+    case 0:     ///< RISING
+        _pinsCfg.irqTriggerLevel = HIGH;
+        break;
+    case 1:    ///< FALLING
+        _pinsCfg.irqTriggerLevel = LOW;
+        break;
+    case 2:   ///< LOW_LEVEL_QUERY
+        _pinsCfg.irqTriggerLevel = LOW;
+        break;
+    case 3:  ///< HIGH_LEVEL_QUERY
+        _pinsCfg.irqTriggerLevel = HIGH;
+        break;
+    default:
+        break;
     }
-    return val;
-}
-
-uint8_t TouchDrvGT911::getPoint()
-{
-    uint8_t numPoints = readGT911(GT911_POINT_INFO);
-    clearBuffer();
-    return (numPoints & 0x0F);
+    return irqMode;
 }
 
 uint32_t TouchDrvGT911::getChipID()
@@ -214,7 +193,7 @@ uint8_t TouchDrvGT911::getConfigVersion()
 
 void TouchDrvGT911::updateRefreshRate(uint8_t rate_ms)
 {
-    if ((rate_ms - 5) < 5) {
+    if (rate_ms < 5) {
         rate_ms = 5;
     }
     if (rate_ms > 15) {
@@ -236,7 +215,7 @@ int TouchDrvGT911::getVendorID()
     return readGT911(GT911_VENDOR_ID);
 }
 
-#if 0   //TODO: Dangerous operation, comment it out.
+#ifdef ENABLE_GT911_CONFIG
 bool TouchDrvGT911::writeConfig(const uint8_t *config_buffer, size_t buffer_size)
 {
     uint8_t check_sum = 0;
@@ -250,15 +229,7 @@ bool TouchDrvGT911::writeConfig(const uint8_t *config_buffer, size_t buffer_size
     }
     log_d("Update touch config , write %lu Bytes check sum:0x%X", buffer_size, check_sum);
     uint8_t cmd[] = {lowByte(GT911_CONFIG_VERSION), highByte(GT911_CONFIG_VERSION)};
-    int err =  comm->writeRegister(GT911_CONFIG_VERSION, (uint8_t *)config_buffer, buffer_size);
-
-
-#if 0
-    while (digitalRead(_irq)) {
-        log_i("Wait irq.."); hal->delay(500);
-    }
-    int err =   comm->writeBuffer((uint8_t *)config_buffer, buffer_size);
-#endif
+    int err =  writeBuff(GT911_CONFIG_VERSION, (uint8_t *)config_buffer, buffer_size);
     return err == 0;
 }
 #endif
@@ -267,11 +238,10 @@ bool TouchDrvGT911::writeConfig(const uint8_t *config_buffer, size_t buffer_size
 uint8_t *TouchDrvGT911::loadConfig(size_t *output_size, bool print_out)
 {
     *output_size = 0;
-    uint8_t   *buffer = (uint8_t * )malloc(GT911_REG_LENGTH * sizeof(uint8_t));
+    uint8_t *buffer = (uint8_t *)malloc(GT911_REG_LENGTH);
     if (!buffer)return NULL;
     addrToBeBuf(GT911_CONFIG_VERSION, buffer);
-    if (comm->writeThenRead(buffer, 2, buffer, GT911_REG_LENGTH) == -1) {
-        free(buffer);
+    if (writeThenRead(buffer, COMMAND_SIZE, buffer, GT911_REG_LENGTH) == -1) {
         return NULL;
     }
     if (print_out) {
@@ -293,8 +263,10 @@ uint8_t *TouchDrvGT911::loadConfig(size_t *output_size, bool print_out)
 
 bool TouchDrvGT911::reloadConfig()
 {
-    uint8_t buffer[GT911_REG_LENGTH] = {highByte(GT911_CONFIG_VERSION), lowByte(GT911_CONFIG_VERSION)};
-    if (comm->writeThenRead(buffer, 2, buffer, GT911_REG_LENGTH - 2) == -1) {
+    uint8_t buffer[GT911_REG_LENGTH] = {};
+    buffer[0] = highByte(GT911_CONFIG_VERSION);
+    buffer[1] = lowByte(GT911_CONFIG_VERSION);
+    if (writeThenRead(buffer, 2, buffer, GT911_REG_LENGTH - 2) == -1) {
         return false;
     }
 
@@ -317,32 +289,26 @@ void TouchDrvGT911::setMaxTouchPoint(uint8_t num)
     reloadConfig();
 }
 
-void TouchDrvGT911::setConfigData(uint8_t *data, uint16_t length)
-{
-    _config = data;
-    _config_size = length;
-}
-
 uint8_t TouchDrvGT911::readGT911(uint16_t cmd)
 {
     uint8_t value = 0x00;
     uint8_t write_buffer[2] = {highByte(cmd), lowByte(cmd)};
-    comm->writeThenRead(write_buffer, arraySize(write_buffer),
-                        &value, 1);
+    writeThenRead(write_buffer, arraySize(write_buffer),
+                  &value, 1);
     return value;
 }
 
 int TouchDrvGT911::writeGT911(uint16_t cmd, uint8_t value)
 {
     uint8_t write_buffer[3] = {highByte(cmd), lowByte(cmd), value};
-    return comm->writeBuffer(write_buffer, arraySize(write_buffer));
+    return writeBuff(write_buffer, arraySize(write_buffer));
 }
 
 void TouchDrvGT911::writeCommand(uint8_t command)
 {
     // GT911_COMMAND 0x8040
     uint8_t write_buffer[3] = {0x80, 0x40, command};
-    comm->writeBuffer(write_buffer, arraySize(write_buffer));
+    writeBuff(write_buffer, arraySize(write_buffer));
 }
 
 void TouchDrvGT911::clearBuffer()
@@ -354,8 +320,7 @@ bool TouchDrvGT911::probeAddress()
 {
     const uint8_t device_address[2]  = {GT911_SLAVE_ADDRESS_L, GT911_SLAVE_ADDRESS_H};
     for (size_t i = 0; i < arraySize(device_address); ++i) {
-        I2CParam params(I2CParam::I2C_SET_ADDR, device_address[i]);
-        comm->setParams(params);
+        setAddress(device_address[i]);
         for (int retry = 0; retry < 3; ++retry) {
             _chipID = getChipID();
             if (_chipID == GT911_DEV_ID) {
@@ -368,55 +333,38 @@ bool TouchDrvGT911::probeAddress()
     return false;
 }
 
-bool TouchDrvGT911::initImpl(uint8_t addr)
+bool TouchDrvGT911::initImpl(uint8_t)
 {
-    int16_t x = 0, y = 0;
-
-    if (addr == GT911_SLAVE_ADDRESS_H  && _rst != -1 && _irq != -1) {
+    if (_addr == GT911_SLAVE_ADDRESS_H  && _pinsCfg.rstPin != -1 && _pinsCfg.irqPin != -1) {
 
         log_i("Try using 0x14 as the device address");
 
-        hal->pinMode(_rst, OUTPUT);
-        hal->pinMode(_irq, OUTPUT);
+        hal->pinMode(_pinsCfg.rstPin, OUTPUT);
+        hal->pinMode(_pinsCfg.irqPin, OUTPUT);
 
-        hal->digitalWrite(_rst, LOW);
-        hal->digitalWrite(_irq, HIGH);
+        hal->digitalWrite(_pinsCfg.rstPin, LOW);
+        hal->digitalWrite(_pinsCfg.irqPin, HIGH);
         hal->delayMicroseconds(120);
-        hal->digitalWrite(_rst, HIGH);
-
-#if   defined(ARDUINO)
-        // In the Arduino ESP32 platform, the test delay is 8ms and the GT911
-        // can be accessed correctly. If the time is too long, it will not be accessible.
-        hal->delay(8);
-#elif defined(ESP_PLATFORM)
-        // For the variant of GPIO extended RST,
-        // communication and delay are carried out simultaneously, and 18 ms is measured in T-RGB esp-idf new api
+        hal->digitalWrite(_pinsCfg.rstPin, HIGH);
+        // The stable value after testing was 18ms.
         hal->delay(18);
-#endif
 
-        hal->pinMode(_irq, INPUT);
+        hal->pinMode(_pinsCfg.irqPin, INPUT);
 
-    } else if (addr == GT911_SLAVE_ADDRESS_L && _rst != -1 && _irq != -1) {
+    } else if (_addr == GT911_SLAVE_ADDRESS_L && _pinsCfg.rstPin != -1 && _pinsCfg.irqPin != -1) {
 
         log_i("Try using 0x5D as the device address");
 
-        hal->pinMode(_rst, OUTPUT);
-        hal->pinMode(_irq, OUTPUT);
+        hal->pinMode(_pinsCfg.rstPin, OUTPUT);
+        hal->pinMode(_pinsCfg.irqPin, OUTPUT);
 
-        hal->digitalWrite(_rst, LOW);
-        hal->digitalWrite(_irq, LOW);
+        hal->digitalWrite(_pinsCfg.rstPin, LOW);
+        hal->digitalWrite(_pinsCfg.irqPin, LOW);
         hal->delayMicroseconds(120);
-        hal->digitalWrite(_rst, HIGH);
-#if   defined(ARDUINO)
-        // In the Arduino ESP32 platform, the test hal->delay is 8ms and the GT911
-        // can be accessed correctly. If the time is too long, it will not be accessible.
-        hal->delay(8);
-#elif defined(ESP_PLATFORM)
-        // For the variant of GPIO extended RST,
-        // communication and hal->delay are carried out simultaneously, and 18 ms is measured in T-RGB esp-idf new api
+        hal->digitalWrite(_pinsCfg.rstPin, HIGH);
+        // The stable value after testing was 18ms.
         hal->delay(18);
-#endif
-        hal->pinMode(_irq, INPUT);
+        hal->pinMode(_pinsCfg.irqPin, INPUT);
 
     } else {
         if (!autoProbe()) {
@@ -448,25 +396,6 @@ bool TouchDrvGT911::initImpl(uint8_t addr)
         }
     }
 
-
-#if 0
-    /*If the configuration is not written, the touch screen may be damaged. */
-    if (_config && _config_size != 0) {
-
-        log_d("Current version char :%x", getConfigVersion());
-        hal->delay(100);
-        writeConfig(_config, _config_size);
-        if (_irq != -1) {
-            hal->pinMode(_irq, INPUT);
-        }
-        log_d("WriteConfig version char :%x", getConfigVersion());
-        // hal->delay(1000);
-        // size_t output_size;
-        // loadConfig(&output_size, true);
-        // log_d("loadConfig version char :%x", version_char);
-    }
-#endif
-
     uint8_t x_resolution[2] = {0}, y_resolution[2] = {0};
     for (int i = 0; i < 2; ++i) {
         x_resolution[i] = readGT911(GT911_X_RESOLUTION + i);
@@ -475,49 +404,47 @@ bool TouchDrvGT911::initImpl(uint8_t addr)
         y_resolution[i] = readGT911(GT911_Y_RESOLUTION + i);
     }
 
-    _resX = x_resolution[0] | (x_resolution[1] << 8);
-    _resY = y_resolution[0] | (y_resolution[1] << 8);
+    _touchConfig.resolutionX = x_resolution[0] | (x_resolution[1] << 8);
+    _touchConfig.resolutionY = y_resolution[0] | (y_resolution[1] << 8);
     log_d("Model:GT911");
-    log_d("RST Pin:%d", _rst);
-    log_d("IRQ Pin:%d", _irq);
+    log_d("RST Pin:%d", _pinsCfg.rstPin);
+    log_d("IRQ Pin:%d", _pinsCfg.irqPin);
     log_i("Product id:%ld", _chipID);
     log_d("Firmware version: 0x%x", getFwVersion());
-    log_d("Resolution : X = %d Y = %d", _resX, _resY);
+    log_d("Resolution : X = %d Y = %d", _touchConfig.resolutionX, _touchConfig.resolutionY);
     log_d("Vendor id:%d", getVendorID());
     log_d("Refresh Rate:%d ms", getRefreshRate());
     _maxTouchPoints = readGT911(GT911_TOUCH_NUMBER) & 0x0F;
     log_d("MaxTouchPoint:%d", _maxTouchPoints);
 
-
     // Get the default interrupt trigger mode of the current screen
-    getInterruptMode();
-
-    if ( _irq_mode == RISING) {
+    uint8_t irqMode = getInterruptMode();
+    switch (irqMode) {
+    case 0:     ///< RISING
         log_d("Interrupt Mode:  RISING");
-    } else if (_irq_mode == FALLING) {
+        break;
+    case 1:    ///< FALLING
         log_d("Interrupt Mode:  FALLING");
-    } else if (_irq_mode == LOW_LEVEL_QUERY) {
+        break;
+    case 2:   ///< LOW_LEVEL_QUERY
         log_d("Interrupt Mode:  LOW_LEVEL_QUERY");
-    } else if (_irq_mode == HIGH_LEVEL_QUERY) {
+        break;
+    case 3:  ///< HIGH_LEVEL_QUERY
         log_d("Interrupt Mode:  HIGH_LEVEL_QUERY");
-    } else {
-        log_e("UNKNOWN");
+        break;
+    default:
+        log_e("Interrupt Mode:  UNKNOWN");
+        break;
     }
-
-    if (x == -1 || y == -1) {
-        log_e("The screen configuration is lost, please update the configuration file again !");
-        return false;
-    }
-
 
     return true;
 }
 
 bool TouchDrvGT911::autoProbe()
 {
-    if (_rst != -1) {
-        hal->pinMode(_rst, OUTPUT);
-        hal->digitalWrite(_rst, HIGH);
+    if (_pinsCfg.rstPin != -1) {
+        hal->pinMode(_pinsCfg.rstPin, OUTPUT);
+        hal->digitalWrite(_pinsCfg.rstPin, HIGH);
         hal->delay(10);
     }
 
@@ -530,8 +457,8 @@ bool TouchDrvGT911::autoProbe()
     // Reset Config
     reset();
 
-    if (_irq != -1) {
-        hal->pinMode(_irq, INPUT);
+    if (_pinsCfg.irqPin != -1) {
+        hal->pinMode(_pinsCfg.irqPin, INPUT);
     }
 
     return true;

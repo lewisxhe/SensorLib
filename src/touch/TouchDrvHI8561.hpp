@@ -56,25 +56,11 @@ public:
     ~TouchDrvHI8561() = default;
 
     /**
-    * @brief  Reset the touch driver
-    * @note   This function will reset the touch driver by toggling the reset pin.
-    * @retval None
-    */
-    void reset() override;
-
-    /**
     * @brief Puts the touch driver to sleep
     * @note The chip integrates touch and display functions, and a sleep mode cannot be set.
     * @retval None
     */
     void sleep() override;
-
-    /**
-     * @brief  Wake up the touch driver
-     * @note   The chip integrates touch and display functions, and a sleep mode cannot be set.
-     * @retval None
-     */
-    void wakeup() override;
 
     /**
     * @brief  Get the touch points
@@ -85,13 +71,6 @@ public:
     * @retval A reference to the touch points.
     */
     const TouchPoints &getTouchPoints() override;
-
-    /**
-    * @brief  Check if the touch point is pressed
-    * @note   This function will check if the touch point is currently pressed.
-    * @retval True if the touch point is pressed, false otherwise.
-    */
-    bool isPressed() override;
 
     /**
     * @brief  Get the model name
@@ -105,10 +84,10 @@ private:
     /**
      * @brief  Initialize the touch driver
      * @note   This function will initialize the touch driver by setting up the I2C communication.
-     * @param  addr: The I2C address of the touch driver.
+     * @param  No use
      * @retval True if the initialization was successful, false otherwise.
      */
-    bool initImpl(uint8_t addr) override;
+    bool initImpl(uint8_t) override;
 
     bool inline makePacketThenRead(uint32_t addr, uint8_t *data, uint16_t len)
     {
@@ -119,12 +98,13 @@ private:
         addrBuf[3] = (uint8_t)((addr & 0x0000FF00) >> 8);
         addrBuf[4] = (uint8_t)((addr & 0x000000FF) >> 0);
         addrBuf[5] = 0x03;
-        return comm->writeThenRead(addrBuf, sizeof(addrBuf), data, len) == 0;
+        return writeThenRead(addrBuf, sizeof(addrBuf), data, len) == 0;
     }
 
 protected:
-    static constexpr uint32_t SECTION_INFO_START_ADDR = 0x200110D0;
-    static constexpr uint32_t TOUCH_INFO_START_ADDR = 0x20011120;
+    static constexpr uint32_t REG_SECTION_INFO = 0x200110D8;
+    static constexpr uint32_t REG_INFO = 0x20011120;
+    static constexpr uint32_t REG_POINT = 0x20011123;
     static constexpr uint8_t BYTES_OFFSET = 3;
     static constexpr uint8_t MAX_FINGER_NUM = (10);
     static constexpr uint8_t BYTES_PER_POINT = (5);

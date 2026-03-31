@@ -25,7 +25,6 @@
  * @file      TouchDrvCSTXXX.cpp
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2023-04-24
- * @date      last 2025-01-20
  *
  */
 #include "TouchDrvCSTXXX.hpp"
@@ -37,12 +36,7 @@ TouchDrvCSTXXX::DriverCreator TouchDrvCSTXXX::driverCreators[TouchDrvCSTXXX::dri
     []() -> std::unique_ptr<TouchDrvInterface> { return std::make_unique<TouchDrvCST3530>(); }
 };
 
-TouchDrvCSTXXX::TouchDrvCSTXXX():
-    _writePtr(nullptr),
-    _readPtr(nullptr),
-    _modePtr(nullptr),
-    _touchType(TouchDrv_UNKNOWN),
-    _drv(nullptr) {}
+TouchDrvCSTXXX::TouchDrvCSTXXX() : _touchType(TouchDrv_UNKNOWN) {}
 
 
 void TouchDrvCSTXXX::setTouchDrvModel(TouchDrvType model)
@@ -53,98 +47,36 @@ void TouchDrvCSTXXX::setTouchDrvModel(TouchDrvType model)
 void TouchDrvCSTXXX::setupDriver()
 {
     if (_drv) {
-        _drv->setPins(_rst, _irq);
-        _drv->setCustomMode(_modePtr);
-        _drv->setCustomWrite(_writePtr);
-        _drv->setCustomRead(_readPtr);
+        _drv->setPins(_pinsCfg.rstPin, _pinsCfg.irqPin);
+        _drv->setGpioCallback(_halModeCallback, _halWriteCallback, _halReadCallback);
     }
 }
 
 #if defined(ARDUINO)
 bool TouchDrvCSTXXX::begin(TwoWire &wire, uint8_t addr, int sda, int scl)
 {
-    bool success = false;
-    for (int i = (_touchType == TouchDrv_UNKNOWN) ? 0 : _touchType; i < driverCreatorMaxNum; ++i) {
-        _drv = createDriver(static_cast<TouchDrvType>(i));
-        setupDriver();
-        if (_drv && _drv->begin(wire, addr, sda, scl)) {
-            _touchType = static_cast<TouchDrvType>(i);
-            success = true;
-            break;
-        }
-    }
-    if (!success) {
-        _touchType = TouchDrv_UNKNOWN;
-    }
-    return success;
+    return beginImpl(wire, addr, sda, scl);
 }
 #elif defined(ESP_PLATFORM)
 #if defined(USEING_I2C_LEGACY)
 bool TouchDrvCSTXXX::begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
 {
-    bool success = false;
-    for (int i = (_touchType == TouchDrv_UNKNOWN) ? 0 : _touchType; i < driverCreatorMaxNum; ++i) {
-        _drv = createDriver(static_cast<TouchDrvType>(i));
-        setupDriver();
-        if (_drv && _drv->begin(port_num, addr, sda, scl)) {
-            _touchType = static_cast<TouchDrvType>(i);
-            success = true;
-            break;
-        }
-    }
-    if (!success) {
-        _touchType = TouchDrv_UNKNOWN;
-    }
-    return success;
+    return beginImpl(port_num, addr, sda, scl);
 }
 #else
 bool TouchDrvCSTXXX::begin(i2c_master_bus_handle_t handle, uint8_t addr)
 {
-    bool success = false;
-    for (int i = (_touchType == TouchDrv_UNKNOWN) ? 0 : _touchType; i < driverCreatorMaxNum; ++i) {
-        _drv = createDriver(static_cast<TouchDrvType>(i));
-        setupDriver();
-        if (_drv && _drv->begin(handle, addr)) {
-            _touchType = static_cast<TouchDrvType>(i);
-            success = true;
-            break;
-        }
-    }
-    if (!success) {
-        _touchType = TouchDrv_UNKNOWN;
-    }
-    return success;
+    return beginImpl(handle, addr);
 }
 #endif  // ESP_PLATFORM
 #endif  // ARDUINO
 
-void TouchDrvCSTXXX::setGpioCallback(SensorHalCustom::CustomMode mode_cb,
-                                     SensorHalCustom::CustomWrite write_cb,
-                                     SensorHalCustom::CustomRead read_cb)
-{
-    _writePtr = write_cb;
-    _readPtr = read_cb;
-    _modePtr = mode_cb;
-}
 
 bool TouchDrvCSTXXX::begin(SensorCommCustom::CustomCallback callback,
                            SensorCommCustomHal::CustomHalCallback hal_callback,
                            uint8_t addr)
 {
-    bool success = false;
-    for (int i = (_touchType == TouchDrv_UNKNOWN) ? 0 : _touchType; i < driverCreatorMaxNum; ++i) {
-        _drv = createDriver(static_cast<TouchDrvType>(i));
-        setupDriver();
-        if (_drv && _drv->begin(callback, hal_callback, addr)) {
-            _touchType = static_cast<TouchDrvType>(i);
-            success = true;
-            break;
-        }
-    }
-    if (!success) {
-        _touchType = TouchDrv_UNKNOWN;
-    }
-    return success;
+    return beginImpl(callback, hal_callback, addr);
 }
 
 
@@ -154,47 +86,25 @@ void TouchDrvCSTXXX::reset()
     _drv->reset();
 }
 
-uint8_t TouchDrvCSTXXX::getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point)
-{
-    if (!_drv)return 0;
-    TouchPoints data = getTouchPoints();
-    if (x_array == nullptr || y_array == nullptr) {
-        return data.getPointCount();
-    }
-    if (data.hasPoints()) {
-        uint8_t pointsToCopy = (get_point < data.getPointCount()) ? get_point : data.getPointCount();
-        for (int i = 0; i < pointsToCopy; i++) {
-            const TouchPoint &pt = data.getPoint(i);
-            x_array[i] = pt.x;
-            y_array[i] = pt.y;
-        }
-    }
-    return data.getPointCount();
-}
-
 const TouchPoints &TouchDrvCSTXXX::getTouchPoints()
 {
-    static TouchPoints points;
-    if (!_drv)return points;
-    return _drv->getTouchPoints();
+    return _drv ? _drv->getTouchPoints() : _touchPoints;
 }
 
-bool TouchDrvCSTXXX::isPressed()
+bool TouchDrvCSTXXX::isPressed(uint32_t filter_ms)
 {
     if (!_drv)return false;
-    return _drv->isPressed();
+    return _drv->isPressed(filter_ms);
 }
 
 const char *TouchDrvCSTXXX::getModelName()
 {
-    if (!_drv)return "NULL";
-    return _drv->getModelName();
+    return _drv ? _drv->getModelName() : "NULL";
 }
 
 uint32_t TouchDrvCSTXXX::getChipID()
 {
-    if (!_drv)return 0;
-    return _drv->getChipID();
+    return _drv ? _drv->getChipID() : 0;
 }
 
 void TouchDrvCSTXXX::sleep()
@@ -206,76 +116,63 @@ void TouchDrvCSTXXX::sleep()
 void TouchDrvCSTXXX::wakeup()
 {
     if (!_drv)return;
-    _drv->reset();
+    _drv->wakeup();
 }
 
 uint8_t TouchDrvCSTXXX::getSupportTouchPoint()
 {
-    if (!_drv)return 0;
-    return _drv->getSupportTouchPoint();
+    return _drv ? _drv->getSupportTouchPoint() : 0;
 }
 
-void TouchDrvCSTXXX::getResolution(int16_t &x, int16_t &y)
+void TouchDrvCSTXXX::getResolution(uint16_t &x, uint16_t &y)
 {
     if (!_drv)return;
     _drv->getResolution(x, y);
 }
 
 
-int16_t TouchDrvCSTXXX::getResolutionY()
+uint16_t TouchDrvCSTXXX::getResolutionY()
 {
-    if (!_drv)return 0;
-    return _drv->getResolutionY();
+    return _drv ? _drv->getResolutionY() : 0;
 }
 
-int16_t TouchDrvCSTXXX::getResolutionX()
+uint16_t TouchDrvCSTXXX::getResolutionX()
 {
-    if (!_drv)return 0;
-    return _drv->getResolutionX();
+    return _drv ? _drv->getResolutionX() : 0;
 }
 
 
 void TouchDrvCSTXXX::setCenterButtonCoordinate(int16_t x, int16_t y)
 {
     if (!_drv)return ;
-    const char *model = _drv->getModelName();
-    if (strncmp(model, "CST8", 3) == 0) {
-        TouchDrvCST816 *pT = static_cast<TouchDrvCST816 *>(_drv.get());
-        pT->setCenterButtonCoordinate(x, y);
+    if (_touchType == TouchDrv_CST8XX) {
+        static_cast<TouchDrvCST816 *>(_drv.get())->setCenterButtonCoordinate(x, y);
     }
 }
 
 void TouchDrvCSTXXX::setHomeButtonCallback(TouchDrvInterface::HomeButtonCallback callback, void *user_data)
 {
     if (!_drv)return ;
-    const char *model = _drv->getModelName();
-    if (strncmp(model, "CST8", 3) == 0) {
-        TouchDrvCST816 *pT = static_cast<TouchDrvCST816 *>(_drv.get());
-        pT->setHomeButtonCallback(callback, user_data);
-
-    } else if (strncmp(model, "CST2", 3) == 0) {
-        TouchDrvCST226 *pT = static_cast<TouchDrvCST226 *>(_drv.get());
-        pT->setHomeButtonCallback(callback, user_data);
+    if (_touchType == TouchDrv_CST8XX) {
+        static_cast<TouchDrvCST816 *>(_drv.get())->setHomeButtonCallback(callback, user_data);
+    } else if (_touchType == TouchDrv_CST226) {
+        static_cast<TouchDrvCST226 *>(_drv.get())->setHomeButtonCallback(callback, user_data);
     }
 }
 
 void TouchDrvCSTXXX::disableAutoSleep()
 {
     if (!_drv)return ;
-    const char *model = _drv->getModelName();
-    if (strncmp(model, "CST8", 3) == 0) {
-        TouchDrvCST816 *pT = static_cast<TouchDrvCST816 *>(_drv.get());
-        pT->disableAutoSleep();
+    if (_touchType == TouchDrv_CST8XX) {
+        static_cast<TouchDrvCST816 *>(_drv.get())->disableAutoSleep();
     }
 }
 
 void TouchDrvCSTXXX::enableAutoSleep()
 {
     if (!_drv)return ;
-    const char *model = _drv->getModelName();
-    if (strncmp(model, "CST8", 3) == 0) {
-        TouchDrvCST816 *pT = static_cast<TouchDrvCST816 *>(_drv.get());
-        pT->enableAutoSleep();
+    if (_touchType == TouchDrv_CST8XX) {
+        static_cast<TouchDrvCST816 *>(_drv.get())->enableAutoSleep();
     }
 }
 

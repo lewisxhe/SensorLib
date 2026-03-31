@@ -65,38 +65,23 @@ public:
     void sleep() override;
 
     /**
-    * @brief  Wake up the touch driver
-    * @note   This function will wake up the touch driver from sleep mode.
-    * @retval None
-    */
-    void wakeup() override;
-
-    /**
      * @brief  Get the touch points
      * @note   This function will retrieve the touch points from the touch driver.
      * @retval A reference to the touch points.
      */
     const TouchPoints &getTouchPoints() override;
-    
-    /**
-    * @brief  Check if the touch point is pressed
-    * @note   This function will check if the touch point is currently pressed.
-    * @retval True if the touch point is pressed, false otherwise.
-    */
-    bool isPressed() override;
 
     /**
     * @brief  Get the model name
     * @note   This function will retrieve the model name from the touch driver.
     * @retval The model name.
     */
-    const char *getModelName();
+    const char *getModelName() override;
 
 private:
     static constexpr uint8_t  CST226SE_CHIPTYPE   =  (0xA8);
     static constexpr uint8_t  CST328_CHIPTYPE     =  (0x48);
     static constexpr uint8_t  MAX_FINGER_NUM      =  (5);
 
-    bool initImpl(uint8_t addr);
-
+    bool initImpl(uint8_t) override;
 };

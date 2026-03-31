@@ -75,12 +75,6 @@ public:
     ~TouchDrvFT6X36() = default;
 
     /**
-    * @brief  Reset the touch driver
-    * @note   This function will reset the touch driver by toggling the reset pin.
-    * @retval None
-    */
-    void reset() override;
-    /**
     * @brief Puts the touch driver to sleep
     * @note This function puts the touch driver into sleep mode.
     *       If the device does not have a reset pin connected, it cannot be woken up after being put
@@ -90,25 +84,11 @@ public:
     void sleep() override;
 
     /**
-    * @brief  Wake up the touch driver
-    * @note   This function will wake up the touch driver from sleep mode.
-    * @retval None
-    */
-    void wakeup() override;
-
-    /**
      * @brief  Get the touch points
      * @note   This function will retrieve the touch points from the touch driver.
      * @retval A reference to the touch points.
      */
-    const TouchPoints &getTouchPoints();
-
-    /**
-    * @brief  Check if the touch point is pressed
-    * @note   This function will check if the touch point is currently pressed.
-    * @retval True if the touch point is pressed, false otherwise.
-    */
-    bool isPressed() override;
+    const TouchPoints &getTouchPoints() override;
 
     /**
     * @brief  Get the model name
@@ -142,6 +122,15 @@ public:
      * @retval The touch threshold.
      */
     uint8_t getThreshold(void);
+
+
+    /**
+     * @brief  Set the touch threshold
+     * @note   This function will set the touch threshold for the touch driver.
+     * @param  value: The touch threshold to set.
+     * @retval None
+     */
+    void setThreshold(uint8_t value);
 
     /**
      * @brief  Get the monitor time
@@ -203,17 +192,29 @@ public:
     uint8_t getErrorCode(void);
 
 private:
-    bool initImpl(uint8_t addr) override;
+    bool initImpl(uint8_t) override;
+
+    void beforeBegin() override
+    {
+        _pinsCfg.rstHoldTimeMs = 30;
+        _pinsCfg.rstReleaseTimeMs = 160;
+    }
+
 
     static constexpr uint8_t BYTES_PER_POINT = (6);
-    static constexpr uint8_t MAX_FINGER_NUM = (1);
+    static constexpr uint8_t MAX_FINGER_NUM = (5);
 
-    static constexpr uint8_t FT6X36_VEND_ID              = (0x11);
+    static constexpr uint8_t FT_VEND_ID1                 = (0x11);
+    static constexpr uint8_t FT_VEND_ID2                 = (0xCD);
+    static constexpr uint8_t FT_VEND_ID3                 = (0x51);
+
     static constexpr uint8_t FT3267_CHIP_ID              = (0x33);
+    static constexpr uint8_t FT3068_CHIP_ID              = (0xA0);
+    static constexpr uint8_t FT5336_CHIP_ID              = (0x14);
     static constexpr uint8_t FT6206_CHIP_ID              = (0x06);
     static constexpr uint8_t FT6236_CHIP_ID              = (0x36);
-    static constexpr uint8_t FT6236U_CHIP_ID             = (0x64);
-    static constexpr uint8_t FT5206U_CHIP_ID             = (0x64);
+    static constexpr uint8_t FT6336U_CHIP_ID             = (0x64);
+
     static constexpr uint8_t FT6X36_REG_MODE             = (0x00);
     static constexpr uint8_t FT6X36_REG_GEST             = (0x01);
     static constexpr uint8_t FT6X36_REG_STATUS           = (0x02);

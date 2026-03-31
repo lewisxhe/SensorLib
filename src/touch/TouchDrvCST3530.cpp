@@ -28,17 +28,6 @@
  */
 #include "TouchDrvCST3530.h"
 
-
-void TouchDrvCST3530::reset()
-{
-    if (_rst != -1) {
-        hal->pinMode(_rst, OUTPUT);
-        hal->digitalWrite(_rst, LOW);
-        hal->delay(30);
-        hal->digitalWrite(_rst, HIGH);
-    }
-}
-
 uint16_t TouchDrvCST3530::check_sum_16(int val, uint8_t *buf, uint16_t len)
 {
     uint16_t sum = val;
@@ -46,26 +35,24 @@ uint16_t TouchDrvCST3530::check_sum_16(int val, uint8_t *buf, uint16_t len)
     return sum;
 }
 
-
 const TouchPoints &TouchDrvCST3530::getTouchPoints()
 {
-    static TouchPoints points;
     uint8_t numPoints = 0;
     uint8_t keyNumber = 0;
     uint8_t read_buffer[MAX_READ_BYTES] = {0};
 
     // Clear cached touch points
-    points.clear();
+    _touchPoints.clear();
 
     // If read command fails, return zero points
     if (!writeCommand(READ_COMMAND, read_buffer, sizeof(read_buffer))) {
         writeCommand(CLEAR_COMMAND);
-        return points;
+        return _touchPoints;
     }
     // If status is not 0xFF, clear points
     if (read_buffer[2] != 0xFF) {
         writeCommand(CLEAR_COMMAND);
-        return points;
+        return _touchPoints;
     }
 
     numPoints = read_buffer[3] & 0x0F;  // Get number of touch points (lower 4 bits)
@@ -73,7 +60,7 @@ const TouchPoints &TouchDrvCST3530::getTouchPoints()
 
     if (numPoints == 0 || numPoints > MAX_FINGER_NUM) {
         writeCommand(CLEAR_COMMAND);
-        return points;
+        return _touchPoints;
     }
 
     for (uint8_t i = 0; i < numPoints; i++) {
@@ -83,31 +70,23 @@ const TouchPoints &TouchDrvCST3530::getTouchPoints()
         }
         const uint8_t pos_id  = read_buffer[idx + 8] & 0x0F;
         const uint8_t event   = read_buffer[idx + 8] >> 4;
-        const uint8_t pos_x   = read_buffer[idx + 4] + ((uint16_t)(read_buffer[idx + 7] & 0x0F) << 8);
-        const uint8_t pos_y   = read_buffer[idx + 5] + ((uint16_t)(read_buffer[idx + 7] & 0xF0) << 4);
+        const uint16_t pos_x   = read_buffer[idx + 4] + ((uint16_t)(read_buffer[idx + 7] & 0x0F) << 8);
+        const uint16_t pos_y   = read_buffer[idx + 5] + ((uint16_t)(read_buffer[idx + 7] & 0xF0) << 4);
         const uint8_t pressure  = read_buffer[idx + 6];
 
         if (check_sum_16(0x55, &read_buffer[4], (keyNumber + numPoints) * 5) != (read_buffer[0] | read_buffer[1] << 8)) {
             writeCommand(CLEAR_COMMAND);
-            return points;
+            return _touchPoints;
         }
         if (event != 0x00) {
-            points.addPoint(pos_x, pos_y, pressure, pos_id, event);
+            _touchPoints.addPoint(pos_x, pos_y, pressure, pos_id, event);
         }
     }
     // Clear cached touch points
     writeCommand(CLEAR_COMMAND);
     // Swap XY or mirroring coordinates,if set
-    updateXY(points);
-    return points;
-}
-
-bool TouchDrvCST3530::isPressed()
-{
-    if (_irq != -1) {
-        return hal->digitalRead(_irq) == LOW;
-    }
-    return getTouchPoints().hasPoints();
+    updateXY(_touchPoints);
+    return _touchPoints;
 }
 
 const char *TouchDrvCST3530::getModelName()
@@ -134,30 +113,24 @@ void TouchDrvCST3530::wakeup()
     writeCommand(0xD0000100);
 }
 
-bool TouchDrvCST3530::initImpl(uint8_t addr)
+bool TouchDrvCST3530::initImpl(uint8_t)
 {
-    if (_irq != -1) {
-        hal->pinMode(_irq, INPUT);
-    }
-
-    reset();
-
     int retry = 5;
     uint8_t buffer[50];
     while (retry--) {
         if (writeCommand(INFO_COMMAND, buffer, sizeof(buffer))) {
             if (buffer[2] == 0xCA && buffer[3] == 0xCA) {
                 _maxTouchPoints = MAX_FINGER_NUM;
-                _resY = (buffer[31] << 8) | buffer[30];
-                _resX = (buffer[29] << 8) | buffer[28];
+                _touchConfig.resolutionY = (buffer[31] << 8) | buffer[30];
+                _touchConfig.resolutionX = (buffer[29] << 8) | buffer[28];
                 _chipID = buffer[3] << 24 | buffer[2] << 16 | buffer[1] << 8 | buffer[0];
                 log_d("Model:CST3530");
-                log_d("RST Pin:%d", _rst);
-                log_d("IRQ Pin:%d", _irq);
+                log_d("RST Pin:%d", _pinsCfg.rstPin);
+                log_d("IRQ Pin:%d", _pinsCfg.irqPin);
                 log_d("Tx Channel:%d", buffer[48]);
                 log_d("Rx Channel:%d", buffer[49]);
                 log_d("Key Number:%d", buffer[27]);
-                log_d("Resolution: %d x %d", _resX, _resY);
+                log_d("Resolution: %d x %d", _touchConfig.resolutionX, _touchConfig.resolutionY);
                 log_d("Project ID:%04X", buffer[39] << 24 | buffer[38] << 16 | buffer[37] << 8 | buffer[36]);
                 log_d("Chip Type:%04" PRIX32, _chipID);
                 log_d("Firmware Version:%04X", buffer[35] << 24 | buffer[34] << 16 | buffer[33] << 8 | buffer[32]);

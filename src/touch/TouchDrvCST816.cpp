@@ -28,38 +28,27 @@
  */
 #include "TouchDrvCST816.h"
 
-void TouchDrvCST816::reset()
-{
-    if (_rst != -1) {
-        hal->pinMode(_rst, OUTPUT);
-        hal->digitalWrite(_rst, LOW);
-        hal->delay(30);
-        hal->digitalWrite(_rst, HIGH);
-        hal->delay(50);
-    }
-}
-
 const TouchPoints &TouchDrvCST816::getTouchPoints()
 {
-    static TouchPoints points;
-    uint8_t buffer[13];
+    static constexpr uint8_t POINT_BUFFER_SIZE = 13;
+    uint8_t buffer[POINT_BUFFER_SIZE] = {0};
     uint16_t x = 0, y = 0;
 
     // Clear cached touch points
-    points.clear();
+    _touchPoints.clear();
 
-    if (comm->readRegister(CST8xx_REG_STATUS, buffer, 13) == 0) {
+    if (readRegBuff(CST8xx_REG_STATUS, buffer, POINT_BUFFER_SIZE) == 0) {
 
         // Some CST816T will return all 0xFF after turning off automatic sleep.
         if (buffer[2] == 0x00 || buffer[2] == 0xFF) {
-            return points;
+            return _touchPoints;
         }
 
         uint8_t numPoints = buffer[2] & 0x0F; // Get number of touch points (lower 4 bits)
 
         // CST816 only supports single touch
-        if (numPoints > MAX_FINGER_NUM) {
-            return points;
+        if (numPoints > MAX_FINGER_NUM || numPoints == 0 ) {
+            return _touchPoints;
         }
 
         x = ((buffer[3] & 0x0F) << 8 | buffer[4]);
@@ -68,34 +57,15 @@ const TouchPoints &TouchDrvCST816::getTouchPoints()
         // Depends on touch screen firmware
         if (x == _center_btn_x && y == _center_btn_y && _HButtonCallback) {
             _HButtonCallback(_userData);
-            return points; // Return zero points
+            return _touchPoints; // Return zero points
         }
         // If not center button, add point
-        points.addPoint(x, y);
+        _touchPoints.addPoint(x, y);
         // Swap XY or mirroring coordinates,if set
-        updateXY(points);
+        updateXY(_touchPoints);
     }
 
-    return points;
-}
-
-bool TouchDrvCST816::isPressed()
-{
-    static uint32_t lastPulse = 0;
-    if (_irq != -1) {
-        if (hal->digitalRead(_irq) == LOW) {
-            uint32_t now = hal->millis();
-            //Filter low levels with intervals greater than 1000ms
-            if(now - lastPulse > 1000){
-                lastPulse = now;
-                return false;
-            }
-            lastPulse = now;
-            return false;
-        }
-        return false;
-    }
-    return getTouchPoints().hasPoints();
+    return _touchPoints;
 }
 
 const char *TouchDrvCST816::getModelName()
@@ -119,20 +89,7 @@ const char *TouchDrvCST816::getModelName()
 
 void TouchDrvCST816::sleep()
 {
-    comm->writeRegister(CST8xx_REG_SLEEP, 0x03);
-#ifdef ARDUINO_ARCH_ESP32
-    if (_irq != -1) {
-        hal->pinMode(_irq, OPEN_DRAIN);
-    }
-    if (_rst != -1) {
-        hal->pinMode(_rst, OPEN_DRAIN);
-    }
-#endif
-}
-
-void TouchDrvCST816::wakeup()
-{
-    reset();
+    writeReg(CST8xx_REG_SLEEP, 0x03);
 }
 
 void TouchDrvCST816::disableAutoSleep()
@@ -144,7 +101,7 @@ void TouchDrvCST816::disableAutoSleep()
     case CST816D_CHIP_ID:
         reset();
         hal->delay(50);
-        comm->writeRegister(CST8xx_REG_DIS_AUTOSLEEP, 0x01);
+        writeReg(CST8xx_REG_DIS_AUTOSLEEP, 0x01);
         break;
     case CST716_CHIP_ID:
     default:
@@ -161,7 +118,7 @@ void TouchDrvCST816::enableAutoSleep()
     case CST816D_CHIP_ID:
         reset();
         hal->delay(50);
-        comm->writeRegister(CST8xx_REG_DIS_AUTOSLEEP, (uint8_t)0x00);
+        writeReg(CST8xx_REG_DIS_AUTOSLEEP, (uint8_t)0x00);
         break;
     case CST716_CHIP_ID:
     default:
@@ -169,23 +126,12 @@ void TouchDrvCST816::enableAutoSleep()
     }
 }
 
-bool TouchDrvCST816::initImpl(uint8_t addr)
+bool TouchDrvCST816::initImpl(uint8_t)
 {
-
-    if (_rst != -1) {
-        hal->pinMode(_rst, OUTPUT);
-    }
-
-    if (_irq != -1) {
-        hal->pinMode(_irq, INPUT);
-    }
-
-    reset();
-
-    int chip_id =   comm->readRegister(CST8xx_REG_CHIP_ID);
+    int chip_id = readReg(CST8xx_REG_CHIP_ID);
     log_i("Chip ID:0x%x", chip_id);
 
-    int version =   comm->readRegister(CST8xx_REG_FW_VERSION);
+    int version = readReg(CST8xx_REG_FW_VERSION);
     log_i("Version :0x%x", version);
 
     // CST716  : 0x20

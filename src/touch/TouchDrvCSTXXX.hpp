@@ -50,15 +50,15 @@ class TouchDrvCSTXXX : public TouchDrvInterface
 {
 public:
     /**
-    * @brief  Constructor for the touch driver
-    * @retval None
-    */
+     * @brief  Constructor for the touch driver
+     * @retval None
+     */
     TouchDrvCSTXXX();
 
     /**
-    * @brief  Destructor for the touch driver
-    * @retval None
-    */
+     * @brief  Destructor for the touch driver
+     * @retval None
+     */
     ~TouchDrvCSTXXX() = default;
 
 // *INDENT-OFF*
@@ -118,29 +118,19 @@ public:
                uint8_t addr) override;
 
     /**
-     * @brief  Sets the GPIO callbacks for the touch driver
-     * @note   This function sets the callbacks for the GPIO operations in the touch driver.
-     * @param  mode_cb: The callback for the mode change
-     * @param  write_cb: The callback for the write operation
-     * @param  read_cb: The callback for the read operation
+     * @brief  Reset the touch driver
+     * @note   This function will reset the touch driver by toggling the reset pin.
      * @retval None
      */
-    void setGpioCallback(CustomMode mode_cb, CustomWrite write_cb, CustomRead read_cb);
-
-    /**
-    * @brief  Reset the touch driver
-    * @note   This function will reset the touch driver by toggling the reset pin.
-    * @retval None
-    */
     void reset() override;
 
     /**
-    * @brief Puts the touch driver to sleep
-    * @note This function puts the touch driver into sleep mode.
-    *       If the device does not have a reset pin connected, it cannot be woken up after being put
-    *       into sleep mode and must be powered on again.
-    * @retval None
-    */
+     * @brief Puts the touch driver to sleep
+     * @note This function puts the touch driver into sleep mode.
+     *       If the device does not have a reset pin connected, it cannot be woken up after being put
+     *       into sleep mode and must be powered on again.
+     * @retval None
+     */
     void sleep() override;
 
     /**
@@ -151,16 +141,6 @@ public:
     void wakeup() override;
 
     /**
-     * @brief  Get the touch point coordinates
-     * @note   This function will retrieve the touch point coordinates from the touch driver.
-     * @param  *x_array: Pointer to the array to store the X coordinates
-     * @param  *y_array: Pointer to the array to store the Y coordinates
-     * @param  size: Number of touch points to retrieve
-     * @retval Return the number of touch points retrieved
-     */
-    uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point = 1) override __attribute__((deprecated("use getTouchPoints instead of getPoint")));
-
-    /**
      * @brief  Get the touch points
      * @note   This function will retrieve the touch points from the touch driver.
      * @retval The touch points.
@@ -168,24 +148,28 @@ public:
     const TouchPoints& getTouchPoints() override;
 
     /**
-    * @brief  Check if the touch point is pressed
-    * @note   This function will check if the touch point is currently pressed.
-    * @retval True if the touch point is pressed, false otherwise.
-    */
-    bool isPressed() override;
+     * @brief Check if any touch point is currently pressed.
+     * @note  The `isPressed` method is suitable for screens with an interrupt pin connected, using the interrupt level 
+     * to detect whether a touch is pressed. For devices without an interrupt pin connected, simply call `getTouchPoints`.
+     * @param filter_ms Optional debounce/filter time in milliseconds. If > 0, 
+     * the function will only return true if a touch has been detected continuously for at least this duration.
+     * @retval true  At least one touch point detected.
+     * @retval false No touch detected.
+     */
+    bool isPressed(uint32_t filter_ms = 0) override;
 
     /**
-    * @brief  Get the model name
-    * @note   This function will retrieve the model name from the touch driver.
-    * @retval The model name.
-    */
+     * @brief  Get the model name
+     * @note   This function will retrieve the model name from the touch driver.
+     * @retval The model name.
+     */
     const char *getModelName() override;
 
     /**
-    * @brief  Get the chip ID
-    * @note   This function will retrieve the chip ID from the touch driver.
-    * @retval The chip ID.
-    */
+     * @brief  Get the chip ID
+     * @note   This function will retrieve the chip ID from the touch driver.
+     * @retval The chip ID.
+     */
     uint32_t getChipID() override;
 
     /**
@@ -260,27 +244,27 @@ public:
      * @param  &y: The Y coordinate of the touch point
      * @retval None
      */
-    void getResolution(int16_t &x, int16_t &y) override;
-
-        /**
-     * @brief  Gets the touch point resolution
-     * @note   This function retrieves the touch point resolution from the touch driver.
-     * @retval None
-     */
-    int16_t getResolutionX() override;
+    void getResolution(uint16_t &x, uint16_t &y) override;
 
     /**
      * @brief  Gets the touch point resolution
      * @note   This function retrieves the touch point resolution from the touch driver.
      * @retval None
      */
-    int16_t getResolutionY() override;
+    uint16_t getResolutionX() override;
+
+    /**
+     * @brief  Gets the touch point resolution
+     * @note   This function retrieves the touch point resolution from the touch driver.
+     * @retval None
+     */
+    uint16_t getResolutionY() override;
 
 // *INDENT-ON*
 
 private:
 
-    bool initImpl(uint8_t addr) override
+    bool initImpl(uint8_t) override
     {
         return false;
     }
@@ -292,11 +276,26 @@ private:
 
     std::unique_ptr<TouchDrvInterface> createDriver(TouchDrvType type)
     {
-        if (/*type >= TouchDrv_UNKNOWN &&*/
-            type < sizeof(driverCreators) / sizeof(driverCreators[0])) {
+        if (type < driverCreatorMaxNum) {
             return driverCreators[type]();
         }
         return nullptr;
+    }
+
+    template<typename... Args>
+    bool beginImpl(Args&&... args)
+    {
+        for (int i = (_touchType == TouchDrv_UNKNOWN) ? 0 : _touchType;
+                i < driverCreatorMaxNum; ++i) {
+            _drv = createDriver(static_cast<TouchDrvType>(i));
+            setupDriver();
+            if (_drv && _drv->begin(std::forward<Args>(args)...)) {
+                _touchType = static_cast<TouchDrvType>(i);
+                return true;
+            }
+        }
+        _touchType = TouchDrv_UNKNOWN;
+        return false;
     }
 
     static constexpr size_t TOUCH_DRV_TYPE_VALID_COUNT = TouchDrv_UNKNOWN;
@@ -305,10 +304,6 @@ private:
                   "driverCreators size mismatch");
 
     void setupDriver();
-
-    SensorHalCustom::CustomWrite        _writePtr;
-    SensorHalCustom::CustomRead         _readPtr;
-    SensorHalCustom::CustomMode         _modePtr;
     TouchDrvType                        _touchType;
     std::unique_ptr<TouchDrvInterface>  _drv;
 };

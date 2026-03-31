@@ -29,58 +29,47 @@
  */
 #include "TouchDrvFT6X36.hpp"
 
-void TouchDrvFT6X36::reset()
-{
-    if (_rst != -1) {
-        hal->pinMode(_rst, OUTPUT);
-        hal->digitalWrite(_rst, HIGH);
-        hal->delay(10);
-        hal->digitalWrite(_rst, LOW);
-        hal->delay(30);
-        hal->digitalWrite(_rst, HIGH);
-        // For the variant of GPIO extended RST,
-        // communication and hal->delay are carried out simultaneously, and 160ms is measured in T-RGB esp-idf new api
-        hal->delay(160);
-    }
-}
-
 void TouchDrvFT6X36::sleep()
 {
-    comm->writeRegister(FT6X36_REG_POWER_MODE, PMODE_DEEP_SLEEP);
-}
-
-void TouchDrvFT6X36::wakeup()
-{
-    reset();
+    writeReg(FT6X36_REG_POWER_MODE, PMODE_DEEP_SLEEP);
 }
 
 const TouchPoints &TouchDrvFT6X36::getTouchPoints()
 {
-    static TouchPoints points;
-    uint8_t buffer[16];
-    points.clear(); // Clear cached touch points
-    if (comm->readRegister(FT6X36_REG_MODE, buffer, 16) == 0) {
-        uint8_t numPoints = buffer[2] & 0x0F;   // Get number of touch points
-        if (numPoints == 0 || numPoints > MAX_FINGER_NUM) {
-            return points;
-        }
-        for (int i = 0; i < numPoints; i++) {
-            points.addPoint(((buffer[3 + i * BYTES_PER_POINT] & 0x0F) << 8) | buffer[4 + i * BYTES_PER_POINT],
-                            ((buffer[5 + i * BYTES_PER_POINT] & 0x0F) << 8) | buffer[6 + i * BYTES_PER_POINT],
-                            (buffer[5 + i * BYTES_PER_POINT] >> 4));
-        }
-        // Swap XY or mirroring coordinates,if set
-        updateXY(points);
+    static constexpr size_t POINT_BUFFER_SIZE = MAX_FINGER_NUM * BYTES_PER_POINT;
+    uint8_t buffer[POINT_BUFFER_SIZE] = {0};
+    _touchPoints.clear(); // Clear cached touch points
+    int numPoints = readReg(FT6X36_REG_STATUS);
+    if (numPoints < 0) {
+        log_e("Failed to read touch points: %d", numPoints);
+        return _touchPoints;
     }
-    return points;
-}
+    if (numPoints == 0 || numPoints > MAX_FINGER_NUM) {
+        return _touchPoints;
+    }
+    uint8_t expectedBytes = numPoints * BYTES_PER_POINT; // 6 bytes per touch point
 
-bool TouchDrvFT6X36::isPressed()
-{
-    if (_irq != -1) {
-        return hal->digitalRead(_irq) == LOW;
+    // Read all touch points data in a single burst read for efficiency
+    if (readRegBuff(FT6X36_REG_TOUCH1_XH, buffer, expectedBytes) == 0) {
+        for (int i = 0; i < numPoints; i++) {
+            const uint8_t eventFlag = (buffer[0 + i * BYTES_PER_POINT] & 0xC0) >> 6;
+            const uint8_t touchId = (buffer[2 + i * BYTES_PER_POINT]  >> 4) & 0x0F;
+            const uint16_t x = ((buffer[0 + i * BYTES_PER_POINT] & 0x0F) << 8) | buffer[1 + i * BYTES_PER_POINT];
+            const uint16_t y = ((buffer[2 + i * BYTES_PER_POINT] & 0x0F) << 8) | buffer[3 + i * BYTES_PER_POINT];
+            const uint8_t weight = buffer[4 + i * BYTES_PER_POINT];
+            // Not used in FT6206, but valid in FT6236/FT6336U, representing the touch area size.
+            // The value is typically 0-15, where higher values indicate a larger touch area,
+            // which can be useful for distinguishing between a fingertip and a larger object like a
+            // stylus or palm. In some applications, this information can be used to improve touch accuracy
+            // or to implement features like palm rejection.
+            // const uint8_t area = (buffer[5 + i * BYTES_PER_POINT] & 0xF0) >> 4;
+            // Serial.printf("Point %d: ID=%d, Event=%d, X=%d, Y=%d, Weight=%d, Area=%d\n", i, touchId, eventFlag, x, y, weight, area);
+            _touchPoints.addPoint(x, y, weight, touchId, eventFlag);
+        }
+        // Swap XY or mirroring coordinates, if set
+        updateXY(_touchPoints);
     }
-    return comm->readRegister(FT6X36_REG_STATUS) & 0x0F;
+    return _touchPoints;
 }
 
 const char *TouchDrvFT6X36::getModelName()
@@ -88,20 +77,22 @@ const char *TouchDrvFT6X36::getModelName()
     switch (_chipID) {
     case FT6206_CHIP_ID: return "FT6206";
     case FT6236_CHIP_ID: return "FT6236";
-    case FT6236U_CHIP_ID: return "FT6236U";
+    case FT6336U_CHIP_ID: return "FT6336U";
     case FT3267_CHIP_ID: return "FT3267";
+    case FT5336_CHIP_ID: return "FT5336";
+    case FT3068_CHIP_ID: return "FT3068";
     default: return "UNKNOWN";
     }
 }
 
 uint8_t TouchDrvFT6X36::getDeviceMode(void)
 {
-    return comm->readRegister(FT6X36_REG_MODE) & 0x03;
+    return readReg(FT6X36_REG_MODE) & 0x03;
 }
 
 uint8_t TouchDrvFT6X36::getGesture()
 {
-    int val = comm->readRegister(FT6X36_REG_GEST);
+    int val = readReg(FT6X36_REG_GEST);
     switch (val) {
     case 0x10: return MOVE_UP;
     case 0x14: return MOVE_RIGHT;
@@ -116,99 +107,99 @@ uint8_t TouchDrvFT6X36::getGesture()
 
 void TouchDrvFT6X36::setDeviceMode(uint8_t value)
 {
-    comm->writeRegister(FT6X36_REG_MODE, value);
+    writeReg(FT6X36_REG_MODE, value);
 }
 
 uint8_t TouchDrvFT6X36::getThreshold(void)
 {
-    return comm->readRegister(FT6X36_REG_THRESHOLD);
+    return readReg(FT6X36_REG_THRESHOLD);
+}
+
+void TouchDrvFT6X36::setThreshold(uint8_t value)
+{
+    writeReg(FT6X36_REG_THRESHOLD, value);
 }
 
 uint8_t TouchDrvFT6X36::getMonitorTime(void)
 {
-    return comm->readRegister(FT6X36_REG_MONITOR_TIME);
+    return readReg(FT6X36_REG_MONITOR_TIME);
 }
 
 void TouchDrvFT6X36::setMonitorTime(uint8_t sec)
 {
-    comm->writeRegister(FT6X36_REG_MONITOR_TIME, sec);
+    writeReg(FT6X36_REG_MONITOR_TIME, sec);
 }
 
 uint16_t TouchDrvFT6X36::getLibraryVersion()
 {
-    uint8_t buffer[2];
-    comm->readRegister(FT6X36_REG_LIB_VERSION_H, buffer, 2);
+    uint8_t buffer[2] = {0};
+    readRegBuff(FT6X36_REG_LIB_VERSION_H, buffer, 2);
     return (buffer[0] << 8) | buffer[1];
 }
 
 void TouchDrvFT6X36::interruptPolling(void)
 {
-    comm->writeRegister(FT6X36_REG_INT_STATUS, 0x00);
+    writeReg(FT6X36_REG_INT_STATUS, 0x00);
 }
 
 void TouchDrvFT6X36::interruptTrigger(void)
 {
-    comm->writeRegister(FT6X36_REG_INT_STATUS, 0x01);
+    writeReg(FT6X36_REG_INT_STATUS, 0x01);
 }
 
 void TouchDrvFT6X36::setPowerMode(PowerMode mode)
 {
-    comm->writeRegister(FT6X36_REG_POWER_MODE, mode);
+    writeReg(FT6X36_REG_POWER_MODE, mode);
 }
 
 uint8_t TouchDrvFT6X36::getVendorID(void)
 {
-    return comm->readRegister(FT6X36_REG_VENDOR1_ID);
+    return readReg(FT6X36_REG_VENDOR1_ID);
 }
 
 uint8_t TouchDrvFT6X36::getErrorCode(void)
 {
-    return comm->readRegister(FT6X36_REG_ERROR_STATUS);
+    return readReg(FT6X36_REG_ERROR_STATUS);
 }
 
-bool TouchDrvFT6X36::initImpl(uint8_t addr)
+bool TouchDrvFT6X36::initImpl(uint8_t)
 {
-    if (_irq != -1) {
-        hal->pinMode(_irq, INPUT);
-    }
+    uint8_t vendId = readReg(FT6X36_REG_VENDOR1_ID);
 
-    reset();
-
-    uint8_t vendId = comm->readRegister(FT6X36_REG_VENDOR1_ID);
-
-    if (vendId != FT6X36_VEND_ID) {
-        log_e("Vendor id is 0x%X not match!", vendId);
+    switch (vendId) {
+    case FT_VEND_ID1:
+    case FT_VEND_ID2:
+    case FT_VEND_ID3:
+        break;
+    default:
+        log_e("Vendor id: 0x%X not match!", vendId);
         return false;
     }
 
-    _chipID = comm->readRegister(FT6X36_REG_CHIP_ID);
+    _chipID = readReg(FT6X36_REG_CHIP_ID);
 
-    if ((_chipID != FT6206_CHIP_ID) &&
-            (_chipID != FT6236_CHIP_ID) &&
-            (_chipID != FT6236U_CHIP_ID)  &&
-            (_chipID != FT3267_CHIP_ID)) {
-        log_e("Vendor id is not match!");
-        log_e("ChipID:0x%lx should be 0x06 or 0x36 or 0x64", _chipID);
+    switch (_chipID) {
+    case FT3267_CHIP_ID:
+    case FT5336_CHIP_ID:
+    case FT6206_CHIP_ID:
+    case FT6236_CHIP_ID:
+    case FT6336U_CHIP_ID:
+    case FT3068_CHIP_ID:
+        break;
+    default:
+        log_e("Chip ID: 0x%lx not match!", _chipID);
         return false;
     }
 
     log_i("Vend ID: 0x%X", vendId);
     log_i("Chip ID: 0x%lx", _chipID);
-    log_i("Firm Version: 0x%X", comm->readRegister(FT6X36_REG_FIRM_VERS));
-    log_i("Point Rate Hz: %u", comm->readRegister(FT6X36_REG_PERIOD_ACTIVE));
-    log_i("Thresh : %u", comm->readRegister(FT6X36_REG_THRESHOLD));
-
-    // change threshold to be higher/lower
-    comm->writeRegister(FT6X36_REG_THRESHOLD, 60);
-
-    log_i("Chip library version : 0x%x", getLibraryVersion());
-
+    log_i("Firmware Version: 0x%X", readReg(FT6X36_REG_FIRM_VERS));
+    log_i("Report Rate Hz: %u", readReg(FT6X36_REG_PERIOD_ACTIVE));
+    log_i("Threshold : %u", readReg(FT6X36_REG_THRESHOLD));
+    log_i("Library version : 0x%x", getLibraryVersion());
     // This register describes period of monitor status, it should not less than 30.
-    log_i("Chip period of monitor status : 0x%x", comm->readRegister(FT6X36_REG_PERIOD_MONITOR));
-
-    // This register describes the period of active status, it should not less than 12
-
-    _maxTouchPoints = 1;
+    log_i("Chip period of monitor status : 0x%x", readReg(FT6X36_REG_PERIOD_MONITOR));
+    _maxTouchPoints = MAX_FINGER_NUM;
 
     return true;
 }
