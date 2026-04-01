@@ -40,3 +40,6 @@ include/readme.txt
 filters/*
 platformio_extra_envs.ini
 *.tar.gz
+build*
+*.lock
+sdkconfig*
