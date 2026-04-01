@@ -88,7 +88,7 @@ public:
     bool begin(i2c_master_bus_handle_t handle, uint8_t addr)
     {
         beforeBegin();
-        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, handle, addr, -1, -1)) return false;
+        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, handle, addr)) return false;
         _addr = addr; _iface = COMM_I2C;
         afterCommReady();
         if (!initImpl(_addr)) {
