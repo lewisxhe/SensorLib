@@ -43,7 +43,7 @@ const TouchPoints &TouchDrvHI8561::getTouchPoints()
     _touchPoints.clear(); // Clear cached touch points
 
     uint8_t numPoints = 0;
-    if (makePacketThenRead(REG_INFO, buffer, 1) < 0) {
+    if (!makePacketThenRead(REG_INFO, buffer, 1)) {
         return _touchPoints;
     }
 
@@ -54,7 +54,7 @@ const TouchPoints &TouchDrvHI8561::getTouchPoints()
 
     uint8_t expectedBytes = numPoints * BYTES_PER_POINT; // 6 bytes per touch point
 
-    if (makePacketThenRead(REG_POINT, buffer, expectedBytes) < 0) {
+    if (!makePacketThenRead(REG_POINT, buffer, expectedBytes)) {
         return _touchPoints;
     }
 

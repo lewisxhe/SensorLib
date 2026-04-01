@@ -111,18 +111,18 @@ const char *TouchDrvGT911::getModelName()
     return "GT911";
 }
 
-bool TouchDrvGT911::setInterruptMode(uint8_t mode)
+bool TouchDrvGT911::setInterruptMode(InterruptMode mode)
 {
     // GT911_MODULE_SWITCH_1 0x804D
     uint8_t oldTriggerLevel = _pinsCfg.irqTriggerLevel;
     uint8_t irqMode = readGT911(GT911_MODULE_SWITCH_1);
     irqMode &= (~IRQ_TRIGGER_MASK);
     switch (mode) {
-    case FALLING:
+    case FALLING_EDGE:
         irqMode |= 0x01;
         _pinsCfg.irqTriggerLevel = LOW;
         break;
-    case RISING:
+    case RISING_EDGE:
         irqMode |= 0x00;
         _pinsCfg.irqTriggerLevel = HIGH;
         break;
@@ -143,15 +143,15 @@ bool TouchDrvGT911::setInterruptMode(uint8_t mode)
     return true;
 }
 
-uint8_t TouchDrvGT911::getInterruptMode()
+TouchDrvGT911::InterruptMode TouchDrvGT911::getInterruptMode()
 {
     uint8_t irqMode = readGT911(GT911_MODULE_SWITCH_1);
     irqMode &= IRQ_TRIGGER_MASK;
     switch (irqMode) {
-    case 0:     ///< RISING
+    case 0:     ///< RISING_EDGE
         _pinsCfg.irqTriggerLevel = HIGH;
         break;
-    case 1:    ///< FALLING
+    case 1:    ///< FALLING_EDGE
         _pinsCfg.irqTriggerLevel = LOW;
         break;
     case 2:   ///< LOW_LEVEL_QUERY
@@ -163,7 +163,7 @@ uint8_t TouchDrvGT911::getInterruptMode()
     default:
         break;
     }
-    return irqMode;
+    return static_cast<InterruptMode>(irqMode);
 }
 
 uint32_t TouchDrvGT911::getChipID()
