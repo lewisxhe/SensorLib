@@ -36,11 +36,12 @@
 #include <Arduino.h>
 #include <TouchDrv.hpp>
 
+#ifdef ARDUINO_ESP32P4_DEV
+
 #if ESP_ARDUINO_VERSION_VAL(3,3,7) > ESP_ARDUINO_VERSION
 #error "This example requires Arduino-ESP32 version 3.3.7 or higher.Please update your Arduino-ESP32 core to the latest version to run this example."
 #endif
 
-#ifdef ARDUINO_ESP32P4_DEV
 #include <IoExpanderXL9555.hpp>
 #include <SensorWireHelper.h>
 #include "esp_lcd_mipi_dsi.h"
