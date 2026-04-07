@@ -78,18 +78,18 @@ void setup()
     printBanner();
 
     Serial.println("\n=== Driver Initialization ===");
-    
+
     if (!haptic.begin(Wire, DRV2605_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
         Serial.println("[FATAL] DRV2605 init failed!");
         while (1) delay(1000);
     }
 
     Serial.println("[OK] Driver initialized");
-    Serial.printf("  Chip Name:    %s\n", haptic.getChipName());
-    Serial.printf("  Chip ID:      0x%02X\n", haptic.getChipID());
-    Serial.printf("  Actuator:     %s\n", haptic.getActuatorType() == HapticActuatorType::LRA ? "LRA" : "ERM");
-    Serial.printf("  VBAT:         %d mV\n", haptic.getVbat());
-    Serial.printf("  Mode:         %d\n", static_cast<uint8_t>(haptic.getMode()));
+    Serial.print("  Chip Name:    "); Serial.println(haptic.getChipName());
+    Serial.print("  Chip ID:      0x"); Serial.println(haptic.getChipID(), HEX);
+    Serial.print("  Actuator:     "); Serial.println(haptic.getActuatorType() == HapticActuatorType::LRA ? "LRA" : "ERM");
+    Serial.print("  VBAT:         "); Serial.print(haptic.getVbat()); Serial.println(" mV");
+    Serial.print("  Mode:         "); Serial.println(static_cast<uint8_t>(haptic.getMode()));
     printHelp();
 }
 
@@ -100,7 +100,7 @@ void loop()
 
         if (cmd >= '1' && cmd <= '9') {
             uint8_t idx = cmd - '1';
-            Serial.printf("Playing: %s\n", effectList[idx]);
+            Serial.print("Playing: "); Serial.println(effectList[idx]);
             haptic.playEffect(idx + 1);
         } else if (cmd == 'e' || cmd == 'E') {
             Serial.println("\n--- Effect List (1-117) ---");
@@ -115,12 +115,12 @@ void loop()
             uint8_t libNum = lib - '0';
             if (libNum >= 1 && libNum <= 6) {
                 haptic.selectLibrary(libNum);
-                Serial.printf("Library set to: %d\n", libNum);
+                Serial.print("Library set to: "); Serial.println(libNum);
             }
         } else if (cmd == 'a' || cmd == 'A') {
             auto type = haptic.getActuatorType();
             haptic.setActuatorType(type == HapticActuatorType::ERM ? HapticActuatorType::LRA : HapticActuatorType::ERM);
-            Serial.printf("Actuator: %s\n", haptic.getActuatorType() == HapticActuatorType::ERM ? "ERM" : "LRA");
+            Serial.print("Actuator: "); Serial.println(haptic.getActuatorType() == HapticActuatorType::ERM ? "ERM" : "LRA");
         } else if (cmd == 's' || cmd == 'S') {
             haptic.stop();
             Serial.println("Stopped");
@@ -131,7 +131,7 @@ void loop()
             int val = Serial.parseInt();
             if (val >= 0 && val <= 255) {
                 haptic.setRealtimeValue(static_cast<uint8_t>(val));
-                Serial.printf("RTP Value: %d\n", val);
+                Serial.print("RTP Value: "); Serial.println(val);
             }
             haptic.setMode(HapticMode::INTERNAL_TRIGGER);
         } else if (cmd == 'c' || cmd == 'C') {
@@ -157,13 +157,13 @@ void loop()
             }
             uint8_t effectNum = numStr.toInt();
             if (effectNum >= 1 && effectNum <= 117) {
-                Serial.printf("Playing effect: %d\n", effectNum);
+                Serial.print("Playing effect: "); Serial.println(effectNum);
                 haptic.playEffect(effectNum);
             } else {
-                Serial.printf("Invalid: %d (range 1-117)\n", effectNum);
+                Serial.print("Invalid: "); Serial.print(effectNum); Serial.println(" (range 1-117)");
             }
         } else if (cmd != '\n' && cmd != '\r' && cmd != ' ') {
-            Serial.printf("[?] Unknown: '%c'\n", cmd);
+            Serial.print("[?] Unknown: '"); Serial.println(cmd);
         }
     }
 

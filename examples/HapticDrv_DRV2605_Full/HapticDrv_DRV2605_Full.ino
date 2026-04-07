@@ -53,23 +53,23 @@ void testCapabilities()
     Serial.println("\n[TEST] Device Capabilities");
     auto cap = haptic.getCapabilities();
 
-    Serial.printf("  F0 Calibration:    %s\n", cap.hasF0Calibration ? "Yes" : "No");
-    Serial.printf("  VBAT Compensation: %s\n", cap.hasVbatCompensation ? "Yes" : "No");
-    Serial.printf("  RTP Mode:          %s\n", cap.hasRTP ? "Yes" : "No");
-    Serial.printf("  Sequence:          %s\n", cap.hasSequence ? "Yes" : "No");
-    Serial.printf("  Auto Calibration:   %s\n", cap.hasAutoCalibration ? "Yes" : "No");
-    Serial.printf("  Break Effect:      %s\n", cap.hasBreakEffect ? "Yes" : "No");
-    Serial.printf("  Overdrive:         %s\n", cap.hasOverdrive ? "Yes" : "No");
-    Serial.printf("  Continuous Mode:   %s\n", cap.hasContinuousMode ? "Yes" : "No");
-    Serial.printf("  Max Effects:       %d\n", cap.maxEffectCount);
-    Serial.printf("  Max Sequence:      %d\n", cap.maxSequenceLength);
+    Serial.print("  F0 Calibration:    "); Serial.println(cap.hasF0Calibration ? "Yes" : "No");
+    Serial.print("  VBAT Compensation: "); Serial.println(cap.hasVbatCompensation ? "Yes" : "No");
+    Serial.print("  RTP Mode:          "); Serial.println(cap.hasRTP ? "Yes" : "No");
+    Serial.print("  Sequence:          "); Serial.println(cap.hasSequence ? "Yes" : "No");
+    Serial.print("  Auto Calibration:  "); Serial.println(cap.hasAutoCalibration ? "Yes" : "No");
+    Serial.print("  Break Effect:      "); Serial.println(cap.hasBreakEffect ? "Yes" : "No");
+    Serial.print("  Overdrive:         "); Serial.println(cap.hasOverdrive ? "Yes" : "No");
+    Serial.print("  Continuous Mode:   "); Serial.println(cap.hasContinuousMode ? "Yes" : "No");
+    Serial.print("  Max Effects:       "); Serial.println(cap.maxEffectCount);
+    Serial.print("  Max Sequence:      "); Serial.println(cap.maxSequenceLength);
     Serial.println("[OK] Done");
 }
 
 void testInit()
 {
     Serial.println("\n=== Driver Initialization ===");
-    Serial.printf("Wire: SDA=%d, SCL=%d\n", SENSOR_SDA, SENSOR_SCL);
+    Serial.print("Wire: SDA="); Serial.print(SENSOR_SDA); Serial.print(", SCL="); Serial.println(SENSOR_SCL);
 
     if (!haptic.begin(Wire, DRV2605_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
         Serial.println("[FATAL] DRV2605 init failed!");
@@ -77,11 +77,11 @@ void testInit()
     }
 
     Serial.println("[OK] Driver initialized");
-    Serial.printf("  Chip Name:    %s\n", haptic.getChipName());
-    Serial.printf("  Chip ID:      0x%02X\n", haptic.getChipID());
-    Serial.printf("  Actuator:     %s\n", haptic.getActuatorType() == HapticActuatorType::LRA ? "LRA" : "ERM");
-    Serial.printf("  VBAT:         %d mV\n", haptic.getVbat());
-    Serial.printf("  Mode:         %d\n", static_cast<uint8_t>(haptic.getMode()));
+    Serial.print("  Chip Name:    "); Serial.println(haptic.getChipName());
+    Serial.print("  Chip ID:      0x"); Serial.println(haptic.getChipID(), HEX);
+    Serial.print("  Actuator:     "); Serial.println(haptic.getActuatorType() == HapticActuatorType::LRA ? "LRA" : "ERM");
+    Serial.print("  VBAT:         "); Serial.print(haptic.getVbat()); Serial.println(" mV");
+    Serial.print("  Mode:         "); Serial.println(static_cast<uint8_t>(haptic.getMode()));
 }
 
 void testActuatorType()
@@ -93,11 +93,11 @@ void testActuatorType()
 
     Serial.println("  Switching to LRA...");
     haptic.setActuatorType(HapticActuatorType::LRA);
-    Serial.printf("  Now: %s\n", haptic.getActuatorType() == HapticActuatorType::LRA ? "LRA" : "ERM");
+    Serial.print("  Now: "); Serial.println(haptic.getActuatorType() == HapticActuatorType::LRA ? "LRA" : "ERM");
 
     Serial.println("  Switching to ERM...");
     haptic.setActuatorType(HapticActuatorType::ERM);
-    Serial.printf("  Now: %s\n", haptic.getActuatorType() == HapticActuatorType::ERM ? "ERM" : "LRA");
+    Serial.print("  Now: "); Serial.println(haptic.getActuatorType() == HapticActuatorType::ERM ? "ERM" : "LRA");
 
     Serial.println("[OK] Done");
 }
@@ -139,7 +139,7 @@ void testPlayEffectRange()
 {
     Serial.println("\n[TEST] playEffect() - Effect Range (1-10)");
     for (uint8_t i = 1; i <= 10; i++) {
-        Serial.printf("  Effect %d...\n", i);
+        Serial.print("  Effect "); Serial.print(i); Serial.println("...");
         haptic.playEffect(i);
         delay(400);
     }
@@ -171,7 +171,7 @@ void testRTP()
     Serial.println("  Playing RTP values...");
     uint8_t values[] = {0x00, 0x40, 0x80, 0xC0, 0xFF, 0xC0, 0x80, 0x40};
     for (size_t i = 0; i < sizeof(values); i++) {
-        Serial.printf("  Value: 0x%02X\n", values[i]);
+        Serial.print("  Value: 0x"); Serial.println(values[i], HEX);
         haptic.setRealtimeValue(values[i]);
         delay(2000);
     }
@@ -189,7 +189,7 @@ void testStop()
     delay(500);
     Serial.println("  Calling stop()...");
     haptic.stop();
-    Serial.printf("  isPlaying: %s\n", haptic.isPlaying() ? "Yes" : "No");
+    Serial.print("  isPlaying: "); Serial.println(haptic.isPlaying() ? "Yes" : "No");
     Serial.println("[OK] Done");
 }
 
@@ -205,7 +205,7 @@ void testStatus()
     case HapticStatus::CALIBRATING: statusStr = "CALIBRATING"; break;
     case HapticStatus::ERROR: statusStr = "ERROR"; break;
     }
-    Serial.printf("  Status: %s\n", statusStr);
+    Serial.print("  Status: "); Serial.println(statusStr);
     Serial.println("[OK] Done");
 }
 
@@ -215,15 +215,15 @@ void testModes()
 
     Serial.println("  Mode: INTERNAL_TRIGGER");
     haptic.setMode(HapticMode::INTERNAL_TRIGGER);
-    Serial.printf("  Current: %d\n", static_cast<uint8_t>(haptic.getMode()));
+    Serial.print("  Current: "); Serial.println(static_cast<uint8_t>(haptic.getMode()));
 
     Serial.println("  Mode: REAL_TIME_PLAYBACK");
     haptic.setMode(HapticMode::REAL_TIME_PLAYBACK);
-    Serial.printf("  Current: %d\n", static_cast<uint8_t>(haptic.getMode()));
+    Serial.print("  Current: "); Serial.println(static_cast<uint8_t>(haptic.getMode()));
 
     Serial.println("  Mode: DIAGNOSTICS");
     haptic.setMode(HapticMode::DIAGNOSTICS);
-    Serial.printf("  Current: %d\n", static_cast<uint8_t>(haptic.getMode()));
+    Serial.print("  Current: "); Serial.println(static_cast<uint8_t>(haptic.getMode()));
 
     haptic.setMode(HapticMode::INTERNAL_TRIGGER);
     Serial.println("[OK] Done");
@@ -247,7 +247,7 @@ void testF0()
     Serial.println("\n[TEST] getF0() - HapticBase Interface");
     uint32_t f0 = haptic.getF0();
     if (f0 > 0) {
-        Serial.printf("  LRA F0: %d Hz\n", f0);
+        Serial.print("  LRA F0: "); Serial.print(f0); Serial.println(" Hz");
     } else {
         Serial.println("  F0 not available or LRA not detected");
     }
@@ -397,7 +397,7 @@ void loop()
             testAutoDemo();
             break;
         case 'v':
-            Serial.printf("[VBAT] %d mV\n", haptic.getVbat());
+            Serial.print("[VBAT] "); Serial.print(haptic.getVbat()); Serial.println(" mV");
             break;
         case 'h':
         case 'H':
@@ -406,7 +406,7 @@ void loop()
             break;
         default:
             if (cmd != '\n' && cmd != '\r' && cmd != ' ') {
-                Serial.printf("[?] Unknown: '%c' (0x%02X)\n", cmd, cmd);
+                Serial.print("[?] Unknown: '"); Serial.print(cmd); Serial.print(" (0x"); Serial.print(cmd, HEX); Serial.println(")");
             }
             break;
         }
