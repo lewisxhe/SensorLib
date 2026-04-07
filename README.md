@@ -141,6 +141,7 @@ dependencies:
 | BMA423          | Accelerometer            | ✔️   | ❌   |
 | BMA456          | Accelerometer            | ✔️   | ❌   |
 | DRV2605         | Haptic Driver            | ✔️   | ❌   |
+| AW86224         | Haptic Driver            | ✔️   | ❌   |
 | CM32181         | Ambient Light Sensor     | ✔️   | ❌   |
 | LTR553          | Light & Proximity Sensor | ✔️   | ❌   |
 | FT3267          | Capacitive touch         | ✔️   | ❌   |
