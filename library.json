@@ -1,6 +1,6 @@
 {
   "name": "SensorLib",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Commonly used I2C , SPI device multi-platform libraries",
   "keywords": [
     "QMC6310N",
@@ -13,6 +13,7 @@
     "BHI260AP",
     "BHI360",
     "DRV2605",
+    "AW86224",
     "CM32181",
     "LTR553",
     "FT5206",

@@ -1,4 +1,4 @@
-version: "0.4.0"
+version: "0.4.1"
 description: "Commonly used I2C & SPI sensor drivers for ESP-IDF / Arduino"
 license: "MIT"
 url: "https://github.com/lewisxhe/SensorLib"
@@ -37,6 +37,7 @@ tags:
   - BMA423
   - BMA456
   - DRV2605
+  - AW86224
   - CM32181
   - LTR553
   - FT3267
