@@ -29,3 +29,5 @@
 #pragma once
 
 #include "./haptic_drivers/HapticDriver_DRV2605.hpp"
+#include "./haptic_drivers/HapticDriver_AW86224.hpp"
+
