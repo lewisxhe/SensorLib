@@ -57,6 +57,12 @@ HapticDriver_AW86224::HapticDriver_AW86224() :
 {
 }
 
+void HapticDriver_AW86224::setPins(uint8_t resetPin, uint8_t intPin)
+{
+    _rstPin = resetPin;
+    _intPin = intPin;
+}
+
 void HapticDriver_AW86224::end()
 {
     stop();
@@ -821,9 +827,10 @@ void HapticDriver_AW86224::calculateCaliData()
 void HapticDriver_AW86224::reset()
 {
     if (_rstPin != -1) {
-        digitalWrite(_rstPin, LOW);
+        hal->pinMode(_rstPin, OUTPUT);
+        hal->digitalWrite(_rstPin, LOW);
         hal->delay(2);
-        digitalWrite(_rstPin, HIGH);
+        hal->digitalWrite(_rstPin, HIGH);
         hal->delay(8);
     }
 }
@@ -902,10 +909,10 @@ bool HapticDriver_AW86224::initImpl(uint8_t param)
     (void)param;
 
     if (_rstPin != -1) {
-        pinMode(_rstPin, OUTPUT);
-        digitalWrite(_rstPin, LOW);
+        hal->pinMode(_rstPin, OUTPUT);
+        hal->digitalWrite(_rstPin, LOW);
         hal->delay(2);
-        digitalWrite(_rstPin, HIGH);
+        hal->digitalWrite(_rstPin, HIGH);
         hal->delay(8);
     }
 

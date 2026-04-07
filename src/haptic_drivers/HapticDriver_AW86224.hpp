@@ -130,6 +130,16 @@ public:
     // HapticBase Interface - Lifecycle
     //=========================================================================
 
+    /**
+     * @brief  setPins
+     * @note   Sets the reset and interrupt pins for the haptic driver.
+     * No support for interrupt pins has been added; they are currently reserved for use as a general interface.
+     * @param[in] resetPin: The GPIO pin number for the reset pin.
+     * @param[in] intPin: The GPIO pin number for the interrupt pin.
+     * @retval None
+     */
+    void setPins(uint8_t resetPin, uint8_t intPin);
+
     void end() override;
     bool isReady() const override;
     const char *getChipName() const override;
@@ -743,6 +753,7 @@ private:
 
     // Member variables
     int _rstPin;
+    int _intPin;
     uint8_t _chipID;
     PlayMode _playMode;
     uint8_t _gain;
