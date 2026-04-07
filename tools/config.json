@@ -1,0 +1,7 @@
+{
+    "fqbn": "esp32:esp32:esp32p4:DebugLevel=none",
+    "port": "COM66",
+    "build_root": ".pio/build",
+    "library": ".",
+    "arduino_cli": "arduino-cli.exe"
+}
