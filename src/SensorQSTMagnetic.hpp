@@ -36,7 +36,7 @@ static constexpr uint8_t QMC6310U_SLAVE_ADDRESS = 0x1C;
 static constexpr uint8_t QMC6310N_SLAVE_ADDRESS = 0x3C;
 static constexpr uint8_t QMC5883P_SLAVE_ADDRESS = 0x2C;
 
-class SensorQSTMagnetic : public MagnetometerBase , public I2CDeviceWithHal
+class SensorQSTMagnetic : public MagnetometerBase, public I2CDeviceWithHal
 {
 public:
     /**
@@ -81,7 +81,7 @@ public:
         // QMC has no data skipping bit
         data.skip_data = false;
 
-        int status = comm->readRegister(REG_0x09_STAT);
+        int status = readReg(REG_0x09_STAT);
         if (status < 0) {
             log_e("Failed to read status register");
             return false;
@@ -101,7 +101,7 @@ public:
             return false;
         }
 
-        if (comm->readRegister(REG_0x01_LSB_DX, buffer, 6) < 0) {
+        if (readRegBuff(REG_0x01_LSB_DX, buffer, 6) < 0) {
             log_e("Failed to read magnetic field data");
             return false;
         }
@@ -136,7 +136,7 @@ public:
      */
     bool isDataReady() override
     {
-        return comm->getRegisterBit(REG_0x09_STAT, 0);
+        return getRegBit(REG_0x09_STAT, 0);
     }
 
     /**
@@ -147,7 +147,7 @@ public:
     */
     bool isDataOverflow()
     {
-        return comm->getRegisterBit(REG_0x09_STAT, 1);
+        return getRegBit(REG_0x09_STAT, 1);
     }
 
     /**
@@ -158,9 +158,9 @@ public:
     */
     bool reset() override
     {
-        comm->writeRegister(REG_0x0B_CMD2, (uint8_t)0x80);
+        writeReg(REG_0x0B_CMD2, (uint8_t)0x80);
         hal->delay(10);
-        comm->writeRegister(REG_0x0B_CMD2, (uint8_t)0x00);
+        writeReg(REG_0x0B_CMD2, (uint8_t)0x00);
         return true;
     }
 
@@ -204,7 +204,7 @@ public:
         int16_t y_pre = data.raw.y;
         int16_t z_pre = data.raw.z;
 
-        comm->setRegisterBit(REG_0x0B_CMD2, 6);
+        setRegBit(REG_0x0B_CMD2, 6);
         hal->delay(5);
 
         if (!readData(data)) {
@@ -215,7 +215,7 @@ public:
         y_result = data.raw.y - y_pre;
         z_result = data.raw.z - z_pre;
 
-        comm->clrRegisterBit(REG_0x0B_CMD2, 6);
+        clrRegBit(REG_0x0B_CMD2, 6);
 
         return setOperationMode(OperationMode::SUSPEND);
     }
@@ -258,8 +258,9 @@ public:
             log_e("Invalid magnetometer range");
             return false;
         }
-        if (comm->writeRegister(REG_0x0B_CMD2, 0xF3, range_value) < 0) {
-            log_e("Failed to set full-scale range");
+
+        if (updateBits(REG_0x0B_CMD2, 0x0C, range_value) < 0) {
+            log_e("Failed to set full scale range.");
             return false;
         }
         _sensitivity = sensitivity;
@@ -295,7 +296,7 @@ public:
             log_e("Invalid output data rate");
             return false;
         }
-        if (comm->writeRegister(REG_0x0A_CMD1, 0xF3, regValue) < 0) {
+        if (updateBits(REG_0x0A_CMD1, 0x0C, regValue) < 0) {
             log_e("Failed to set bandwidth");
             return false;
         }
@@ -330,7 +331,7 @@ public:
             log_e("Invalid operation mode");
             return false;
         }
-        if (comm->writeRegister(REG_0x0A_CMD1, 0xFC, mode_val) < 0) {
+        if (updateBits(REG_0x0A_CMD1, 0x03, mode_val) < 0) {
             log_e("Failed to set operation mode");
             return false;
         }
@@ -369,7 +370,7 @@ public:
             log_e("Invalid oversampling rate");
             return false;
         }
-        return comm->writeRegister(REG_0x0A_CMD1, 0xCF, osr_val) == 0;
+        return updateBits(REG_0x0A_CMD1, 0x30, osr_val) == 0;
     }
 
     /**
@@ -399,7 +400,7 @@ public:
             log_e("Invalid downsampling rate");
             return false;
         }
-        return comm->writeRegister(REG_0x0A_CMD1, 0x3F, dsr_val) == 0;
+        return updateBits(REG_0x0A_CMD1, 0xC0, dsr_val) == 0;
     }
 
     /**
@@ -424,7 +425,7 @@ public:
      * @retval True if the configuration was successful, false otherwise.
      */
     bool configMagnetometer(OperationMode mode, MagFullScaleRange range, float odr,
-                            MagOverSampleRatio osr, MagDownSampleRatio dsr)
+                            MagOverSampleRatio osr, MagDownSampleRatio dsr) override
     {
         if (!setOperationMode(mode)) {
             return false;
@@ -465,11 +466,12 @@ private:
 
     bool initImpl(uint8_t param) override
     {
+        uint8_t _chipId = 0;
         reset();
 
         hal->delay(20);
 
-        _info.uid = comm->readRegister(REG_0x00_CHIP_ID);
+        _info.uid = readReg(REG_0x00_CHIP_ID);
         _info.manufacturer = "QSTMagnetic";
         _info.type = SensorType::MAGNETOMETER;
         _info.i2c_address = _addr;
@@ -479,14 +481,17 @@ private:
         case QMC6310U_SLAVE_ADDRESS:
             _type = CHIP_QMC6310U;
             _info.model = "QMC6310U";
+            _chipId = QMC6310_CHIP_ID;
             break;
         case QMC6310N_SLAVE_ADDRESS:
             _type = CHIP_QMC6310N;
             _info.model = "QMC6310N";
+            _chipId = QMC6310_CHIP_ID;
             break;
         case QMC5883P_SLAVE_ADDRESS:
             _type = CHIP_QMC5883P;
             _info.model = "QMC5883P";
+            _chipId = QMC5883P_CHIP_ID;
             break;
         default:
             _type = CHIP_UNKNOWN;
@@ -494,6 +499,17 @@ private:
             return false;
         }
 
+        if (_info.uid == 0) {
+            log_e("Failed to read chip ID.");
+            return false;
+        }
+
+        if (_info.uid != _chipId) {
+            log_e("Unexpected chip ID: 0x%02X", _chipId);
+            return false;
+        }
+
+        log_d("Magnetometer initialized successfully. read chip ID: 0x%02X", _info.uid );
         // Set default configuration
         configMagnetometer(OperationMode::SUSPEND,
                            MagFullScaleRange::FS_8G,

@@ -121,6 +121,19 @@ public:
     virtual bool setDownsamplingRate(MagDownSampleRatio dsr) = 0;
 
     /**
+     * @brief  Configures the magnetometer with the specified settings.
+     * @note   This function should be called to set up the sensor's operating parameters.
+     * @param  mode: The desired operation mode.
+     * @param  range: The desired full-scale range.
+     * @param  data_rate_hz: The desired output data rate in Hz.
+     * @param  osr: The desired oversampling rate.
+     * @param  dsr: The desired downsampling rate.
+     * @retval True if the configuration was successful, false otherwise.
+     */
+    virtual bool configMagnetometer(OperationMode mode, MagFullScaleRange range, float data_rate_hz,
+                            MagOverSampleRatio osr, MagDownSampleRatio dsr) = 0;
+
+    /**
      * @brief  Gets the full-scale range for the magnetometer.
      * @note   This function should be called to retrieve the sensor's measurement range.
      * @retval The current full-scale range (e.g., 2.0, 4.0, 8.0, 16.0).
@@ -168,7 +181,7 @@ public:
     virtual float getDeclinationDeg() const {
         return _declination_rad * 180.0f / M_PI;
     }
-    
+
     /**
      * @brief Get the currently set magnetic declination in radians.
      * 

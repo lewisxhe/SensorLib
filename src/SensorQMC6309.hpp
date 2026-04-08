@@ -34,7 +34,7 @@
 
 static constexpr uint8_t QMC6309_SLAVE_ADDRESS = (0x7C);
 
-class SensorQMC6309 : public MagnetometerBase , public I2CDeviceWithHal
+class SensorQMC6309 : public MagnetometerBase, public I2CDeviceWithHal
 {
 public:
 
@@ -50,7 +50,7 @@ public:
      * Creates a SensorQMC6309 object with no active communication or hardware
      * abstraction instances.
      */
-    SensorQMC6309() {}
+    SensorQMC6309() = default;
 
     /**
      * @brief Destructor. Deinitializes the communication object if it exists.
@@ -71,9 +71,8 @@ public:
     bool readData(MagnetometerData &data) override
     {
         uint8_t buffer[6] = {0};
-        int16_t x = 0, y = 0, z = 0;
 
-        int status = comm->readRegister(REG_0x09_STAT);
+        int status = readReg(REG_0x09_STAT);
         if (status < 0) {
             log_e("Failed to read status register");
             return false;
@@ -93,7 +92,7 @@ public:
             return false;
         }
 
-        if (comm->readRegister(REG_0x01_LSB_DX, buffer, sizeof(buffer)) < 0) {
+        if (readRegBuff(REG_0x01_LSB_DX, buffer, sizeof(buffer)) < 0) {
             log_e("Failed to read magnetic field data");
             return false;
         }
@@ -127,7 +126,7 @@ public:
      */
     bool isDataReady() override
     {
-        return comm->getRegisterBit(REG_0x09_STAT, 0);
+        return getRegBit(REG_0x09_STAT, 0);
     }
 
     /**
@@ -138,7 +137,7 @@ public:
     */
     bool isDataOverflow()
     {
-        return comm->getRegisterBit(REG_0x09_STAT, 1);
+        return getRegBit(REG_0x09_STAT, 1);
     }
 
     /**
@@ -149,7 +148,7 @@ public:
      */
     bool isNVMReady()
     {
-        return comm->getRegisterBit(REG_0x09_STAT, 3);
+        return getRegBit(REG_0x09_STAT, 3);
     }
 
     /**
@@ -160,7 +159,7 @@ public:
      */
     bool isNVMLoadDone()
     {
-        return comm->getRegisterBit(REG_0x09_STAT, 4);
+        return getRegBit(REG_0x09_STAT, 4);
     }
 
     /**
@@ -171,12 +170,12 @@ public:
     */
     bool reset() override
     {
-        if (comm->writeRegister(REG_0x0B_CMD2, 0x7F, 0x80) < 0) {
+        if (updateBits(REG_0x0B_CMD2, 0x80, 0x80) < 0) {
             log_e("Failed to set soft reset");
             return false;
         }
         hal->delay(10);
-        if (comm->writeRegister(REG_0x0B_CMD2, 0x7F, 0x00) < 0) {
+        if (updateBits(REG_0x0B_CMD2, 0x80, 0x00) < 0) {
             log_e("Failed to clear soft reset");
             return false;
         }
@@ -216,28 +215,22 @@ public:
 
         hal->delay(20);
 
-        if (comm->writeRegister(REG_0x0E_SELFTEST_CTRL, MASK_SOFT_RST, 0x80) < 0) {
-            log_e("Failed to enable self-test");
-            return false;
-        }
+        writeReg(REG_0x0E_SELFTEST_CTRL, MASK_SOFT_RST);
 
-        hal->delay(150);
+        hal->delay(1);
 
-        if (!comm->getRegisterBit(REG_0x09_STAT, 2)) {
-            comm->writeRegister(REG_0x0E_SELFTEST_CTRL, MASK_SOFT_RST, 0x00);
+        if (!getRegBit(REG_0x09_STAT, 2)) {
             log_e("Self-test not ready (ST_RDY bit is 0)");
             return false;
         }
 
-        uint8_t x_test = comm->readRegister(REG_0x13_SELFTEST_X);
-        uint8_t y_test = comm->readRegister(REG_0x14_SELFTEST_Y);
-        uint8_t z_test = comm->readRegister(REG_0x15_SELFTEST_Z);
+        uint8_t x_test = readReg(REG_0x13_SELFTEST_X);
+        uint8_t y_test = readReg(REG_0x14_SELFTEST_Y);
+        uint8_t z_test = readReg(REG_0x15_SELFTEST_Z);
 
         x_result = (int8_t)x_test;
         y_result = (int8_t)y_test;
         z_result = (int8_t)z_test;
-
-        comm->writeRegister(REG_0x0E_SELFTEST_CTRL, MASK_SOFT_RST, 0x00);
 
         setOperationMode(OperationMode::SUSPEND);
 
@@ -283,11 +276,12 @@ public:
             full_scale = 8.0f;
             break;
         default:
-            log_e("Invalid magnetometer range for QMC6309");
+            log_e("Invalid magnetometer range.");
             return false;
         }
-        if (comm->writeRegister(REG_0x0B_CMD2, 0xF3, range_value) < 0) {
-            log_e("Failed to set full scale range for QMC6309");
+
+        if (updateBits(REG_0x0B_CMD2, 0x0C, range_value) < 0) {
+            log_e("Failed to set full scale range.");
             return false;
         }
         _sensitivity = sensitivity;
@@ -326,7 +320,7 @@ public:
             log_e("Invalid output data rate");
             return false;
         }
-        if (comm->writeRegister(REG_0x0B_CMD2, 0x8F, regValue) < 0) {
+        if (updateBits(REG_0x0A_CMD1, 0x70, regValue) < 0) {
             log_e("Failed to set bandwidth");
             return false;
         }
@@ -361,7 +355,7 @@ public:
             log_e("Invalid operation mode");
             return false;
         }
-        if (comm->writeRegister(REG_0x0A_CMD1, 0xFC, mode_val) < 0) {
+        if (updateBits(REG_0x0A_CMD1, 0x03, mode_val) < 0) {
             log_e("Failed to set operation mode");
             return false;
         }
@@ -400,7 +394,7 @@ public:
             log_e("Invalid oversampling rate");
             return false;
         }
-        return comm->writeRegister(REG_0x0A_CMD1, 0xE7, osr_val) == 0;
+        return updateBits(REG_0x0A_CMD1, 0x18, osr_val) == 0;
     }
 
     /**
@@ -443,7 +437,7 @@ public:
             log_e("Invalid low-pass filter");
             return false;
         }
-        return comm->writeRegister(REG_0x0A_CMD1, 0x1F, lpf_val) == 0;
+        return updateBits(REG_0x0A_CMD1, 0xE0, lpf_val) == 0;
     }
 
     /**
@@ -467,7 +461,7 @@ public:
      * @retval True if the configuration was successful, false otherwise.
      */
     bool configMagnetometer(OperationMode mode, MagFullScaleRange range, float data_rate_hz,
-                            MagOverSampleRatio osr, MagDownSampleRatio dsr = MagDownSampleRatio::DSR_1)
+                            MagOverSampleRatio osr, MagDownSampleRatio dsr = MagDownSampleRatio::DSR_1) override
     {
         if (!setOperationMode(mode)) {
             return false;
@@ -511,7 +505,7 @@ public:
             log_e("Invalid set/reset mode");
             return false;
         }
-        return comm->writeRegister(REG_0x0B_CMD2, 0xFC, sr_val) == 0;
+        return updateBits(REG_0x0B_CMD2, 0x03, sr_val) == 0;
     }
 
 private:
@@ -550,7 +544,7 @@ private:
 
         hal->delay(20);
 
-        _info.uid = comm->readRegister(REG_0x00_CHIP_ID);
+        _info.uid = readReg(REG_0x00_CHIP_ID);
         _info.manufacturer = "QSTMagnetic";
         _info.type = SensorType::MAGNETOMETER;
         _info.model = "QMC6309";

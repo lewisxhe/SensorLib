@@ -43,7 +43,7 @@ public:
      * Creates a SensorQMC5883L object with no active communication or hardware
      * abstraction instances.
      */
-    SensorQMC5883L() {}
+    SensorQMC5883L() = default;
 
     /**
      * @brief Destructor. Deinitializes the communication object if it exists.
@@ -66,7 +66,7 @@ public:
         uint8_t buffer[6] = {0};
         int16_t x = 0, y = 0, z = 0;
 
-        int status = comm->readRegister(REG_0x06_STATUS);
+        int status = readReg(REG_0x06_STATUS);
         if (status < 0) {
             log_e("Failed to read status register");
             return false;
@@ -94,7 +94,7 @@ public:
             return false;
         }
 
-        if (comm->readRegister(REG_0x00_LSB_DX, buffer, 6) < 0) {
+        if (readRegBuff(REG_0x00_LSB_DX, buffer, 6) < 0) {
             log_e("Failed to read magnetic field data");
             return false;
         }
@@ -129,7 +129,7 @@ public:
      */
     bool isDataReady() override
     {
-        return comm->getRegisterBit(REG_0x06_STATUS, 0);
+        return getRegBit(REG_0x06_STATUS, 0);
     }
 
     /**
@@ -140,7 +140,7 @@ public:
      */
     bool isDataOverflow()
     {
-        return comm->getRegisterBit(REG_0x06_STATUS, 1);
+        return getRegBit(REG_0x06_STATUS, 1);
     }
 
     /**
@@ -151,7 +151,7 @@ public:
      */
     bool isDataSkipped()
     {
-        return comm->getRegisterBit(REG_0x06_STATUS, 2);
+        return getRegBit(REG_0x06_STATUS, 2);
     }
 
     /**
@@ -162,9 +162,9 @@ public:
      */
     bool reset() override
     {
-        comm->writeRegister(REG_0x0A_CMD2, (uint8_t)0x80);
+        writeReg(REG_0x0A_CMD2, 0x80);
         hal->delay(10);
-        comm->writeRegister(REG_0x0A_CMD2, (uint8_t)0x00);
+        writeReg(REG_0x0A_CMD2, 0x00);
         return true;
     }
 
@@ -207,7 +207,7 @@ public:
             log_e("Invalid magnetometer range");
             return false;
         }
-        if (comm->writeRegister(REG_0x09_CMD1, 0xCF, range_value) > 0) {
+        if (updateBits(REG_0x09_CMD1, 0x30, range_value) > 0) {
             log_e("Failed to set full scale range");
             return false;
         }
@@ -245,7 +245,7 @@ public:
             log_e("Invalid output data rate");
             return false;
         }
-        if (comm->writeRegister(REG_0x09_CMD1, 0xF3, regValue) < 0) {
+        if (updateBits(REG_0x09_CMD1, 0x0C, regValue) < 0) {
             log_e("Failed to set bandwidth");
             return false;
         }
@@ -275,7 +275,7 @@ public:
             log_e("Invalid operation mode");
             return false;
         }
-        if (comm->writeRegister(REG_0x09_CMD1, 0xFC, mode_val) < 0) {
+        if (updateBits(REG_0x09_CMD1, 0x03, mode_val) < 0) {
             log_e("Failed to set operation mode");
             return false;
         }
@@ -318,7 +318,7 @@ public:
             log_e("Invalid oversampling rate");
             return false;
         }
-        return comm->writeRegister(REG_0x09_CMD1, 0x3F, osr_val) == 0;
+        return updateBits(REG_0x09_CMD1, 0xC0, osr_val) == 0;
     }
 
     /**
@@ -344,7 +344,7 @@ public:
     {
         uint8_t buffer[2] = {0};
 
-        if (comm->readRegister(REG_0x07_TOUT_LOW, buffer, 2) < 0) {
+        if (readRegBuff(REG_0x07_TOUT_LOW, buffer, 2) < 0) {
             log_e("Failed to read temperature registers");
             return false;
         }
@@ -377,7 +377,7 @@ public:
      * @retval True if the configuration was successful, false otherwise.
      */
     bool configMagnetometer(OperationMode mode, MagFullScaleRange range, float data_rate_hz,
-                            MagOverSampleRatio osr, MagDownSampleRatio dsr = MagDownSampleRatio::DSR_1)
+                            MagOverSampleRatio osr, MagDownSampleRatio dsr = MagDownSampleRatio::DSR_1) override
     {
         if (!setOperationMode(mode)) {
             log_e("Failed to set operation mode");
@@ -424,11 +424,11 @@ private:
         // SET/RESET Period is controlled by FBR [7:0].
         // It is recommended that the register 0BH is written by 0x01.
         uint8_t set_reset_period = 0x01;
-        if (comm->writeRegister(REG_0x0B_CMD3, set_reset_period) < 0) {
+        if (writeReg(REG_0x0B_CMD3, set_reset_period) < 0) {
             log_e("Failed to set SET/RESET period");
             return false;
         }
-        _info.uid = comm->readRegister(REG_0x0D_CHIP_ID);
+        _info.uid = readReg(REG_0x0D_CHIP_ID);
         _info.manufacturer = "QSTMagnetic";
         _info.model = "QMC5883L";
         _info.type = SensorType::MAGNETOMETER;
