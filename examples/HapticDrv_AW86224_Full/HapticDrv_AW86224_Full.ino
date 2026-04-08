@@ -28,6 +28,7 @@
  */
 
 #include <HapticDrivers.hpp>
+#include <SensorWireHelper.h>
 
 #ifndef SENSOR_SDA
 #define SENSOR_SDA  20
@@ -38,6 +39,18 @@
 #endif
 
 HapticDriver_AW86224 haptic;
+
+// LilyGo T-Display-P4 peripherals power control pins
+#ifdef ARDUINO_ESP32P4_DEV
+#include <IoExpanderXL9555.hpp>
+#define IO_EXPANDER_3V3_POWER_EN 0
+#define IO_EXPANDER_5V0_POWER_EN 6
+#define IO_EXPANDER_P4_VCCA_POWER_EN 8
+#define P4_TOUCH_SDA  7
+#define P4_TOUCH_SCL  8
+IoExpanderXL9555 expander;
+#endif
+
 
 void printBanner()
 {
@@ -69,6 +82,34 @@ void testInit()
 {
     Serial.println("\n=== Driver Initialization ===");
     Serial.print("Wire: SDA="); Serial.print(SENSOR_SDA); Serial.print(", SCL="); Serial.println(SENSOR_SCL);
+
+    Wire1.begin(SENSOR_SDA, SENSOR_SCL);
+
+#ifdef ARDUINO_ESP32P4_DEV
+    // Enable power supply for T-Display-P4 peripherals
+    Wire1.begin(P4_TOUCH_SDA, P4_TOUCH_SCL);
+    SensorWireHelper::dumpDevices(Wire1);
+
+    if (!expander.begin(Wire1, XL9555_SLAVE_ADDRESS0)) {
+        while (1) {
+            Serial.println("Failed to find XL9555 - check your wiring!");
+            delay(1000);
+        }
+    }
+    Serial.println("Sensor Expander Initialized");
+
+    expander.pinMode(IO_EXPANDER_P4_VCCA_POWER_EN, OUTPUT);
+    expander.digitalWrite(IO_EXPANDER_P4_VCCA_POWER_EN, LOW);
+
+    expander.pinMode(IO_EXPANDER_5V0_POWER_EN, OUTPUT);
+    expander.digitalWrite(IO_EXPANDER_5V0_POWER_EN, HIGH);
+
+    expander.pinMode(IO_EXPANDER_3V3_POWER_EN, OUTPUT);
+    expander.digitalWrite(IO_EXPANDER_3V3_POWER_EN, LOW);
+#endif
+
+    Wire.begin(SENSOR_SDA, SENSOR_SCL);
+    SensorWireHelper::dumpDevices(Wire);
 
     if (!haptic.begin(Wire, AW8624_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
         Serial.println("[FATAL] AW86224 init failed!");
