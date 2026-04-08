@@ -83,8 +83,6 @@ void testInit()
     Serial.println("\n=== Driver Initialization ===");
     Serial.print("Wire: SDA="); Serial.print(SENSOR_SDA); Serial.print(", SCL="); Serial.println(SENSOR_SCL);
 
-    Wire1.begin(SENSOR_SDA, SENSOR_SCL);
-
 #ifdef ARDUINO_ESP32P4_DEV
     // Enable power supply for T-Display-P4 peripherals
     Wire1.begin(P4_TOUCH_SDA, P4_TOUCH_SCL);
