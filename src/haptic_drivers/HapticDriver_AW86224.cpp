@@ -76,7 +76,17 @@ bool HapticDriver_AW86224::isReady() const
 
 const char *HapticDriver_AW86224::getChipName() const
 {
-    return "AW86224";
+    switch (_chipID) {
+    case static_cast<uint8_t>(ChipID::AW86214):
+        return "AW86214";
+    case static_cast<uint8_t>(ChipID::AW86223):
+        return "AW86223";
+    case static_cast<uint8_t>(ChipID::AW86224):
+        return "AW86224";
+    default:
+        break;
+    }
+    return "UNKNOWN";
 }
 
 // ==================== HapticBase Interface ====================
@@ -936,11 +946,29 @@ bool HapticDriver_AW86224::initImpl(uint8_t param)
 
 bool HapticDriver_AW86224::parseChipID()
 {
-    uint8_t ef_id = readReg(REG_CHIPID);
-    if ((ef_id & 0x41) == 0x01) {
-        _chipID = static_cast<uint8_t>(ChipID::AW86223);
-    } else if ((ef_id & 0x41) == 0x00) {
-        _chipID = static_cast<uint8_t>(ChipID::AW86224);
+    uint8_t reg = 0;
+    for (int i = 0; i < 5; i++) {
+        reg = readReg(0x00);
+        if (reg != 0) break;
+        hal->delay(2);
+    }
+
+    if (reg == 0x00) {
+        uint8_t ef_id = readReg(REG_CHIPID);
+        if ((ef_id & 0x41) == 0x01) {
+            _chipID = static_cast<uint8_t>(ChipID::AW86223);
+        } else if ((ef_id & 0x41) == 0x00) {
+            _chipID = static_cast<uint8_t>(ChipID::AW86224);
+        } else {
+            return false;
+        }
+    } else if (reg == 0x01) {
+        uint8_t ef_id = readReg(REG_CHIPID);
+        if ((ef_id & 0x41) == 0x41) {
+            _chipID = static_cast<uint8_t>(ChipID::AW86214);
+        } else {
+            return false;
+        }
     } else {
         return false;
     }
