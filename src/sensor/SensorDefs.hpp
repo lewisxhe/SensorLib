@@ -190,6 +190,9 @@ enum SensorDirection {
     //  __*_____________
     // |________________|
     DIRECTION_TOP,
+
+    // Unknown direction
+    DIRECTION_UNKNOWN
 };
 
 /**
