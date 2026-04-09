@@ -49,6 +49,8 @@ void beginPower()
 {
 #if defined(ARDUINO_T_BEAM_S3_SUPREME)
     XPowersAXP2101 power;
+    Wire.begin(SENSOR_SDA, SENSOR_SCL);
+    SensorWireHelper::dumpDevices(Wire);
     power.begin(Wire1, AXP2101_SLAVE_ADDRESS, 42, 41);
     power.disableALDO1();
     power.disableALDO2();
@@ -80,10 +82,6 @@ void setup()
 
     // LilyGo T-Beam-Supreme sensor requires a power source to function.
     beginPower();
-
-    Wire.begin(SENSOR_SDA, SENSOR_SCL);
-
-    SensorWireHelper::dumpDevices(Wire);
 
     if (magnetometer == nullptr) {
         magnetometer = new SensorQMC6310();

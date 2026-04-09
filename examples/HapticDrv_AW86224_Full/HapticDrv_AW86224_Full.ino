@@ -104,10 +104,10 @@ void testInit()
 
     expander.pinMode(IO_EXPANDER_3V3_POWER_EN, OUTPUT);
     expander.digitalWrite(IO_EXPANDER_3V3_POWER_EN, LOW);
-#endif
-
+    
     Wire.begin(SENSOR_SDA, SENSOR_SCL);
     SensorWireHelper::dumpDevices(Wire);
+#endif
 
     if (!haptic.begin(Wire, AW8624_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
         Serial.println("[FATAL] AW86224 init failed!");
