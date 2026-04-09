@@ -137,5 +137,28 @@ namespace AccelerometerUtils
         float rad = calculateInclination(data, axis);
         return isnan(rad) ? NAN : rad * 180.0f / M_PI;
     }
+
+    /**
+     * @brief  Get the direction of the acceleration vector
+     * @note   Determines the primary direction of the acceleration vector based on its components.
+     * @param  &data: The accelerometer data structure containing the acceleration vector.
+     * @retval The primary direction of the acceleration vector.
+     */
+    SensorDirection getDirection(const AccelerometerData &data)
+    {
+        float x = data.mps2.x;
+        float y = data.mps2.y;
+        float z = data.mps2.z;
+
+        if (fabsf(x) > fabsf(y) && fabsf(x) > fabsf(z)) {
+            return (x > 0) ? SensorDirection::DIRECTION_TOP_LEFT : SensorDirection::DIRECTION_BOTTOM_RIGHT;
+        } else if (fabsf(y) > fabsf(x) && fabsf(y) > fabsf(z)) {
+            return (y > 0) ? SensorDirection::DIRECTION_TOP_RIGHT : SensorDirection::DIRECTION_BOTTOM_LEFT;
+        } else if (fabsf(z) > fabsf(x) && fabsf(z) > fabsf(y)) {
+            return (z > 0) ? SensorDirection::DIRECTION_TOP : SensorDirection::DIRECTION_BOTTOM;
+        } else {
+            return SensorDirection::DIRECTION_UNKNOWN;
+        }
+    }
 };
 // *INDENT-ON*
