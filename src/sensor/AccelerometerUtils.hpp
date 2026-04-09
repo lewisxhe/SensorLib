@@ -44,7 +44,7 @@ namespace AccelerometerUtils
      * @param g_value Acceleration in g-force (1g = 9.80665 m/s²)
      * @return float Acceleration in m/s²
      */
-    float gToMps2(float g_value)
+    inline float gToMps2(float g_value)
     {
         return g_value * 9.80665f; // Standard gravity constant
     }
@@ -55,7 +55,7 @@ namespace AccelerometerUtils
      * @param mps2_value Acceleration in m/s²
      * @return float Acceleration in g-force
      */
-    float mps2ToG(float mps2_value)
+    inline float mps2ToG(float mps2_value)
     {
         return mps2_value / 9.80665f;
     }
@@ -66,7 +66,7 @@ namespace AccelerometerUtils
      * @param range Full-scale range enumeration
      * @return float Corresponding g-force value
      */
-    float rangeToG(AccelFullScaleRange range)
+    inline float rangeToG(AccelFullScaleRange range)
     {
         switch (range) {
         case AccelFullScaleRange::FS_2G:   return 2.0f;
@@ -88,7 +88,7 @@ namespace AccelerometerUtils
      * @param data Accelerometer data structure
      * @return float Magnitude of acceleration in m/s²
      */
-    float calculateMagnitude(const AccelerometerData &data)
+    inline float calculateMagnitude(const AccelerometerData &data)
     {
         const auto &acc = data.mps2;
         return sqrtf(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z);
@@ -104,7 +104,7 @@ namespace AccelerometerUtils
      * @param axis Axis to calculate inclination for (0=X, 1=Y, 2=Z)
      * @return float Inclination angle in radians, or NAN if calculation invalid
      */
-    float calculateInclination(const AccelerometerData &data, uint8_t axis)
+    inline float calculateInclination(const AccelerometerData &data, uint8_t axis)
     {
         if (axis > 2) return NAN;
 
@@ -132,7 +132,7 @@ namespace AccelerometerUtils
      * @param axis Axis to calculate inclination for (0=X, 1=Y, 2=Z)
      * @return float Inclination angle in degrees, or NAN if calculation invalid
      */
-    float calculateInclinationDegrees(const AccelerometerData &data, uint8_t axis)
+    inline float calculateInclinationDegrees(const AccelerometerData &data, uint8_t axis)
     {
         float rad = calculateInclination(data, axis);
         return isnan(rad) ? NAN : rad * 180.0f / M_PI;
@@ -144,7 +144,7 @@ namespace AccelerometerUtils
      * @param  &data: The accelerometer data structure containing the acceleration vector.
      * @retval The primary direction of the acceleration vector.
      */
-    SensorDirection getDirection(const AccelerometerData &data)
+    inline SensorDirection getDirection(const AccelerometerData &data)
     {
         float x = data.mps2.x;
         float y = data.mps2.y;

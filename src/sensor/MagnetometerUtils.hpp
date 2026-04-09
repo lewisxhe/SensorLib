@@ -43,7 +43,7 @@ namespace MagnetometerUtils
      * @param seconds Arc seconds (0-59.999...)
      * @return Decimal degrees
      */
-    float dmsToDecimalDegrees(int degrees, int minutes, float seconds = 0.0f)
+    inline float dmsToDecimalDegrees(int degrees, int minutes, float seconds = 0.0f)
     {
         float sign = (degrees < 0 || (degrees == 0 && (minutes < 0 || seconds < 0))) ? -1.0f : 1.0f;
         return sign * (abs(degrees) + minutes / 60.0f + seconds / 3600.0f);
@@ -52,7 +52,7 @@ namespace MagnetometerUtils
     /**
      * @brief Convert degrees-minutes-seconds to radians
      */
-    float dmsToRadians(int degrees, int minutes, float seconds = 0.0f)
+    inline float dmsToRadians(int degrees, int minutes, float seconds = 0.0f)
     {
         return dmsToDecimalDegrees(degrees, minutes, seconds) * M_PI / 180.0f;
     }
@@ -71,7 +71,7 @@ namespace MagnetometerUtils
     * @param declination Magnetic declination correction in radians (positive east)
     * @return Heading angle in radians, range [0, 2π) (0 = magnetic north)
     */
-    float calculateHeading(const MagnetometerData& data, float declination = 0.0f)
+    inline float calculateHeading(const MagnetometerData& data, float declination = 0.0f)
     {
         const auto& mag = data.magnetic_field;
 
@@ -112,7 +112,7 @@ namespace MagnetometerUtils
      * @param declination_deg Magnetic declination correction in degrees (positive east)
      * @return Heading angle in degrees, range [0, 360) (0 = magnetic north)
      */
-    float calculateHeadingDegrees(const MagnetometerData& data, float declination_deg = 0.0f)
+    inline float calculateHeadingDegrees(const MagnetometerData& data, float declination_deg = 0.0f)
     {
         const auto& mag = data.magnetic_field;
         if (mag.x == 0.0f && mag.y == 0.0f) {
@@ -140,7 +140,7 @@ namespace MagnetometerUtils
      * @param data Magnetometer data structure containing magnetic field measurements
      * @return Magnetic field strength in the same units as input (typically microtesla, μT)
      */
-    float calculateMagneticStrength(const MagnetometerData& data)
+    inline float calculateMagneticStrength(const MagnetometerData& data)
     {
         const auto& mag = data.magnetic_field;
 
@@ -154,7 +154,7 @@ namespace MagnetometerUtils
      * @param  gauss: The magnetic field strength in Gauss.
      * @retval The magnetic field strength in microTesla.
      */
-    float gaussToMicroTesla(float gauss)
+    inline float gaussToMicroTesla(float gauss)
     {
         return gauss * 100.0f; // 1 Gauss = 100 μT
     }
@@ -165,13 +165,13 @@ namespace MagnetometerUtils
      * @param  ut: The magnetic field strength in microTesla.
      * @retval The magnetic field strength in Gauss.
      */
-    float microTeslaToGauss(float ut)
+    inline float microTeslaToGauss(float ut)
     {
         return ut * 0.01f; // 1 μT = 0.01 Gauss
     }
 
 
-    float rangeToGauss(MagFullScaleRange range)
+    inline float rangeToGauss(MagFullScaleRange range)
     {
         switch (range) {
         case MagFullScaleRange::FS_4G:
