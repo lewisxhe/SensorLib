@@ -53,7 +53,7 @@ public:
         bool detected;
     } SensorData;
 
-    BoschSensorDataHelperBase(BoschSensorID sensor_id, BoschSensorBase &handle)
+    BoschSensorDataHelperBase(uint16_t sensor_id, BoschSensorBase &handle)
         : _sensor_id(sensor_id), _handle(handle)
     {
         _scaling_factor = _handle.getScaling(_sensor_id);
@@ -215,7 +215,7 @@ protected:
         }
         return result;
     }
-    BoschSensorID _sensor_id;
+    uint16_t _sensor_id;
     float _scaling_factor;
     BoschSensorBase &_handle;
 };
@@ -224,7 +224,7 @@ template <typename DataType>
 class SensorTemplateBase : public BoschSensorDataHelperBase
 {
 public:
-    SensorTemplateBase(BoschSensorID sensor_id, BoschSensorBase &handle)
+    SensorTemplateBase(uint16_t sensor_id, BoschSensorBase &handle)
         : BoschSensorDataHelperBase(sensor_id, handle)
     {
     }
@@ -580,7 +580,7 @@ protected:
 class SensorXYZ : public SensorTemplateBase<bhy2_data_xyz>
 {
 public:
-    SensorXYZ(BoschSensorID sensor_id, BoschSensorBase &handle)
+    SensorXYZ(uint16_t sensor_id, BoschSensorBase &handle)
         : SensorTemplateBase<bhy2_data_xyz>(sensor_id, handle) {}
 
     float getX() const
@@ -885,7 +885,7 @@ enum class MotionMode : uint8_t {
     CONTINUOUS
 };
 
-template<typename Derived, BoschSensorID SensorID>
+template<typename Derived, uint16_t SensorID>
 class SensorMotionBase : public SensorTemplateBase<bool>
 {
 public:
