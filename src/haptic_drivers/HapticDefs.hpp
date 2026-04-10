@@ -51,6 +51,7 @@ enum class HapticMode : uint8_t {
     REAL_TIME_PLAYBACK,  ///< RTP mode (direct drive value)
     DIAGNOSTICS,         ///< Diagnostics mode
     AUTO_CALIBRATE,      ///< Auto-calibration mode
+    STANDBY,             ///< Standby mode
 };
 
 /**
@@ -69,6 +70,7 @@ enum class HapticStatus : uint8_t {
     PAUSED      = 2, ///< Playback paused
     CALIBRATING = 3, ///< Calibrating
     ERROR       = 4, ///< Error state
+    STANDBY     = 5, ///< Standby mode
 };
 
 /**

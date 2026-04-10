@@ -104,7 +104,7 @@ void testInit()
 
     expander.pinMode(IO_EXPANDER_3V3_POWER_EN, OUTPUT);
     expander.digitalWrite(IO_EXPANDER_3V3_POWER_EN, LOW);
-    
+
     Wire.begin(SENSOR_SDA, SENSOR_SCL);
     SensorWireHelper::dumpDevices(Wire);
 #endif
@@ -264,6 +264,7 @@ void testStatus()
     case HapticStatus::PAUSED: statusStr = "PAUSED"; break;
     case HapticStatus::CALIBRATING: statusStr = "CALIBRATING"; break;
     case HapticStatus::ERROR: statusStr = "ERROR"; break;
+    case HapticStatus::STANDBY: statusStr = "STANDBY"; break;
     }
     Serial.print("  Status: "); Serial.println(statusStr);
     Serial.println("[OK] Done");

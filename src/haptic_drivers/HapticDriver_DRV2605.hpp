@@ -517,4 +517,5 @@ private:
     uint8_t _waveformCount;
     uint8_t _gain;
     bool _isERM;
+    bool _isStandby;
 };

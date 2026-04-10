@@ -34,6 +34,7 @@ HapticDriver_DRV2605::HapticDriver_DRV2605()
     , _currentLibrary(1)
     , _waveformCount(0)
     , _isERM(true)
+    , _isStandby(false)
 {
     for (int i = 0; i < 8; i++) {
         _waveformSeq[i] = 0;
@@ -63,6 +64,10 @@ const char *HapticDriver_DRV2605::getChipName() const
 
 bool HapticDriver_DRV2605::run()
 {
+    if (_isStandby) {
+        // Standby can't run
+        return false;
+    }
     return writeReg(DRV2605_REG_GO, 1) == 0;
 }
 
@@ -79,6 +84,7 @@ bool HapticDriver_DRV2605::isPlaying() const
 
 HapticStatus HapticDriver_DRV2605::getStatus() const
 {
+    if (_isStandby) return HapticStatus::STANDBY;
     if (!_isReady) return HapticStatus::ERROR;
     if (isPlaying()) return HapticStatus::PLAYING;
     return HapticStatus::IDLE;
@@ -110,6 +116,7 @@ uint8_t HapticDriver_DRV2605::getGain() const
 bool HapticDriver_DRV2605::playEffect(HapticEffectId effect)
 {
     if (!_isReady) return false;
+    if (_isStandby)return false;
     setWaveform(0, static_cast<uint8_t>(effect));
     setWaveform(1, 0);
     return run();
@@ -223,14 +230,24 @@ bool HapticDriver_DRV2605::setMode(HapticMode mode)
     case HapticMode::AUTO_CALIBRATE:
         value = 0x07;
         break;
+    case HapticMode::STANDBY:
+        value = 0x40;
+        break;
     default:
         return false;
     }
-    return writeReg(DRV2605_REG_MODE, value) == 0;
+    if (writeReg(DRV2605_REG_MODE, value) == 0) {
+        _isStandby = (mode == HapticMode::STANDBY);
+        return true;
+    }
+    return false;
 }
 
 HapticMode HapticDriver_DRV2605::getMode() const
 {
+    if (_isStandby) {
+        return HapticMode::STANDBY;
+    }
     int value = readReg(DRV2605_REG_MODE);
     if (value < 0) {
         return HapticMode::INTERNAL_TRIGGER;

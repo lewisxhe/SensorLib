@@ -110,6 +110,7 @@ HapticCapabilities HapticDriver_AW86224::getCapabilities() const
 
 HapticStatus HapticDriver_AW86224::getStatus() const
 {
+    if (_playMode == PlayMode::STANDBY) return HapticStatus::STANDBY;
     if (!_isReady) return HapticStatus::ERROR;
     if (isPlaying()) return HapticStatus::PLAYING;
     return HapticStatus::IDLE;
@@ -865,6 +866,8 @@ bool HapticDriver_AW86224::setMode(HapticMode mode)
     case HapticMode::REAL_TIME_PLAYBACK:
         playMode(PlayMode::RTP);
         break;
+    case HapticMode::STANDBY:
+        playStop();
     default:
         return false;
     }
@@ -878,6 +881,9 @@ HapticMode HapticDriver_AW86224::getMode() const
         return HapticMode::REAL_TIME_PLAYBACK;
     case PlayMode::CONT:
         return HapticMode::AUTO_CALIBRATE;
+    case PlayMode::STANDBY:
+        return HapticMode::STANDBY;
+        break;
     default:
         return HapticMode::INTERNAL_TRIGGER;
     }

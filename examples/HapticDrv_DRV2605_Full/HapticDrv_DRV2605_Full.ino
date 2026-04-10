@@ -130,9 +130,13 @@ void testPlayEffect()
 {
     Serial.println("\n[TEST] playEffect() - HapticBase Interface");
     Serial.println("  Playing effect 1...");
-    haptic.playEffect(1);
-    delay(300);
-    Serial.println("[OK] Done");
+    bool result = haptic.playEffect(1);
+    if (result) {
+        delay(300);
+        Serial.println("[OK] Done");
+    } else {
+        Serial.println("[FAIL] playEffect() returned false");
+    }
 }
 
 void testPlayEffectRange()
@@ -204,6 +208,7 @@ void testStatus()
     case HapticStatus::PAUSED: statusStr = "PAUSED"; break;
     case HapticStatus::CALIBRATING: statusStr = "CALIBRATING"; break;
     case HapticStatus::ERROR: statusStr = "ERROR"; break;
+    case HapticStatus::STANDBY: statusStr = "STANDBY"; break;
     }
     Serial.print("  Status: "); Serial.println(statusStr);
     Serial.println("[OK] Done");
@@ -223,6 +228,10 @@ void testModes()
 
     Serial.println("  Mode: DIAGNOSTICS");
     haptic.setMode(HapticMode::DIAGNOSTICS);
+    Serial.print("  Current: "); Serial.println(static_cast<uint8_t>(haptic.getMode()));
+
+    Serial.println("  Mode: STANDBY");
+    haptic.setMode(HapticMode::STANDBY);
     Serial.print("  Current: "); Serial.println(static_cast<uint8_t>(haptic.getMode()));
 
     haptic.setMode(HapticMode::INTERNAL_TRIGGER);
@@ -251,6 +260,20 @@ void testF0()
     } else {
         Serial.println("  F0 not available or LRA not detected");
     }
+    Serial.println("[OK] Done");
+}
+
+void testStandby()
+{
+    Serial.println("\n[TEST] setMode(STANDBY) - HapticBase Interface");
+    haptic.setMode(HapticMode::STANDBY);
+    Serial.println("[OK] Done");
+}
+
+void testNormalMode()
+{
+    Serial.println("\n[TEST] setMode(NORMAL) - HapticBase Interface");
+    haptic.setMode(HapticMode::INTERNAL_TRIGGER);
     Serial.println("[OK] Done");
 }
 
@@ -316,6 +339,8 @@ void printHelp()
     Serial.println("  c   - calibrate()");
     Serial.println("  f   - getF0()");
     Serial.println("  k   - Show capabilities");
+    Serial.println("  s   - Enter standby mode");
+    Serial.println("  n   - Return to normal mode");
     Serial.println("");
     Serial.println("DRV2605 Extended:");
     Serial.println("  l   - Library selection");
@@ -398,6 +423,12 @@ void loop()
             break;
         case 'v':
             Serial.print("[VBAT] "); Serial.print(haptic.getVbat()); Serial.println(" mV");
+            break;
+        case 's':
+            testStandby();
+            break;
+        case 'n':
+            testNormalMode();
             break;
         case 'h':
         case 'H':
