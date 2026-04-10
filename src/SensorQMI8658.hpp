@@ -30,6 +30,7 @@
 #pragma once
 
 #include "platform/comm/ComplexStaticDeviceWithHal.hpp"
+#include <math.h>
 
 static constexpr uint8_t  QMI8658_L_SLAVE_ADDRESS = (0x6B);
 static constexpr uint8_t  QMI8658_H_SLAVE_ADDRESS = (0x6A);
