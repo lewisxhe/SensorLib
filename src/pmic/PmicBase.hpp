@@ -47,6 +47,7 @@
 #include "PmicPowerBase.hpp"
 #include "PmicChargerBase.hpp"
 #include "PmicAdcBase.hpp"
+#include "PmicLedBase.hpp"
 #include "../platform/SensorCommCustom.hpp"
 
 /**
@@ -180,6 +181,15 @@ public:
      * @see PmicAdcBase
      */
     virtual PmicAdcBase &adc() = 0;
+
+    /**
+     * @brief Get LED interface
+     * @return Reference to LED interface
+     *
+     * @note Returns reference to LED implementation
+     * @see PmicLedBase
+     */
+    virtual PmicLedBase &led() = 0;
 
     /**
      * @brief Get PMIC device name
