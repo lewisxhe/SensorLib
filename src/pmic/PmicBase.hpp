@@ -58,16 +58,16 @@
  */
 namespace PmicCapability {
 enum class Capability : uint32_t {
-    NONE        = 0,    ///< No capabilities (should not occur)
-    CHARGER     = (1 << 0),  ///< Battery charger support
-    POWER       = (1 << 1),  ///< Power management (input limits, boost, etc.)
-    ADC         = (1 << 2),  ///< Analog-to-Digital converter for monitoring
-    GPIO        = (1 << 3),  ///< General purpose I/O support
-    LED         = (1 << 4),  ///< LED driver support
-    IRQ         = (1 << 5),  ///< Interrupt handling support
-    BC12        = (1 << 6),  ///< BC1.2 (USB Battery Charging) support
-    TYPEC       = (1 << 7),  ///< USB Type-C support
-    PWRON       = (1 << 8),  ///< Power-on/Power-off control support
+    PMIC_NONE        = 0,    ///< No capabilities (should not occur)
+    PMIC_CHARGER     = (1 << 0),  ///< Battery charger support
+    PMIC_POWER       = (1 << 1),  ///< Power management (input limits, boost, etc.)
+    PMIC_ADC         = (1 << 2),  ///< Analog-to-Digital converter for monitoring
+    PMIC_GPIO        = (1 << 3),  ///< General purpose I/O support
+    PMIC_LED         = (1 << 4),  ///< LED driver support
+    PMIC_IRQ         = (1 << 5),  ///< Interrupt handling support
+    PMIC_BC12        = (1 << 6),  ///< BC1.2 (USB Battery Charging) support
+    PMIC_TYPEC       = (1 << 7),  ///< USB Type-C support
+    PMIC_PWRON       = (1 << 8),  ///< Power-on/Power-off control support
 };
 
 /**
