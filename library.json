@@ -3,6 +3,7 @@
   "version": "0.4.1",
   "description": "Commonly used I2C , SPI device multi-platform libraries",
   "keywords": [
+    "QMC6309",
     "QMC6310N",
     "QMC6310U",
     "QMI8658",
