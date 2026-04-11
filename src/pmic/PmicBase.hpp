@@ -56,7 +56,8 @@
  * Used to indicate which features are available in a specific PMIC implementation.
  * These flags help determine which sub-modules can be accessed.
  */
-enum class PmicCapability : uint32_t {
+namespace PmicCapability {
+enum class Capability : uint32_t {
     NONE        = 0,    ///< No capabilities (should not occur)
     CHARGER     = (1 << 0),  ///< Battery charger support
     POWER       = (1 << 1),  ///< Power management (input limits, boost, etc.)
@@ -70,25 +71,26 @@ enum class PmicCapability : uint32_t {
 };
 
 /**
- * @brief Bitwise OR operator for PmicCapability
+ * @brief Bitwise OR operator for PmicCapability::Capability
  * @param a First capability
  * @param b Second capability
  * @return Combined capability flags
  */
-constexpr PmicCapability operator|(PmicCapability a, PmicCapability b)
+constexpr Capability operator|(Capability a, Capability b)
 {
-    return static_cast<PmicCapability>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
+    return static_cast<Capability>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
 }
 
 /**
- * @brief Bitwise AND operator for PmicCapability
+ * @brief Bitwise AND operator for PmicCapability::Capability
  * @param a First capability
  * @param b Second capability
  * @return True if both capabilities are set
  */
-constexpr bool operator&(PmicCapability a, PmicCapability b)
+constexpr bool operator&(Capability a, Capability b)
 {
     return (static_cast<uint32_t>(a) & static_cast<uint32_t>(b)) != 0;
+}
 }
 
 /**
@@ -154,9 +156,9 @@ public:
      * @brief Get PMIC capabilities
      * @return Bitmask of supported capabilities
      *
-     * @see PmicCapability enum for available capability flags
+     * @see PmicCapability::Capability enum for available capability flags
      */
-    virtual PmicCapability getCapabilities() const = 0;
+    virtual PmicCapability::Capability getCapabilities() const = 0;
 
     /**
      * @brief Get power management interface

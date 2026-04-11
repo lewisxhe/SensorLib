@@ -137,13 +137,13 @@ public:
 
     /**
      * @brief Get supported PMIC capabilities
-     * @return Bitmask of PmicCapability flags
+     * @return Bitmask of PmicCapability::Capability flags
      *
      * @note SY6970 supports: CHARGER, POWER, ADC
      */
-    PmicCapability getCapabilities() const override
+    PmicCapability::Capability getCapabilities() const override
     {
-        return PmicCapability::CHARGER | PmicCapability::POWER | PmicCapability::ADC;
+        return PmicCapability::Capability::CHARGER | PmicCapability::Capability::POWER | PmicCapability::Capability::ADC;
     }
 
     /**
