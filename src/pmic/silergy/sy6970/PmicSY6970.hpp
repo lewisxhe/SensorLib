@@ -143,7 +143,7 @@ public:
      */
     PmicCapability::Capability getCapabilities() const override
     {
-        return PmicCapability::Capability::PMIC_CHARGER | PmicCapability::Capability::PMIC_POWER | PmicCapability::Capability::PMIC_ADC;
+        return PmicCapability::Capability::PmicSupportCharger | PmicCapability::Capability::PmicSupportPower | PmicCapability::Capability::PmicSupportAdc;
     }
 
     /**
