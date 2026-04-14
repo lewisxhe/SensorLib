@@ -42,6 +42,7 @@
   - [PlatformIO](#platformio)
   - [ESP-IDF](#esp-idf)
 - [Examples](#examples)
+  - [Using Examples](#using-examples)
 - [Support list](#support-list)
 - [Notes](#notes)
 - [License](#license)
@@ -119,8 +120,48 @@ dependencies:
 
 ## Examples
 
-- PlatformIO examples: see `platformio.ini` and uncomment the example `src_dir` you want to build.
-- More examples are located in the `examples/` folder.
+Examples are organized by category in the `examples/` directory:
+
+```
+examples/
+├── Actuators/         # Actuator drivers
+│   ├── Haptic/        # DRV2605, AW86224 haptic motors
+│   └── LED/           # AW9364 LED driver
+├── IO/                # IO expansion
+│   └── Expander/      # XL9555, PCA9570 GPIO expanders
+├── Platform/          # Platform-specific examples
+│   └── idf-examples/   # ESP-IDF framework examples
+├── PowerManagement/    # Power management ICs
+│   ├── Gauge/          # Battery gauges (AXP2602, BQ27220)
+│   └── Pmic/           # PMICs and chargers ( BQ25896, SY6970)
+├── Sensors/           # Sensor drivers
+│   ├── Accelerometer/  # BMA422, BMA423, BMA456H
+│   ├── FingerNavigation/  # PawA350
+│   ├── IMU/           # BHI260AP, BHI360, QMI8658
+│   ├── LightSensor/   # CM32181, LTR553
+│   ├── Magnetometer/   # BMM150, QMC series
+│   └── Touch/          # GT911, FT6232, CST series, etc.
+├── Time/              # Timekeeping
+│   └── RTC/            # PCF85063, PCF8563
+└── Utilities/         # Helper utilities
+    ├── CustomCallback/ # Custom callback examples
+    └── SensorWireHelper/
+```
+
+### Using Examples
+
+**PlatformIO**: Edit `platformio.ini` and uncomment the `src_dir` for the example you want to build:
+
+```ini
+[platformio]
+; Uncomment the example you want to build:
+src_dir = examples/Sensors/IMU/QMI8658_GetDataExample
+; src_dir = examples/Sensors/Touch/TouchDrv_GT911_GetPoint
+```
+
+**Arduino IDE**: Open the `.ino` file directly from the examples folder.
+
+**ESP-IDF**: See `examples/Platform/idf-examples/` for ESP-IDF specific projects.
 
 ## Support list
 
