@@ -6,8 +6,7 @@ on:
   push:
     paths:
       - "src/**"
-      - "examples/ESP_IDF_TouchDrvExample/**"
-      - "examples/ESP_IDF_SensorExamples/**"
+      - "examples/Platform/idf-examples/**"
       - ".github/workflows/esp-idf.yml"
 
 jobs:
@@ -35,12 +34,12 @@ jobs:
         run: |
           pwd
           . ${IDF_PATH}/export.sh
-          cd examples/ESP_IDF_TouchDrvExample
+          cd examples/Platform/idf-examples/ESP_IDF_TouchDrvExample
           idf.py build
       - name: Build ESP_IDF_SensorExamples
         shell: bash
         run: |
           pwd
           . ${IDF_PATH}/export.sh
-          cd examples/ESP_IDF_SensorExamples
+          cd examples/Platform/idf-examples/ESP_IDF_SensorExamples
           idf.py build
