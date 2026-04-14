@@ -136,6 +136,11 @@
 #define BHI360_IRQ   9
 #define BHI360_RST   14
 #define USE_SPI_INTERFACE   1
+#elif defined(ARDUINO_T_PANEL)
+#define TOUCH_SDA 17
+#define TOUCH_SCL 18
+#define TOUCH_IRQ 21
+#define TOUCH_RST 4
 #endif
 
 
