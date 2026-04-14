@@ -59,6 +59,7 @@ tags:
   - AW9364
   - BQ27220
   - AXP2602
+  - PAW-A350
 dependencies:
   idf:
     version: ">=4.4"

@@ -161,6 +161,7 @@ dependencies:
 | AW9364          | Led Driver (GPIO)        | ❌   | ❌   |
 | BQ27220         | Gauge Meter              | ✔️   | ❌   |
 | AXP2602         | Gauge Meter              | ✔️   | ❌   |
+| PAW-A350        | Finger Navigation        | ✔️   | ❌   |
 
 ## Notes
 
