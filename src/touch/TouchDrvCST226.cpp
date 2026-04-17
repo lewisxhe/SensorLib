@@ -96,6 +96,8 @@ const char *TouchDrvCST226::getModelName()
         return "CST226SE";
     case CST328_CHIPTYPE:
         return "CST328";
+    case CST3240_CHIPTYPE:
+        return "CST3240";
     default:
         break;
     }
@@ -137,16 +139,15 @@ bool TouchDrvCST226::initImpl(uint8_t)
     write_buffer[0] = 0xD2;
     write_buffer[1] = 0x04;
     writeThenRead(write_buffer, 2, buffer, 4);
-    // uint32_t chipType = buffer[3];
-    // chipType <<= 8;
-    // chipType |= buffer[2];
-    uint32_t chipType = buffer[2];
-    // log_i("Chip ID high byte:0x%lx. low byte:0x%lx", buffer[3], buffer[2]);
+    uint32_t chipType = buffer[3];
+    chipType <<= 8;
+    chipType |= buffer[2];
+
 
     uint32_t ProjectID = buffer[1];
     ProjectID <<= 8;
     ProjectID |= buffer[0];
-    log_i("Chip type :0x%lx, ProjectID:0X%lx",
+    log_i("Chip type :0x%x, ProjectID:0X%lx",
           chipType, ProjectID);
 
 
@@ -182,7 +183,12 @@ bool TouchDrvCST226::initImpl(uint8_t)
         return false;
     }
 
-    if (chipType != CST226SE_CHIPTYPE && chipType != CST328_CHIPTYPE) {
+    switch (chipType) {
+    case CST226SE_CHIPTYPE:
+    case CST3240_CHIPTYPE:
+    case CST328_CHIPTYPE:
+        break;
+    default:
         log_e("Chip ID does not match, should be 0x%02" PRIX8 " ,but is 0x%02" PRIX32, CST226SE_CHIPTYPE, chipType);
         return false;
     }

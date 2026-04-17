@@ -197,6 +197,7 @@ src_dir = examples/Sensors/IMU/QMI8658_GetDataExample
 | GT911           | Capacitive touch         | ✔️   | ❌   |
 | CST9217         | Capacitive touch         | ✔️   | ❌   |
 | CST9220         | Capacitive touch         | ✔️   | ❌   |
+| CST3240         | Capacitive touch         | ✔️   | ❌   |
 | GT9895          | Capacitive touch         | ✔️   | ❌   |
 | HI8561          | Capacitive touch         | ✔️   | ❌   |
 | AW9364          | Led Driver (GPIO)        | ❌   | ❌   |

@@ -81,6 +81,7 @@ public:
 private:
     static constexpr uint8_t  CST226SE_CHIPTYPE   =  (0xA8);
     static constexpr uint8_t  CST328_CHIPTYPE     =  (0x48);
+    static constexpr uint32_t  CST3240_CHIPTYPE    =  (0x3240);
     static constexpr uint8_t  MAX_FINGER_NUM      =  (5);
 
     bool initImpl(uint8_t) override;
