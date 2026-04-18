@@ -76,6 +76,17 @@ void setup()
         }
     }
 
+    // Self-test 
+    int16_t x_result = 0, y_result = 0, z_result = 0;
+    bool self_test_result = magnetometer.selfTest(x_result, y_result, z_result);
+    Serial.print("Self-test ");
+    Serial.println(self_test_result ? "passed" : "failed");
+    Serial.print("X-axis: "); Serial.println(x_result);
+    Serial.print("Y-axis: "); Serial.println(y_result);
+    Serial.print("Z-axis: "); Serial.println(z_result);
+
+    delay(3000);
+
     // The desired output data rate in Hz.  Allowed values are 1.0, 10.0, 50.0, 100.0 and 200.0HZ.
     float data_rate_hz = 200.0f;
     // op_mode: Allowed values are SUSPEND, NORMAL, SINGLE_MEASUREMENT, CONTINUOUS_MEASUREMENT
