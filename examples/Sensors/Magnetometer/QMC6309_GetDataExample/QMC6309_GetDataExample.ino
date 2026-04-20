@@ -76,7 +76,7 @@ void setup()
         }
     }
 
-    // Self-test 
+    // Self-test
     int16_t x_result = 0, y_result = 0, z_result = 0;
     bool self_test_result = magnetometer.selfTest(x_result, y_result, z_result);
     Serial.print("Self-test ");
@@ -178,6 +178,7 @@ void loop()
         Serial.print("°");
 
         float strength = MagnetometerUtils::calculateMagneticStrength(data);
+        strength = MagnetometerUtils::gaussToMicroTesla(strength);
         Serial.print(" Magnetic Strength: ");
         Serial.print(strength, 2);
         Serial.println(" μT");

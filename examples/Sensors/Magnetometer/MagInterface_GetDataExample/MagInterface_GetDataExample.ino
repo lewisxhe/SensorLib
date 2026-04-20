@@ -231,6 +231,7 @@ void loop()
         Serial.print("°");
 
         float strength = MagnetometerUtils::calculateMagneticStrength(data);
+        strength = MagnetometerUtils::gaussToMicroTesla(strength);
         Serial.print(" Magnetic Strength: ");
         Serial.print(strength, 2);
         Serial.println(" μT");

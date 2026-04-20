@@ -138,7 +138,7 @@ namespace MagnetometerUtils
      * This represents the total strength of the magnetic field at the sensor.
      *
      * @param data Magnetometer data structure containing magnetic field measurements
-     * @return Magnetic field strength in the same units as input (typically microtesla, μT)
+     * @return Magnetic field strength in Gauss
      */
     inline float calculateMagneticStrength(const MagnetometerData& data)
     {

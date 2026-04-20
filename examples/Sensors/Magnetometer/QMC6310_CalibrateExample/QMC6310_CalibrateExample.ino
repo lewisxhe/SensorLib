@@ -66,21 +66,34 @@ void calibrate()
         Serial.println("Failed to set output data rate");
         return ;
     }
+
+    Serial.println("========================================");
+    Serial.println("Calibration Instructions:");
+    Serial.println("1. Rotate sensor in FIGURE-8 pattern");
+    Serial.println("2. Cover all axes (X, Y, Z directions)");
+    Serial.println("3. Rotate slowly and completely");
+    Serial.println("4. Wait for progress bar to complete");
+    Serial.println("5. Expected: Magnetic Strength ~25-65 uT");
+    Serial.println("========================================");
+    Serial.println();
+
+    Serial.println("Place the sensor on the plane and slowly rotate the sensor...");
+    Serial.println("Rotate in FIGURE-8 pattern to cover all directions!");
+    Serial.println();
+
     int32_t x_min = 65535;
     int32_t x_max = -65535;
     int32_t y_min = 65535;
     int32_t y_max = -65535;
     int32_t z_min = 65535;
     int32_t z_max = -65535;
-    Serial.println("Place the sensor on the plane and slowly rotate the sensor...");
 
     int32_t range = 1000;
     int32_t i = 0;
     int32_t x = 0, y = 0, z = 0;;
-    float a = 0.5 ;
-    float x_offset = 0;
-    float y_offset = 0;
-    float z_offset = 0;
+    int16_t x_offset = 0;
+    int16_t y_offset = 0;
+    int16_t z_offset = 0;
 
     MagnetometerData data;
     while (i < range) {
@@ -90,9 +103,9 @@ void calibrate()
 
             magnetometer.readData(data);
 
-            x = a * data.raw.x + (1 - a) * x;
-            y = a * data.raw.y + (1 - a) * y;
-            z = a * data.raw.z + (1 - a) * z;
+            x = (data.raw.x + x) / 2;
+            y = (data.raw.y + y) / 2;
+            z = (data.raw.z + z) / 2;
             if (x < x_min) {
                 x_min = x;
                 i = 0;
@@ -133,35 +146,40 @@ void calibrate()
     z_offset = (z_max + z_min) / 2;
 
     Serial.print("x_min:");
-    Serial.print(x_min);
+    Serial.println(x_min);
 
     Serial.print("x_max:");
-    Serial.print(x_max);
+    Serial.println(x_max);
 
     Serial.print("y_min:");
-    Serial.print(y_min);
+    Serial.println(y_min);
 
     Serial.print("y_max:");
-    Serial.print(y_max);
+    Serial.println(y_max);
 
     Serial.print("z_min:");
-    Serial.print(z_min);
+    Serial.println(z_min);
 
     Serial.print("z_max:");
     Serial.println(z_max);
 
     Serial.print("x_offset:");
-    Serial.print(x_offset);
+    Serial.println(x_offset);
 
     Serial.print("y_offset:");
-    Serial.print(y_offset);
+    Serial.println(y_offset);
 
     Serial.print("z_offset:");
-    Serial.print(z_offset);
+    Serial.println(z_offset);
 
 
     // Set the calibration value and the user calculates the deviation
     magnetometer.setOffset(x_offset, y_offset, z_offset);
+
+    Serial.println();
+    Serial.println("Calibration complete!");
+    Serial.println("Check if Magnetic Strength is ~25-65 uT");
+    Serial.println("If too low, repeat calibration with better rotation");
 }
 
 
@@ -290,6 +308,7 @@ void loop()
         Serial.print("°");
 
         float strength = MagnetometerUtils::calculateMagneticStrength(data);
+        strength = MagnetometerUtils::gaussToMicroTesla(strength);
         Serial.print(" Magnetic Strength: ");
         Serial.print(strength, 2);
         Serial.println(" μT");
