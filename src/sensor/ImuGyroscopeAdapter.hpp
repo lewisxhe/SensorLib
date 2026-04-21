@@ -47,7 +47,7 @@ public:
 
     bool isDataReady() override
     {
-        return _dev.gyroIsDataReady();
+        return _dev.isDataReady(static_cast<uint8_t>(ImuBase::DataReadyMask::GYRO));
     }
 
     bool reset() override
@@ -68,6 +68,11 @@ public:
     bool setOutputDataRate(float data_rate_hz) override
     {
         return _dev.setGyroOutputDataRate(data_rate_hz);
+    }
+
+    bool setOperationMode(OperationMode mode) override
+    {
+        return _dev.setOperationMode(mode);
     }
 
 private:

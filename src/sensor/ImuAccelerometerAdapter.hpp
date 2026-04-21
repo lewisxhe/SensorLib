@@ -47,7 +47,7 @@ public:
 
     bool isDataReady() override
     {
-        return _dev.accelIsDataReady();
+        return _dev.isDataReady(static_cast<uint8_t>(ImuBase::DataReadyMask::ACCEL));
     }
 
     bool reset() override
@@ -69,6 +69,11 @@ public:
     bool setOutputDataRate(float data_rate_hz) override
     {
         return _dev.setAccelOutputDataRate(data_rate_hz);
+    }
+
+    bool setOperationMode(OperationMode mode) override
+    {
+        return _dev.setOperationMode(mode);
     }
 
 private:

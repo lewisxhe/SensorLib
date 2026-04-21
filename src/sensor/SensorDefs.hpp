@@ -254,8 +254,18 @@ enum class AccelFullScaleRange {
  * @brief Enumeration of interrupt pin mapping options
  */
 enum class InterruptPinMap {
-    PIN1 = 1,   ///< Interrupt pin 1
-    PIN2,       ///< Interrupt pin 2
+    DISABLE = 0,  ///< Disable interrupt output
+    PIN1 = 1,     ///< Interrupt pin 1
+    PIN2          ///< Interrupt pin 2
+};
+
+/**
+ * @brief Generic tap event type
+ */
+enum class TapEvent : uint8_t {
+    INVALID = 0,
+    SINGLE  = 1,
+    DOUBLE  = 2,
 };
 
 

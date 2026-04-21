@@ -111,4 +111,13 @@ public:
      * @return false       Configuration failed
      */
     virtual bool setOutputDataRate(float data_rate_hz) = 0;
+
+    /**
+     * @brief Set gyroscope operation mode
+     *
+     * @param mode Desired operation mode
+     * @return true  Configuration successful
+     * @return false Configuration failed
+     */
+    virtual bool setOperationMode(OperationMode mode) = 0;
 };
