@@ -74,7 +74,7 @@ public:
      * @brief Get the chip ID / WHO_AM_I value.
      * @return Chip ID value.
      */
-    virtual uint8_t getChipId() = 0;
+    virtual uint8_t getChipID() = 0;
 
     /**
      * @brief Get the firmware version.
