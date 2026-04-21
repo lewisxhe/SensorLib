@@ -39,7 +39,6 @@
 #endif
 
 #include "SensorLib_Version.h"
-#include "DevicesPins.h"
 
 #if !defined(ARDUINO_ARCH_MBED) && !defined(ARDUINO_ARCH_ZEPHYR)
 #define PLATFORM_HAS_PRINTF
