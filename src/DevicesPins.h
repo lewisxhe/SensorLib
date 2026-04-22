@@ -40,6 +40,8 @@
 // T-Display-AMOLED 1.91 Inch CST816T✅
 #define TOUCH_SDA 3
 #define TOUCH_SCL 2
+#define SENSOR_SDA 3
+#define SENSOR_SCL 2
 #define TOUCH_IRQ 21
 #define TOUCH_RST -1
 #elif defined(ARDUINO_T_AMOLED_191_QWIIC)
@@ -108,6 +110,7 @@
 #define RTC_IRQ    (14)
 #define RTC_PMU_SDA (42)
 #define RTC_PMU_SCL (41)
+#define USE_SPI_INTERFACE
 #elif defined(ARDUINO_BHI260_SENSOR)
 #define SPI_MOSI     33
 #define SPI_MISO     34
@@ -142,32 +145,3 @@
 #define TOUCH_IRQ 21
 #define TOUCH_RST 4
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
