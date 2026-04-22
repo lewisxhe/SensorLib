@@ -147,8 +147,7 @@ bool TouchDrvCST226::initImpl(uint8_t)
     uint32_t ProjectID = buffer[1];
     ProjectID <<= 8;
     ProjectID |= buffer[0];
-    log_i("Chip type :0x%x, ProjectID:0X%lx",
-          chipType, ProjectID);
+    log_i("Chip type: 0x%04" PRIX32 ", ProjectID: 0x%04" PRIX32, chipType, ProjectID);
 
 
     write_buffer[0] = 0xD2;
