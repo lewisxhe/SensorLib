@@ -868,6 +868,7 @@ bool HapticDriver_AW86224::setMode(HapticMode mode)
         break;
     case HapticMode::STANDBY:
         playStop();
+        break;
     default:
         return false;
     }
