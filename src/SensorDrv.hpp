@@ -29,3 +29,4 @@
 #pragma once
 
 #include "sensor/imu/qmi8658/SensorQMI8658.hpp"
+#include "sensor/magnetometer/bmm150/SensorBMM150.hpp"
