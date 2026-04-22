@@ -132,7 +132,7 @@ void setup()
     Serial.println("QMI8658 Synchronous Mode Example");
 
 #ifdef USE_I2C_INTERFACE
-    if (!imu.begin(Wire, QMI8658_DEFAULT_I2C_ADDR_HIGH, IMU_SDA, IMU_SCL)) {
+    if (!imu.begin(Wire, QMI8658_H_SLAVE_ADDRESS, IMU_SDA, IMU_SCL)) {
         Serial.println("Failed to initialize QMI8658!");
         while (1) {
             delay(1000);

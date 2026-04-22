@@ -33,8 +33,8 @@
 #include "../../ImuBase.hpp"
 #include "../../../platform/comm/ComplexDeviceWithHal.hpp"
 
-static constexpr uint8_t QMI8658_DEFAULT_I2C_ADDR_LOW  = 0x6B;
-static constexpr uint8_t QMI8658_DEFAULT_I2C_ADDR_HIGH = 0x6A;
+static constexpr uint8_t QMI8658_L_SLAVE_ADDRESS  = 0x6B;
+static constexpr uint8_t QMI8658_H_SLAVE_ADDRESS  = 0x6A;
 
 /**
  * @brief QMI8658 IMU sensor driver class.
