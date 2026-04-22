@@ -29,6 +29,8 @@
  */
 #pragma once
 
+#pragma message("Warning: Please replace with a new driver. Please refer to the examples/QMI8658 example. SensorQMI8658.hpp will be removed in the next version.")
+
 #include "platform/comm/ComplexStaticDeviceWithHal.hpp"
 #include <math.h>
 
