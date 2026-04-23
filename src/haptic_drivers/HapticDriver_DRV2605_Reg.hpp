@@ -31,6 +31,8 @@
 
 #include <stdint.h>
 
+namespace DRV2605Regs {
+
 // -----------------------
 // Chip IDs (STATUS[7:5])
 // -----------------------
@@ -78,3 +80,6 @@ static constexpr uint8_t DRV2605_REG_CONTROL3 = 0x1D;
 static constexpr uint8_t DRV2605_REG_CONTROL4 = 0x1E;
 static constexpr uint8_t DRV2605_REG_VBAT = 0x21;
 static constexpr uint8_t DRV2605_REG_LRARESON = 0x22;
+
+} // namespace DRV2605Regs
+

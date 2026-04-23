@@ -31,6 +31,8 @@
 
 #include <stdint.h>
 
+namespace AW86224Regs {
+
 #ifdef _BV
 #undef _BV
 #endif
@@ -667,3 +669,5 @@ static constexpr uint8_t MASK_CHIPID_L = _BV(0);
 static constexpr uint8_t REG_ANACFG8 = 0x77;
 static constexpr uint8_t MASK_TRTF_CTRL_HDRV = 0xC0;  // bits 7:6
 static constexpr uint8_t SHIFT_TRTF_CTRL_HDRV = 6;
+
+} // namespace AW86224Regs

@@ -32,6 +32,8 @@
 #include "HapticDriver_AW86224_Reg.hpp"
 #include "AW86224_RamData.hpp"
 
+using namespace AW86224Regs;
+
 HapticDriver_AW86224::HapticDriver_AW86224() :
     HapticBase("AW86224"),
     _rstPin(-1),

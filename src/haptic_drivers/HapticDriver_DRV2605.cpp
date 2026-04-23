@@ -29,6 +29,8 @@
 #include "HapticDriver_DRV2605.hpp"
 #include "HapticDriver_DRV2605_Reg.hpp"
 
+using namespace DRV2605Regs;
+
 HapticDriver_DRV2605::HapticDriver_DRV2605()
     : HapticBase("DRV2605")
     , _currentLibrary(1)
