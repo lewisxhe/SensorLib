@@ -31,3 +31,5 @@
 
 #include "pmic/silergy/sy6970/PmicSY6970.hpp"
 #include "pmic/ti/bq25896/PmicBQ25896.hpp"
+#include "pmic/xpowers/axp517/PmicAXP517.hpp"
+

@@ -63,6 +63,17 @@ public:
     virtual bool setOnLevel(uint16_t ms) = 0;
 
     /**
+     * @brief Get button on-level timing
+     *
+     * Retrieves the current minimum button press duration
+     * required to trigger a power-on event.
+     *
+     * @param[out] ms Output variable receiving the duration in milliseconds
+     * @return true on success, false on failure
+     */
+    virtual bool getOnLevel(uint16_t &ms) const = 0;
+
+    /**
      * @brief Set button off-level timing
      *
      * Configures the minimum duration the button must be pressed (held low/active)
@@ -76,6 +87,17 @@ public:
     virtual bool setOffLevel(uint16_t ms) = 0;
 
     /**
+     * @brief Get button off-level timing
+     *
+     * Retrieves the current minimum button press duration
+     * required to trigger a power-off event.
+     *
+     * @param[out] ms Output variable receiving the duration in milliseconds
+     * @return true on success, false on failure
+     */
+    virtual bool getOffLevel(uint16_t &ms) const = 0;
+
+    /**
      * @brief Set button IRQ level timing
      *
      * Configures the duration for button-related interrupt generation.
@@ -87,4 +109,15 @@ public:
      * @note Valid range is chip-specific
      */
     virtual bool setIrqLevel(uint16_t ms) = 0;
+
+    /**
+     * @brief Get button IRQ level timing
+     *
+     * Retrieves the current button press duration
+     * configured for interrupt generation.
+     *
+     * @param[out] ms Output variable receiving the duration in milliseconds
+     * @return true on success, false on failure
+     */
+    virtual bool getIrqLevel(uint16_t &ms) const = 0;
 };
