@@ -143,12 +143,15 @@ public:
      * For custom I2C implementations (bit-banging, SPI-I2C bridge, etc.)
      *
      * @param callback Custom read/write callback function
+     * @param hal_cb: No use this callback,can be nullptr
      * @param addr I2C address (default: BQ25896_SLAVE_ADDRESS = 0x6B)
      * @return true on success
      */
-    bool begin(SensorCommCustom::CustomCallback callback, uint8_t addr)
+    bool begin(SensorCommCustom::CustomCallback callback,
+               SensorCommCustomHal::CustomHalCallback hal_cb,
+               uint8_t addr)
     {
-        return _core.begin(callback, addr);
+        return _core.begin(callback, hal_cb, addr);
     }
 
     /**

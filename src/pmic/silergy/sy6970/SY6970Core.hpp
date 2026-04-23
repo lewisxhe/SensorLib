@@ -40,7 +40,7 @@
  */
 #pragma once
 
-#include "../../../platform/comm/I2CDeviceNoHal.hpp"
+#include "../../../platform/comm/I2CDeviceWithHal.hpp"
 
 namespace SY6970Faults {
     constexpr uint8_t WATCHDOG_TIMEOUT = 0x80;
@@ -64,7 +64,7 @@ namespace SY6970Faults {
     inline uint8_t getNtcFault(uint8_t fault) { return fault & NTC_FAULT_MASK; }
 }
 
-class SY6970Core : public I2CDeviceNoHal
+class SY6970Core : public I2CDeviceWithHal
 {
 public:
     SY6970Core() = default;

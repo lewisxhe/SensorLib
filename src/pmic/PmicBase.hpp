@@ -49,6 +49,7 @@
 #include "PmicAdcBase.hpp"
 #include "PmicLedBase.hpp"
 #include "../platform/SensorCommCustom.hpp"
+#include "../platform/SensorCommCustomHal.hpp"
 
 /**
  * @brief PMIC Capability Flags
@@ -142,10 +143,12 @@ public:
     /**
      * @brief Initialize PMIC with custom communication callback
      * @param callback Custom communication callback for read/write operations
+     * @param hal_cb: Platform digital IO and delay callback function.
      * @param addr Device address
      * @return true on success, false on failure
      */
-    virtual bool begin(SensorCommCustom::CustomCallback callback, uint8_t addr) = 0;
+    virtual bool begin(SensorCommCustom::CustomCallback callback,
+                       SensorCommCustomHal::CustomHalCallback hal_cb, uint8_t addr) = 0;
 
     /**
      * @brief Deinitialize PMIC and release resources

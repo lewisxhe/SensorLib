@@ -64,7 +64,7 @@
  */
 #pragma once
 
-#include "../../../platform/comm/I2CDeviceNoHal.hpp"
+#include "../../../platform/comm/I2CDeviceWithHal.hpp"
 #include "BQ25896Regs.hpp"
 
 namespace BQ25896Faults {
@@ -89,7 +89,7 @@ namespace BQ25896Faults {
     inline uint8_t getNtcFault(uint8_t fault) { return fault & NTC_FAULT_MASK; }
 }
 
-class BQ25896Core : public I2CDeviceNoHal
+class BQ25896Core : public I2CDeviceWithHal
 {
 public:
     BQ25896Core() = default;
