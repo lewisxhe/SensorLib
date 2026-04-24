@@ -165,7 +165,7 @@ public:
      */
     const char *getChipName()
     {
-        return ARDUINO_VARIANT;
+        return "PosixRTC";
     }
 };
 
