@@ -37,6 +37,8 @@
  *
  * Access the web interface by connecting to the ESP32's WiFi IP address.
  */
+#include <Wire.h>
+#include <SPI.h>
 #include <Arduino.h>
 #ifdef ARDUINO_ARCH_ESP32
 #include <WiFi.h>
