@@ -28,7 +28,7 @@
  */
 #pragma once
 
-#include "platform/comm/I2CDeviceNoHal.hpp"
+#include "platform/comm/I2CDeviceWithHal.hpp"
 #include "HapticBase.hpp"
 
 /**
@@ -109,7 +109,7 @@ static constexpr uint8_t DRV2605_SLAVE_ADDRESS = 0x5A;
  *
  * @warning You must call begin() successfully before using any other API.
  */
-class HapticDriver_DRV2605 : public HapticBase, public I2CDeviceNoHal
+class HapticDriver_DRV2605 : public HapticBase, public I2CDeviceWithHal
 {
 public:
     /**

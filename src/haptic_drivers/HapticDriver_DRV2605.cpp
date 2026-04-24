@@ -337,9 +337,9 @@ int HapticDriver_DRV2605::autoCal()
     setMode(HapticMode::AUTO_CALIBRATE);
     run();
 
-    uint32_t start = millis();
-    while (!isDone() && (millis() - start < 1000)) {
-        delay(10);
+    uint32_t start = hal->millis();
+    while (!isDone() && (hal->millis() - start < 1000)) {
+        hal->delay(10);
     }
 
     if (isDone()) {
