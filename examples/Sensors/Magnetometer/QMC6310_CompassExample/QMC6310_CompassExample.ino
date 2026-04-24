@@ -27,7 +27,7 @@
  * @date      2026-01-26
  *
  */
-#include <SensorDrv.hpp>
+#include <MagnetometerDrv.hpp>
 
 #if defined(ARDUINO_ARCH_ESP32)
 #include "SH1106Wire.h"         //Oled display from https://github.com/ThingPulse/esp8266-oled-ssd1306

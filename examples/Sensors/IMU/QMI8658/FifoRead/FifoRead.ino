@@ -46,7 +46,7 @@
  *            reducing CPU overhead from frequent interrupt handling.
  */
 #include <stdarg.h>
-#include "SensorDrv.hpp"
+#include "ImuDrv.hpp"
 #include "DevicesPins.h"
 
 

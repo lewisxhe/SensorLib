@@ -27,7 +27,7 @@
  * @date      2026-04-08
  *
  */
-#include <SensorDrv.hpp>
+#include <MagnetometerDrv.hpp>
 #include <SensorWireHelper.h>
 
 #ifdef ARDUINO_T_BEAM_S3_SUPREME

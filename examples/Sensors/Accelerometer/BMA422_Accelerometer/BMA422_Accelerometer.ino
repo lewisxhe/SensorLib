@@ -26,7 +26,7 @@
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2026-01-30
  */
-#include <SensorDrv.hpp>
+#include <AccelerometerDrv.hpp>
 
 #ifndef SENSOR_SDA
 #define SENSOR_SDA  21

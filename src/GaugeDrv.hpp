@@ -22,20 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      SensorDrv.hpp
+ * @file      GaugeDrv.hpp
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2026-04-15
+ * @date      2026-04-24
  */
 #pragma once
 
-#include "sensor/imu/qmi8658/SensorQMI8658.hpp"
-#include "sensor/magnetometer/bmm150/SensorBMM150.hpp"
-#include "sensor/magnetometer/qmc/SensorQMC5883L.hpp"
-#include "sensor/magnetometer/qmc/SensorQMC5883P.hpp"
-#include "sensor/magnetometer/qmc/SensorQMC6309.hpp"
-#include "sensor/magnetometer/qmc/SensorQMC6310.hpp"
-#include "sensor/accelerometer/bma/SensorBMA422.hpp"
-#include "sensor/accelerometer/bma/SensorBMA423.hpp"
-#include "sensor/accelerometer/bma/SensorBMA456H.hpp"
-#include "sensor/accelerometer/bma/SensorBMA4XX.hpp"
-
+#include "gauge/xpowers/GaugeAXP2602.hpp"
+#include "gauge/ti/GaugeBQ27220.hpp"

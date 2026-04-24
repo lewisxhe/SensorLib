@@ -1,5 +1,5 @@
 #pragma once
 
-#pragma message("WARNING: SensorQMC5883L.hpp is deprecated. Include SensorDrv.hpp instead for all QMC5883L sensors.")
+#pragma message("WARNING: SensorQMC5883L.hpp is deprecated. Include MagnetometerDrv.hpp instead for all QMC5883L sensors.")
 
-#include "SensorDrv.hpp"
+#include "MagnetometerDrv.hpp"

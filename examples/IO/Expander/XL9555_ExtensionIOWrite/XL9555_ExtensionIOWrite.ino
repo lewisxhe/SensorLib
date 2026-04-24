@@ -27,8 +27,7 @@
  * @date      2024-09-14
  *
  */
-#include <Arduino.h>
-#include "IoExpanderXL9555.hpp"
+#include <IoExpanderDrv.hpp>
 
 #ifndef SENSOR_SDA
 #define SENSOR_SDA  17

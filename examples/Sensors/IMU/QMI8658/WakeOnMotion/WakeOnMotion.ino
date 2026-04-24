@@ -45,7 +45,7 @@
  *            The accelerometer runs in low-power mode when not triggered.
  */
 #include <stdarg.h>
-#include "SensorDrv.hpp"
+#include "ImuDrv.hpp"
 #include "DevicesPins.h"
 
 

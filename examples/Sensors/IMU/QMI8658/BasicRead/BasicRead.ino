@@ -39,7 +39,7 @@
  * Open the Serial Monitor to see the accelerometer and gyroscope data.
  */
 #include <stdarg.h>
-#include "SensorDrv.hpp"
+#include "ImuDrv.hpp"
 #include "DevicesPins.h"
 
 // Select one interface.

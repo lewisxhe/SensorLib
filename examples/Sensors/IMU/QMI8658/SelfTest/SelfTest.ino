@@ -37,7 +37,7 @@
  *            and verifies the output is within expected ranges.
  */
 #include <stdarg.h>
-#include "SensorDrv.hpp"
+#include "ImuDrv.hpp"
 #include "DevicesPins.h"
 
 

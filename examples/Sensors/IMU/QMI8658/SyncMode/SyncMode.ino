@@ -38,7 +38,7 @@
  *            The data locking mechanism provides additional synchronization.
  */
 #include <stdarg.h>
-#include "SensorDrv.hpp"
+#include "ImuDrv.hpp"
 #include "DevicesPins.h"
 
 

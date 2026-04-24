@@ -38,7 +38,7 @@
  *            Calibration corrects for sensor bias and gain errors.
  */
 #include <stdarg.h>
-#include "SensorDrv.hpp"
+#include "ImuDrv.hpp"
 #include "DevicesPins.h"
 
 

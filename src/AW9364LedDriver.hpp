@@ -29,7 +29,7 @@
 
 #pragma once
 
-#include "IoExpanderBase.hpp"
+#include "expander/IoExpanderBase.hpp"
 
 /** @brief Maximum brightness steps (0‑16). */
 constexpr uint8_t MAX_BRIGHTNESS_STEPS = 16;

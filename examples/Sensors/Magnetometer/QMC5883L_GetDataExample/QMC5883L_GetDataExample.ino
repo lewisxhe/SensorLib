@@ -27,7 +27,7 @@
  * @date      2026-01-26
  *
  */
-#include <SensorDrv.hpp>
+#include <MagnetometerDrv.hpp>
 
 
 #ifndef SENSOR_SDA

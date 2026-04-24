@@ -27,10 +27,7 @@
  * @date      2025-02-13
  *
  */
-#include <Wire.h>
-#include <SPI.h>
-#include <Arduino.h>
-#include <GaugeBQ27220.hpp>
+#include <GaugeDrv.hpp>
 
 #ifndef SENSOR_SDA
 #define SENSOR_SDA  2

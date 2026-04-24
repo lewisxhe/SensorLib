@@ -38,7 +38,7 @@
  *            The sensor should remain motionless during calibration.
  */
 #include <stdarg.h>
-#include "SensorDrv.hpp"
+#include "ImuDrv.hpp"
 #include "DevicesPins.h"
 
 // Select one interface.

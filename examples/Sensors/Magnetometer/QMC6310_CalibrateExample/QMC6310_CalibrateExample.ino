@@ -27,7 +27,7 @@
  * @date      2026-01-26
  *
  */
-#include <SensorDrv.hpp>
+#include <MagnetometerDrv.hpp>
 #ifdef ARDUINO_T_BEAM_S3_SUPREME
 #include <XPowersAXP2101.tpp>   //PMU Library https://github.com/lewisxhe/XPowersLib.git
 #endif

@@ -27,10 +27,7 @@
  * @date      2026-01-14
  *
  */
-#include <Wire.h>
-#include <SPI.h>
-#include <Arduino.h>
-#include <GaugeAXP2602.hpp>
+#include <GaugeDrv.hpp>
 
 #ifndef SENSOR_SDA
 #define SENSOR_SDA  3

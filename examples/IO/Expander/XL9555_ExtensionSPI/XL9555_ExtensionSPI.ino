@@ -28,9 +28,8 @@
  * @note      The example demonstrates using XL9555 to emulate SPI to initialize the RGB screen
  *
  */
-#include <Arduino.h>
-#include "IoExpanderXL9555.hpp"
-#include "IoExpanderSPI.hpp"
+#include <IoExpanderDrv.hpp>
+
 #ifdef ARDUINO_ARCH_ESP32
 
 #include <esp_lcd_panel_io.h>

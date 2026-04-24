@@ -22,56 +22,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      IoExpanderPCA9570.ino
+ * @file      LightSensorDrv.hpp
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2026-03-03
- *
+ * @date      2026-04-24
  */
-#include <IoExpanderDrv.hpp>
+#pragma once
 
-#ifndef SENSOR_SDA
-#define SENSOR_SDA  17
-#endif
 
-#ifndef SENSOR_SCL
-#define SENSOR_SCL  18
-#endif
-
-IoExpanderPCA9570 expander;
-
-void setup()
-{
-    Serial.begin(115200);
-
-    if (!expander.begin(Wire, PCA9570_SLAVE_ADDRESS, SENSOR_SDA, SENSOR_SCL)) {
-        while (1) {
-            Serial.println("Failed to find PCA9570 - check your wiring!");
-            delay(1000);
-        }
-    }
-
-    // Since PCA9570 pins are fixed as outputs, this call merely updates the software pin mode
-    // cache and does not perform any actual hardware configuration.
-    expander.configPins(IoExpanderPCA9570::PORT_ALL, OUTPUT);
-}
-
-void loop()
-{
-    // Set all pins to 1
-    Serial.println("Set port HIGH");
-    expander.digitalWritePort(0x0F, HIGH);
-    delay(1000);
-
-    Serial.println("Set port LOW");
-    // Set all pins to 0
-    expander.digitalWritePort(0x00, LOW);
-    delay(1000);
-
-    Serial.println("digitalWrite 0");
-    expander.digitalWrite(0, HIGH);
-    delay(1000);
-
-    Serial.println("digitalToggle 0");
-    expander.digitalToggle(0);
-    delay(1000);
-}
+#include "sensor/light_sensor/SensorCM32181.hpp"
+#include "sensor/light_sensor/SensorLTR553.hpp"

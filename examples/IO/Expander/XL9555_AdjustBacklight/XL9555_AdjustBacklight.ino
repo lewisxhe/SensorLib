@@ -27,9 +27,8 @@
  * @date      2024-11-22
  * @note      Use XL9555 to drive AW9364 led driver, use esp32 to test, the highest I2C communication rate must reach 1MHz, otherwise it will not work
  */
-#include <Arduino.h>
-#include "IoExpanderXL9555.hpp"
-#include "AW9364LedDriver.hpp"
+#include <IoExpanderDrv.hpp>
+#include <AW9364LedDriver.hpp>
 
 #ifdef ENABLE_TFT
 #include "TFT_eSPI.h"

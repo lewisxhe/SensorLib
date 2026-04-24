@@ -36,6 +36,6 @@
 * 1. Search your codebase for: #include "ExtensionIOXL9555.hpp" replace #include "IoExpanderXL9555.hpp"
 * 2. Replace all instances with: ExtensionIOXL9555 with IoExpanderXL9555"
  */
-#include "IoExpanderXL9555.hpp"
+#include "expander/IoExpanderXL9555.hpp"
 
 using ExtensionIOXL9555 = IoExpanderXL9555;
