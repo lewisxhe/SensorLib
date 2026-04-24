@@ -111,8 +111,7 @@ bool SY6970Core::initImpl(uint8_t param)
 
     while (getRegBit(REG_DEVICE_REV, 7)) {
         // Wait for reset bit to clear, indicating reset complete
-        // hal->delay(10);
-        for (volatile int i = 0; i < 100000; ++i); // Simple delay loop
+        hal->delay(10);
     }
 
     // Disable watchdog timer by default for safety (can be enabled via API)
