@@ -141,7 +141,7 @@ AXP517Charger::Status AXP517Charger::getStatus()
     ///< 100: charge done
     ///< 101: not charging
     ///< 11X: Reserved
-    if (status.batteryPresent) {
+    if (status.batteryPresent && status.vbusPresent) {
         uint8_t charging_status = buffer[1] & 0x03;
         status.charging = charging_status < 3;
         status.chargeDone = charging_status == 4;
