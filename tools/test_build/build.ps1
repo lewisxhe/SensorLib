@@ -15,10 +15,17 @@ $null = New-Item -Path $logFile -ItemType File -Force
 
 Write-Host "Starting build process..." -ForegroundColor Cyan
 
-$allExamples = Get-ChildItem -Path "examples" -Directory -Name
+$examplesRoot = (Resolve-Path "examples").Path
+$allExamples = Get-ChildItem -Path "examples" -Directory -Recurse | Where-Object {
+    $_.Name -ne "main" -and (
+        @($_.GetFiles("*.ino")).Count -gt 0 -or
+        @($_.GetFiles("*.cpp")).Count -gt 0 -or
+        @($_.GetFiles("*.c")).Count -gt 0
+    )
+} | ForEach-Object { $_.FullName.Replace($examplesRoot + "\", "") }
 
 if ($prefix -ne "*") {
-    $examples = $allExamples | Where-Object { $_ -like "${prefix}*" }
+    $examples = $allExamples | Where-Object { (Split-Path $_ -Leaf) -like "${prefix}*" }
 } else {
     $examples = $allExamples
 }
@@ -26,7 +33,7 @@ if ($prefix -ne "*") {
 if ($skipPrefix) {
     $skipPatterns = $skipPrefix -split ',' | ForEach-Object { $_.Trim() }
     foreach ($pattern in $skipPatterns) {
-        $examples = $examples | Where-Object { $_ -notlike $pattern }
+        $examples = $examples | Where-Object { (Split-Path $_ -Leaf) -notlike $pattern }
     }
 }
 
@@ -35,7 +42,7 @@ if ($examples.Count -eq 0) {
     exit 1
 }
 
-$envs = @("nrf52840_arduino")
+$envs = @("esp32dev_arduino")
 $total = $examples.Count * $envs.Count
 $current = 0
 $success = 0

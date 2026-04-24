@@ -2,15 +2,15 @@ cd ../../
 
 pwd
 
-# Prefixes required for compilation
+# Prefixes required for compilation (matched against example folder basename)
 patterns=("BHI26*" "BMA42*")
 
 examples=()
 for pattern in "${patterns[@]}"; do
     while IFS= read -r -d '' dir; do
-        dir_name=$(basename "$dir")
-        examples+=("$dir_name")
-    done < <(find examples/ -maxdepth 1 -type d -name "$pattern" -print0)
+        rel_path="${dir#examples/}"
+        examples+=("$rel_path")
+    done < <(find examples/ -type d -name "$pattern" -print0)
 done
 
 readarray -t examples < <(printf '%s\n' "${examples[@]}" | sort -u)
@@ -35,7 +35,7 @@ do
     do
         current=$((current + 1))
         
-        if [ -f "$value/.skip."$env ];then
+        if [ -f "examples/$value/.skip.$env" ]; then
             echo "[$current/$total] Skipped: $value [$env]"
             continue
         fi
