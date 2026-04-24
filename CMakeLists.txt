@@ -1,33 +1,66 @@
-set(src_dirs 
+set(src_dirs
     src
-    src/touch
-    src/platform
     src/bosch
     src/bosch/BMM150
     src/bosch/bma4xx
     src/bosch/bhi260x
     src/bosch/bhi36x
-)
-set(include_dirs 
-    src
-    src/touch
+    src/haptic_drivers
     src/platform
+    src/pmic/silergy/sy6970
+    src/pmic/ti/bq25896
+    src/pmic/xpowers/axp517
+    src/sensor/imu/qmi8658
+    src/sensor/magnetometer/bmm150
+    src/sensor/pixart/pawA350
+    src/time
+    src/touch
+)
+set(include_dirs
+    src
     src/bosch
+    src/bosch/BMM150
+    src/bosch/bma4xx
+    src/bosch/bhi260x
+    src/bosch/bhi36x
     src/bosch/firmware/bhi260
     src/bosch/firmware/bhi360
-    src/bosch/BMM150
-    src/bosch/bma4xx
-    src/bosch/bhi260x
-    src/bosch/bhi36x
+    src/expander
+    src/gauge
+    src/gauge/ti
+    src/gauge/xpowers
+    src/haptic_drivers
+    src/platform
+    src/platform/arduino
+    src/platform/comm
+    src/platform/espidf
+    src/pmic
+    src/pmic/silergy
+    src/pmic/silergy/sy6970
+    src/pmic/ti
+    src/pmic/ti/bq25896
+    src/pmic/xpowers
+    src/pmic/xpowers/axp517
     src/sensor
+    src/sensor/accelerometer/bma
+    src/sensor/imu
+    src/sensor/imu/qmi8658
+    src/sensor/light_sensor
+    src/sensor/magnetometer/bmm150
+    src/sensor/magnetometer/qmc
+    src/sensor/pixart/pawA350
+    src/time
+    src/time/pcf85063
+    src/time/pcf8563
+    src/touch
 )
 
 idf_component_register(
-    SRC_DIRS ${src_dirs} 
+    SRC_DIRS ${src_dirs}
     INCLUDE_DIRS ${include_dirs}
-    REQUIRES esp_timer 
-    esp_driver_gpio 
-    esp_driver_i2c  
-    esp_driver_spi 
+    REQUIRES esp_timer
+    esp_driver_gpio
+    esp_driver_i2c
+    esp_driver_spi
     driver
 )
