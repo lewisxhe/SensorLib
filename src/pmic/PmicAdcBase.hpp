@@ -37,6 +37,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <math.h>
 
 class PmicAdcBase
 {
