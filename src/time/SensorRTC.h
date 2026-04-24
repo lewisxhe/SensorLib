@@ -29,12 +29,6 @@
  */
 #pragma once
 
-#ifdef ARDUINO
-#include <Arduino.h>
-#else
-#include <stdint.h>
-#endif /*defined(ARDUINO)*/
-
 #include <sys/time.h>
 #include "SensorPlatform.hpp"
 
@@ -313,10 +307,10 @@ public:
 
     /**
     * @brief Reset the RTC.
-    * 
+    *
     * This function is available depending on the chip.
     */
-    virtual void reset() = 0;
+    virtual void reset() {};
 
 
     /**

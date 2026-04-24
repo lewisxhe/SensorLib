@@ -34,7 +34,7 @@ SensorRtcHelper::DriverCreator SensorRtcHelper::driverCreators[SensorRtcHelper::
     []() -> std::unique_ptr<SensorRTC> { return std::make_unique<SensorPCF8563>(); },
 };
 
-SensorRtcHelper::SensorRtcHelper() : _drvType(RtcDrv_UNKOWN), _drv(nullptr)
+SensorRtcHelper::SensorRtcHelper() : _drvType(RtcDrv_UNKNOWN), _drv(nullptr)
 {
 
 }
@@ -53,7 +53,7 @@ void SensorRtcHelper::setRtcDrvModel(SensorRTCType model)
 bool SensorRtcHelper::begin(TwoWire &wire,  int sda, int scl)
 {
     bool success = false;
-    for (int i = (_drvType == RtcDrv_UNKOWN) ? 0 : _drvType; i < driverCreatorMaxNum; ++i) {
+    for (int i = (_drvType == RtcDrv_UNKNOWN) ? 0 : _drvType; i < driverCreatorMaxNum; ++i) {
         _drv = createDriver(static_cast<SensorRTCType>(i));
 
         if (_drv && _drv->begin(wire, sda, scl)) {
@@ -63,7 +63,7 @@ bool SensorRtcHelper::begin(TwoWire &wire,  int sda, int scl)
         }
     }
     if (!success) {
-        _drvType = RtcDrv_UNKOWN;
+        _drvType = RtcDrv_UNKNOWN;
     }
     return success;
 }
@@ -74,7 +74,7 @@ bool SensorRtcHelper::begin(TwoWire &wire,  int sda, int scl)
 bool SensorRtcHelper::begin(i2c_port_t port_num,  int sda, int scl)
 {
     bool success = false;
-    for (int i = (_drvType == RtcDrv_UNKOWN) ? 0 : _drvType; i < driverCreatorMaxNum; ++i) {
+    for (int i = (_drvType == RtcDrv_UNKNOWN) ? 0 : _drvType; i < driverCreatorMaxNum; ++i) {
         _drv = createDriver(static_cast<SensorRTCType>(i));
 
         if (_drv && _drv->begin(port_num, sda, scl)) {
@@ -84,7 +84,7 @@ bool SensorRtcHelper::begin(i2c_port_t port_num,  int sda, int scl)
         }
     }
     if (!success) {
-        _drvType = RtcDrv_UNKOWN;
+        _drvType = RtcDrv_UNKNOWN;
     }
     return success;
 }
@@ -94,7 +94,7 @@ bool SensorRtcHelper::begin(i2c_port_t port_num,  int sda, int scl)
 bool SensorRtcHelper::begin(i2c_master_bus_handle_t handle)
 {
     bool success = false;
-    for (int i = (_drvType == RtcDrv_UNKOWN) ? 0 : _drvType; i < driverCreatorMaxNum; ++i) {
+    for (int i = (_drvType == RtcDrv_UNKNOWN) ? 0 : _drvType; i < driverCreatorMaxNum; ++i) {
         _drv = createDriver(static_cast<SensorRTCType>(i));
 
         if (_drv && _drv->begin(handle)) {
@@ -104,7 +104,7 @@ bool SensorRtcHelper::begin(i2c_master_bus_handle_t handle)
         }
     }
     if (!success) {
-        _drvType = RtcDrv_UNKOWN;
+        _drvType = RtcDrv_UNKNOWN;
     }
     return success;
 }
@@ -115,7 +115,7 @@ bool SensorRtcHelper::begin(i2c_master_bus_handle_t handle)
 bool SensorRtcHelper::begin(SensorCommCustom::CustomCallback callback)
 {
     bool success = false;
-    for (int i = (_drvType == RtcDrv_UNKOWN) ? 0 : _drvType; i < driverCreatorMaxNum; ++i) {
+    for (int i = (_drvType == RtcDrv_UNKNOWN) ? 0 : _drvType; i < driverCreatorMaxNum; ++i) {
         _drv = createDriver(static_cast<SensorRTCType>(i));
         if (_drv && _drv->begin(callback)) {
             _drvType = static_cast<SensorRTCType>(i);
@@ -124,7 +124,7 @@ bool SensorRtcHelper::begin(SensorCommCustom::CustomCallback callback)
         }
     }
     if (!success) {
-        _drvType = RtcDrv_UNKOWN;
+        _drvType = RtcDrv_UNKNOWN;
     }
     return success;
 }
