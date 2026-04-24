@@ -27,10 +27,7 @@
  * @date      2026-04-08
  *
  */
-#include <Wire.h>
-#include <SPI.h>
-#include <Arduino.h>
-#include "SensorQMC6309.hpp"
+#include <SensorDrv.hpp>
 
 #ifdef ARDUINO_T_BEAM_S3_SUPREME
 #include <XPowersAXP2101.tpp>   //PMU Library https://github.com/lewisxhe/XPowersLib.git

@@ -27,14 +27,12 @@
  * @date      2022-12-12
  *
  */
-#include <Wire.h>
-#include <SPI.h>
-#include <Arduino.h>
+#include <RtcDrv.hpp>
 #if defined(ARDUINO_ARCH_ESP32)
 #include <time.h>
 #include <WiFi.h>
 #include <esp_sntp.h>
-#include <SensorPCF8563.hpp>
+
 
 #ifndef SENSOR_SDA
 #define SENSOR_SDA  42

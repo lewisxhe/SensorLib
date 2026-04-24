@@ -27,8 +27,7 @@
  * @date      2026-04-08
  *
  */
-#include <SensorQMC6310.hpp>
-#include <SensorQMC6309.hpp>
+#include <SensorDrv.hpp>
 #include <SensorWireHelper.h>
 
 #ifdef ARDUINO_T_BEAM_S3_SUPREME

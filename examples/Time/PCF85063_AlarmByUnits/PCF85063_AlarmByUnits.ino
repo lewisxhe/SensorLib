@@ -27,11 +27,7 @@
  * @date      2023-12-11
  *
  */
-#include <Wire.h>
-#include <SPI.h>
-#include <Arduino.h>
-#include <time.h>
-#include "SensorPCF85063.hpp"
+#include <RtcDrv.hpp>
 
 #ifndef SENSOR_SDA
 #define SENSOR_SDA  4

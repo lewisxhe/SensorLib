@@ -30,10 +30,7 @@
  *            between the two. This class is added to facilitate switching between different chips without 
  *            having to worry about the specific model used.
  */
-#include <Wire.h>
-#include <SPI.h>
-#include <Arduino.h>
-#include <SensorRtcHelper.hpp>
+#include <RtcDrv.hpp>
 
 #ifndef SENSOR_SDA
 #define SENSOR_SDA  17

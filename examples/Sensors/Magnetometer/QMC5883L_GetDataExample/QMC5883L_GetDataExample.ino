@@ -27,10 +27,7 @@
  * @date      2026-01-26
  *
  */
-#include <Wire.h>
-#include <SPI.h>
-#include <Arduino.h>
-#include "SensorQMC5883L.hpp"
+#include <SensorDrv.hpp>
 
 
 #ifndef SENSOR_SDA

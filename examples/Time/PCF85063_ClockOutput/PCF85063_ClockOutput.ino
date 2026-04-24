@@ -27,10 +27,7 @@
  * @date      2024-07-24
  *
  */
-#include <Wire.h>
-#include <SPI.h>
-#include <Arduino.h>
-#include "SensorPCF85063.hpp"
+#include <RtcDrv.hpp>
 
 #ifndef SENSOR_SDA
 #define SENSOR_SDA  17

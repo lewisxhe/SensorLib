@@ -27,14 +27,9 @@
  * @date      2025-08-15
  * @note      Currently only the Espressif platform supports the POSIX interface
  */
-#include <Wire.h>
-#include <SPI.h>
-#include <Arduino.h>
+#include <RtcDrv.hpp>
 
 #if defined(ARDUINO_ARCH_ESP32)
-
-#include <SensorRTC_POSIX.hpp>
-
 
 SensorRTC_POSIX rtc;
 

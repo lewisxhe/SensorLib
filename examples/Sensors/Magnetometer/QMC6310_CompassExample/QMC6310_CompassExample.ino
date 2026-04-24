@@ -27,12 +27,9 @@
  * @date      2026-01-26
  *
  */
-#include <Wire.h>
-#include <SPI.h>
-#include <Arduino.h>
+#include <SensorDrv.hpp>
 
 #if defined(ARDUINO_ARCH_ESP32)
-#include "SensorQMC6310.hpp"
 #include "SH1106Wire.h"         //Oled display from https://github.com/ThingPulse/esp8266-oled-ssd1306
 #ifdef ARDUINO_T_BEAM_S3_SUPREME
 #include <XPowersAXP2101.tpp>   //PMU Library https://github.com/lewisxhe/XPowersLib.git
