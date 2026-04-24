@@ -43,8 +43,6 @@
 #include <WebServer.h>
 #include <PmicDrv.hpp>
 
-#define WIFI_SSID "LilyGo-AABB"
-#define WIFI_PASSWORD "xinyuandianzi"
 
 #ifndef WIFI_SSID
 #define WIFI_SSID "YourSSID"
