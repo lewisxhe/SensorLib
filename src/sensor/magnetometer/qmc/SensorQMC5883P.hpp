@@ -2,7 +2,7 @@
  *
  * @license MIT License
  *
- * Copyright (c) 2026 lewis he
+ * Copyright (c) 2022 lewis he
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,16 +22,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      SensorDrv.hpp
+ * @file      SensorQMC5883P.hpp
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2026-04-15
+ * @date      2022-10-16
+ *
  */
 #pragma once
 
-#include "sensor/imu/qmi8658/SensorQMI8658.hpp"
-#include "sensor/magnetometer/bmm150/SensorBMM150.hpp"
-#include "sensor/magnetometer/qmc/SensorQMC5883L.hpp"
-#include "sensor/magnetometer/qmc/SensorQMC5883P.hpp" 
-#include "sensor/magnetometer/qmc/SensorQMC6309.hpp" 
-#include "sensor/magnetometer/qmc/SensorQMC6310.hpp" 
+#include "SensorQSTMagnetic.hpp"
 
+/**
+ * @brief Typedef to create an alias for SensorQSTMagnetic specifically for QMC5883P compatibility.
+ */
+typedef  SensorQSTMagnetic SensorQMC5883P;
