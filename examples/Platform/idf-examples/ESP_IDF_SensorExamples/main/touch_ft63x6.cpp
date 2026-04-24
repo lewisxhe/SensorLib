@@ -35,7 +35,7 @@
 
 #ifdef CONFIG_FT636X
 
-#include "TouchDrvFT6X36.hpp"
+#include "TouchDrv.hpp"
 
 static const char *TAG = "FT63XX";
 

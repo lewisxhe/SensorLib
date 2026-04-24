@@ -42,7 +42,7 @@ HapticDriver_AW86224 haptic;
 
 // LilyGo T-Display-P4 peripherals power control pins
 #ifdef ARDUINO_ESP32P4_DEV
-#include <IoExpanderXL9555.hpp>
+#include <IoExpanderDrv.hpp>
 #define IO_EXPANDER_3V3_POWER_EN 0
 #define IO_EXPANDER_5V0_POWER_EN 6
 #define IO_EXPANDER_P4_VCCA_POWER_EN 8

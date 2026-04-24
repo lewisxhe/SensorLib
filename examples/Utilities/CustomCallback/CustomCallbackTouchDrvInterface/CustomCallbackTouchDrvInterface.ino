@@ -31,7 +31,7 @@
  *            The prerequisite compilation platform must support C++11.
  */
 #include <TouchDrv.hpp>
-#include <IoExpanderXL9555.hpp>
+#include <IoExpanderDrv.hpp>
 #include <SensorWireHelper.h>
 
 #ifndef TOUCH_SDA

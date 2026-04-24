@@ -29,7 +29,7 @@
  *            The example demonstrates using the touch interface class and one sketch is suitable for three types of touch chips.
  */
 #include <TouchDrv.hpp>
-#include <IoExpanderXL9555.hpp>
+#include <IoExpanderDrv.hpp>
 #include <SensorWireHelper.h>
 
 #ifndef TOUCH_SDA

@@ -35,7 +35,7 @@
 
 #ifdef CONFIG_PCF8563
 
-#include "SensorPCF8563.hpp"
+#include "RtcDrv.hpp"
 
 static const char *TAG = "RTC";
 

@@ -35,7 +35,7 @@
 
 #ifdef CONFIG_BMA423
 
-#include "SensorBMA423.hpp"
+#include "AccelerometerDrv.hpp"
 
 static const char *TAG = "BMA";
 

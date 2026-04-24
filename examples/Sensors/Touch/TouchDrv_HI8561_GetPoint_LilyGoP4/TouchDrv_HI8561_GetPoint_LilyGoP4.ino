@@ -42,7 +42,7 @@
 #error "This example requires Arduino-ESP32 version 3.3.7 or higher.Please update your Arduino-ESP32 core to the latest version to run this example."
 #endif
 
-#include <IoExpanderXL9555.hpp>
+#include <IoExpanderDrv.hpp>
 #include <SensorWireHelper.h>
 #include "esp_lcd_mipi_dsi.h"
 #include "esp_lcd_panel_ops.h"

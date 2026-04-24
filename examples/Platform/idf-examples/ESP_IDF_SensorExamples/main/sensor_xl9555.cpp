@@ -35,7 +35,7 @@
 
 #ifdef CONFIG_XL9555
 
-#include "IoExpanderXL9555.hpp"
+#include "IoExpanderDrv.hpp"
 
 static const char *TAG = "XL9555";
 

@@ -28,7 +28,7 @@
  *
  */
 #include <TouchDrv.hpp>
-#include <IoExpanderXL9555.hpp>
+#include <IoExpanderDrv.hpp>
 #include <SensorWireHelper.h>
 
 // Pin definitions for the LilyGo-P4
