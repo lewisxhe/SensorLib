@@ -133,7 +133,7 @@ public:
      *
      * @param datetime Date/time to write.
      */
-    void setDateTime(RTC_DateTime datetime)
+    void setDateTime(RTC_DateTime datetime) override
     {
         uint8_t buffer[7];
         buffer[0] = DEC2BCD(datetime.getSecond()) & 0x7F;
@@ -160,7 +160,7 @@ public:
      *
      * @return Current date/time.
      */
-    RTC_DateTime getDateTime()
+    RTC_DateTime getDateTime() override
     {
         uint8_t buffer[7];
         readRegBuff(SEC_REG, buffer, 7);
@@ -433,9 +433,16 @@ public:
      * @brief Get the chip name string.
      * @return Constant chip name string.
      */
-    const char *getChipName()
+    const char *getChipName() override
     {
         return "PCF8563";
+    }
+
+    /**
+    * @brief Reset the RTC.
+    */
+    void reset() override
+    {
     }
 
 private:

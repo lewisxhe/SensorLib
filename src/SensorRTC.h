@@ -312,6 +312,14 @@ public:
 
 
     /**
+    * @brief Reset the RTC.
+    * 
+    * This function is available depending on the chip.
+    */
+    virtual void reset() = 0;
+
+
+    /**
     * @brief Retrieve the current date and time from the RTC (Real-Time Clock) and populate a struct tm object.
     *
     * This function fetches the current date and time information from the RTC device.

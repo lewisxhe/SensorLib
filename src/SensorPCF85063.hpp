@@ -137,7 +137,7 @@ public:
      *
      * @param datetime Date-time object to set.
      */
-    void setDateTime(RTC_DateTime datetime)
+    void setDateTime(RTC_DateTime datetime) override
     {
         uint8_t buffer[7];
         buffer[0] = DEC2BCD(datetime.getSecond()) & 0x7F;  // seconds (mask OS flag)
@@ -159,7 +159,7 @@ public:
      *
      * @return Current date-time from the chip.
      */
-    RTC_DateTime getDateTime()
+    RTC_DateTime getDateTime() override
     {
         // Note: variable kept for compatibility with existing style (not used)
         RTC_DateTime datetime;
@@ -468,9 +468,17 @@ public:
      *
      * @return Constant string "PCF85063".
      */
-    const char *getChipName()
+    const char *getChipName() override
     {
         return "PCF85063";
+    }
+
+    /**
+     * @brief Reset the RTC.
+     */
+    void reset() override
+    {
+        writeReg(PCF85063_CTRL1_REG, 0x58);
     }
 
 private:
