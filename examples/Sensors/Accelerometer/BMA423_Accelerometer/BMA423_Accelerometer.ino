@@ -26,7 +26,7 @@
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2026-01-31
  */
-#include <SensorBMA423.hpp>
+#include <SensorDrv.hpp>
 
 #ifndef SENSOR_SDA
 #define SENSOR_SDA  21

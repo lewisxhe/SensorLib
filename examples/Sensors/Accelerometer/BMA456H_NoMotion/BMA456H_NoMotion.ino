@@ -27,7 +27,7 @@
  * @date      2026-01-31
  * @note      Example of initializing the Bosch BMA456H characteristic profile using the BMA456 triaxial accelerometer.
  */
-#include <SensorBMA456H.hpp>
+#include <SensorDrv.hpp>
 
 #ifndef SENSOR_SDA
 #define SENSOR_SDA  21
