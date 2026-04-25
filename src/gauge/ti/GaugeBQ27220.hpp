@@ -29,6 +29,7 @@
 #pragma once
 
 #include "platform/comm/I2CDeviceWithHal.hpp"
+#include "../GaugeBase.hpp"
 
 // BQ27220 Unique device address
 static constexpr uint8_t BQ27220_SLAVE_ADDRESS  = (0x55);
@@ -584,7 +585,7 @@ public:
 };
 // *INDENT-ON*
 
-class GaugeBQ27220 : public I2CDeviceWithHal
+class GaugeBQ27220 : public GaugeBase, public I2CDeviceWithHal
 {
 private:
     typedef struct {
@@ -672,7 +673,7 @@ public:
      *          If any of the read operations fail, the function returns false; otherwise, it returns true.
      * @return true if all read operations are successful and the data is refreshed, false otherwise.
      */
-    bool refresh()
+    bool refresh() override
     {
         uint8_t buffer[REGISTER_COUNT];
         if (readRegBuff(START_REGISTER, buffer, REGISTER_COUNT) < 0) {
@@ -716,7 +717,7 @@ public:
      *          The raw data is stored in tenths of Kelvin and is converted to Celsius in this function.
      * @return The temperature value in Celsius.
      */
-    float    getTemperature() const { return (data.Temperature * 0.1f) - 273.15f; }
+    float getTemperature() override { return (data.Temperature * 0.1f) - 273.15f; }
 
     /**
      * @brief Get the battery voltage value.
@@ -724,7 +725,7 @@ public:
      *          ranging from 0 to 6000mV.
      * @return The battery voltage value in mV.
      */
-    uint16_t getVoltage() const { return data.Voltage; }
+    uint16_t getVoltage() override { return data.Voltage; }
 
     /**
      * @brief Get the battery status.
@@ -740,7 +741,19 @@ public:
      *          A negative value indicates a discharge current. The unit is milliamperes (mA).
      * @return The instantaneous current value in mA.
      */
-    int16_t  getCurrent() const { return data.Current; }
+    float getCurrent() override { return data.Current; }
+
+    /**
+     * @brief Check if battery is charging
+     * @return true if charging, false otherwise
+     */
+    bool isCharging() override { return data.Current > 0; }
+
+    /**
+     * @brief Check if battery is discharging
+     * @return true if discharging, false otherwise
+     */
+    bool isDischarging() override { return data.Current < 0; }
 
     /**
      * @brief Get the remaining battery capacity.
@@ -762,7 +775,7 @@ public:
      *          under normal operating conditions. The unit is minutes.
      * @return The estimated time to empty in minutes.
      */
-    uint16_t getTimeToEmpty() const { return data.TimeToEmpty; }
+    uint16_t getTimeToEmpty() override { return data.TimeToEmpty; }
 
     /**
      * @brief Get the estimated time until the battery is fully charged.
@@ -770,7 +783,7 @@ public:
      *          The unit is minutes.
      * @return The estimated time to full in minutes.
      */
-    uint16_t getTimeToFull() const { return data.TimeToFull; }
+    uint16_t getTimeToFull() override { return data.TimeToFull; }
 
     /**
      * @brief Get the standby current value.
@@ -838,7 +851,7 @@ public:
      *          remaining battery capacity as a percentage of the full charge capacity, in the range 0 to 100%.
      * @return The state of charge value in percentage.
      */
-    uint16_t getStateOfCharge() const { return data.StateOfCharge; }
+    uint16_t getStateOfCharge() override { return data.StateOfCharge; }
 
     /**
      * @brief Get the state of health value.
@@ -965,7 +978,7 @@ public:
      * @brief Retrieve the unique identifier of the chip.
      * @return A 16 - bit unsigned integer representing the chip's unique identifier.
      */
-    uint16_t getChipID()
+    uint16_t getChipID() override
     {
         uint8_t buffer[2] = {0};
         if (sendSubCommand(BQ27220_SUB_CMD_DEVICE_NUMBER, true) < 0) {
@@ -1022,7 +1035,7 @@ public:
      * @brief Reset the device.
      * @details This function sends a reset sub - command to the device to perform a reset operation.
      */
-    void reset()
+    void reset() override
     {
         sendSubCommand(BQ27220_SUB_CMD_RESET);
     }

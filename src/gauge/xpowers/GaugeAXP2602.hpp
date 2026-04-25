@@ -30,11 +30,12 @@
 #pragma once
 
 #include "platform/comm/I2CDeviceWithHal.hpp"
+#include "../GaugeBase.hpp"
 
 // AXP2602 Unique device address
 static constexpr uint8_t AXP2602_SLAVE_ADDRESS  = (0x62);
 
-class GaugeAXP2602 : public I2CDeviceWithHal
+class GaugeAXP2602 : public GaugeBase, public I2CDeviceWithHal
 {
 public:
     enum CurrentSenseResistor {
@@ -188,7 +189,7 @@ public:
      * @note   This function reads the latest data from the AXP2602 chip registers.
      * @retval True if refresh is successful, false otherwise.
      */
-    bool refresh()
+    bool refresh() override
     {
         if (!comm) return false;
 
@@ -305,7 +306,7 @@ public:
      * @note   This function retrieves the unique identifier for the AXP2602 chip.
      * @retval The chip ID as an integer. Default value is 0x1C for AXP2602.
      */
-    int getChipID()
+    uint16_t getChipID() override
     {
         return readReg(REG_ID);
     }
@@ -314,7 +315,7 @@ public:
      * @brief  Get the temperature.
      * @retval The temperature in degrees Celsius (°C).
      */
-    int8_t getTemperature()
+    float getTemperature() override
     {
         return data.temperature;
     }
@@ -332,7 +333,7 @@ public:
      * @brief  Get the battery percentage.
      * @retval The battery percentage as an 8-bit unsigned integer.
      */
-    uint8_t getStateOfCharge()
+    uint16_t getStateOfCharge() override
     {
         return data.soc;
     }
@@ -341,7 +342,7 @@ public:
      * @brief  Get the battery time to empty.
      * @retval The battery time to empty in minutes.
      */
-    uint16_t getTimeToEmpty()
+    uint16_t getTimeToEmpty() override
     {
         return data.timeToEmpty;
     }
@@ -350,7 +351,7 @@ public:
      * @brief  Get the battery time to full.
      * @retval The battery time to full in minutes.
      */
-    uint16_t getTimeToFull()
+    uint16_t getTimeToFull() override
     {
         return data.timeToFull;
     }
@@ -403,7 +404,7 @@ public:
      * @brief  Get the battery voltage.
      * @retval The battery voltage in millivolts (mV).
      */
-    uint16_t getVoltage()
+    uint16_t getVoltage() override
     {
         return data.voltage;
     }
@@ -413,7 +414,7 @@ public:
     * @brief Checks if the battery is charging
     * @retval Returns true for charging, false for discharging
     */
-    bool isCharging()
+    bool isCharging() override
     {
         return data.current > 0;
     }
@@ -422,7 +423,7 @@ public:
     * @brief Checks if the battery is discharging
     * @retval Returns true for discharging and false for charging
     */
-    bool isDischarging()
+    bool isDischarging() override
     {
         return data.current < 0;
     }
@@ -458,7 +459,7 @@ public:
     * @brief Get the actual current value (considering the sampling resistor)
     * @retval Actual current value (mA)
     */
-    float getCurrent()
+    float getCurrent() override
     {
         return data.current;
     }
@@ -475,7 +476,7 @@ public:
     /**
      * @brief  Reset Gauge AXP2602.
      */
-    void reset()
+    void reset() override
     {
         setRegBit(REG_MODE, 5);
         hal->delay(50);
