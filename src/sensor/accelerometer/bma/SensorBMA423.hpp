@@ -135,28 +135,6 @@ public:
     };
 
     /**
-     * @brief  Motion axes configuration
-     * @note   This structure is used to configure which axes are monitored for
-     *         motion and no-motion detection. Each bit enables/disables detection
-     *         on a specific axis.
-     */
-    struct MotionAxesConfig {
-        uint8_t x_axis : 1;        ///< Enable motion detection on X-axis (1=enabled, 0=disabled)
-        uint8_t y_axis : 1;        ///< Enable motion detection on Y-axis (1=enabled, 0=disabled)
-        uint8_t z_axis : 1;        ///< Enable motion detection on Z-axis (1=enabled, 0=disabled)
-
-        /**
-         * @brief  Constructor for MotionAxesConfig
-         * @param  x_axis    Enable motion detection on X-axis (default: 1)
-         * @param  y_axis    Enable motion detection on Y-axis (default: 1)
-         * @param  z_axis    Enable motion detection on Z-axis (default: 1)
-         */
-        MotionAxesConfig(uint8_t x = 1, uint8_t y = 1, uint8_t z = 1)
-            : x_axis(x), y_axis(y), z_axis(z) {}
-    };
-
-
-    /**
      * @brief  Constructor for the SensorBMA423 class
      * @note   Initializes the sensor with default settings and sets the remap offset
      *         for BMA423 specific features.
@@ -177,8 +155,23 @@ public:
     */
     ~SensorBMA423() = default;
 
+    using SensorBMA4XX::MotionAxesConfig;
+
+    BMA4XXCapability::Capability getCapabilities() const override
+    {
+        return BMA4XXCapability::Capability::SupportDataReady
+             | BMA4XXCapability::Capability::SupportAnyMotion
+             | BMA4XXCapability::Capability::SupportNoMotion
+             | BMA4XXCapability::Capability::SupportTap
+             | BMA4XXCapability::Capability::SupportStepDetector
+             | BMA4XXCapability::Capability::SupportStepCounter
+             | BMA4XXCapability::Capability::SupportActivity
+             | BMA4XXCapability::Capability::SupportTilt
+             | BMA4XXCapability::Capability::SupportAxisRemap;
+    }
+
     /**
-    * @brief  Set the callback for tap events
+     * @brief  Set the callback for tap events
     * @note   The callback will be invoked when a tap (single/double/triple) is detected.
     * @param  cb  Callback function that accepts TapType as parameter
     */
@@ -350,7 +343,7 @@ public:
     * @param  pin_map          Interrupt pin to use (PIN1 or PIN2)
     * @return true if successful, false on error
     */
-    bool enableDataReady(bool enable = true, InterruptPinMap pin_map = InterruptPinMap::PIN1)
+    bool enableDataReady(bool enable = true, InterruptPinMap pin_map = InterruptPinMap::PIN1) override
     {
         return enableInterrupt(pin_map, BMA4_DATA_RDY_INT, enable);
     }
@@ -366,7 +359,7 @@ public:
     * @param  reset_counter true to reset counter to zero
     * @return true if successful, false on error
     */
-    bool enableStepCounter(bool enable, uint16_t step_counter_wm = 1, bool reset_counter = false)
+    bool enableStepCounter(bool enable, uint16_t step_counter_wm = 1, bool reset_counter = false) override
     {
         if (enable) {
             if (bma423_step_counter_set_watermark(step_counter_wm, dev.get()) != 0) {
@@ -404,7 +397,7 @@ public:
     * @return true if successful, false on error
     */
     bool enableStepDetector(bool enable, bool interrupt_enable = false,
-                            InterruptPinMap pin_map = InterruptPinMap::PIN1)
+                            InterruptPinMap pin_map = InterruptPinMap::PIN1) override
     {
         if (!enableInterrupt(pin_map, BMA423_STEP_CNTR_INT, interrupt_enable)) {
             return false;
@@ -421,7 +414,7 @@ public:
     * @return true if successful, false on error
     */
     bool enableTiltDetector(bool enable, bool interrupt_enable = false,
-                            InterruptPinMap pin_map = InterruptPinMap::PIN1)
+                            InterruptPinMap pin_map = InterruptPinMap::PIN1) override
     {
         if (!enableInterrupt(pin_map, BMA423_TILT_INT, interrupt_enable)) {
             return false;
@@ -452,7 +445,7 @@ public:
     * @return true if successful, false on error
     */
     bool enableTapDetector(bool enable, bool interrupt_enable = false,
-                           InterruptPinMap pin_map = InterruptPinMap::PIN1)
+                           InterruptPinMap pin_map = InterruptPinMap::PIN1) override
     {
         if (!enableInterrupt(pin_map, BMA423_WAKEUP_INT, interrupt_enable)) {
             return false;
@@ -492,7 +485,7 @@ public:
     * @return true if successful, false on error
     */
     bool enableActivityRecognition(bool enable, bool interrupt_enable = false,
-                                   InterruptPinMap pin_map = InterruptPinMap::PIN1)
+                                   InterruptPinMap pin_map = InterruptPinMap::PIN1) override
     {
         if (!enableInterrupt(pin_map, BMA423_ACTIVITY_INT, interrupt_enable)) {
             return false;
@@ -512,7 +505,7 @@ public:
      */
     bool enableAnyMotionDetection(const MotionAxesConfig &cfg, bool enable,
                                   bool interrupt_enable = false,
-                                  InterruptPinMap pin_map = InterruptPinMap::PIN1)
+                                  InterruptPinMap pin_map = InterruptPinMap::PIN1) override
     {
         uint16_t axis = 0;
 
@@ -534,7 +527,7 @@ public:
             return false;
         }
 
-        if (!configMotion(false, _mon_cfg.any_motion_threshold, _mon_cfg.any_motion_duration)) {
+        if (!configMotion(true, _mon_cfg.any_motion_threshold, _mon_cfg.any_motion_duration)) {
             return false;
         }
 
@@ -553,7 +546,7 @@ public:
      */
     bool enableNoMotionDetection(const MotionAxesConfig &cfg, bool enable,
                                  bool interrupt_enable = false,
-                                 InterruptPinMap pin_map = InterruptPinMap::PIN1)
+                                 InterruptPinMap pin_map = InterruptPinMap::PIN1) override
     {
         uint16_t axis = 0;
 
@@ -575,7 +568,7 @@ public:
             return false;
         }
 
-        if (!configMotion(true, _mon_cfg.no_motion_threshold, _mon_cfg.no_motion_duration)) {
+        if (!configMotion(false, _mon_cfg.no_motion_threshold, _mon_cfg.no_motion_duration)) {
             return false;
         }
 
@@ -596,7 +589,7 @@ public:
     *                    Default: 0x0005 = 5 samples = 100ms
      * @return This method is compatible with other classes and will always return true.
      */
-    bool configNoMotion(uint16_t threshold, uint16_t duration)
+    bool configNoMotion(uint16_t threshold, uint16_t duration) override
     {
         _mon_cfg.no_motion_duration = duration;
         _mon_cfg.no_motion_threshold = threshold;
@@ -617,7 +610,7 @@ public:
     *                    Default: 0x0005 = 5 samples = 100ms
      * @return This method is compatible with other classes and will always return true.
      */
-    bool configAnyMotion(uint16_t threshold, uint16_t duration)
+    bool configAnyMotion(uint16_t threshold, uint16_t duration) override
     {
         _mon_cfg.any_motion_duration = duration;
         _mon_cfg.any_motion_threshold = threshold;
@@ -630,7 +623,7 @@ public:
      * This function sets the threshold and duration directly using register values.
      * For physical units, use configMotion() instead.
      *
-     * @param no_motion   true for no-motion detection, false for any-motion detection
+     * @param any_motion   true for any-motion detection, false for no-motion detection
      * @param threshold   Slope threshold in 5.11g format (0-2047 = 0-~1g)
      *                    Default: 0x00AA = 170 / 2048 ≈ 0.083g = 83mg
      * @param duration    Number of consecutive 50Hz samples (20ms each) required
@@ -638,26 +631,26 @@ public:
      *                    Default: 0x0005 = 5 samples = 100ms
      * @return true if successful, false on error
      */
-    bool configMotion(bool no_motion, uint16_t threshold, uint16_t duration)
+    bool configMotion(bool any_motion, uint16_t threshold, uint16_t duration) override
     {
-        struct bma423_anymotion_config any_motion;
-        any_motion.threshold = threshold;
-        any_motion.duration = duration;
-        any_motion.nomotion_sel = no_motion ? 1 : 0;
+        struct bma423_anymotion_config any_motion_cfg;
+        any_motion_cfg.threshold = threshold;
+        any_motion_cfg.duration = duration;
+        any_motion_cfg.nomotion_sel = any_motion ? 0 : 1;
 
-        if (no_motion) {
-            _mon_cfg.no_motion_threshold = threshold;
-            _mon_cfg.no_motion_duration = duration;
-        } else {
+        if (any_motion) {
             _mon_cfg.any_motion_threshold = threshold;
             _mon_cfg.any_motion_duration = duration;
+        } else {
+            _mon_cfg.no_motion_threshold = threshold;
+            _mon_cfg.no_motion_duration = duration;
         }
 
         log_d("BMA423 motion config (raw): threshold=0x%04X, duration=%u, type: %s",
               threshold, duration,
-              no_motion ? "No-motion" : "Any-motion");
+              any_motion ? "Any-motion" : "No-motion");
 
-        return bma423_set_any_motion_config(&any_motion, dev.get()) == 0;
+        return bma423_set_any_motion_config(&any_motion_cfg, dev.get()) == 0;
     }
 
     /**

@@ -50,28 +50,6 @@ public:
     };
 
     /**
-     * @brief  Motion axes configuration
-     * @note   This structure is used to configure which axes are monitored for
-     *         motion and no-motion detection. Each bit enables/disables detection
-     *         on a specific axis.
-     */
-    struct MotionAxesConfig {
-        uint8_t x_axis : 1;        ///< Enable motion detection on X-axis (1=enabled, 0=disabled)
-        uint8_t y_axis : 1;        ///< Enable motion detection on Y-axis (1=enabled, 0=disabled)
-        uint8_t z_axis : 1;        ///< Enable motion detection on Z-axis (1=enabled, 0=disabled)
-
-        /**
-         * @brief  Constructor for MotionAxesConfig
-         * @param  x_axis    Enable motion detection on X-axis (default: 1)
-         * @param  y_axis    Enable motion detection on Y-axis (default: 1)
-         * @param  z_axis    Enable motion detection on Z-axis (default: 1)
-         */
-        MotionAxesConfig(uint8_t x = 1, uint8_t y = 1, uint8_t z = 1)
-            : x_axis(x), y_axis(y), z_axis(z) {}
-    };
-
-
-    /**
      * @brief  Constructor for the SensorBMA422 class
      * @note   Initializes the sensor with default settings and sets the remap offset
      *         for BMA422 specific features.
@@ -81,11 +59,21 @@ public:
         _remap_reg_offset = BMA422_AN_AXES_REMAP_START_ADDR;
     }
 
+    using SensorBMA4XX::MotionAxesConfig;
+
     /**
     * @brief  Destructor for the SensorBMA422 class
     * @note   Cleans up the sensor resources (default implementation).
     */
     ~SensorBMA422() = default;
+
+    BMA4XXCapability::Capability getCapabilities() const override
+    {
+        return BMA4XXCapability::Capability::SupportDataReady
+             | BMA4XXCapability::Capability::SupportAnyMotion
+             | BMA4XXCapability::Capability::SupportNoMotion
+             | BMA4XXCapability::Capability::SupportAxisRemap;
+    }
 
     /**
     * @brief  Set the any-motion callback for motion events
@@ -153,7 +141,7 @@ public:
     * @param  pin_map          Interrupt pin to use (PIN1 or PIN2)
     * @return true if successful, false on error
     */
-    bool enableDataReady(bool enable = true, InterruptPinMap pin_map = InterruptPinMap::PIN1)
+    bool enableDataReady(bool enable = true, InterruptPinMap pin_map = InterruptPinMap::PIN1) override
     {
         return enableInterrupt(pin_map, BMA4_DATA_RDY_INT, enable);
     }
@@ -167,9 +155,9 @@ public:
      * @param  pin_map          Interrupt pin to use (PIN1 or PIN2)
      * @return true if successful, false on error
      */
-    bool enableAnyMotionDetection(MotionAxesConfig &cfg, bool enable,
+    bool enableAnyMotionDetection(const MotionAxesConfig &cfg, bool enable,
                                   bool interrupt_enable = false,
-                                  InterruptPinMap pin_map = InterruptPinMap::PIN1)
+                                  InterruptPinMap pin_map = InterruptPinMap::PIN1) override
     {
         int8_t rslt = 0;
         struct bma422_an_any_no_mot_config any_mot_config = { 0, 0, 0};
@@ -204,9 +192,9 @@ public:
      * @param  pin_map          Interrupt pin to use (PIN1 or PIN2)
      * @return true if successful, false on error
      */
-    bool enableNoMotionDetection(MotionAxesConfig &cfg, bool enable,
+    bool enableNoMotionDetection(const MotionAxesConfig &cfg, bool enable,
                                  bool interrupt_enable = false,
-                                 InterruptPinMap pin_map = InterruptPinMap::PIN1)
+                                 InterruptPinMap pin_map = InterruptPinMap::PIN1) override
     {
         int8_t rslt = 0;
         struct bma422_an_any_no_mot_config no_mot_config = { 0, 0, 0};
@@ -271,7 +259,7 @@ public:
     *
     * @return true if configuration successful, false on error
     */
-    bool configNoMotion(uint16_t threshold, uint16_t duration)
+    bool configNoMotion(uint16_t threshold, uint16_t duration) override
     {
         return configMotion(false, threshold, duration);
     }
@@ -317,7 +305,7 @@ public:
     *
     * @return true if configuration successful, false on error
     */
-    bool configAnyMotion(uint16_t threshold, uint16_t duration)
+    bool configAnyMotion(uint16_t threshold, uint16_t duration) override
     {
         return configMotion(true, threshold, duration);
     }
@@ -365,7 +353,7 @@ public:
      *
      * @return true if configuration successful, false on error
      */
-    bool configMotion(bool any_motion, uint16_t threshold, uint16_t duration)
+    bool configMotion(bool any_motion, uint16_t threshold, uint16_t duration) override
     {
         int8_t rslt = 0;
 
@@ -425,7 +413,7 @@ public:
     *                       Will be converted to LSB: LSB = duration_ms / 20
     * @return true if successful, false on error
     */
-    bool configAnyMotionInPhysicalUnits(float threshold_mg, float duration_ms)
+    bool configAnyMotionInPhysicalUnits(float threshold_mg, float duration_ms) override
     {
         uint16_t threshold_lsb = static_cast<uint16_t>(threshold_mg / 0.48f + 0.5f);
         uint16_t duration_lsb = static_cast<uint16_t>(duration_ms / 20.0f + 0.5f);
@@ -447,7 +435,7 @@ public:
     *                       Will be converted to LSB: LSB = duration_ms / 20
     * @return true if successful, false on error
     */
-    bool configNoMotionInPhysicalUnits(float threshold_mg, float duration_ms)
+    bool configNoMotionInPhysicalUnits(float threshold_mg, float duration_ms) override
     {
         uint16_t threshold_lsb = static_cast<uint16_t>(threshold_mg / 0.48f + 0.5f);
         uint16_t duration_lsb = static_cast<uint16_t>(duration_ms / 20.0f + 0.5f);

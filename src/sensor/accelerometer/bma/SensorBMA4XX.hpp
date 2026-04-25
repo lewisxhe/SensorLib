@@ -94,6 +94,37 @@ enum class ActivityType {
 };
 
 /**
+ * @brief BMA4XX Capability Flags
+ *
+ * Used to indicate which features are available in a specific BMA4XX implementation.
+ * Users can query capabilities through the base class pointer.
+ */
+namespace BMA4XXCapability {
+enum class Capability : uint32_t {
+    None              = 0,
+    SupportDataReady  = (1 << 0),
+    SupportAnyMotion  = (1 << 1),
+    SupportNoMotion   = (1 << 2),
+    SupportTap        = (1 << 3),
+    SupportStepDetector = (1 << 4),
+    SupportStepCounter  = (1 << 5),
+    SupportActivity     = (1 << 6),
+    SupportTilt         = (1 << 7),
+    SupportAxisRemap    = (1 << 8),
+};
+
+constexpr Capability operator|(Capability a, Capability b)
+{
+    return static_cast<Capability>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
+}
+
+constexpr bool operator&(Capability a, Capability b)
+{
+    return (static_cast<uint32_t>(a) & static_cast<uint32_t>(b)) != 0;
+}
+}
+
+/**
  * @brief Abstract base class for BMA4XX series accelerometer sensors.
  *
  * This class defines the common interface for BMA4XX family accelerometers (BMA422, BMA423, BMA456).
@@ -131,6 +162,27 @@ public:
      * @brief  typedef for BMA4 device structure
      */
     using bma4_dev_t = struct bma4_dev ;
+
+    /**
+     * @brief  Motion axes configuration
+     * @note   This structure is used to configure which axes are monitored for
+     *         motion and no-motion detection. Each bit enables/disables detection
+     *         on a specific axis.
+     */
+    struct MotionAxesConfig {
+        uint8_t x_axis : 1;        ///< Enable motion detection on X-axis (1=enabled, 0=disabled)
+        uint8_t y_axis : 1;        ///< Enable motion detection on Y-axis (1=enabled, 0=disabled)
+        uint8_t z_axis : 1;        ///< Enable motion detection on Z-axis (1=enabled, 0=disabled)
+
+        /**
+         * @brief  Constructor for MotionAxesConfig
+         * @param  x_axis    Enable motion detection on X-axis (default: 1)
+         * @param  y_axis    Enable motion detection on Y-axis (default: 1)
+         * @param  z_axis    Enable motion detection on Z-axis (default: 1)
+         */
+        MotionAxesConfig(uint8_t x = 1, uint8_t y = 1, uint8_t z = 1)
+            : x_axis(x), y_axis(y), z_axis(z) {}
+    };
 
     /**
      * @brief  Enumeration of BMA4XX models
@@ -718,6 +770,163 @@ public:
         // Convert ticks to milliseconds (1 tick = 39.0625 μs = 0.0390625 ms)
         float time_ms = sensor_time_ticks * 0.0390625f;
         return static_cast<uint32_t>(time_ms);
+    }
+
+    /**
+     * @brief Get supported capabilities
+     * @return Bitmask of supported capabilities
+     * @see BMA4XXCapability::Capability
+     */
+    virtual BMA4XXCapability::Capability getCapabilities() const = 0;
+
+    /**
+     * @brief  Enable data ready interrupt (default: not supported)
+     */
+    virtual bool enableDataReady(bool enable = true, InterruptPinMap pin_map = InterruptPinMap::PIN1)
+    {
+        (void)enable;
+        (void)pin_map;
+        return false;
+    }
+
+    /**
+     * @brief  Enable or disable any-motion detection (default: not supported)
+     */
+    virtual bool enableAnyMotionDetection(const MotionAxesConfig &cfg, bool enable,
+                                           bool interrupt_enable = false,
+                                           InterruptPinMap pin_map = InterruptPinMap::PIN1)
+    {
+        (void)cfg;
+        (void)enable;
+        (void)interrupt_enable;
+        (void)pin_map;
+        return false;
+    }
+
+    /**
+     * @brief  Enable or disable no-motion detection (default: not supported)
+     */
+    virtual bool enableNoMotionDetection(const MotionAxesConfig &cfg, bool enable,
+                                          bool interrupt_enable = false,
+                                          InterruptPinMap pin_map = InterruptPinMap::PIN1)
+    {
+        (void)cfg;
+        (void)enable;
+        (void)interrupt_enable;
+        (void)pin_map;
+        return false;
+    }
+
+    /**
+     * @brief  Configure any-motion threshold and duration (default: not supported)
+     */
+    virtual bool configAnyMotion(uint16_t threshold, uint16_t duration)
+    {
+        (void)threshold;
+        (void)duration;
+        return false;
+    }
+
+    /**
+     * @brief  Configure no-motion threshold and duration (default: not supported)
+     */
+    virtual bool configNoMotion(uint16_t threshold, uint16_t duration)
+    {
+        (void)threshold;
+        (void)duration;
+        return false;
+    }
+
+    /**
+     * @brief  Configure motion detection (default: not supported)
+     * @param  any_motion  true for any-motion, false for no-motion
+     */
+    virtual bool configMotion(bool any_motion, uint16_t threshold, uint16_t duration)
+    {
+        (void)any_motion;
+        (void)threshold;
+        (void)duration;
+        return false;
+    }
+
+    /**
+     * @brief  Configure any-motion using physical units (default: not supported)
+     */
+    virtual bool configAnyMotionInPhysicalUnits(float threshold_mg, float duration_ms)
+    {
+        (void)threshold_mg;
+        (void)duration_ms;
+        return false;
+    }
+
+    /**
+     * @brief  Configure no-motion using physical units (default: not supported)
+     */
+    virtual bool configNoMotionInPhysicalUnits(float threshold_mg, float duration_ms)
+    {
+        (void)threshold_mg;
+        (void)duration_ms;
+        return false;
+    }
+
+    /**
+     * @brief  Enable or disable tap detection (default: not supported)
+     */
+    virtual bool enableTapDetector(bool enable, bool interrupt_enable = false,
+                                    InterruptPinMap pin_map = InterruptPinMap::PIN1)
+    {
+        (void)enable;
+        (void)interrupt_enable;
+        (void)pin_map;
+        return false;
+    }
+
+    /**
+     * @brief  Enable or disable step counter (default: not supported)
+     */
+    virtual bool enableStepCounter(bool enable, uint16_t step_counter_wm = 1,
+                                    bool reset_counter = false)
+    {
+        (void)enable;
+        (void)step_counter_wm;
+        (void)reset_counter;
+        return false;
+    }
+
+    /**
+     * @brief  Enable or disable step detector (default: not supported)
+     */
+    virtual bool enableStepDetector(bool enable, bool interrupt_enable = false,
+                                     InterruptPinMap pin_map = InterruptPinMap::PIN1)
+    {
+        (void)enable;
+        (void)interrupt_enable;
+        (void)pin_map;
+        return false;
+    }
+
+    /**
+     * @brief  Enable or disable activity recognition (default: not supported)
+     */
+    virtual bool enableActivityRecognition(bool enable, bool interrupt_enable = false,
+                                            InterruptPinMap pin_map = InterruptPinMap::PIN1)
+    {
+        (void)enable;
+        (void)interrupt_enable;
+        (void)pin_map;
+        return false;
+    }
+
+    /**
+     * @brief  Enable or disable tilt detection (default: not supported)
+     */
+    virtual bool enableTiltDetector(bool enable, bool interrupt_enable = false,
+                                     InterruptPinMap pin_map = InterruptPinMap::PIN1)
+    {
+        (void)enable;
+        (void)interrupt_enable;
+        (void)pin_map;
+        return false;
     }
 
     /**
