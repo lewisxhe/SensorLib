@@ -63,6 +63,7 @@ const TouchPoints &TouchDrvCST226::getTouchPoints()
 
         if (buffer[6] != 0xAB)return _touchPoints; // Return zero points
         if (buffer[0] == 0xAB)return _touchPoints; // Return zero points
+        if (buffer[0] == 0x00)return _touchPoints; // Return zero points
         if (buffer[5] == 0x80)return _touchPoints; // Return zero points
 
         uint8_t numPoints = buffer[5] & 0x7F; // Get number of touch points (lower 7 bits)

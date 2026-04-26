@@ -109,6 +109,7 @@ void setup()
     if (Wire.endTransmission() == 0) {
         address = CST816_SLAVE_ADDRESS;
     }
+    // CST226 and CST328 , CST3240 same i2c address
     Wire.beginTransmission(CST226SE_SLAVE_ADDRESS);
     if (Wire.endTransmission() == 0) {
         address = CST226SE_SLAVE_ADDRESS;
@@ -127,13 +128,15 @@ void setup()
     * Support type.
     * TouchDrv_UNKNOWN      : Judging by identification ID
     * TouchDrv_CST8XX       : CST816X,CST716,CST820
-    * TouchDrv_CST226       : CST226X,CST328
+    * TouchDrv_CST226       : CST226X,CST328,CST3240
     * TouchDrv_CST92XX      : CST9217,CST9220
+    * TouchDrv_CST3530      : CST3530
     */
     // Can choose fixed touch model or automatic identification by ID
     // touch.setTouchDrvModel(TouchDrv_CST8XX);
     // touch.setTouchDrvModel(TouchDrv_CST226);
     // touch.setTouchDrvModel(TouchDrv_CST92XX);
+    // touch.setTouchDrvModel(TouchDrv_CST3530);
 
     // For touchscreens without an RST pin, the actual model may not be
     // accurately detected, or some undefined behavior may occur.
