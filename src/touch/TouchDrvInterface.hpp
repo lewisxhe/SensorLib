@@ -282,7 +282,7 @@ public:
      * @param get_point Number of points to retrieve (max).
      * @return uint8_t Actual number of touch points detected.
      */
-    virtual uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point) __attribute__((deprecated("use getTouchPoints instead of getPoint")))
+    virtual uint8_t getPoint(int16_t *x_array, int16_t *y_array, uint8_t get_point = 1) __attribute__((deprecated("use getTouchPoints instead of getPoint")))
     {
         TouchPoints data = getTouchPoints();
 
