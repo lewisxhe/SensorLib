@@ -51,6 +51,8 @@ public:
         DIE_TEMPERATURE,    ///< Die temperature
         BAT_TEMPERATURE,    ///< Battery temperature
         BAT_PERCENTAGE,     ///< Battery percentage
+        ACIN_VOLTAGE,       ///< ACIN voltage
+        ACIN_CURRENT,       ///< ACIN current
     };
 
     virtual ~PmicAdcBase() = default;
