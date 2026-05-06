@@ -30,51 +30,50 @@
 #include "AXP517Irq.hpp"
 #include "AXP517Regs.hpp"
 
-using namespace axp517::regs;
 
 AXP517Irq::AXP517Irq(AXP517Core &core) : _core(core)
 {
 }
 
-bool AXP517Irq::enable(uint32_t mask)
+bool AXP517Irq::enable(uint64_t mask)
 {
     mask &= ~IRQ_RESERVED_MASK;
 
     uint8_t buffer[4];
 
-    if (_core.readRegBuff(irq::ENABLE0, buffer, sizeof(buffer)) < 0) {
+    if (_core.readRegBuff(axp517_regs::irq::ENABLE0, buffer, sizeof(buffer)) < 0) {
         log_e("Failed to read IRQ enable registers");
         return false;
     }
-    uint32_t current = (static_cast<uint32_t>(buffer[0]) << 24) |
-                       (static_cast<uint32_t>(buffer[1]) << 16) |
-                       (static_cast<uint32_t>(buffer[2]) << 8) |
-                       (static_cast<uint32_t>(buffer[3]));
+    uint64_t current = (static_cast<uint64_t>(buffer[0]) << 24) |
+                       (static_cast<uint64_t>(buffer[1]) << 16) |
+                       (static_cast<uint64_t>(buffer[2]) << 8) |
+                       (static_cast<uint64_t>(buffer[3]));
     current &= (~IRQ_RESERVED_MASK);
     current |= mask;
     buffer[0] = static_cast<uint8_t>((current >> 24) & 0xFF);
     buffer[1] = static_cast<uint8_t>((current >> 16) & 0xFF);
     buffer[2] = static_cast<uint8_t>((current >> 8) & 0xFF);
     buffer[3] = static_cast<uint8_t>(current & 0xFF);
-    if (_core.writeRegBuff(irq::ENABLE0, buffer, sizeof(buffer)) < 0) {
+    if (_core.writeRegBuff(axp517_regs::irq::ENABLE0, buffer, sizeof(buffer)) < 0) {
         return false;
     }
     return true;
 }
 
-bool AXP517Irq::disable(uint32_t mask)
+bool AXP517Irq::disable(uint64_t mask)
 {
     mask &= ~IRQ_RESERVED_MASK;
 
     uint8_t buffer[4];
-    if (_core.readRegBuff(irq::ENABLE0, buffer, sizeof(buffer)) < 0) {
+    if (_core.readRegBuff(axp517_regs::irq::ENABLE0, buffer, sizeof(buffer)) < 0) {
         log_e("Failed to read IRQ enable registers");
         return false;
     }
-    uint32_t current = (static_cast<uint32_t>(buffer[0]) << 24) |
-                       (static_cast<uint32_t>(buffer[1]) << 16) |
-                       (static_cast<uint32_t>(buffer[2]) << 8) |
-                       (static_cast<uint32_t>(buffer[3]));
+    uint64_t current = (static_cast<uint64_t>(buffer[0]) << 24) |
+                       (static_cast<uint64_t>(buffer[1]) << 16) |
+                       (static_cast<uint64_t>(buffer[2]) << 8) |
+                       (static_cast<uint64_t>(buffer[3]));
 
     current &= (~IRQ_RESERVED_MASK);
     current &= (~mask);
@@ -82,34 +81,34 @@ bool AXP517Irq::disable(uint32_t mask)
     buffer[1] = static_cast<uint8_t>((current >> 16) & 0xFF);
     buffer[2] = static_cast<uint8_t>((current >> 8) & 0xFF);
     buffer[3] = static_cast<uint8_t>(current & 0xFF);
-    if (_core.writeRegBuff(irq::ENABLE0, buffer, sizeof(buffer)) < 0) {
+    if (_core.writeRegBuff(axp517_regs::irq::ENABLE0, buffer, sizeof(buffer)) < 0) {
         return false;
     }
     return true;
 }
 
-uint32_t AXP517Irq::readStatus(bool clear)
+uint64_t AXP517Irq::readStatus(bool clear)
 {
     uint8_t buffer[4];
-    if (_core.readRegBuff(irq::STATUS0, buffer, sizeof(buffer)) < 0) {
+    if (_core.readRegBuff(axp517_regs::irq::STATUS0, buffer, sizeof(buffer)) < 0) {
         log_e("Failed to read IRQ status registers");
         return 0;
     }
-    uint32_t mask = (static_cast<uint32_t>(buffer[0]) << 24) |
-                    (static_cast<uint32_t>(buffer[1]) << 16) |
-                    (static_cast<uint32_t>(buffer[2]) << 8) |
-                    (static_cast<uint32_t>(buffer[3]));
+    uint64_t mask = (static_cast<uint64_t>(buffer[0]) << 24) |
+                    (static_cast<uint64_t>(buffer[1]) << 16) |
+                    (static_cast<uint64_t>(buffer[2]) << 8) |
+                    (static_cast<uint64_t>(buffer[3]));
     mask &= (~IRQ_RESERVED_MASK);
     if (clear && mask != 0) {
-        this->clear();
+        this->clearStatus();
     }
     return mask;
 }
 
-bool AXP517Irq::clear()
+bool AXP517Irq::clearStatus()
 {
     uint8_t buffer[4] = {0xFF, 0xFF, 0xFF, 0xFF};
-    if (_core.writeRegBuff(irq::STATUS0, buffer, sizeof(buffer)) < 0) {
+    if (_core.writeRegBuff(axp517_regs::irq::STATUS0, buffer, sizeof(buffer)) < 0) {
         log_e("Failed to clear IRQ status registers");
         return false;
     }

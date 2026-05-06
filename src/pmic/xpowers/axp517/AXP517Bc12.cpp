@@ -30,7 +30,6 @@
 #include "AXP517Bc12.hpp"
 #include "AXP517Regs.hpp"
 
-using namespace axp517::regs;
 
 AXP517Bc12::AXP517Bc12(AXP517Core &core)
     : _core(core)
@@ -40,7 +39,7 @@ AXP517Bc12::AXP517Bc12(AXP517Core &core)
 bool AXP517Bc12::enableAutoDetect(bool enable)
 {
     // REG 2BH: BC1.2 control3, bit6: auto dpdm detect enable
-    const uint8_t reg = bc12::CTRL3;
+    const uint8_t reg = axp517_regs::bc12::CTRL3;
     const uint8_t bit = 6;
     return enable ? _core.setRegBit(reg, bit) : _core.clrRegBit(reg, bit);
 }
@@ -48,7 +47,7 @@ bool AXP517Bc12::enableAutoDetect(bool enable)
 bool AXP517Bc12::triggerDetect()
 {
     // REG 2BH: BC1.2 control3, bit7: force dpdm detection (write 1, self-clear)
-    const uint8_t reg = bc12::CTRL3;
+    const uint8_t reg = axp517_regs::bc12::CTRL3;
     int cur = _core.readReg(reg);
     if (cur < 0) return false;
     cur |= 0x80;
@@ -57,7 +56,7 @@ bool AXP517Bc12::triggerDetect()
 
 bool AXP517Bc12::isDetecting()
 {
-    const uint8_t reg = bc12::CTRL0;
+    const uint8_t reg = axp517_regs::bc12::CTRL0;
     int cur = _core.readReg(reg);
     if (cur < 0) return false;
     return (cur & 0x04) != 0;
@@ -67,7 +66,7 @@ PmicBc12Base::Result AXP517Bc12::readResult()
 {
     Result out{};
     out.detecting = isDetecting();
-    int v = _core.readReg(bmu::BC_DETECT);
+    int v = _core.readReg(axp517_regs::bmu::BC_DETECT);
     if (v < 0) {
         out.type = PortType::Unknown;
         return out;

@@ -30,7 +30,6 @@
 #include "AXP517Led.hpp"
 #include "AXP517Regs.hpp"
 
-using namespace axp517::regs;
 
 
 AXP517Led::AXP517Led(AXP517Core &core) : _core(core)
@@ -41,9 +40,9 @@ bool AXP517Led::setOutputType(OutputType type)
 {
     switch (type) {
     case OutputType::OpenDrain:
-        return _core.updateBits(led::CHGLED_CFG, 0x80, 0x00);
+        return _core.updateBits(axp517_regs::led::CHGLED_CFG, 0x80, 0x00);
     case OutputType::PushPull:
-        return _core.updateBits(led::CHGLED_CFG, 0x80, 0x80);
+        return _core.updateBits(axp517_regs::led::CHGLED_CFG, 0x80, 0x80);
     default:
         break;
     }
@@ -53,16 +52,16 @@ bool AXP517Led::setOutputType(OutputType type)
 bool AXP517Led::setMode(Mode mode)
 {
     if (mode == Mode::DISABLE) {
-        return _core.clrRegBit(ctrl::MODULE_EN1, 2); // Disable LED module
+        return _core.clrRegBit(axp517_regs::ctrl::MODULE_EN1, 2); // Disable LED module
     }
-    _core.setRegBit(ctrl::MODULE_EN1, 2); // Ensure LED module is enabled
+    _core.setRegBit(axp517_regs::ctrl::MODULE_EN1, 2); // Ensure LED module is enabled
     switch (mode) {
     case Mode::AUTO:
-        return _core.updateBits(led::CHGLED_CFG, 0x47, 0x00);
+        return _core.updateBits(axp517_regs::led::CHGLED_CFG, 0x47, 0x00);
     case Mode::MANUAL:
-        return _core.updateBits(led::CHGLED_CFG, 0x47, 0x06);
+        return _core.updateBits(axp517_regs::led::CHGLED_CFG, 0x47, 0x06);
     case Mode::BREATH:
-        return _core.updateBits(led::CHGLED_CFG, 0x47, 0x43);
+        return _core.updateBits(axp517_regs::led::CHGLED_CFG, 0x47, 0x43);
     default:
         return false;
     }
@@ -70,10 +69,10 @@ bool AXP517Led::setMode(Mode mode)
 
 AXP517Led::Mode AXP517Led::getMode()
 {
-    if (!_core.getRegBit(ctrl::MODULE_EN1, 2)) {
+    if (!_core.getRegBit(axp517_regs::ctrl::MODULE_EN1, 2)) {
         return Mode::DISABLE; // LED module is disabled
     }
-    int regVal = _core.readReg(led::CHGLED_CFG);
+    int regVal = _core.readReg(axp517_regs::led::CHGLED_CFG);
     if (regVal < 0) return Mode::VENDOR;
     regVal &= 0x47;
     switch (regVal) {
@@ -97,12 +96,12 @@ bool AXP517Led::setManualState(ManualState state)
     case ManualState::LEVEL_HIGH: val = 0x20; break;
     default: return false;
     }
-    return _core.updateBits(led::CHGLED_CFG, 0x3F, base | val);
+    return _core.updateBits(axp517_regs::led::CHGLED_CFG, 0x3F, base | val);
 }
 
 AXP517Led::ManualState AXP517Led::getManualState()
 {
-    int regVal = _core.readReg(led::CHGLED_CFG);
+    int regVal = _core.readReg(axp517_regs::led::CHGLED_CFG);
     if (regVal < 0) return ManualState::UNDEFINED;
     uint8_t modeBits = regVal & 0x07;
     if (modeBits != 0x06) {

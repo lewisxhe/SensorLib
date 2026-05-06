@@ -30,7 +30,6 @@
 #include "AXP517Power.hpp"
 #include "AXP517Regs.hpp"
 
-using namespace axp517::regs;
 
 AXP517Power::AXP517Power(AXP517Core &core) : _core(core)
 {
@@ -41,12 +40,12 @@ bool AXP517Power::setMinimumSystemVoltage(uint32_t mv)
     if (mv < 1000) mv = 1000;
     if (mv > 3800) mv = 3800;
     uint8_t code = (mv - 1000) / 100;
-    return _core.updateBits(ctrl::MIN_SYS_VOLTAGE, 0x1F, code);
+    return _core.updateBits(axp517_regs::ctrl::MIN_SYS_VOLTAGE, 0x1F, code);
 }
 
 uint32_t AXP517Power::getMinimumSystemVoltage() const
 {
-    int regVal = _core.readReg(ctrl::MIN_SYS_VOLTAGE);
+    int regVal = _core.readReg(axp517_regs::ctrl::MIN_SYS_VOLTAGE);
     if (regVal < 0) return 0;
     uint8_t code = regVal & 0x1F;
     return 1000 + code * 100;
@@ -57,12 +56,12 @@ bool AXP517Power::setInputVoltageLimit(uint32_t mv)
     if (mv < 3600) mv = 3600;
     if (mv > 16200) mv = 16200;
     uint8_t code = (mv - 3600) / 100 + 1;
-    return _core.updateBits(ctrl::INPUT_VOLT_LIMIT, 0x7F, code);
+    return _core.updateBits(axp517_regs::ctrl::INPUT_VOLT_LIMIT, 0x7F, code);
 }
 
 uint32_t AXP517Power::getInputVoltageLimit() const
 {
-    int regVal = _core.readReg(ctrl::INPUT_VOLT_LIMIT);
+    int regVal = _core.readReg(axp517_regs::ctrl::INPUT_VOLT_LIMIT);
     if (regVal < 0) return 0;
     uint8_t code = regVal & 0x7F;
     if (code == 0) return 3600;
@@ -74,12 +73,12 @@ bool AXP517Power::setInputCurrentLimit(uint32_t mA)
     if (mA < 100) mA = 100;
     if (mA > 3250) mA = 3250;
     uint8_t code = (mA - 100) / 50;
-    return _core.updateBits(ctrl::INPUT_CURR_LIMIT, 0xFC, code << 2);
+    return _core.updateBits(axp517_regs::ctrl::INPUT_CURR_LIMIT, 0xFC, code << 2);
 }
 
 uint32_t AXP517Power::getInputCurrentLimit() const
 {
-    int regVal = _core.readReg(ctrl::INPUT_CURR_LIMIT);
+    int regVal = _core.readReg(axp517_regs::ctrl::INPUT_CURR_LIMIT);
     if (regVal < 0) return 0;
     uint8_t code = (regVal >> 2) & 0x3F;
     return 100 + code * 50;
@@ -87,12 +86,12 @@ uint32_t AXP517Power::getInputCurrentLimit() const
 
 bool AXP517Power::enableBoost(bool enable)
 {
-    return _core.updateBits(ctrl::MODULE_EN1, 0x10, enable ? 0x10 : 0x00);
+    return _core.updateBits(axp517_regs::ctrl::MODULE_EN1, 0x10, enable ? 0x10 : 0x00);
 }
 
 bool AXP517Power::isBoostEnabled() const
 {
-    return _core.getRegBit(ctrl::MODULE_EN1, 4);
+    return _core.getRegBit(axp517_regs::ctrl::MODULE_EN1, 4);
 }
 
 bool AXP517Power::setBoostVoltage(uint16_t mv)
@@ -101,14 +100,14 @@ bool AXP517Power::setBoostVoltage(uint16_t mv)
     if (mv > 5510) mv = 5510;
     uint8_t n = ((mv - 4550) / 64);
     if (n > 15) n = 15;
-    int regVal = _core.readReg(ctrl::BOOST_CFG);
+    int regVal = _core.readReg(axp517_regs::ctrl::BOOST_CFG);
     if (regVal < 0) return false;
-    return _core.updateBits(ctrl::BOOST_CFG, 0xF0, n << 4);
+    return _core.updateBits(axp517_regs::ctrl::BOOST_CFG, 0xF0, n << 4);
 }
 
 uint16_t AXP517Power::getBoostVoltage() const
 {
-    int regVal = _core.readReg(ctrl::BOOST_CFG);
+    int regVal = _core.readReg(axp517_regs::ctrl::BOOST_CFG);
     if (regVal < 0) return 0;
     uint8_t n = (regVal >> 4) & 0x0F;
     return 4550 + n * 64;
@@ -116,10 +115,10 @@ uint16_t AXP517Power::getBoostVoltage() const
 
 bool AXP517Power::enableShipMode(bool enable)
 {
-    return _core.setRegBit(ctrl::BATFET_CTRL, 2);
+    return _core.setRegBit(axp517_regs::ctrl::BATFET_CTRL, 2);
 }
 
 bool AXP517Power::isShipModeEnabled() const
 {
-    return _core.getRegBit(bmu::STATUS0, 4);
+    return _core.getRegBit(axp517_regs::bmu::STATUS0, 4);
 }

@@ -30,7 +30,6 @@
 #include "AXP517Adc.hpp"
 #include "AXP517Regs.hpp"
 
-using namespace axp517::regs;
 
 AXP517Adc::AXP517Adc(AXP517Core &core) : _core(core)
 {
@@ -38,18 +37,18 @@ AXP517Adc::AXP517Adc(AXP517Core &core) : _core(core)
 
 bool AXP517Adc::enableChannels(uint32_t mask)
 {
-    int regVal = _core.readReg(adc::ENABLE);
+    int regVal = _core.readReg(axp517_regs::adc::ENABLE);
     if (regVal < 0) return false;
     regVal |= mask;
-    return _core.writeReg(adc::ENABLE, static_cast<uint8_t>(regVal)) == 0;
+    return _core.writeReg(axp517_regs::adc::ENABLE, static_cast<uint8_t>(regVal)) == 0;
 }
 
 bool AXP517Adc::disableChannels(uint32_t mask)
 {
-    int regVal = _core.readReg(adc::ENABLE);
+    int regVal = _core.readReg(axp517_regs::adc::ENABLE);
     if (regVal < 0) return false;
     regVal &= ~mask;
-    return _core.writeReg(adc::ENABLE, static_cast<uint8_t>(regVal)) == 0;
+    return _core.writeReg(axp517_regs::adc::ENABLE, static_cast<uint8_t>(regVal)) == 0;
 }
 
 bool AXP517Adc::read(Channel ch, float &out)
@@ -61,7 +60,7 @@ bool AXP517Adc::read(Channel ch, float &out)
     if (ch == Channel::VBUS_VOLTAGE || ch == Channel::VBUS_CURRENT ||
             ch == Channel::BAT_VOLTAGE || ch == Channel::BAT_CURRENT) {
 
-        if (_core.readRegBuff(bmu::STATUS0, buffer, sizeof(buffer)) < 0) {
+        if (_core.readRegBuff(axp517_regs::bmu::STATUS0, buffer, sizeof(buffer)) < 0) {
             return false;
         }
         bool vbusPresent = (buffer[0] >> 5) & 0x01;
@@ -86,47 +85,47 @@ bool AXP517Adc::read(Channel ch, float &out)
 
     switch (ch) {
     case Channel::VBUS_VOLTAGE:
-        if (_core.readRegBuff(adc::VBUS_VOLT_H, buffer, sizeof(buffer)) < 0)
+        if (_core.readRegBuff(axp517_regs::adc::VBUS_VOLT_H, buffer, sizeof(buffer)) < 0)
             return false;
-        out = ((buffer[0] & 0x3F) << 8 | buffer[1]) * factory::FACTORY_VBUS_VOLTAGE;
+        out = ((buffer[0] & 0x3F) << 8 | buffer[1]) * axp517_regs::factory::FACTORY_VBUS_VOLTAGE;
         break;
     case Channel::VBUS_CURRENT:
-        if (_core.readRegBuff(adc::VBUS_CURR_H, buffer, sizeof(buffer)) < 0)
+        if (_core.readRegBuff(axp517_regs::adc::VBUS_CURR_H, buffer, sizeof(buffer)) < 0)
             return false;
         adcVal = (static_cast<int16_t>((buffer[0] & 0x3F) << 8 | buffer[1]));
-        out = adcVal * factory::FACTORY_VBUS_CURRENT;
+        out = adcVal * axp517_regs::factory::FACTORY_VBUS_CURRENT;
         break;
     case Channel::BAT_VOLTAGE:
-        if (_core.readRegBuff(adc::BAT_VOLT_H, buffer, sizeof(buffer)) < 0)
+        if (_core.readRegBuff(axp517_regs::adc::BAT_VOLT_H, buffer, sizeof(buffer)) < 0)
             return false;
-        out = ((buffer[0] & 0x3F) << 8 | buffer[1]) * factory::FACTORY_VBAT_VOLTAGE;
+        out = ((buffer[0] & 0x3F) << 8 | buffer[1]) * axp517_regs::factory::FACTORY_VBAT_VOLTAGE;
         break;
     case Channel::BAT_CURRENT:
-        if (_core.readRegBuff(adc::BAT_CURR_H, buffer, sizeof(buffer)) < 0)
+        if (_core.readRegBuff(axp517_regs::adc::BAT_CURR_H, buffer, sizeof(buffer)) < 0)
             return false;
         adcVal = (static_cast<int16_t>(buffer[0]) << 8) | buffer[1];
-        out = static_cast<float>(adcVal) * factory::FACTORY_BAT_CURRENT;
+        out = static_cast<float>(adcVal) * axp517_regs::factory::FACTORY_BAT_CURRENT;
         break;
     case Channel::VSYS_VOLTAGE:
-        if (_core.writeReg(adc::DATA_SEL, 0x01) < 0) return false;
-        if (_core.readRegBuff(adc::DATA_H, buffer, 2) < 0) return false;
+        if (_core.writeReg(axp517_regs::adc::DATA_SEL, 0x01) < 0) return false;
+        if (_core.readRegBuff(axp517_regs::adc::DATA_H, buffer, 2) < 0) return false;
         adcVal = ((buffer[0] & 0x3F) << 8) | buffer[1];
-        out = static_cast<int16_t>((buffer[0] & 0x3F) << 8 | buffer[1]) * factory::FACTORY_VSYS_VOLTAGE;
+        out = static_cast<int16_t>((buffer[0] & 0x3F) << 8 | buffer[1]) * axp517_regs::factory::FACTORY_VSYS_VOLTAGE;
         break;
     case Channel::DIE_TEMPERATURE:
-        if (_core.writeReg(adc::DATA_SEL, 0x00) < 0) return false;
-        if (_core.readRegBuff(adc::DATA_H, buffer, 2) < 0) return false;
+        if (_core.writeReg(axp517_regs::adc::DATA_SEL, 0x00) < 0) return false;
+        if (_core.readRegBuff(axp517_regs::adc::DATA_H, buffer, 2) < 0) return false;
         adcVal = ((buffer[0] & 0x3F) << 8) | buffer[1];
         out = (3552.0f - adcVal) / 1.79f + 25.0f;
         break;
     case Channel::BAT_TEMPERATURE:
-        if (_core.readRegBuff(gauge::BAT_TEMP, buffer, 1) < 0) {
+        if (_core.readRegBuff(axp517_regs::gauge::BAT_TEMP, buffer, 1) < 0) {
             return false;
         }
         out = static_cast<float>(buffer[0]);
         break;
     case Channel::BAT_PERCENTAGE:
-        if (_core.readRegBuff(gauge::BAT_PERCENT, buffer, 1) < 0) {
+        if (_core.readRegBuff(axp517_regs::gauge::BAT_PERCENT, buffer, 1) < 0) {
             return false;
         }
         out = static_cast<float>(buffer[0]);

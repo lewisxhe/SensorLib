@@ -30,7 +30,6 @@
 #include "AXP517Charger.hpp"
 #include "AXP517Regs.hpp"
 
-using namespace axp517::regs;
 
 AXP517Charger::AXP517Charger(AXP517Core &core) : _core(core)
 {
@@ -39,7 +38,7 @@ AXP517Charger::AXP517Charger(AXP517Core &core) : _core(core)
 
 bool AXP517Charger::enableCharging(bool enable)
 {
-    return _core.updateBits(ctrl::MODULE_EN1, 0x02, enable ? 0x02 : 0x00);
+    return _core.updateBits(axp517_regs::ctrl::MODULE_EN1, 0x02, enable ? 0x02 : 0x00);
 }
 
 bool AXP517Charger::isCharging()
@@ -49,32 +48,32 @@ bool AXP517Charger::isCharging()
 
 bool AXP517Charger::setPreChargeCurrent(uint16_t mA)
 {
-    return setCurrentWithStep(chg::IPRECHG_ITRICHG, mA, 960, 64, 0x0F);
+    return setCurrentWithStep(axp517_regs::chg::IPRECHG_ITRICHG, mA, 960, 64, 0x0F);
 }
 
 uint16_t AXP517Charger::getPreChargeCurrent()
 {
-    return getCurrentWithStep(chg::IPRECHG_ITRICHG, 64, 0x0F);
+    return getCurrentWithStep(axp517_regs::chg::IPRECHG_ITRICHG, 64, 0x0F);
 }
 
 bool AXP517Charger::setFastChargeCurrent(uint16_t mA)
 {
-    return setCurrentWithStep(chg::ICC_SETTING, mA, 5120, 64, 0x7F);
+    return setCurrentWithStep(axp517_regs::chg::ICC_SETTING, mA, 5120, 64, 0x7F);
 }
 
 uint16_t AXP517Charger::getFastChargeCurrent()
 {
-    return getCurrentWithStep(chg::ICC_SETTING, 64, 0x7F);
+    return getCurrentWithStep(axp517_regs::chg::ICC_SETTING, 64, 0x7F);
 }
 
 bool AXP517Charger::setTerminationCurrent(uint16_t mA)
 {
-    return setCurrentWithStep(chg::ITERM_CTRL, mA, 960, 64, 0x0F);
+    return setCurrentWithStep(axp517_regs::chg::ITERM_CTRL, mA, 960, 64, 0x0F);
 }
 
 uint16_t AXP517Charger::getTerminationCurrent()
 {
-    return getCurrentWithStep(chg::ITERM_CTRL, 64, 0x0F);
+    return getCurrentWithStep(axp517_regs::chg::ITERM_CTRL, 64, 0x0F);
 }
 
 bool AXP517Charger::setChargeVoltage(uint16_t mV)
@@ -92,12 +91,12 @@ bool AXP517Charger::setChargeVoltage(uint16_t mV)
     case 5000: voltCode = 0x07; break;
     default: return false;
     }
-    regValue =  _core.readReg(chg::CV_CHG_VOLTAGE);
+    regValue =  _core.readReg(axp517_regs::chg::CV_CHG_VOLTAGE);
     if (regValue < 0) {
         return false;
     }
     regValue = (regValue &  0xF8) | voltCode;
-    if (_core.writeReg(chg::CV_CHG_VOLTAGE, regValue) < 0) {
+    if (_core.writeReg(axp517_regs::chg::CV_CHG_VOLTAGE, regValue) < 0) {
         return false;
     }
     return true;
@@ -105,7 +104,7 @@ bool AXP517Charger::setChargeVoltage(uint16_t mV)
 
 uint16_t AXP517Charger::getChargeVoltage()
 {
-    int regValue = _core.readReg(chg::CV_CHG_VOLTAGE);
+    int regValue = _core.readReg(axp517_regs::chg::CV_CHG_VOLTAGE);
     if (regValue < 0) {
         return 0;
     }
@@ -128,7 +127,7 @@ AXP517Charger::Status AXP517Charger::getStatus()
 {
     Status status {};
     uint8_t buffer[2] {};
-    if (_core.readRegBuff(bmu::STATUS0, buffer, sizeof(buffer)) < 0) {
+    if (_core.readRegBuff(axp517_regs::bmu::STATUS0, buffer, sizeof(buffer)) < 0) {
         return status;
     }
     status.online = true;

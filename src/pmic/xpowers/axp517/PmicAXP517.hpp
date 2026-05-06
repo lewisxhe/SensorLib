@@ -137,6 +137,25 @@ public:
                PmicCapability::Capability::PmicSupportBc12;
     }
 
+    const PmicConfig &getConfig() const override
+    {
+        static const PmicConfig config = {
+            .chipName = "AXP517",
+            .i2cAddress = 0x34,
+            .chipIdReg = 0x00,
+            .chipIdValue = 0,
+            .channelCount = 0,
+            .capabilities = PmicCapability::Capability::PmicSupportCharger |
+                            PmicCapability::Capability::PmicSupportPower |
+                            PmicCapability::Capability::PmicSupportAdc |
+                            PmicCapability::Capability::PmicSupportGpio |
+                            PmicCapability::Capability::PmicSupportLed |
+                            PmicCapability::Capability::PmicSupportIrq |
+                            PmicCapability::Capability::PmicSupportBc12,
+        };
+        return config;
+    }
+
     AXP517Adc &chipAdc()
     {
         return _adc;
@@ -160,6 +179,16 @@ public:
     PmicAdcBase &adc() override
     {
         return _adc;
+    }
+
+    PmicGpioBase *getGpio() override
+    {
+        return &_gpio;
+    }
+
+    PmicIrqBase *getIrq() override
+    {
+        return &_irq;
     }
 
     // ---------------- Chip-specific module accessors ----------------

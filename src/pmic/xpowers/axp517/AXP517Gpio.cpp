@@ -1,53 +1,63 @@
 #include "AXP517Gpio.hpp"
 #include "AXP517Regs.hpp"
 
-using namespace axp517::regs;
 
 AXP517Gpio::AXP517Gpio(AXP517Core &core)
     : _core(core)
 {
 }
 
-int AXP517Gpio::readRaw()
+uint8_t AXP517Gpio::getPinCount() const
 {
-    return _core.readReg(ctrl::GPIO_CFG);
+    return 1;
 }
 
-bool AXP517Gpio::setDirection(uint8_t pin, Direction dir)
+int AXP517Gpio::readRaw()
 {
+    return _core.readReg(axp517_regs::ctrl::GPIO_CFG);
+}
+
+PmicGpioBase::Status AXP517Gpio::setDirection(uint8_t pin, Direction dir)
+{
+    if (pin != 0) return Status::InvalidPin;
     // bit4: 0 input, 1 output
-    return _core.updateBits(ctrl::GPIO_CFG, 0x10, (dir == Direction::Output) ? 0x10 : 0x00);
+    return _core.updateBits(axp517_regs::ctrl::GPIO_CFG, 0x10, (dir == Direction::Output) ? 0x10 : 0x00) ? Status::Ok : Status::Failed;
 }
 
 PmicGpioBase::Direction AXP517Gpio::getDirection(uint8_t pin)
 {
+    if (pin != 0) return Direction::Input;
     int v = readRaw();
     if (v < 0) return Direction::Input;
     return (v & 0x10) ? Direction::Output : Direction::Input;
 }
 
-bool AXP517Gpio::setDrive(uint8_t pin, Drive drive)
+PmicGpioBase::Status AXP517Gpio::setDrive(uint8_t pin, DriveType drive)
 {
-    // bit7: 0 floating, 1 open drain output
-    return _core.updateBits(ctrl::GPIO_CFG, 0x80, (drive == Drive::OpenDrain) ? 0x80 : 0x00);
+    if (pin != 0) return Status::InvalidPin;
+    // bit7: 0 floating(push-pull), 1 open drain output
+    return _core.updateBits(axp517_regs::ctrl::GPIO_CFG, 0x80, (drive == DriveType::OpenDrain) ? 0x80 : 0x00) ? Status::Ok : Status::Failed;
 }
 
-PmicGpioBase::Drive AXP517Gpio::getDrive(uint8_t pin)
+PmicGpioBase::DriveType AXP517Gpio::getDrive(uint8_t pin)
 {
+    if (pin != 0) return DriveType::PushPull;
     int v = readRaw();
-    if (v < 0) return Drive::Floating;
-    return (v & 0x80) ? Drive::OpenDrain : Drive::Floating;
+    if (v < 0) return DriveType::PushPull;
+    return (v & 0x80) ? DriveType::OpenDrain : DriveType::PushPull;
 }
 
 bool AXP517Gpio::setOutputSource(uint8_t pin, OutputSource src)
 {
+    if (pin != 0) return false;
     // bit[3:2]: 0=by reg11[1:0], 1=PD_IRQ
     uint8_t field = (src == OutputSource::PdIrq) ? 0x01 : 0x00;
-    return _core.updateBits(ctrl::GPIO_CFG, 0x0C, (uint8_t)(field << 2));
+    return _core.updateBits(axp517_regs::ctrl::GPIO_CFG, 0x0C, (uint8_t)(field << 2));
 }
 
 AXP517Gpio::OutputSource AXP517Gpio::getOutputSource(uint8_t pin)
 {
+    if (pin != 0) return OutputSource::ByReg11;
     int v = readRaw();
     if (v < 0) return OutputSource::ByReg11;
 
@@ -55,33 +65,36 @@ AXP517Gpio::OutputSource AXP517Gpio::getOutputSource(uint8_t pin)
     return (field == 0x01) ? OutputSource::PdIrq : OutputSource::ByReg11;
 }
 
-bool AXP517Gpio::read(uint8_t pin, bool &high)
+PmicGpioBase::Status AXP517Gpio::read(uint8_t pin, bool &high)
 {
+    if (pin != 0) return Status::InvalidPin;
     int v = readRaw();
-    if (v < 0) return false;
+    if (v < 0) return Status::Failed;
 
     // bit1: GPIO input status
     high = (v & 0x02) != 0;
-    return true;
+    return Status::Ok;
 }
 
-bool AXP517Gpio::write(uint8_t pin, Level level)
+PmicGpioBase::Status AXP517Gpio::write(uint8_t pin, Level level)
 {
+    if (pin != 0) return Status::InvalidPin;
+
     if (getOutputSource(pin) == OutputSource::PdIrq) {
-        return false;
+        return Status::Failed;
     }
 
     if (getDirection(pin) != Direction::Output) {
-        return false;
+        return Status::Failed;
     }
 
-    Drive drive = getDrive(pin);
+    DriveType drive = getDrive(pin);
 
-    if (drive == Drive::OpenDrain) {
+    if (drive == DriveType::OpenDrain) {
         // bit6: OD output configure: 0 hiz, 1 low
         // Open-drain does not support forced drive high: High -> HiZ (external pull-up)
         uint8_t od = (level == Level::Low) ? 0x40 : 0x00;
-        return _core.updateBits(ctrl::GPIO_CFG, 0x40, od);
+        return _core.updateBits(axp517_regs::ctrl::GPIO_CFG, 0x40, od) ? Status::Ok : Status::Failed;
     }
 
     uint8_t code = 0;
@@ -93,5 +106,5 @@ bool AXP517Gpio::write(uint8_t pin, Level level)
     }
 
     // bits[1:0]
-    return _core.updateBits(ctrl::GPIO_CFG, 0x03, code);
+    return _core.updateBits(axp517_regs::ctrl::GPIO_CFG, 0x03, code) ? Status::Ok : Status::Failed;
 }

@@ -37,7 +37,7 @@
  *
  * Depends on:
  *  - AXP517Core for register IO
- *  - axp517::regs::bmu / axp517::regs::bc12 from AXP517Regs.hpp
+ *  - axp517_regs (struct wrapper) from AXP517Regs.hpp
  */
 class AXP517Bc12 : public PmicBc12Base
 {

@@ -47,14 +47,14 @@ public:
      * @param  ms: Desired on-level duration in milliseconds
      * @retval True on success, false on I2C failure
      */
-    bool setOnLevel(uint16_t ms) override;
+    bool setOnDurationMs(uint16_t ms) override;
 
     /**
      * @brief  Get the current power-on debounce duration
      * @param  ms: Output parameter receiving the on-level in milliseconds
      * @retval True on success, false on I2C failure
      */
-    bool getOnLevel(uint16_t &ms) const override;
+    bool getOnDurationMs(uint16_t &ms) const override;
 
     /**
      * @brief  Set the power-off debounce duration
@@ -63,14 +63,14 @@ public:
      * @param  ms: Desired off-level duration in milliseconds
      * @retval True on success, false on I2C failure
      */
-    bool setOffLevel(uint16_t ms) override;
+    bool setOffDurationMs(uint16_t ms) override;
 
     /**
      * @brief  Get the current power-off debounce duration
      * @param  ms: Output parameter receiving the off-level in milliseconds
      * @retval True on success, false on I2C failure
      */
-    bool getOffLevel(uint16_t &ms) const override;
+    bool getOffDurationMs(uint16_t &ms) const override;
 
     /**
      * @brief  Set the button IRQ trigger duration
@@ -79,14 +79,14 @@ public:
      * @param  ms: Desired IRQ-level duration in milliseconds
      * @retval True on success, false on I2C failure
      */
-    bool setIrqLevel(uint16_t ms) override;
+    bool setIrqDurationMs(uint16_t ms) override;
 
     /**
      * @brief  Get the current button IRQ trigger duration
      * @param  ms: Output parameter receiving the IRQ-level in milliseconds
      * @retval True on success, false on I2C failure
      */
-    bool getIrqLevel(uint16_t &ms) const override;
+    bool getIrqDurationMs(uint16_t &ms) const override;
 
 private:
     /**
