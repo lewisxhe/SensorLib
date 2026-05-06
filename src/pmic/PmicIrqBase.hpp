@@ -49,7 +49,7 @@ public:
      * @param  mask: Bitmask of interrupts to enable.
      * @retval True on success, false on failure.
      */
-    virtual bool enable(uint32_t mask) = 0;
+    virtual bool enable(uint64_t mask) = 0;
 
     /**
      * @brief  Disable interrupts.
@@ -57,18 +57,18 @@ public:
      * @param  mask: Bitmask of interrupts to disable.
      * @retval True on success, false on failure.
      */
-    virtual bool disable(uint32_t mask) = 0;
+    virtual bool disable(uint64_t mask) = 0;
 
     /**
      * @brief  Read interrupt status.
      * @param  clear: True to clear the status after reading, false to keep it.
      * @retval Bitmask of active interrupts.
      */
-    virtual uint32_t readStatus(bool clear = true) = 0;
+    virtual uint64_t readStatus(bool clear = true) = 0;
 
     /**
      * @brief  Clear interrupt status.
      * @retval True on success, false on failure.
      */
-    virtual bool clear() = 0;
+    virtual bool clearStatus() = 0;
 };
