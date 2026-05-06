@@ -33,9 +33,9 @@
  *
  * @section Button Overview
  * PMICs with button support typically provide:
- * - Configurable on-level timing (button press duration to trigger on)
- * - Configurable off-level timing (button hold to trigger off/power down)
- * - Configurable IRQ timing for button events
+ * - Configurable power-on press duration (button press length to trigger on)
+ * - Configurable power-off press duration (button hold to trigger off/power down)
+ * - Configurable IRQ press duration for button events
  *
  */
 #pragma once
@@ -50,7 +50,7 @@ public:
     virtual ~PmicButtonBase() = default;
 
     /**
-     * @brief Set button on-level timing
+     * @brief Set button power-on press duration
      *
      * Configures the minimum duration the button must be pressed (held low/active)
      * to trigger a power-on event.
@@ -60,10 +60,10 @@ public:
      *
      * @note Valid range is chip-specific
      */
-    virtual bool setOnLevel(uint16_t ms) = 0;
+    virtual bool setOnDurationMs(uint16_t ms) = 0;
 
     /**
-     * @brief Get button on-level timing
+     * @brief Get button power-on press duration
      *
      * Retrieves the current minimum button press duration
      * required to trigger a power-on event.
@@ -71,10 +71,10 @@ public:
      * @param[out] ms Output variable receiving the duration in milliseconds
      * @return true on success, false on failure
      */
-    virtual bool getOnLevel(uint16_t &ms) const = 0;
+    virtual bool getOnDurationMs(uint16_t &ms) const = 0;
 
     /**
-     * @brief Set button off-level timing
+     * @brief Set button power-off press duration
      *
      * Configures the minimum duration the button must be pressed (held low/active)
      * to trigger a power-off event.
@@ -84,10 +84,10 @@ public:
      *
      * @note Valid range is chip-specific
      */
-    virtual bool setOffLevel(uint16_t ms) = 0;
+    virtual bool setOffDurationMs(uint16_t ms) = 0;
 
     /**
-     * @brief Get button off-level timing
+     * @brief Get button power-off press duration
      *
      * Retrieves the current minimum button press duration
      * required to trigger a power-off event.
@@ -95,10 +95,10 @@ public:
      * @param[out] ms Output variable receiving the duration in milliseconds
      * @return true on success, false on failure
      */
-    virtual bool getOffLevel(uint16_t &ms) const = 0;
+    virtual bool getOffDurationMs(uint16_t &ms) const = 0;
 
     /**
-     * @brief Set button IRQ level timing
+     * @brief Set button IRQ trigger duration
      *
      * Configures the duration for button-related interrupt generation.
      * Some PMICs generate IRQs on button press, release, or both.
@@ -108,10 +108,10 @@ public:
      *
      * @note Valid range is chip-specific
      */
-    virtual bool setIrqLevel(uint16_t ms) = 0;
+    virtual bool setIrqDurationMs(uint16_t ms) = 0;
 
     /**
-     * @brief Get button IRQ level timing
+     * @brief Get button IRQ trigger duration
      *
      * Retrieves the current button press duration
      * configured for interrupt generation.
@@ -119,5 +119,5 @@ public:
      * @param[out] ms Output variable receiving the duration in milliseconds
      * @return true on success, false on failure
      */
-    virtual bool getIrqLevel(uint16_t &ms) const = 0;
+    virtual bool getIrqDurationMs(uint16_t &ms) const = 0;
 };
