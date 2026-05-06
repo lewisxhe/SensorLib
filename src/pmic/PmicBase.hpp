@@ -45,9 +45,12 @@
 #pragma once
 
 #include "PmicPowerBase.hpp"
+#include "PmicChannelBase.hpp"
 #include "PmicChargerBase.hpp"
 #include "PmicAdcBase.hpp"
+#include "PmicGpioBase.hpp"
 #include "PmicLedBase.hpp"
+#include "PmicIrqBase.hpp"
 #include "../platform/SensorCommCustom.hpp"
 #include "../platform/SensorCommCustomHal.hpp"
 
@@ -69,6 +72,7 @@ enum class Capability : uint32_t {
     PmicSupportBc12        = (1 << 6),  ///< BC1.2 (USB Battery Charging) support
     PmicSupportTypeC       = (1 << 7),  ///< USB Type-C support
     PmicSupportPowerBtn    = (1 << 8),  ///< Power-on/Power-off control support
+    PmicSupportChannel     = (1 << 9),  ///< Power output channel control (DCDC/LDO)
 };
 
 /**
@@ -93,6 +97,21 @@ constexpr bool operator&(Capability a, Capability b)
     return (static_cast<uint32_t>(a) & static_cast<uint32_t>(b)) != 0;
 }
 }
+
+/**
+ * @brief PMIC static configuration data.
+ *
+ * Each chip implementation returns a const reference to a static instance,
+ * avoiding virtual calls for frequently queried metadata.
+ */
+struct PmicConfig {
+    const char *chipName;                    ///< e.g. "AXP2101"
+    uint8_t i2cAddress;                      ///< Default I2C address
+    uint8_t chipIdReg;                       ///< Chip ID register address
+    uint8_t chipIdValue;                     ///< Expected chip ID value
+    uint8_t channelCount;                    ///< Number of power output channels
+    PmicCapability::Capability capabilities; ///< Supported feature flags
+};
 
 /**
  * @brief PMIC Base Abstract Class
@@ -164,6 +183,12 @@ public:
     virtual PmicCapability::Capability getCapabilities() const = 0;
 
     /**
+     * @brief Get static PMIC configuration.
+     * @return Const reference to a static PmicConfig struct.
+     */
+    virtual const PmicConfig &getConfig() const = 0;
+
+    /**
      * @brief Get power management interface
      * @return Reference to power interface
      */
@@ -176,7 +201,10 @@ public:
      * @note Returns nullptr if CHARGER capability is not present
      * @see getCapabilities()
      */
-    virtual PmicChargerBase *getCharger() = 0;
+    virtual PmicChargerBase *getCharger()
+    {
+        return nullptr;
+    }
 
     /**
      * @brief Get ADC interface
@@ -188,6 +216,18 @@ public:
     virtual PmicAdcBase &adc() = 0;
 
     /**
+     * @brief Get GPIO interface
+     * @return Pointer to GPIO interface, nullptr if not supported
+     *
+     * @note GPIO support is optional across PMICs. Callers should check
+     *       for nullptr before use and/or verify capability flags.
+     */
+    virtual PmicGpioBase *getGpio()
+    {
+        return nullptr;
+    }
+
+    /**
      * @brief Get LED interface
      * @return Reference to LED interface
      *
@@ -195,6 +235,35 @@ public:
      * @see PmicLedBase
      */
     virtual PmicLedBase &led() = 0;
+
+    /**
+     * @brief Get power output channel interface
+     * @return Pointer to channel interface, nullptr if not supported
+     *
+     * @note Provides unified DCDC/LDO channel control
+     * @see PmicChannelBase
+     */
+    virtual PmicChannelBase *getChannel()
+    {
+        return nullptr;
+    }
+
+    /**
+     * @brief Get interrupt interface
+     * @return Pointer to interrupt interface, nullptr if not supported
+     *
+     * @note This accessor uses the "getXxx" style intentionally because IRQ
+     *       support is optional across PMICs. Callers should check for nullptr
+     *       before use (similar to getCharger()).
+     *
+     * @note Chip-specific drivers may additionally expose irq() returning a
+     *       concrete IRQ type (for chip-specific helper APIs). Use getIrq()
+     *       when working through a PmicBase pointer/reference.
+     */
+    virtual PmicIrqBase *getIrq()
+    {
+        return nullptr;
+    }
 
     /**
      * @brief Get PMIC device name
