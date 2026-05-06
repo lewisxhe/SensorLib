@@ -263,6 +263,21 @@ public:
      * @brief Get device name
      * @return "BQ25896"
      */
+    const PmicConfig &getConfig() const override
+    {
+        static const PmicConfig config = {
+            .chipName = "BQ25896",
+            .i2cAddress = 0x6B,
+            .chipIdReg = 0x14,
+            .chipIdValue = 0x02,
+            .channelCount = 0,
+            .capabilities = PmicCapability::Capability::PmicSupportCharger |
+                            PmicCapability::Capability::PmicSupportPower |
+                            PmicCapability::Capability::PmicSupportAdc,
+        };
+        return config;
+    }
+
     const char *getChipName() const override
     {
         return "BQ25896";

@@ -233,6 +233,21 @@ public:
      * @brief Get device name
      * @return "SY6970"
      */
+    const PmicConfig &getConfig() const override
+    {
+        static const PmicConfig config = {
+            .chipName = "SY6970",
+            .i2cAddress = 0x6A,
+            .chipIdReg = 0x14,
+            .chipIdValue = 0x00,
+            .channelCount = 0,
+            .capabilities = PmicCapability::Capability::PmicSupportCharger |
+                            PmicCapability::Capability::PmicSupportPower |
+                            PmicCapability::Capability::PmicSupportAdc,
+        };
+        return config;
+    }
+
     const char *getChipName() const override
     {
         return "SY6970";
