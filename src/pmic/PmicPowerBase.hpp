@@ -83,26 +83,48 @@ public:
     /**
      * @brief Enable boost functionality.
      * @param enable True to enable, false to disable.
+     *
+     * @note Not all PMICs support boost output (OTG/BOOST). For unsupported PMICs,
+     *       this method returns false.
      */
-    virtual bool enableBoost(bool enable) = 0;
+    virtual bool enableBoost(bool enable)
+    {
+        (void)enable;
+        return false;
+    };
 
     /**
      * @brief Check if boost functionality is enabled.
      * @return True if boost is enabled, false otherwise.
+     *
+     * @note Not all PMICs support boost output (OTG/BOOST). For unsupported PMICs,
+     *       this method returns false.
      */
-    virtual bool isBoostEnabled() const = 0;
+    virtual bool isBoostEnabled() const
+    {
+        return false;
+    };
 
     /**
-    * @brief Set the boost voltage.
-    * @param mv Boost voltage in millivolts.
-    */
-    virtual bool setBoostVoltage(uint16_t mv) = 0;
+     * @brief Set the boost voltage.
+     * @param mv Boost voltage in millivolts.
+     *
+     * @note Not all PMICs support boost output. Returns false for unsupported PMICs.
+     */
+    virtual bool setBoostVoltage(uint16_t mv)
+    {
+        (void)mv;
+        return false;
+    };
 
     /**
      * @brief Get the boost voltage.
      * @return Boost voltage in millivolts.
      */
-    virtual uint16_t getBoostVoltage() const = 0;
+    virtual uint16_t getBoostVoltage() const
+    {
+        return 0;
+    };
 
     /**
      * @brief Enable ship mode (battery disconnect)
@@ -117,13 +139,20 @@ public:
      * @note When ship mode is enabled, the device cannot be powered from battery.
      *       To exit ship mode, VBUS must be connected to power the system.
      */
-    virtual bool enableShipMode(bool enable) = 0;
+    virtual bool enableShipMode(bool enable)
+    {
+        (void)enable;
+        return false;
+    };
 
     /**
      * @brief Check if ship mode is enabled.
      * @return true if ship mode is active (battery disconnected)
      */
-    virtual bool isShipModeEnabled() const = 0;
+    virtual bool isShipModeEnabled() const
+    {
+        return false;
+    };
 
     /**
      * @brief Virtual destructor.
