@@ -32,4 +32,7 @@
 #include "pmic/silergy/sy6970/PmicSY6970.hpp"
 #include "pmic/ti/bq25896/PmicBQ25896.hpp"
 #include "pmic/xpowers/axp517/PmicAXP517.hpp"
+#include "pmic/xpowers/axp2101/PmicAXP2101.hpp"
+#include "pmic/xpowers/axp192/PmicAXP192.hpp"
+#include "pmic/xpowers/axp202/PmicAXP202.hpp"
 
