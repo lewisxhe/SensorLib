@@ -34,7 +34,7 @@
 #if defined(ARDUINO_ARCH_NRF52)
 
 #include <SdFat.h>              //Deplib https://github.com/adafruit/SdFat.git
-#include <SensorBHI260AP.hpp>
+#include <sensor/imu/bhi260/SensorBHI260AP.hpp>
 
 // #define USE_I2C_INTERFACE        true
 // #define USE_SPI_INTERFACE        true

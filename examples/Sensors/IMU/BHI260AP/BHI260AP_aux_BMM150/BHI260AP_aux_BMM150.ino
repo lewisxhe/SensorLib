@@ -30,7 +30,7 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
-#include <SensorBHI260AP.hpp>
+#include <sensor/imu/bhi260/SensorBHI260AP.hpp>
 #include <bosch/BoschSensorDataHelper.hpp>
 
 

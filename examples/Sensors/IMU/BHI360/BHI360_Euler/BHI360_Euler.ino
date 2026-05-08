@@ -30,7 +30,7 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
-#include <SensorBHI360.hpp>
+#include <sensor/imu/bhi360/SensorBHI360.hpp>
 #include <bosch/BoschSensorDataHelper.hpp>
 
 // #define USE_I2C_INTERFACE        true

@@ -33,7 +33,7 @@
 #include "freertos/FreeRTOS.h"
 #include "driver/spi_master.h"
 #include "driver/gpio.h"
-#include "SensorBHI260AP.hpp"
+#include "sensor/imu/bhi260/SensorBHI260AP.hpp"
 #include <bosch/BoschSensorDataHelper.hpp>
 
 #if CONFIG_BHI260
