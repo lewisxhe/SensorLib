@@ -48,6 +48,10 @@
 #define SPIClass SPIClassRP2040
 #endif
 
+#if defined(INCLUDE_DEVICES_PINS)
+#include "DevicesPins.h"
+#endif
+
 #ifdef _BV
 #undef _BV
 #endif

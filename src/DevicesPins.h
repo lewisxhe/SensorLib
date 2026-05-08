@@ -61,10 +61,16 @@
 #define SENSOR_SDA 1
 #define SENSOR_SCL 2
 #define SENSOR_IRQ 8
+
+#define PMIC_SDA 1
+#define PMIC_SCL 2
+#define PMIC_IRQ 3
+
 #define TOUCH_SDA  1
 #define TOUCH_SCL  2
 #define TOUCH_RST 14
 #define TOUCH_IRQ  13
+
 #elif defined(ARDUINO_T_DISPLAY_S3_PRO)
 // T-Display-S3-Pro CST226SE✅
 #define SENSOR_SDA 5
@@ -98,6 +104,25 @@
 #define TOUCH_SDA 39
 #define TOUCH_SCL 40
 #define TOUCH_IRQ 16
+
+#define PMIC_SDA 10
+#define PMIC_SCL 11
+#define PMIC_IRQ 21
+
+#elif defined(ARDUINO_T_WATCH_VX)
+// T-Watch-VX
+#define SENSOR_SDA 21
+#define SENSOR_SCL 22
+#define PCF8563_IRQ 37
+#define BMA423_IRQ 39
+#define TOUCH_SDA 23
+#define TOUCH_SCL 32
+#define TOUCH_IRQ 38
+
+#define PMIC_SDA 21
+#define PMIC_SCL 22
+#define PMIC_IRQ 35
+
 #elif defined(ARDUINO_T_BEAM_S3_SUPREME)
 #define OLED_SDA   (17)
 #define OLED_SCL   (18)
