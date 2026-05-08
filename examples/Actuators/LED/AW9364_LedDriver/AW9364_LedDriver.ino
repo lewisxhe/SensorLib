@@ -27,7 +27,7 @@
  * @date      2024-11-22
  */
 #include <Arduino.h>
-#include "AW9364LedDriver.hpp"
+#include <actuator/AW9364LedDriver.hpp>
 
 #ifdef ENABLE_TFT
 #include "TFT_eSPI.h"
