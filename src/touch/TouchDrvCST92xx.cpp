@@ -26,7 +26,7 @@
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2024-07-07
  */
-#include "TouchDrvCST92xx.h"
+#include "TouchDrvCST92xx.hpp"
 
 TouchDrvCST92xx::TouchDrvCST92xx(): _slave_addr(-1)
 {

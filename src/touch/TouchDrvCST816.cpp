@@ -26,7 +26,7 @@
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2023-10-06
  */
-#include "TouchDrvCST816.h"
+#include "TouchDrvCST816.hpp"
 
 const TouchPoints &TouchDrvCST816::getTouchPoints()
 {

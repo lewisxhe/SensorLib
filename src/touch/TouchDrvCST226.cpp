@@ -26,7 +26,7 @@
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2023-10-06
  */
-#include "TouchDrvCST226.h"
+#include "TouchDrvCST226.hpp"
 
 void TouchDrvCST226::reset()
 {

@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      TouchDrvCST92xx.h
+ * @file      TouchDrvCST92xx.hpp
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2024-07-07
  */

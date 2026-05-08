@@ -30,10 +30,10 @@
  */
 #pragma once
 
-#include "touch/TouchDrvCST226.h"
-#include "touch/TouchDrvCST816.h"
-#include "touch/TouchDrvCST92xx.h"
-#include "touch/TouchDrvCST3530.h"
+#include "touch/TouchDrvCST226.hpp"
+#include "touch/TouchDrvCST816.hpp"
+#include "touch/TouchDrvCST92xx.hpp"
+#include "touch/TouchDrvCST3530.hpp"
 
 static constexpr uint8_t CSTXXX_SLAVE_ADDRESS = (0x15);
 static constexpr uint8_t CST328_SLAVE_ADDRESS = (0x1A);
