@@ -1,5 +1,5 @@
 #pragma once
 
-#pragma message("WARNING: SensorBMA456H.hpp is deprecated. Include AccelerometerDrv.hpp instead for all BMA456H sensors.")
+#pragma message("WARNING: SensorBMA456H.hpp is deprecated. Include sensor/accelerometer/bma/SensorBMA456H.hpp instead.")
 
-#include "AccelerometerDrv.hpp"
+#include "sensor/accelerometer/bma/SensorBMA456H.hpp"

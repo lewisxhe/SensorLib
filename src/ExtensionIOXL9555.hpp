@@ -1,12 +1,7 @@
 #pragma once
 
-#pragma message("WARNING: ExtensionIOXL9555.hpp is deprecated. Include IoExpanderDrv.hpp instead for all XL9555.")
+#pragma message("WARNING: ExtensionIOXL9555.hpp is deprecated. Include expander/IoExpanderXL9555.hpp instead.")
 
-/*
-* Action Required:
-* 1. Search your codebase for: #include "ExtensionIOXL9555.hpp" replace #include "IoExpanderDrv.hpp"
-* 2. Replace all instances with: ExtensionIOXL9555 with IoExpanderXL9555"
- */
-#include "IoExpanderDrv.hpp"
+#include "expander/IoExpanderXL9555.hpp"
 
 using ExtensionIOXL9555 = IoExpanderXL9555;

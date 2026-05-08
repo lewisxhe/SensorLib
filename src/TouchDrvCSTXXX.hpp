@@ -1,5 +1,5 @@
 #pragma once
 
-#pragma message("WARNING: TouchDrvCSTXXX.hpp is deprecated. Include TouchDrv.hpp instead for all touch drivers.")
+#pragma message("WARNING: TouchDrvCSTXXX.hpp is deprecated. Include touch/TouchDrvCSTXXX.hpp instead.")
 
 #include "touch/TouchDrvCSTXXX.hpp"

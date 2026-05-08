@@ -1,5 +1,5 @@
 #pragma once
 
-#pragma message("WARNING: SensorCM32181.hpp is deprecated. Include LightSensorDrv.hpp instead for all CM32181 sensors.")
+#pragma message("WARNING: SensorCM32181.hpp is deprecated. Include sensor/light_sensor/SensorCM32181.hpp instead.")
 
-#include "LightSensorDrv.hpp"
+#include "sensor/light_sensor/SensorCM32181.hpp"

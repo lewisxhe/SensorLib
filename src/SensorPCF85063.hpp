@@ -1,5 +1,5 @@
 #pragma once
 
-#pragma message("WARNING: SensorPCF85063.hpp is deprecated. Include RtcDrv.hpp instead for all PCF85063 sensors.")
+#pragma message("WARNING: SensorPCF85063.hpp is deprecated. Include time/pcf85063/SensorPCF85063.hpp instead.")
 
-#include "RtcDrv.hpp"
+#include "time/pcf85063/SensorPCF85063.hpp"

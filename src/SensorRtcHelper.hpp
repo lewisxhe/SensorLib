@@ -1,5 +1,5 @@
 #pragma once
 
-#pragma message("WARNING: SensorRtcHelper.hpp is deprecated. Include RtcDrv.hpp instead for all headers.")
+#pragma message("WARNING: SensorRtcHelper.hpp is deprecated. Include time/SensorRtcHelper.hpp instead.")
 
-#include "RtcDrv.hpp"
+#include "time/SensorRtcHelper.hpp"

@@ -1,5 +1,5 @@
 #pragma once
 
-#pragma message("WARNING: IoExpanderXL9555.hpp is deprecated. Include IoExpanderDrv.hpp instead for all Io Expander.")
+#pragma message("WARNING: IoExpanderXL9555.hpp is deprecated. Include expander/IoExpanderXL9555.hpp instead.")
 
-#include "IoExpanderDrv.hpp"
+#include "expander/IoExpanderXL9555.hpp"

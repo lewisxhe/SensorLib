@@ -1,5 +1,5 @@
 #pragma once
 
-#pragma message("WARNING: GaugeAXP2602.hpp is deprecated. Include GaugeDrv.hpp instead for all AXP2602 sensors.")
+#pragma message("WARNING: GaugeAXP2602.hpp is deprecated. Include gauge/xpowers/GaugeAXP2602.hpp instead.")
 
-#include "GaugeDrv.hpp"
+#include "gauge/xpowers/GaugeAXP2602.hpp"

@@ -1,5 +1,5 @@
 #pragma once
 
-#pragma message("WARNING: GaugeBQ27220.hpp is deprecated. Include GaugeDrv.hpp instead for all BQ27220 sensors.")
+#pragma message("WARNING: GaugeBQ27220.hpp is deprecated. Include gauge/ti/GaugeBQ27220.hpp instead.")
 
-#include "GaugeDrv.hpp"
+#include "gauge/ti/GaugeBQ27220.hpp"

@@ -1,5 +1,5 @@
 #pragma once
 
-#pragma message("WARNING: SensorLTR553.hpp is deprecated. Include LightSensorDrv.hpp instead for all LTR553 sensors.")
+#pragma message("WARNING: SensorLTR553.hpp is deprecated. Include sensor/light_sensor/SensorLTR553.hpp instead.")
 
-#include "LightSensorDrv.hpp"
+#include "sensor/light_sensor/SensorLTR553.hpp"
