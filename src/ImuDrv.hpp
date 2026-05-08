@@ -29,5 +29,6 @@
 #pragma once
 
 #include "sensor/imu/qmi8658/SensorQMI8658.hpp"
-
-
+#include "sensor/imu/bhi260/SensorBHI260AP_Klio.hpp"
+#include "sensor/imu/bhi260/SensorBHI260AP.hpp"
+#include "sensor/imu/bhi360/SensorBHI360.hpp"
