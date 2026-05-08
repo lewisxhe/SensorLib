@@ -61,7 +61,7 @@ public:
     static constexpr uint32_t ADC_VBUS_CURRENT    = 0x04;   // REG82H bit 2 - VBUS current
     static constexpr uint32_t ADC_APS_VOLTAGE     = 0x02;   // REG82H bit 1 - APS voltage
     static constexpr uint32_t ADC_TS_PIN          = 0x01;   // REG82H bit 0 - TS pin
-    static constexpr uint32_t ADC_TEMP            = 0x8000; // REG83H bit 7 - Internal temp
+    static constexpr uint32_t ADC_TEMPERATURE     = 0x8000; // REG83H bit 7 - Internal temp
     static constexpr uint32_t ADC_GPIO0           = 0x0800; // REG83H bit 3 - GPIO0
     static constexpr uint32_t ADC_GPIO1           = 0x0400; // REG83H bit 2 - GPIO1
 
