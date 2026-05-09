@@ -84,26 +84,21 @@ void setup()
 
     Serial.println("\n--- ADC Test ---");
 
-    // Enable ADC channels via facade
-    auto &adc = pmic.adc();
-    adc.enableChannels(0xFF);  // Enable all channels
 
-    float val = 0;
-    if (adc.read(PmicAdcBase::Channel::BAT_VOLTAGE, val)) {
-        Serial.print("VBAT: ");
-        Serial.print(val);
-        Serial.println(" mV");
-    }
-    if (adc.read(PmicAdcBase::Channel::VBUS_VOLTAGE, val)) {
-        Serial.print("VBUS: ");
-        Serial.print(val);
-        Serial.println(" mV");
-    }
-    if (adc.read(PmicAdcBase::Channel::DIE_TEMPERATURE, val)) {
-        Serial.print("DIE: ");
-        Serial.print(val);
-        Serial.println(" C");
-    }
+    // Enable ADC channels
+    auto &adc = pmic.adc();
+    adc.enableChannels(
+        PmicAdcBase::Channel::VBUS_VOLTAGE |
+        PmicAdcBase::Channel::VBUS_CURRENT |
+        PmicAdcBase::Channel::VSYS_VOLTAGE |
+        PmicAdcBase::Channel::BAT_VOLTAGE |
+        PmicAdcBase::Channel::BAT_CURRENT |
+        PmicAdcBase::Channel::BAT_TEMPERATURE
+    );
+
+    // Enable LED set blinking
+    pmic.led().setMode(PmicLedBase::Mode::MANUAL);
+    pmic.led().setManualState(PmicLedBase::ManualState::BLINK_1HZ);
 
     Serial.println("\n=== Setup Complete ===\n");
 }
@@ -130,6 +125,11 @@ void loop()
         // ADC readings
         auto &adc = pmic.adc();
         float val = 0;
+        if (adc.read(PmicAdcBase::Channel::VBUS_VOLTAGE, val)) {
+            Serial.print("VBUS: ");
+            Serial.print(val);
+            Serial.println(" mV");
+        }
         if (adc.read(PmicAdcBase::Channel::BAT_VOLTAGE, val)) {
             Serial.print("VBAT: ");
             Serial.print(val);
@@ -139,6 +139,16 @@ void loop()
             Serial.print("IBAT: ");
             Serial.print(val);
             Serial.println(" mA");
+        }
+        if (adc.read(PmicAdcBase::Channel::DIE_TEMPERATURE, val)) {
+            Serial.print("TEMP: ");
+            Serial.print(val);
+            Serial.println(" C");
+        }
+        if (adc.read(PmicAdcBase::Channel::VSYS_VOLTAGE, val)) {
+            Serial.print("VSYS: ");
+            Serial.print(val);
+            Serial.println(" mV");
         }
     }
 

@@ -166,15 +166,13 @@ void setup()
 
     // Enable ADC channels for monitoring
     bmu.adc().enableChannels(
-           AXP517Adc::ADC_VBUS_VOLTAGE |
-           AXP517Adc::ADC_VBUS_CURRENT |
-           AXP517Adc::ADC_BAT_VOLTAGE |
-           AXP517Adc::ADC_BAT_CHARGE |
-           AXP517Adc::ADC_BAT_DISCHARGE |
-           AXP517Adc::ADC_SYSTEM_VOLTAGE |
-           AXP517Adc::ADC_DIE_TEMP |
-           AXP517Adc::ADC_TS_PIN
-       );
+           PmicAdcBase::Channel::VBUS_VOLTAGE |
+           PmicAdcBase::Channel::VBUS_CURRENT |
+           PmicAdcBase::Channel::BAT_VOLTAGE |
+           PmicAdcBase::Channel::BAT_CURRENT |
+           PmicAdcBase::Channel::VSYS_VOLTAGE |
+           PmicAdcBase::Channel::BAT_TEMPERATURE);
+
 
     const char *ssid = WIFI_SSID;
     const char *password = WIFI_PASSWORD;
