@@ -51,12 +51,6 @@ public:
     AXP202Core() = default;
     ~AXP202Core() = default;
 
-    /**
-     * @brief Implicit conversion to SensorCommWrapper reference
-     * @return Reference to this object as SensorCommWrapper
-     */
-    operator SensorCommWrapper&() { return *this; }
-
 private:
     /**
      * @brief I2C device initialization implementation

@@ -51,14 +51,6 @@ public:
     AXP192Core() = default;
     ~AXP192Core() = default;
 
-    /**
-     * @brief Implicit conversion to SensorCommWrapper for API compatibility
-     */
-    operator SensorCommWrapper &()
-    {
-        return *this;
-    }
-
 private:
     bool initImpl(uint8_t param) override;
 };
