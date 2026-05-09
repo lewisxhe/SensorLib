@@ -35,32 +35,30 @@
 class AXP517Adc : public PmicAdcBase
 {
 public:
-    /// @brief PMIC analog data channels bitmask definitions
-    static constexpr uint8_t ADC_VBUS_CURRENT    = 0x80;
-    static constexpr uint8_t ADC_BAT_DISCHARGE   = 0x40;
-    static constexpr uint8_t ADC_BAT_CHARGE      = 0x20;
-    static constexpr uint8_t ADC_DIE_TEMP        = 0x10;
-    static constexpr uint8_t ADC_SYSTEM_VOLTAGE  = 0x08;
-    static constexpr uint8_t ADC_VBUS_VOLTAGE    = 0x04;
-    static constexpr uint8_t ADC_TS_PIN          = 0x02;
-    static constexpr uint8_t ADC_BAT_VOLTAGE     = 0x01;
+    // Hardware bitmask constants (for direct register control)
+    static constexpr uint8_t ADC_VBUS_CURRENT_HW   = 0x80;
+    static constexpr uint8_t ADC_BAT_DISCHARGE_HW  = 0x40;
+    static constexpr uint8_t ADC_BAT_CHARGE_HW     = 0x20;
+    static constexpr uint8_t ADC_DIE_TEMP_HW       = 0x10;
+    static constexpr uint8_t ADC_SYSTEM_VOLTAGE_HW = 0x08;
+    static constexpr uint8_t ADC_VBUS_VOLTAGE_HW   = 0x04;
+    static constexpr uint8_t ADC_TS_PIN_HW         = 0x02;
+    static constexpr uint8_t ADC_BAT_VOLTAGE_HW    = 0x01;
 
     explicit AXP517Adc(AXP517Core &core);
 
     ~AXP517Adc() = default;
 
     /**
-     * @brief  Enable ADC channels
-     * @note   This function enables the specified ADC channels.
-     * @param  mask: A bitmask representing the channels to enable.
+     * @brief  Enable one or more ADC channels
+     * @param  mask: Bitwise OR of Channel values to enable.
      * @retval True if successful, false otherwise.
      */
     bool enableChannels(uint32_t mask) override;
 
     /**
-     * @brief  Disable ADC channels
-     * @note   This function disables the specified ADC channels.
-     * @param  mask: A bitmask representing the channels to disable.
+     * @brief  Disable one or more ADC channels
+     * @param  mask: Bitwise OR of Channel values to disable.
      * @retval True if successful, false otherwise.
      */
     bool disableChannels(uint32_t mask) override;

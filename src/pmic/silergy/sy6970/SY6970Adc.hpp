@@ -88,30 +88,22 @@ public:
     ~SY6970Adc() = default;
 
     /**
-     * @brief Enable ADC channels for conversion
+     * @brief Enable ADC channels (no-op for SY6970)
      *
-     * Enables specified ADC channels. The ADC must be running to read values.
-     * This method sets the CONV_START bit in REG_PWR_ONOFF to initiate conversions.
+     * The SY6970 has no per-channel enable control. All ADC channels
+     * are always available. Use startConversion() or setContinuousMode()
+     * to control ADC operation.
      *
-     * @param mask Bitmask of channels to enable (from PmicAdcBase::Channel)
-     * @return true on success, false on I2C error
-     *
-     * @note The mask parameter is retained for compatibility but currently enables
-     *       the ADC conversion (start bit) rather than selecting specific channels.
-     *       All ADC channels are always enabled in the SY6970.
-     *
-     * @see disableChannels()
-     * @see startConversion()
+     * @param mask Channel mask (ignored)
+     * @return true always
      */
     bool enableChannels(uint32_t mask) override;
 
     /**
-     * @brief Disable ADC channels
+     * @brief Disable ADC channels (no-op for SY6970)
      *
-     * Stops ADC conversions by clearing CONV_START and CONV_RATE bits.
-     *
-     * @param mask Bitmask of channels to disable (not used, for compatibility)
-     * @return true on success, false on I2C error
+     * @param mask Channel mask (ignored)
+     * @return true always
      */
     bool disableChannels(uint32_t mask) override;
 

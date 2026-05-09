@@ -36,17 +36,14 @@ BQ25896Adc::BQ25896Adc(BQ25896Core &core) : _core(core) {}
 
 bool BQ25896Adc::enableChannels(uint32_t mask)
 {
-    uint8_t val = MASK_CONV_START;
-    if (mask & ADC_CONV_RATE) {
-        val |= MASK_CONV_RATE;
-    }
-    return _core.updateBits(REG_PWR_ONOFF, MASK_CONV_START | MASK_CONV_RATE, val) >= 0;
+    (void)mask;
+    return true;  // BQ25896 has no per-channel enable control
 }
 
 bool BQ25896Adc::disableChannels(uint32_t mask)
 {
     (void)mask;
-    return _core.updateBits(REG_PWR_ONOFF, MASK_CONV_START | MASK_CONV_RATE, 0) >= 0;
+    return true;  // BQ25896 has no per-channel enable control
 }
 
 bool BQ25896Adc::read(Channel ch, float &out)

@@ -52,32 +52,26 @@
 class AXP2101Adc : public PmicAdcBase
 {
 public:
-    /** @brief ADC channel enable bit for die temperature (REG 0x30 bit 4) */
-    static constexpr uint8_t ADC_DIE_TEMP        = 0x10;
-    /** @brief ADC channel enable bit for VSYS voltage (REG 0x30 bit 3) */
-    static constexpr uint8_t ADC_SYSTEM_VOLTAGE  = 0x08;
-    /** @brief ADC channel enable bit for VBUS voltage (REG 0x30 bit 2) */
-    static constexpr uint8_t ADC_VBUS_VOLTAGE    = 0x04;
-    /** @brief ADC channel enable bit for TS pin (REG 0x30 bit 1) */
-    static constexpr uint8_t ADC_TS_PIN          = 0x02;
-    /** @brief ADC channel enable bit for battery voltage (REG 0x30 bit 0) */
-    static constexpr uint8_t ADC_BAT_VOLTAGE     = 0x01;
+    // Hardware bitmask constants (for direct register control)
+    static constexpr uint8_t ADC_DIE_TEMP_HW     = 0x10;  // REG30H bit 4
+    static constexpr uint8_t ADC_SYSTEM_VOLTAGE_HW = 0x08; // REG30H bit 3
+    static constexpr uint8_t ADC_VBUS_VOLTAGE_HW  = 0x04;  // REG30H bit 2
+    static constexpr uint8_t ADC_TS_PIN_HW        = 0x02;  // REG30H bit 1
+    static constexpr uint8_t ADC_BAT_VOLTAGE_HW   = 0x01;  // REG30H bit 0
 
     explicit AXP2101Adc(AXP2101Core &core);
     ~AXP2101Adc() = default;
 
     /**
      * @brief Enable one or more ADC channels (REG 0x30).
-     * @param mask Bitmask of ADC channel bits to enable. Use ADC_xxx constants.
-     *             Only bits [5:0] are used; higher bits are ignored.
+     * @param mask Bitwise OR of Channel values to enable.
      * @return true on success.
      */
     bool enableChannels(uint32_t mask) override;
 
     /**
      * @brief Disable one or more ADC channels (REG 0x30).
-     * @param mask Bitmask of ADC channel bits to disable. Use ADC_xxx constants.
-     *             Only bits [5:0] are used; higher bits are ignored.
+     * @param mask Bitwise OR of Channel values to disable.
      * @return true on success.
      */
     bool disableChannels(uint32_t mask) override;

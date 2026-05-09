@@ -52,18 +52,18 @@
 class AXP202Adc : public axp1xx::AXP1xxAdc<AXP202Core, axp1xx::AdcTraitsBase<AXP202Core>>
 {
 public:
-    // Channel enable masks for backward compatibility
-    static constexpr uint32_t ADC_BAT_VOLTAGE     = 0x80;   // REG82H bit 7 - Battery voltage
-    static constexpr uint32_t ADC_BAT_CURRENT     = 0x40;   // REG82H bit 6 - Battery current
-    static constexpr uint32_t ADC_ACIN_VOLTAGE    = 0x20;   // REG82H bit 5 - ACIN voltage
-    static constexpr uint32_t ADC_ACIN_CURRENT    = 0x10;   // REG82H bit 4 - ACIN current
-    static constexpr uint32_t ADC_VBUS_VOLTAGE    = 0x08;   // REG82H bit 3 - VBUS voltage
-    static constexpr uint32_t ADC_VBUS_CURRENT    = 0x04;   // REG82H bit 2 - VBUS current
-    static constexpr uint32_t ADC_APS_VOLTAGE     = 0x02;   // REG82H bit 1 - APS voltage
-    static constexpr uint32_t ADC_TS_PIN          = 0x01;   // REG82H bit 0 - TS pin
-    static constexpr uint32_t ADC_TEMPERATURE     = 0x8000; // REG83H bit 7 - Internal temp
-    static constexpr uint32_t ADC_GPIO0           = 0x0800; // REG83H bit 3 - GPIO0
-    static constexpr uint32_t ADC_GPIO1           = 0x0400; // REG83H bit 2 - GPIO1
+    // Hardware bitmask constants (for direct register control)
+    static constexpr uint32_t ADC_BAT_VOLTAGE_HW  = 0x80;   // REG82H bit 7
+    static constexpr uint32_t ADC_BAT_CURRENT_HW  = 0x40;   // REG82H bit 6
+    static constexpr uint32_t ADC_ACIN_VOLTAGE_HW = 0x20;   // REG82H bit 5
+    static constexpr uint32_t ADC_ACIN_CURRENT_HW = 0x10;   // REG82H bit 4
+    static constexpr uint32_t ADC_VBUS_VOLTAGE_HW = 0x08;   // REG82H bit 3
+    static constexpr uint32_t ADC_VBUS_CURRENT_HW = 0x04;   // REG82H bit 2
+    static constexpr uint32_t ADC_APS_VOLTAGE_HW  = 0x02;   // REG82H bit 1
+    static constexpr uint32_t ADC_TS_PIN_HW       = 0x01;   // REG82H bit 0
+    static constexpr uint32_t ADC_TEMPERATURE_HW  = 0x8000; // REG83H bit 7
+    static constexpr uint32_t ADC_GPIO0_HW        = 0x0800; // REG83H bit 3
+    static constexpr uint32_t ADC_GPIO1_HW        = 0x0400; // REG83H bit 2
 
     /**
      * @brief Construct AXP202 ADC interface

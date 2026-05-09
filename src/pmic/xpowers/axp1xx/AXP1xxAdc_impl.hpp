@@ -36,38 +36,49 @@ namespace axp1xx {
 template<typename CoreType, typename RegTraits>
 bool AXP1xxAdc<CoreType, RegTraits>::enableChannels(uint32_t mask)
 {
-    uint8_t en1 = mask & 0xFF;
-    uint8_t en2 = (mask >> 8) & 0xFF;
+    uint8_t en1 = 0, en2 = 0;
+    bool hasSpecial = false;
 
-    // Update ADC_EN1 register if mask has bits in lower byte
-    if (en1 || (!en2 && mask)) {  // Always try EN1 if any mask bits present
-        int val = _core.readReg(RegTraits::ADC_EN1_ADDR);
-        if (val < 0) return false;
-        val |= en1;
-        if (_core.writeReg(RegTraits::ADC_EN1_ADDR, static_cast<uint8_t>(val)) < 0) {
-            return false;
+    // Translate each Channel bit to chip-specific register mask
+    forEachChannel(mask, [&](uint32_t bit) {
+        auto ch = static_cast<PmicAdcBase::Channel>(bit);
+        uint32_t hwMask = RegTraits::getChannelMask(ch);
+        en1 |= hwMask & 0xFF;
+        en2 |= (hwMask >> 8) & 0xFF;
+        if (RegTraits::hasSpecialEnablement(ch)) {
+            hasSpecial = true;
         }
-    }
+    });
 
-    // Update ADC_EN2 register if mask has bits in upper byte
-    if (en2) {
-        int val = _core.readReg(RegTraits::ADC_EN2_ADDR);
-        if (val < 0) return false;
-        val |= en2;
-        if (_core.writeReg(RegTraits::ADC_EN2_ADDR, static_cast<uint8_t>(val)) < 0) {
-            return false;
-        }
-    }
-
-    // Handle special enablement requirements (e.g., TS pin on AXP2101)
-    for (int i = 0; i < 10; ++i) {
-        PmicAdcBase::Channel ch = static_cast<PmicAdcBase::Channel>(i);
-        uint32_t chMask = RegTraits::getChannelMask(ch);
-        if ((mask & chMask) && RegTraits::hasSpecialEnablement(ch)) {
-            if (!RegTraits::enableSpecialChannel(_core, ch)) {
+    if (en1 || en2) {
+        if (en1) {
+            int val = _core.readReg(RegTraits::ADC_EN1_ADDR);
+            if (val < 0) return false;
+            val |= en1;
+            if (_core.writeReg(RegTraits::ADC_EN1_ADDR, static_cast<uint8_t>(val)) < 0) {
                 return false;
             }
         }
+        if (en2) {
+            int val = _core.readReg(RegTraits::ADC_EN2_ADDR);
+            if (val < 0) return false;
+            val |= en2;
+            if (_core.writeReg(RegTraits::ADC_EN2_ADDR, static_cast<uint8_t>(val)) < 0) {
+                return false;
+            }
+        }
+    } else {
+        return false;  // No supported channels in mask
+    }
+
+    // Handle special enablement requirements (e.g., TS pin)
+    if (hasSpecial) {
+        forEachChannel(mask, [&](uint32_t bit) {
+            auto ch = static_cast<PmicAdcBase::Channel>(bit);
+            if (RegTraits::hasSpecialEnablement(ch)) {
+                RegTraits::enableSpecialChannel(_core, ch);
+            }
+        });
     }
 
     return true;
@@ -76,38 +87,47 @@ bool AXP1xxAdc<CoreType, RegTraits>::enableChannels(uint32_t mask)
 template<typename CoreType, typename RegTraits>
 bool AXP1xxAdc<CoreType, RegTraits>::disableChannels(uint32_t mask)
 {
-    uint8_t en1 = mask & 0xFF;
-    uint8_t en2 = (mask >> 8) & 0xFF;
+    uint8_t en1 = 0, en2 = 0;
+    bool hasSpecial = false;
 
-    // Update ADC_EN1 register
-    if (en1 || (!en2 && mask)) {
-        int val = _core.readReg(RegTraits::ADC_EN1_ADDR);
-        if (val < 0) return false;
-        val &= ~en1;
-        if (_core.writeReg(RegTraits::ADC_EN1_ADDR, static_cast<uint8_t>(val)) < 0) {
-            return false;
+    forEachChannel(mask, [&](uint32_t bit) {
+        auto ch = static_cast<PmicAdcBase::Channel>(bit);
+        uint32_t hwMask = RegTraits::getChannelMask(ch);
+        en1 |= hwMask & 0xFF;
+        en2 |= (hwMask >> 8) & 0xFF;
+        if (RegTraits::hasSpecialEnablement(ch)) {
+            hasSpecial = true;
         }
-    }
+    });
 
-    // Update ADC_EN2 register
-    if (en2) {
-        int val = _core.readReg(RegTraits::ADC_EN2_ADDR);
-        if (val < 0) return false;
-        val &= ~en2;
-        if (_core.writeReg(RegTraits::ADC_EN2_ADDR, static_cast<uint8_t>(val)) < 0) {
-            return false;
-        }
-    }
-
-    // Handle special disablement requirements
-    for (int i = 0; i < 10; ++i) {
-        PmicAdcBase::Channel ch = static_cast<PmicAdcBase::Channel>(i);
-        uint32_t chMask = RegTraits::getChannelMask(ch);
-        if ((mask & chMask) && RegTraits::hasSpecialEnablement(ch)) {
-            if (!RegTraits::disableSpecialChannel(_core, ch)) {
+    if (en1 || en2) {
+        if (en1) {
+            int val = _core.readReg(RegTraits::ADC_EN1_ADDR);
+            if (val < 0) return false;
+            val &= ~en1;
+            if (_core.writeReg(RegTraits::ADC_EN1_ADDR, static_cast<uint8_t>(val)) < 0) {
                 return false;
             }
         }
+        if (en2) {
+            int val = _core.readReg(RegTraits::ADC_EN2_ADDR);
+            if (val < 0) return false;
+            val &= ~en2;
+            if (_core.writeReg(RegTraits::ADC_EN2_ADDR, static_cast<uint8_t>(val)) < 0) {
+                return false;
+            }
+        }
+    } else {
+        return false;
+    }
+
+    if (hasSpecial) {
+        forEachChannel(mask, [&](uint32_t bit) {
+            auto ch = static_cast<PmicAdcBase::Channel>(bit);
+            if (RegTraits::hasSpecialEnablement(ch)) {
+                RegTraits::disableSpecialChannel(_core, ch);
+            }
+        });
     }
 
     return true;
@@ -135,7 +155,7 @@ template<typename CoreType, typename RegTraits>
 bool AXP1xxAdc<CoreType, RegTraits>::read(PmicAdcBase::Channel ch, float &out)
 {
     out = NAN;
-    
+
     // Delegate channel-specific read logic to RegTraits
     return RegTraits::readChannel(_core, ch, out);
 }

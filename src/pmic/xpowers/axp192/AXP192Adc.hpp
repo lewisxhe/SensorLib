@@ -56,16 +56,16 @@
 class AXP192Adc : public axp1xx::AXP1xxAdc<AXP192Core, axp1xx::AdcTraitsBase<AXP192Core>>
 {
 public:
-    // Channel enable masks for backward compatibility
-    static constexpr uint32_t ADC_VBUS_VOLTAGE    = 0x08;   // REG82H bit 3
-    static constexpr uint32_t ADC_VBUS_CURRENT    = 0x04;   // REG82H bit 2
-    static constexpr uint32_t ADC_ACIN_VOLTAGE    = 0x20;   // REG82H bit 5
-    static constexpr uint32_t ADC_ACIN_CURRENT    = 0x10;   // REG82H bit 4
-    static constexpr uint32_t ADC_BAT_VOLTAGE     = 0x80;   // REG82H bit 7
-    static constexpr uint32_t ADC_BAT_CURRENT     = 0x40;   // REG82H bit 6
-    static constexpr uint32_t ADC_APS_VOLTAGE     = 0x02;   // REG82H bit 1
-    static constexpr uint32_t ADC_TS_PIN          = 0x01;   // REG82H bit 0
-    static constexpr uint32_t ADC_TEMPERATURE     = 0x8000; // REG83H bit 7
+    // Hardware bitmask constants (for direct register control)
+    static constexpr uint32_t ADC_VBUS_VOLTAGE_HW = 0x08;   // REG82H bit 3
+    static constexpr uint32_t ADC_VBUS_CURRENT_HW = 0x04;   // REG82H bit 2
+    static constexpr uint32_t ADC_ACIN_VOLTAGE_HW = 0x20;   // REG82H bit 5
+    static constexpr uint32_t ADC_ACIN_CURRENT_HW = 0x10;   // REG82H bit 4
+    static constexpr uint32_t ADC_BAT_VOLTAGE_HW  = 0x80;   // REG82H bit 7
+    static constexpr uint32_t ADC_BAT_CURRENT_HW  = 0x40;   // REG82H bit 6
+    static constexpr uint32_t ADC_APS_VOLTAGE_HW  = 0x02;   // REG82H bit 1
+    static constexpr uint32_t ADC_TS_PIN_HW       = 0x01;   // REG82H bit 0
+    static constexpr uint32_t ADC_TEMPERATURE_HW  = 0x8000; // REG83H bit 7
 
     /**
      * @brief Construct ADC interface

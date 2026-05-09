@@ -99,40 +99,22 @@ public:
     ~BQ25896Adc() = default;
 
     /**
-     * @brief Enable ADC channels for conversion
+     * @brief Enable ADC channels (no-op for BQ25896)
      *
-     * Enables the ADC and optionally sets continuous conversion mode.
-     * The ADC must be enabled before reading values.
+     * The BQ25896 has no per-channel enable control. All ADC channels
+     * are always available. Use startConversion() or setContinuousMode()
+     * to control ADC operation.
      *
-     * @param mask Bitmask of flags:
-     *        - ADC_CONV_START (0x80): Start conversion (required)
-     *        - ADC_CONV_RATE (0x40): Enable continuous mode (1Hz)
-     * @return true on success, false on I2C error
-     *
-     * @note The mask is used to pass control flags, not channel selection.
-     *       All ADC channels are always enabled in the BQ25896.
-     *
-     * @code
-     * // One-shot mode - single conversion
-     * adc.enableChannels(BQ25896Adc::ADC_CONV_START);
-     * 
-     * // Continuous mode - auto-update at 1Hz
-     * adc.enableChannels(BQ25896Adc::ADC_CONV_START | BQ25896Adc::ADC_CONV_RATE);
-     * @endcode
-     *
-     * @see disableChannels()
-     * @see setContinuousMode()
+     * @param mask Channel mask (ignored)
+     * @return true always
      */
     bool enableChannels(uint32_t mask) override;
 
     /**
-     * @brief Disable ADC channels
+     * @brief Disable ADC channels (no-op for BQ25896)
      *
-     * Stops ADC conversions by clearing CONV_START and CONV_RATE bits.
-     * This saves power when ADC readings are not needed.
-     *
-     * @param mask Parameter kept for API compatibility (not used)
-     * @return true on success, false on I2C error
+     * @param mask Channel mask (ignored)
+     * @return true always
      */
     bool disableChannels(uint32_t mask) override;
 

@@ -37,9 +37,29 @@ AXP2101Adc::AXP2101Adc(AXP2101Core &core) : _core(core)
 {
 }
 
+static uint8_t axp2101_channelToMask(PmicAdcBase::Channel ch)
+{
+    switch (ch) {
+    case PmicAdcBase::Channel::BAT_VOLTAGE:      return 0x01;
+    case PmicAdcBase::Channel::BAT_TEMPERATURE:  return 0x02;
+    case PmicAdcBase::Channel::VBUS_VOLTAGE:     return 0x04;
+    case PmicAdcBase::Channel::VSYS_VOLTAGE:     return 0x08;
+    case PmicAdcBase::Channel::DIE_TEMPERATURE:  return 0x10;
+    default:                                     return 0;
+    }
+}
+
 bool AXP2101Adc::enableChannels(uint32_t mask)
 {
-    if (mask & ADC_TS_PIN) {
+    uint8_t hwMask = 0;
+    forEachChannel(mask, [&](uint32_t bit) {
+        auto ch = static_cast<Channel>(bit);
+        hwMask |= axp2101_channelToMask(ch);
+    });
+    if (hwMask == 0) return false;
+
+    // TS pin special handling
+    if (hwMask & 0x02) {
         int tsCtrl = _core.readReg(axp2101_regs::ts::TS_PIN_CTRL);
         if (tsCtrl < 0) return false;
         tsCtrl &= 0xE0;
@@ -49,13 +69,20 @@ bool AXP2101Adc::enableChannels(uint32_t mask)
 
     int regVal = _core.readReg(axp2101_regs::adc::CHANNEL_CTRL);
     if (regVal < 0) return false;
-    regVal |= (mask & 0x3F);
+    regVal |= hwMask;
     return _core.writeReg(axp2101_regs::adc::CHANNEL_CTRL, static_cast<uint8_t>(regVal)) >= 0;
 }
 
 bool AXP2101Adc::disableChannels(uint32_t mask)
 {
-    if (mask & ADC_TS_PIN) {
+    uint8_t hwMask = 0;
+    forEachChannel(mask, [&](uint32_t bit) {
+        auto ch = static_cast<Channel>(bit);
+        hwMask |= axp2101_channelToMask(ch);
+    });
+    if (hwMask == 0) return false;
+
+    if (hwMask & 0x02) {
         int tsCtrl = _core.readReg(axp2101_regs::ts::TS_PIN_CTRL);
         if (tsCtrl < 0) return false;
         tsCtrl &= 0xF0;
@@ -65,7 +92,7 @@ bool AXP2101Adc::disableChannels(uint32_t mask)
 
     int regVal = _core.readReg(axp2101_regs::adc::CHANNEL_CTRL);
     if (regVal < 0) return false;
-    regVal &= ~(mask & 0x3F);
+    regVal &= ~hwMask;
     return _core.writeReg(axp2101_regs::adc::CHANNEL_CTRL, static_cast<uint8_t>(regVal)) >= 0;
 }
 

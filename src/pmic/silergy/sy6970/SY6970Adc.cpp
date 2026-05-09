@@ -36,17 +36,14 @@ SY6970Adc::SY6970Adc(SY6970Core &core) : _core(core) {}
 
 bool SY6970Adc::enableChannels(uint32_t mask)
 {
-    uint8_t val = MASK_CONV_START;
-    if (mask & ADC_CONV_RATE) {
-        val |= MASK_CONV_RATE;
-    }
-    return _core.updateBits(REG_PWR_ONOFF, MASK_CONV_START | MASK_CONV_RATE, val) >= 0;
+    (void)mask;
+    return true;  // SY6970 has no per-channel enable control
 }
 
 bool SY6970Adc::disableChannels(uint32_t mask)
 {
     (void)mask;
-    return _core.updateBits(REG_PWR_ONOFF, MASK_CONV_START | MASK_CONV_RATE, 0) >= 0;
+    return true;  // SY6970 has no per-channel enable control
 }
 
 bool SY6970Adc::read(Channel ch, float &out)

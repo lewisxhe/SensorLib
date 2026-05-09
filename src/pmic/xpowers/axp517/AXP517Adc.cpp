@@ -35,19 +35,45 @@ AXP517Adc::AXP517Adc(AXP517Core &core) : _core(core)
 {
 }
 
+static uint8_t axp517_channelToMask(PmicAdcBase::Channel ch)
+{
+    switch (ch) {
+    case PmicAdcBase::Channel::BAT_VOLTAGE:      return 0x01;
+    case PmicAdcBase::Channel::BAT_TEMPERATURE:  return 0x02;
+    case PmicAdcBase::Channel::VBUS_VOLTAGE:     return 0x04;
+    case PmicAdcBase::Channel::VSYS_VOLTAGE:     return 0x08;
+    case PmicAdcBase::Channel::DIE_TEMPERATURE:  return 0x10;
+    case PmicAdcBase::Channel::BAT_CURRENT:      return 0x60; // BAT_CHARGE | BAT_DISCHARGE
+    case PmicAdcBase::Channel::VBUS_CURRENT:     return 0x80;
+    default:                                     return 0;
+    }
+}
+
 bool AXP517Adc::enableChannels(uint32_t mask)
 {
+    uint8_t hwMask = 0;
+    forEachChannel(mask, [&](uint32_t bit) {
+        auto ch = static_cast<Channel>(bit);
+        hwMask |= axp517_channelToMask(ch);
+    });
+    if (hwMask == 0) return false;
     int regVal = _core.readReg(axp517_regs::adc::ENABLE);
     if (regVal < 0) return false;
-    regVal |= mask;
+    regVal |= hwMask;
     return _core.writeReg(axp517_regs::adc::ENABLE, static_cast<uint8_t>(regVal)) == 0;
 }
 
 bool AXP517Adc::disableChannels(uint32_t mask)
 {
+    uint8_t hwMask = 0;
+    forEachChannel(mask, [&](uint32_t bit) {
+        auto ch = static_cast<Channel>(bit);
+        hwMask |= axp517_channelToMask(ch);
+    });
+    if (hwMask == 0) return false;
     int regVal = _core.readReg(axp517_regs::adc::ENABLE);
     if (regVal < 0) return false;
-    regVal &= ~mask;
+    regVal &= ~hwMask;
     return _core.writeReg(axp517_regs::adc::ENABLE, static_cast<uint8_t>(regVal)) == 0;
 }
 

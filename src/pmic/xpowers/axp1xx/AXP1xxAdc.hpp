@@ -59,25 +59,23 @@ public:
     ~AXP1xxAdc() = default;
 
     /**
-     * @brief Enable one or more ADC measurement channels
+     * @brief Enable one or more ADC channels
      *
-     * Updates the ADC enable registers (ADC_EN1 and optionally ADC_EN2)
-     * to activate the requested channels. Handles both single and dual
-     * register configurations transparently.
+     * Maps each Channel bit to chip-specific enable mask via RegTraits,
+     * then sets the appropriate bits in ADC enable registers.
+     * Supports single or combined channels:
+     *   adc.enableChannels(Channel::BAT_VOLTAGE | Channel::VBUS_VOLTAGE);
      *
-     * @param mask Bitwise OR of channel-specific enable constants
-     * @return true on success, false on I2C error
+     * @param mask Bitwise OR of Channel values or chip-specific mask constants
+     * @return true on success, false if channel not supported or I2C error
      */
     bool enableChannels(uint32_t mask) override;
 
     /**
-     * @brief Disable one or more ADC measurement channels
+     * @brief Disable one or more ADC channels
      *
-     * Clears bits in the ADC enable registers corresponding to the
-     * requested channels.
-     *
-     * @param mask Bitwise OR of channel-specific disable constants
-     * @return true on success, false on I2C error
+     * @param mask Bitwise OR of Channel values or chip-specific mask constants
+     * @return true on success, false if channel not supported or I2C error
      */
     bool disableChannels(uint32_t mask) override;
 
