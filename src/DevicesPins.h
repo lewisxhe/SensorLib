@@ -95,6 +95,9 @@
 #define TOUCH_SCL 2
 #define TOUCH_IRQ 12
 #define TOUCH_RST -1
+#define PMIC_SDA 3
+#define PMIC_SCL 2
+#define PMIC_IRQ 7
 #elif defined(ARDUINO_T_WATCH_S3)
 // T-Watch-S3
 #define SENSOR_SDA 10
