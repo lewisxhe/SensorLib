@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
             input_file = fopen(argv[i], "rb");
             if (input_file)
             {
-                sprintf(output_file_name, "%s" ".h", (char *)argv[i]);
+                snprintf(output_file_name, sizeof(output_file_name), "%s.h", (char *)argv[i]);
                 printf("Copying firmware to %s\n", output_file_name);
                 output_file = fopen(output_file_name, "w");
                 if (output_file)
