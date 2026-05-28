@@ -58,6 +58,10 @@ public:
 
     ~AXP1xxAdc() = default;
 
+
+    using PmicAdcBase::enableChannels;
+    using PmicAdcBase::disableChannels;
+
     /**
      * @brief Enable one or more ADC channels
      *

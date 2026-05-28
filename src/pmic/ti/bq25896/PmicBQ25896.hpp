@@ -212,7 +212,7 @@ public:
      * - enableBoost(bool) [requires no VBUS connected]
      * - setBoostVoltage(uint16_t mv) [quantized to 64mV step, 4550-5510mV]
      */
-    PmicPowerBase &power() override
+    PmicPowerBase &getPower() override
     {
         return _power;
     }
@@ -233,7 +233,7 @@ public:
      * @warning BAT_TEMPERATURE returns percentage (21-80%), NOT temperature!
      *          See BQ25896Adc.hpp documentation for details.
      */
-    PmicAdcBase &adc() override
+    PmicAdcBase &getAdc() override
     {
         return _adc;
     }
@@ -254,9 +254,26 @@ public:
      * @see PmicLedBase for available methods
      * @see BQ25896Led for chip-specific implementation
      */
-    PmicLedBase &led() override
+    PmicLedBase &getLed() override
     {
         return _led;
+    }
+
+    // ---- Chip-specific module accessors ----
+
+    BQ25896Power &power()
+    {
+        return _power;
+    }
+
+    BQ25896Led &led()
+    {
+        return _led;
+    }
+
+    BQ25896Adc &adc()
+    {
+        return _adc;
     }
 
     /**

@@ -192,7 +192,7 @@ public:
      * @brief Get power management interface
      * @return Reference to power interface
      */
-    virtual PmicPowerBase &power() = 0;
+    virtual PmicPowerBase &getPower() = 0;
 
     /**
      * @brief Get charger interface
@@ -213,7 +213,7 @@ public:
      * @note Returns reference to ADC implementation
      * @see PmicAdcBase
      */
-    virtual PmicAdcBase &adc() = 0;
+    virtual PmicAdcBase &getAdc() = 0;
 
     /**
      * @brief Get GPIO interface
@@ -234,7 +234,7 @@ public:
      * @note Returns reference to LED implementation
      * @see PmicLedBase
      */
-    virtual PmicLedBase &led() = 0;
+    virtual PmicLedBase &getLed() = 0;
 
     /**
      * @brief Get power output channel interface

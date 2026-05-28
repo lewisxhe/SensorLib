@@ -201,7 +201,7 @@ public:
      * @brief Access the power management interface
      * @return Reference to AXP1xxPower instance
      */
-    PmicPowerBase &power() override
+    PmicPowerBase &getPower() override
     {
         return _power;
     }
@@ -219,7 +219,7 @@ public:
      * @brief Access the ADC interface
      * @return Reference to AXP192Adc instance
      */
-    PmicAdcBase &adc() override
+    PmicAdcBase &getAdc() override
     {
         return _adc;
     }
@@ -233,7 +233,7 @@ public:
      * @brief Access the LED interface
      * @return Reference to AXP1xxLed instance
      */
-    PmicLedBase &led() override
+    PmicLedBase &getLed() override
     {
         return _led;
     }
@@ -283,7 +283,7 @@ public:
      * @brief Access the LED module
      * @return Reference to AXP1xxLed instance
      */
-    AXP1xxLed<axp192_regs> &ledModule()
+    AXP1xxLed<axp192_regs> &led()
     {
         return _led;
     }
@@ -319,7 +319,7 @@ public:
      * @brief Access the chip-specific ADC interface
      * @return Reference to AXP192Adc instance
      */
-    AXP192Adc &chipAdc()
+    AXP192Adc &adc()
     {
         return _adc;
     }

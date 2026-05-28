@@ -108,6 +108,10 @@ public:
      * @param mask Channel mask (ignored)
      * @return true always
      */
+
+    using PmicAdcBase::enableChannels;
+    using PmicAdcBase::disableChannels;
+
     bool enableChannels(uint32_t mask) override;
 
     /**

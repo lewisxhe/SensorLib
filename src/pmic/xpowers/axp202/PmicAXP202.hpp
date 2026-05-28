@@ -203,7 +203,7 @@ public:
      * @brief Access the power management interface
      * @return Reference to AXP1xxPower
      */
-    PmicPowerBase &power() override
+    PmicPowerBase &getPower() override
     {
         return _power;
     }
@@ -221,7 +221,7 @@ public:
      * @brief Access the ADC interface
      * @return Reference to AXP202Adc
      */
-    PmicAdcBase &adc() override
+    PmicAdcBase &getAdc() override
     {
         return _adc;
     }
@@ -235,7 +235,7 @@ public:
      * @brief Access the LED control interface
      * @return Reference to AXP1xxLed
      */
-    PmicLedBase &led() override
+    PmicLedBase &getLed() override
     {
         return _led;
     }
@@ -305,7 +305,7 @@ public:
      * @brief Access the ADC interface (chip-specific)
      * @return Reference to AXP202Adc
      */
-    AXP202Adc &chipAdc()
+    AXP202Adc &adc()
     {
         return _adc;
     }
@@ -323,7 +323,7 @@ public:
      * @brief Access AXP202-specific power extensions (DCDC mode, APS warning)
      * @return Reference to AXP202PowerEx
      */
-    AXP202PowerEx &powerEx()
+    AXP202PowerEx &power()
     {
         return _powerEx;
     }
@@ -344,6 +344,11 @@ public:
     AXP202Coulomb &coulomb()
     {
         return _coulomb;
+    }
+
+    AXP1xxLed<axp202_regs> &led()
+    {
+        return _led;
     }
 
     /**

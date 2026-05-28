@@ -54,6 +54,10 @@ public:
      * @param  mask: Bitwise OR of Channel values to enable.
      * @retval True if successful, false otherwise.
      */
+
+    using PmicAdcBase::enableChannels;
+    using PmicAdcBase::disableChannels;
+
     bool enableChannels(uint32_t mask) override;
 
     /**

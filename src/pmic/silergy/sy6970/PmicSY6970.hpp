@@ -186,7 +186,7 @@ public:
      * - enableBoost(bool)
      * - setBoostVoltage(uint16_t mv) [quantized to 64mV step]
      */
-    PmicPowerBase &power() override
+    PmicPowerBase &getPower() override
     {
         return _power;
     }
@@ -203,7 +203,7 @@ public:
      * - read(Channel::BAT_TEMPERATURE, float &)
      * - setContinuousMode(bool)
      */
-    PmicAdcBase &adc() override
+    PmicAdcBase &getAdc() override
     {
         return _adc;
     }
@@ -224,9 +224,26 @@ public:
      * @see PmicLedBase for available methods
      * @see SY6970Led for chip-specific implementation
      */
-    PmicLedBase &led() override
+    PmicLedBase &getLed() override
     {
         return _led;
+    }
+
+    // ---- Chip-specific module accessors ----
+
+    SY6970Power &power()
+    {
+        return _power;
+    }
+
+    SY6970Led &led()
+    {
+        return _led;
+    }
+
+    SY6970Adc &adc()
+    {
+        return _adc;
     }
 
     /**

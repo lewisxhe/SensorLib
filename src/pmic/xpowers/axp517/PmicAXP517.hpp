@@ -156,7 +156,7 @@ public:
         return config;
     }
 
-    AXP517Adc &chipAdc()
+    AXP517Adc &adc()
     {
         return _adc;
     }
@@ -166,7 +166,7 @@ public:
         return _irq;
     }
 
-    PmicPowerBase &power() override
+    PmicPowerBase &getPower() override
     {
         return _power;
     }
@@ -176,7 +176,7 @@ public:
         return &_charger;
     }
 
-    PmicAdcBase &adc() override
+    PmicAdcBase &getAdc() override
     {
         return _adc;
     }
@@ -202,9 +202,19 @@ public:
         return _bc12;
     }
 
+    PmicLedBase &getLed() override
+    {
+        return _led;
+    }
+
     AXP517Led &led()
     {
         return _led;
+    }
+
+    AXP517Power &power()
+    {
+        return _power;
     }
 
     AXP517Gpio &gpio()

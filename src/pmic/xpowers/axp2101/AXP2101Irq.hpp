@@ -74,13 +74,13 @@ public:
 
     // IRQ Status 1 (REG 49H) -- Power path and key events
     /** @brief Power key rising edge detected. */
-    static constexpr uint64_t IRQ_PKEY_POSITIVE_EDGE      = (1ULL << 8);
+    static constexpr uint64_t IRQ_PEKEY_POSITIVE_EDGE      = (1ULL << 8);
     /** @brief Power key falling edge detected. */
-    static constexpr uint64_t IRQ_PKEY_NEGATIVE_EDGE      = (1ULL << 9);
+    static constexpr uint64_t IRQ_PEKEY_NEGATIVE_EDGE      = (1ULL << 9);
     /** @brief Power key held for a long press duration. */
-    static constexpr uint64_t IRQ_PKEY_LONG_PRESS         = (1ULL << 10);
+    static constexpr uint64_t IRQ_PEKEY_LONG_PRESS         = (1ULL << 10);
     /** @brief Power key pressed briefly (short press). */
-    static constexpr uint64_t IRQ_PKEY_SHORT_PRESS        = (1ULL << 11);
+    static constexpr uint64_t IRQ_PEKEY_SHORT_PRESS        = (1ULL << 11);
     /** @brief Battery removed from the system. */
     static constexpr uint64_t IRQ_BAT_REMOVE              = (1ULL << 12);
     /** @brief Battery inserted into the system. */
@@ -149,13 +149,13 @@ public:
     /** @brief Check if battery removal interrupt is set. */
     static bool inline isBatRemove(uint64_t mask)  { return isIrqSet(IRQ_BAT_REMOVE, mask); }
     /** @brief Check if power key short press interrupt is set. */
-    static bool inline isPkeyShortPress(uint64_t mask)  { return isIrqSet(IRQ_PKEY_SHORT_PRESS, mask); }
+    static bool inline isPekeyShortPress(uint64_t mask)  { return isIrqSet(IRQ_PEKEY_SHORT_PRESS, mask); }
     /** @brief Check if power key long press interrupt is set. */
-    static bool inline isPkeyLongPress(uint64_t mask)  { return isIrqSet(IRQ_PKEY_LONG_PRESS, mask); }
+    static bool inline isPekeyLongPress(uint64_t mask)  { return isIrqSet(IRQ_PEKEY_LONG_PRESS, mask); }
     /** @brief Check if power key negative (falling) edge interrupt is set. */
-    static bool inline isPkeyNegativeEdge(uint64_t mask)  { return isIrqSet(IRQ_PKEY_NEGATIVE_EDGE, mask); }
+    static bool inline isPkeyNegativeEdge(uint64_t mask)  { return isIrqSet(IRQ_PEKEY_NEGATIVE_EDGE, mask); }
     /** @brief Check if power key positive (rising) edge interrupt is set. */
-    static bool inline isPkeyPositiveEdge(uint64_t mask)  { return isIrqSet(IRQ_PKEY_POSITIVE_EDGE, mask); }
+    static bool inline isPkeyPositiveEdge(uint64_t mask)  { return isIrqSet(IRQ_PEKEY_POSITIVE_EDGE, mask); }
 
     /** @brief Check if watchdog timer expired interrupt is set. */
     static bool inline isWdtExpire(uint64_t mask)  { return isIrqSet(IRQ_WDT_EXPIRE, mask); }

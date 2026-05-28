@@ -300,9 +300,9 @@ public:
     /** @brief AXP192 alias for isDc3VoltLess(). */
     static bool isDc3LowVol(uint64_t m) { return isDc3VoltLess(m); }
     /** @brief AXP192 alias for isPekeyShortPress(). */
-    static bool isPkeyShortPress(uint64_t m) { return isPekeyShortPress(m); }
+    // static bool isPkeyShortPress(uint64_t m) { return isPekeyShortPress(m); }
     /** @brief AXP192 alias for isPekeyLongPress(). */
-    static bool isPkeyLongPress(uint64_t m) { return isPekeyLongPress(m); }
+    // static bool isPkeyLongPress(uint64_t m) { return isPekeyLongPress(m); }
     /** @brief AXP192 alias for isNoePoweron(). */
     static bool isNoeOn(uint64_t m) { return isNoePoweron(m); }
     /** @brief AXP192 alias for isNoePowerdown(). */

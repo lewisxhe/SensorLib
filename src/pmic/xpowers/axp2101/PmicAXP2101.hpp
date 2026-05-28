@@ -184,7 +184,7 @@ public:
      * @brief Get the power management interface.
      * @return Reference to AXP2101Power.
      */
-    PmicPowerBase &power() override
+    PmicPowerBase &getPower() override
     {
         return _power;
     }
@@ -202,7 +202,7 @@ public:
      * @brief Get the ADC interface.
      * @return Reference to AXP2101Adc.
      */
-    PmicAdcBase &adc() override
+    PmicAdcBase &getAdc() override
     {
         return _adc;
     }
@@ -211,7 +211,7 @@ public:
      * @brief Get the LED interface.
      * @return Reference to AXP2101Led.
      */
-    PmicLedBase &led() override
+    PmicLedBase &getLed() override
     {
         return _led;
     }
@@ -263,7 +263,7 @@ public:
      * @brief Get the chip-specific LED module.
      * @return Reference to AXP2101Led.
      */
-    AXP2101Led &ledModule()
+    AXP2101Led &led()
     {
         return _led;
     }
@@ -290,7 +290,7 @@ public:
      * @brief Get the chip-specific ADC interface.
      * @return Reference to AXP2101Adc.
      */
-    AXP2101Adc &chipAdc()
+    AXP2101Adc &adc()
     {
         return _adc;
     }
@@ -308,7 +308,7 @@ public:
      * @brief Get the chip-specific power management interface.
      * @return Reference to AXP2101Power.
      */
-    AXP2101Power &powerEx()
+    AXP2101Power &power()
     {
         return _power;
     }
