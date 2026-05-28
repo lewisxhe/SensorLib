@@ -131,23 +131,23 @@ void setup()
     }
 
     // --- Power configuration (base-class reference) ---
-    pmic->power().setInputCurrentLimit(1000);
-    pmic->power().setInputVoltageLimit(5000);
-    pmic->power().setMinimumSystemVoltage(3300);
+    pmic->getPower().setInputCurrentLimit(1000);
+    pmic->getPower().setInputVoltageLimit(5000);
+    pmic->getPower().setMinimumSystemVoltage(3300);
 
     Serial.print("Input Current Limit: ");
-    Serial.print(pmic->power().getInputCurrentLimit());
+    Serial.print(pmic->getPower().getInputCurrentLimit());
     Serial.println(" mA");
     Serial.print("Input Voltage Limit: ");
-    Serial.print(pmic->power().getInputVoltageLimit());
+    Serial.print(pmic->getPower().getInputVoltageLimit());
     Serial.println(" mV");
     Serial.print("Min System Voltage: ");
-    Serial.print(pmic->power().getMinimumSystemVoltage());
+    Serial.print(pmic->getPower().getMinimumSystemVoltage());
     Serial.println(" mV");
 
     // --- LED configuration (base-class reference) ---
     if (caps & PmicCapability::Capability::PmicSupportLed) {
-        pmic->led().setMode(PmicLedBase::Mode::DISABLE);
+        pmic->getLed().setMode(PmicLedBase::Mode::DISABLE);
     }
 
     Serial.println("\nSetup complete! Printing status every 3s...\n");
@@ -184,22 +184,22 @@ void loop()
 
         // --- ADC readings ---
         float val;
-        if (pmic->adc().read(PmicAdcBase::Channel::VBUS_VOLTAGE, val)) {
+        if (pmic->getAdc().read(PmicAdcBase::Channel::VBUS_VOLTAGE, val)) {
             Serial.print("VBUS Voltage: ");
             Serial.print(val);
             Serial.println(" mV");
         }
-        if (pmic->adc().read(PmicAdcBase::Channel::BAT_VOLTAGE, val)) {
+        if (pmic->getAdc().read(PmicAdcBase::Channel::BAT_VOLTAGE, val)) {
             Serial.print("BAT Voltage: ");
             Serial.print(val);
             Serial.println(" mV");
         }
-        if (pmic->adc().read(PmicAdcBase::Channel::VSYS_VOLTAGE, val)) {
+        if (pmic->getAdc().read(PmicAdcBase::Channel::VSYS_VOLTAGE, val)) {
             Serial.print("VSYS Voltage: ");
             Serial.print(val);
             Serial.println(" mV");
         }
-        if (pmic->adc().read(PmicAdcBase::Channel::BAT_CURRENT, val)) {
+        if (pmic->getAdc().read(PmicAdcBase::Channel::BAT_CURRENT, val)) {
             Serial.print("BAT Current: ");
             Serial.print(val);
             Serial.println(" mA");
@@ -207,9 +207,9 @@ void loop()
 
         // --- Power status ---
         Serial.print("Boost: ");
-        Serial.println(pmic->power().isBoostEnabled() ? "Enabled" : "Disabled");
+        Serial.println(pmic->getPower().isBoostEnabled() ? "Enabled" : "Disabled");
         Serial.print("Boost Voltage: ");
-        Serial.print(pmic->power().getBoostVoltage());
+        Serial.print(pmic->getPower().getBoostVoltage());
         Serial.println(" mV");
 
         Serial.println("===================================\n");

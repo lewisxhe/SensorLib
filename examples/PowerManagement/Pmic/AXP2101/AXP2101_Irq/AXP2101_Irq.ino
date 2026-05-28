@@ -76,8 +76,8 @@ void setup()
             AXP2101Irq::IRQ_BAT_REMOVE |
             AXP2101Irq::IRQ_BAT_CHG_START |
             AXP2101Irq::IRQ_BAT_CHG_DONE |
-            AXP2101Irq::IRQ_PKEY_SHORT_PRESS |
-            AXP2101Irq::IRQ_PKEY_LONG_PRESS |
+            AXP2101Irq::IRQ_PEKEY_SHORT_PRESS |
+            AXP2101Irq::IRQ_PEKEY_LONG_PRESS |
             AXP2101Irq::IRQ_WDT_EXPIRE |
             AXP2101Irq::IRQ_DIE_OVER_TEMP
         );
@@ -110,7 +110,7 @@ void loop()
             Serial.println("Charge started");
         if (pmic.irq().isBatChgDone(irqStatus))
             Serial.println("Charge done");
-        if (pmic.irq().isPkeyShortPress(irqStatus)) {
+        if (pmic.irq().isPekeyShortPress(irqStatus)) {
             Serial.println("PEKEY short press");
             pmic.led().setMode(PmicLedBase::Mode::MANUAL);
 
@@ -142,7 +142,7 @@ void loop()
                 pmic.led().setManualState(PmicLedBase::ManualState::LEVEL_HIGH);
             }
         }
-        if (pmic.irq().isPkeyLongPress(irqStatus))
+        if (pmic.irq().isPekeyLongPress(irqStatus))
             Serial.println("PEKEY long press");
         if (pmic.irq().isWdtExpire(irqStatus))
             Serial.println("Watchdog expired");
