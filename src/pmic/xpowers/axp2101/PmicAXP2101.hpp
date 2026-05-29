@@ -175,6 +175,11 @@ public:
             PmicCapability::Capability::PmicSupportLed |
             PmicCapability::Capability::PmicSupportPowerBtn |
             PmicCapability::Capability::PmicSupportChannel,
+            // REG62H[4:0]: 0~200mA step=25, 200~1000mA step=100 (non-uniform)
+            .chargeCurrentMin  = 0,
+            .chargeCurrentMax  = 1000,
+            .chargeCurrentStep = 0,
+            .chargeCurrentSteps = 17,
         };
         return config;
     }

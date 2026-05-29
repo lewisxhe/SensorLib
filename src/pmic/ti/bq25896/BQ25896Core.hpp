@@ -312,8 +312,6 @@ public:
     bool isInputCurrentOptimizerOptimized();
 
 
-    bool disableWatchdog();
-
 private:
     bool initImpl(uint8_t param) override;
 };

@@ -193,6 +193,11 @@ public:
             PmicCapability::Capability::PmicSupportLed |
             PmicCapability::Capability::PmicSupportPowerBtn |
             PmicCapability::Capability::PmicSupportChannel,
+            // REG33H[3:0]: Icharge = [300 + N*100] mA, N=0..15
+            .chargeCurrentMin  = 300,
+            .chargeCurrentMax  = 1800,
+            .chargeCurrentStep = 100,
+            .chargeCurrentSteps = 16,
         };
         return config;
     }

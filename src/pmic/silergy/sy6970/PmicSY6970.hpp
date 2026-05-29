@@ -261,6 +261,11 @@ public:
             .capabilities = PmicCapability::Capability::PmicSupportCharger |
                             PmicCapability::Capability::PmicSupportPower |
                             PmicCapability::Capability::PmicSupportAdc,
+            // REG04[6:0]: ICHG = 64*N mA, N=0..79
+            .chargeCurrentMin  = 0,
+            .chargeCurrentMax  = 5056,
+            .chargeCurrentStep = 64,
+            .chargeCurrentSteps = 80,
         };
         return config;
     }

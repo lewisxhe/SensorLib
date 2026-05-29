@@ -193,6 +193,11 @@ public:
             PmicCapability::Capability::PmicSupportLed |
             PmicCapability::Capability::PmicSupportPowerBtn |
             PmicCapability::Capability::PmicSupportChannel,
+            // REG33H[3:0]: 16 discrete levels 100~1320mA (non-uniform ~80mA steps)
+            .chargeCurrentMin  = 100,
+            .chargeCurrentMax  = 1320,
+            .chargeCurrentStep = 0,
+            .chargeCurrentSteps = 16,
         };
         return config;
     }

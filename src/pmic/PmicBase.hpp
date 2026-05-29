@@ -111,6 +111,12 @@ struct PmicConfig {
     uint8_t chipIdValue;                     ///< Expected chip ID value
     uint8_t channelCount;                    ///< Number of power output channels
     PmicCapability::Capability capabilities; ///< Supported feature flags
+
+    // --- Charging current limits (from datasheet ICHG register) ---
+    uint16_t chargeCurrentMin;    ///< Minimum configurable charge current (mA), 0 if charging can be disabled
+    uint16_t chargeCurrentMax;    ///< Maximum configurable charge current (mA)
+    uint16_t chargeCurrentStep;   ///< Step size in mA; 0 if non-uniform (see datasheet)
+    uint8_t  chargeCurrentSteps;  ///< Total number of discrete levels
 };
 
 /**

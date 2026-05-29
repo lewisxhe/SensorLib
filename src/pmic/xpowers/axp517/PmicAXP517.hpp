@@ -152,6 +152,11 @@ public:
                             PmicCapability::Capability::PmicSupportLed |
                             PmicCapability::Capability::PmicSupportIrq |
                             PmicCapability::Capability::PmicSupportBc12,
+            // REG62H[6:0]: ICC = 64*N mA, N=0..80
+            .chargeCurrentMin  = 0,
+            .chargeCurrentMax  = 5120,
+            .chargeCurrentStep = 64,
+            .chargeCurrentSteps = 81,
         };
         return config;
     }
