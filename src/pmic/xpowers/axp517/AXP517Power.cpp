@@ -40,7 +40,7 @@ bool AXP517Power::setMinimumSystemVoltage(uint32_t mv)
     if (mv < 1000) mv = 1000;
     if (mv > 3800) mv = 3800;
     uint8_t code = (mv - 1000) / 100;
-    return _core.updateBits(axp517_regs::ctrl::MIN_SYS_VOLTAGE, 0x1F, code);
+    return _core.updateBits(axp517_regs::ctrl::MIN_SYS_VOLTAGE, 0x1F, code) >= 0;
 }
 
 uint32_t AXP517Power::getMinimumSystemVoltage() const
@@ -56,7 +56,7 @@ bool AXP517Power::setInputVoltageLimit(uint32_t mv)
     if (mv < 3600) mv = 3600;
     if (mv > 16200) mv = 16200;
     uint8_t code = (mv - 3600) / 100 + 1;
-    return _core.updateBits(axp517_regs::ctrl::INPUT_VOLT_LIMIT, 0x7F, code);
+    return _core.updateBits(axp517_regs::ctrl::INPUT_VOLT_LIMIT, 0x7F, code) >= 0;
 }
 
 uint32_t AXP517Power::getInputVoltageLimit() const
@@ -73,7 +73,7 @@ bool AXP517Power::setInputCurrentLimit(uint32_t mA)
     if (mA < 100) mA = 100;
     if (mA > 3250) mA = 3250;
     uint8_t code = (mA - 100) / 50;
-    return _core.updateBits(axp517_regs::ctrl::INPUT_CURR_LIMIT, 0xFC, code << 2);
+    return _core.updateBits(axp517_regs::ctrl::INPUT_CURR_LIMIT, 0xFC, code << 2)  >= 0;
 }
 
 uint32_t AXP517Power::getInputCurrentLimit() const
@@ -86,7 +86,7 @@ uint32_t AXP517Power::getInputCurrentLimit() const
 
 bool AXP517Power::enableBoost(bool enable)
 {
-    return _core.updateBits(axp517_regs::ctrl::MODULE_EN1, 0x10, enable ? 0x10 : 0x00);
+    return _core.updateBits(axp517_regs::ctrl::MODULE_EN1, 0x10, enable ? 0x10 : 0x00) >= 0;
 }
 
 bool AXP517Power::isBoostEnabled() const
@@ -102,7 +102,7 @@ bool AXP517Power::setBoostVoltage(uint16_t mv)
     if (n > 15) n = 15;
     int regVal = _core.readReg(axp517_regs::ctrl::BOOST_CFG);
     if (regVal < 0) return false;
-    return _core.updateBits(axp517_regs::ctrl::BOOST_CFG, 0xF0, n << 4);
+    return _core.updateBits(axp517_regs::ctrl::BOOST_CFG, 0xF0, n << 4) >= 0;
 }
 
 uint16_t AXP517Power::getBoostVoltage() const
@@ -122,3 +122,18 @@ bool AXP517Power::isShipModeEnabled() const
 {
     return _core.getRegBit(axp517_regs::bmu::STATUS0, 4);
 }
+
+bool AXP517Power::enableRBFET(bool enable) const
+{
+    // CHECK VBUS IS NOT PRESENT,IF VBUS PRESENT, RETURN FALSE
+    if (_core.getRegBit(axp517_regs::bmu::STATUS0, 5)) {
+        return false;
+    }
+    return _core.updateBits(axp517_regs::ctrl::RBFET_CTRL, 0x01, enable ? 0x01 : 0x00) >= 0;
+}
+
+bool AXP517Power::isRBFETEnabled() const
+{
+    return _core.getRegBit(axp517_regs::ctrl::RBFET_CTRL, 0);
+}
+

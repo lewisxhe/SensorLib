@@ -21,7 +21,7 @@ PmicGpioBase::Status AXP517Gpio::setDirection(uint8_t pin, Direction dir)
 {
     if (pin != 0) return Status::InvalidPin;
     // bit4: 0 input, 1 output
-    return _core.updateBits(axp517_regs::ctrl::GPIO_CFG, 0x10, (dir == Direction::Output) ? 0x10 : 0x00) ? Status::Ok : Status::Failed;
+    return _core.updateBits(axp517_regs::ctrl::GPIO_CFG, 0x10, (dir == Direction::Output) ? 0x10 : 0x00) >= 0 ? Status::Ok : Status::Failed;
 }
 
 PmicGpioBase::Direction AXP517Gpio::getDirection(uint8_t pin)
@@ -36,7 +36,7 @@ PmicGpioBase::Status AXP517Gpio::setDrive(uint8_t pin, DriveType drive)
 {
     if (pin != 0) return Status::InvalidPin;
     // bit7: 0 floating(push-pull), 1 open drain output
-    return _core.updateBits(axp517_regs::ctrl::GPIO_CFG, 0x80, (drive == DriveType::OpenDrain) ? 0x80 : 0x00) ? Status::Ok : Status::Failed;
+    return _core.updateBits(axp517_regs::ctrl::GPIO_CFG, 0x80, (drive == DriveType::OpenDrain) ? 0x80 : 0x00) >= 0 ? Status::Ok : Status::Failed;
 }
 
 PmicGpioBase::DriveType AXP517Gpio::getDrive(uint8_t pin)
@@ -52,7 +52,7 @@ bool AXP517Gpio::setOutputSource(uint8_t pin, OutputSource src)
     if (pin != 0) return false;
     // bit[3:2]: 0=by reg11[1:0], 1=PD_IRQ
     uint8_t field = (src == OutputSource::PdIrq) ? 0x01 : 0x00;
-    return _core.updateBits(axp517_regs::ctrl::GPIO_CFG, 0x0C, (uint8_t)(field << 2));
+    return _core.updateBits(axp517_regs::ctrl::GPIO_CFG, 0x0C, (uint8_t)(field << 2)) >= 0;
 }
 
 AXP517Gpio::OutputSource AXP517Gpio::getOutputSource(uint8_t pin)
@@ -106,5 +106,5 @@ PmicGpioBase::Status AXP517Gpio::write(uint8_t pin, Level level)
     }
 
     // bits[1:0]
-    return _core.updateBits(axp517_regs::ctrl::GPIO_CFG, 0x03, code) ? Status::Ok : Status::Failed;
+    return _core.updateBits(axp517_regs::ctrl::GPIO_CFG, 0x03, code) >= 0 ? Status::Ok : Status::Failed;
 }

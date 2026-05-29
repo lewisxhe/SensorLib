@@ -38,7 +38,7 @@ AXP517Charger::AXP517Charger(AXP517Core &core) : _core(core)
 
 bool AXP517Charger::enableCharging(bool enable)
 {
-    return _core.updateBits(axp517_regs::ctrl::MODULE_EN1, 0x02, enable ? 0x02 : 0x00);
+    return _core.updateBits(axp517_regs::ctrl::MODULE_EN1, 0x02, enable ? 0x02 : 0x00) >= 0;
 }
 
 bool AXP517Charger::isCharging()

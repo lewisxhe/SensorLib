@@ -121,7 +121,20 @@ public:
      * @retval True if ship mode is enabled, false otherwise.
      */
     bool isShipModeEnabled() const override;
-    
+
+    /**
+     * @brief Enable or disable the RBFET.
+     * @param enable: True to enable, false to disable.
+     * @retval True on success, false on failure.
+     */
+    bool enableRBFET(bool enable) const;
+
+    /**
+     * @brief Check if RBFET is enabled.
+     * @retval True if RBFET is enabled, false otherwise.
+     */
+    bool isRBFETEnabled() const;
+
 private:
     AXP517Core &_core;
 };
