@@ -132,7 +132,7 @@ public:
 
 #elif defined(ESP_PLATFORM)
 
-#if defined(USEING_I2C_LEGACY)
+#if defined(SENSORLIB_USE_I2C_LEGACY)
     /**
      * @brief Initialize the sensor using ESP-IDF I2C legacy interface.
      * @param port_num I2C port number (I2C_NUM0 or I2C_NUM1).

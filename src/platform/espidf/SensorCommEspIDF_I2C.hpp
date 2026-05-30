@@ -41,7 +41,7 @@
 #include "driver/i2c_master.h"
 #else
 #include "driver/i2c.h"
-#define USEING_I2C_LEGACY                       1
+#define SENSORLIB_USE_I2C_LEGACY                       1
 #endif  //ESP_IDF_VERSION
 
 #define SENSORLIB_I2C_MASTER_TIMEOUT_MS         1000
@@ -51,7 +51,7 @@ class SensorCommI2C : public SensorCommBase
 {
 public:
 
-#if defined(USEING_I2C_LEGACY)
+#if defined(SENSORLIB_USE_I2C_LEGACY)
     SensorCommI2C(i2c_port_t i2c_num, uint8_t addr, int sda, int scl, SensorHal *ptr = nullptr) :
         addr(addr), sda(sda), scl(scl), _i2cNum(i2c_num), sendStopFlag(true)
     {}
@@ -62,7 +62,7 @@ public:
 
     bool init() override
     {
-#if defined(USEING_I2C_LEGACY)
+#if defined(SENSORLIB_USE_I2C_LEGACY)
         return init_legacy();
 #else
         return init_ll_hal();
@@ -71,7 +71,7 @@ public:
 
     void deinit() override
     {
-#ifndef USEING_I2C_LEGACY
+#ifndef SENSORLIB_USE_I2C_LEGACY
         if (_i2cDevice) {
             // Initialization failed, delete device
             i2c_master_bus_rm_device(_i2cDevice);
@@ -98,7 +98,7 @@ public:
     int writeBuffer(uint8_t *buffer, size_t len)
     {
 
-#if defined(USEING_I2C_LEGACY)
+#if defined(SENSORLIB_USE_I2C_LEGACY)
         if (ESP_OK == i2c_master_write_to_device(_i2cNum, addr, buffer, len,
                 SENSORLIB_I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS)) {
             return SENSOR_OK;
@@ -114,7 +114,7 @@ public:
 
     int readBuffer(uint8_t *buf, size_t len) override
     {
-#if defined(USEING_I2C_LEGACY)
+#if defined(SENSORLIB_USE_I2C_LEGACY)
         if (ESP_OK == i2c_master_write_read_device(_i2cNum, addr, NULL, 0, buf, len,
                 SENSORLIB_I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS)) {
             return SENSOR_OK;
@@ -129,7 +129,7 @@ public:
 
     int readRegister(const uint8_t reg, uint8_t *buf, size_t len) override
     {
-#if defined(USEING_I2C_LEGACY)
+#if defined(SENSORLIB_USE_I2C_LEGACY)
         if (ESP_OK == i2c_master_write_read_device(_i2cNum, addr, (uint8_t *)&reg, 1, buf, len,
                 SENSORLIB_I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS)) {
             return SENSOR_OK;
@@ -144,7 +144,7 @@ public:
 
     int writeThenRead(const uint8_t *write_buffer, size_t write_len, uint8_t *read_buffer, size_t read_len) override
     {
-#if defined(USEING_I2C_LEGACY)
+#if defined(SENSORLIB_USE_I2C_LEGACY)
         if (ESP_OK == i2c_master_write_read_device(
                     _i2cNum,
                     addr,
@@ -188,7 +188,7 @@ public:
             break;
         }
 
-#if !defined(USEING_I2C_LEGACY)
+#if !defined(SENSORLIB_USE_I2C_LEGACY)
         deinit();
         init_ll_hal();
 #endif
@@ -198,7 +198,7 @@ private:
 
 
 
-#if defined(USEING_I2C_LEGACY)
+#if defined(SENSORLIB_USE_I2C_LEGACY)
 
     bool init_legacy()
     {
@@ -230,7 +230,7 @@ private:
         return true;
     }
 
-#else //USEING_I2C_LEGACY
+#else //SENSORLIB_USE_I2C_LEGACY
 
     // * Using the new API of esp-idf 5.x, need to pass the I2C BUS handle,
     // * which is useful when the bus shares multiple devices.
@@ -263,7 +263,7 @@ private:
 #endif //ESP 5.X
 
     uint8_t addr;
-#if defined(USEING_I2C_LEGACY)
+#if defined(SENSORLIB_USE_I2C_LEGACY)
     int sda;
     int scl;
     i2c_port_t  _i2cNum;

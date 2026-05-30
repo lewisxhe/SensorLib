@@ -82,7 +82,7 @@ public:
      */
     bool begin(TwoWire &wire, uint8_t addr, int sda, int scl) override;
 #elif defined(ESP_PLATFORM)
-#if defined(USEING_I2C_LEGACY)
+#if defined(SENSORLIB_USE_I2C_LEGACY)
     /**
      * @brief  Initialize the touch driver for ESP32 using legacy I2C
      * @note   This function initializes the touch driver with the specified I2C parameters.

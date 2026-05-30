@@ -70,7 +70,7 @@ bool SensorRtcHelper::begin(TwoWire &wire,  int sda, int scl)
 
 #elif defined(ESP_PLATFORM)
 
-#if defined(USEING_I2C_LEGACY)
+#if defined(SENSORLIB_USE_I2C_LEGACY)
 bool SensorRtcHelper::begin(i2c_port_t port_num,  int sda, int scl)
 {
     bool success = false;

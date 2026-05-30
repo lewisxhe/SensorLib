@@ -57,7 +57,7 @@ public:
     }
 
 #elif defined(ESP_PLATFORM)
-#if defined(USEING_I2C_LEGACY)
+#if defined(SENSORLIB_USE_I2C_LEGACY)
     /**
      * @brief  Initialization using the ESP-IDF I2C Legacy Interface
      * @param  port_num: I2C port number.
@@ -97,7 +97,7 @@ public:
         afterInitSuccess(_addr);
         return true;
     }
-#endif  //USEING_I2C_LEGACY
+#endif  //SENSORLIB_USE_I2C_LEGACY
 #endif  //ARDUINO
     /**
      * @brief Initialize the sensor using custom callback interface.

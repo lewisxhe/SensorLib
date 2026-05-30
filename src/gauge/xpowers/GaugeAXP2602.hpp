@@ -144,7 +144,7 @@ public:
 
 #elif defined(ESP_PLATFORM)
 
-#if defined(USEING_I2C_LEGACY)
+#if defined(SENSORLIB_USE_I2C_LEGACY)
     /**
      * @brief  Begin with ESP-IDF I2C port number.
      * @note   This function initializes the AXP2602 chip with the specified I2C parameters.

@@ -113,7 +113,7 @@ public:
 
 #elif defined(ESP_PLATFORM)
 
-#if defined(USEING_I2C_LEGACY)
+#if defined(SENSORLIB_USE_I2C_LEGACY)
 
     /**
      * @brief Initialize the touch driver using ESP-IDF legacy I2C driver.
@@ -145,7 +145,7 @@ public:
         return I2CDeviceWithHal::begin(handle, addr);
     }
 
-#endif  //USEING_I2C_LEGACY
+#endif  //SENSORLIB_USE_I2C_LEGACY
 #endif  //ARDUINO
 
     /**

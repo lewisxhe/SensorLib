@@ -647,7 +647,7 @@ public:
 
 #elif defined(ESP_PLATFORM)
 
-#if defined(USEING_I2C_LEGACY)
+#if defined(SENSORLIB_USE_I2C_LEGACY)
     bool begin(i2c_port_t port_num, int sda = -1, int scl = -1)
     {
         return I2CDeviceWithHal::begin(port_num, BQ27220_SLAVE_ADDRESS, sda, scl);

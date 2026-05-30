@@ -58,7 +58,7 @@ public:
         return true;
     }
 #elif defined(ESP_PLATFORM)
-#if defined(USEING_I2C_LEGACY)
+#if defined(SENSORLIB_USE_I2C_LEGACY)
     /**
      * @brief  Initialization using the ESP-IDF I2C Legacy Interface
      * @param  port_num: I2C port number.

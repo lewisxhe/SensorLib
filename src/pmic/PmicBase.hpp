@@ -144,7 +144,7 @@ public:
      */
     virtual bool begin(TwoWire &wire, uint8_t addr, int sda = -1, int scl = -1) = 0;
 #elif defined(ESP_PLATFORM)
-#if defined(USEING_I2C_LEGACY)
+#if defined(SENSORLIB_USE_I2C_LEGACY)
     /**
      * @brief Initialize PMIC with ESP-IDF legacy I2C API
      * @param port_num I2C port number

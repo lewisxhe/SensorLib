@@ -58,7 +58,7 @@ bool TouchDrvCSTXXX::begin(TwoWire &wire, uint8_t addr, int sda, int scl)
     return beginImpl(wire, addr, sda, scl);
 }
 #elif defined(ESP_PLATFORM)
-#if defined(USEING_I2C_LEGACY)
+#if defined(SENSORLIB_USE_I2C_LEGACY)
 bool TouchDrvCSTXXX::begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
 {
     return beginImpl(port_num, addr, sda, scl);

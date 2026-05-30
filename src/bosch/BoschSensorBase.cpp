@@ -93,7 +93,7 @@ bool BoschSensorBase::begin(SPIClass &spi, uint8_t csPin, int mosi, int miso, in
 
 #elif defined(ESP_PLATFORM)
 
-#if defined(USEING_I2C_LEGACY)
+#if defined(SENSORLIB_USE_I2C_LEGACY)
 bool BoschSensorBase::begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
 {
     if (!beginCommonStatic<SensorCommI2C, HalEspIDF>(comm, staticComm, hal, port_num, addr, sda, scl)) {
@@ -101,7 +101,7 @@ bool BoschSensorBase::begin(i2c_port_t port_num, uint8_t addr, int sda, int scl)
     }
     return initImpl(COMM_I2C);
 }
-#else   //USEING_I2C_LEGACY
+#else   //SENSORLIB_USE_I2C_LEGACY
 bool BoschSensorBase::begin(i2c_master_bus_handle_t handle, uint8_t addr)
 {
     if (!beginCommonStatic<SensorCommI2C, HalEspIDF>(comm, staticComm, hal, handle, addr)) {
@@ -109,7 +109,7 @@ bool BoschSensorBase::begin(i2c_master_bus_handle_t handle, uint8_t addr)
     }
     return initImpl(COMM_I2C);
 }
-#endif  //USEING_I2C_LEGACY
+#endif  //SENSORLIB_USE_I2C_LEGACY
 
 
 bool BoschSensorBase::begin(spi_host_device_t host, spi_device_handle_t handle, uint8_t csPin, int mosi, int miso, int sck)

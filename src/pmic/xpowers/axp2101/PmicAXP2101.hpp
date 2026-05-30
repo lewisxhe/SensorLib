@@ -93,7 +93,7 @@ public:
         return _core.begin(wire, addr, sda, scl);
     }
 #elif defined(ESP_PLATFORM)
-#if defined(USEING_I2C_LEGACY)
+#if defined(SENSORLIB_USE_I2C_LEGACY)
     /**
      * @brief Initialise the AXP2101 using ESP-IDF legacy I2C driver.
      * @param port_num I2C port number.

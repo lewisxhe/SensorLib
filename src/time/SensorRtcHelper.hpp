@@ -83,7 +83,7 @@ public:
 
 #elif defined(ESP_PLATFORM)
 
-#if defined(USEING_I2C_LEGACY)
+#if defined(SENSORLIB_USE_I2C_LEGACY)
     /**
      * @brief Initialize the RTC driver for ESP platform using legacy I2C.
      *
@@ -109,7 +109,7 @@ public:
      */
     bool begin(i2c_master_bus_handle_t handle);
 
-#endif  //USEING_I2C_LEGACY
+#endif  //SENSORLIB_USE_I2C_LEGACY
 
 #endif  // ESP_PLATFORM
 
