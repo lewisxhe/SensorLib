@@ -36,7 +36,7 @@ int8_t SensorCommStatic::sensor_static_read_data(uint8_t reg_addr, uint8_t *reg_
     if (pThis) {
         return pThis->comm->readRegister(reg_addr, reg_data, length);
     }
-    log_e("This ptr is empty!");
+    SENSORLIB_LOG_E("This pointer is null");
     return -1;
 }
 
@@ -46,7 +46,7 @@ int8_t SensorCommStatic::sensor_static_write_data(uint8_t reg_addr, const uint8_
     if (pThis) {
         return pThis->comm->writeRegister(reg_addr, (uint8_t *) reg_data, length);
     }
-    log_e("This ptr is empty!");
+    SENSORLIB_LOG_E("This pointer is null");
     return -1;
 }
 
@@ -56,6 +56,6 @@ void SensorCommStatic::sensor_static_delay_us(uint32_t us, void *private_data)
     if (pThis) {
         pThis->hal->delayMicroseconds(us);
     } else {
-        log_e("This ptr is empty!");
+        SENSORLIB_LOG_E("This pointer is null");
     }
 }

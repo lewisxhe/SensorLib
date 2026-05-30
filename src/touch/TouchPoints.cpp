@@ -65,14 +65,14 @@ uint8_t TouchPoints::getPointCount() const
 TouchPoint &TouchPoints::getPoint(uint8_t index)
 {
     if (index < pointCount) return points[index];
-    log_e("Invalid touch point index: %u", index);
+    SENSORLIB_LOG_E("Invalid touch point index: %u", index);
     return emptyPoint;
 }
 
 const TouchPoint &TouchPoints::getPoint(uint8_t index) const
 {
     if (index < pointCount) return points[index];
-    log_e("Invalid touch point index: %u", index);
+    SENSORLIB_LOG_E("Invalid touch point index: %u", index);
     return emptyPoint;
 }
 

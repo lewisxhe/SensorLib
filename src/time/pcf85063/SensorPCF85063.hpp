@@ -497,7 +497,7 @@ private:
         // Check device is online
         int val = readReg(PCF85063_RAM_REG);
         if (val < 0) {
-            log_e("Device is offline!");
+            SENSORLIB_LOG_E("Device is offline!");
             return false;
         }
 
@@ -508,10 +508,10 @@ private:
 
         // Determine whether this is PCF85063 by testing RAM register bit writability:
         // If bit 7 can be set/cleared, it is likely PCF85063.
-        writeReg(PCF85063_RAM_REG, val | _BV(7));
+        writeReg(PCF85063_RAM_REG, val | sensorlib::_bv(7));
         val = readReg(PCF85063_RAM_REG);
         if (val & 0x80) {
-            writeReg(PCF85063_RAM_REG, val & ~_BV(7));
+            writeReg(PCF85063_RAM_REG, val & ~sensorlib::_bv(7));
             val = readReg(PCF85063_RAM_REG);
             if ((val & 0x80) == 0) {
                 rlst = true;
@@ -519,7 +519,7 @@ private:
         }
 
         if (!rlst) {
-            log_e("Failed to write to RAM memory register. Maybe this chip is pcf8563.");
+            SENSORLIB_LOG_E("Failed to write to RAM memory register. Maybe this chip is pcf8563.");
             return false;
         }
 

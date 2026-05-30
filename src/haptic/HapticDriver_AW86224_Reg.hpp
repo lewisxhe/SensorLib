@@ -33,18 +33,14 @@
 
 namespace AW86224Regs {
 
-#ifdef _BV
-#undef _BV
-#endif
-#define _BV(bit)  (1U << (bit))
 
 static constexpr uint8_t SOFTRESET_VAL = 0xAA;
 
-static constexpr uint32_t EN_RAMINIT = _BV(3);
-static constexpr uint32_t VBAT_GO = _BV(1);
+static constexpr uint32_t EN_RAMINIT = 0x08;
+static constexpr uint32_t VBAT_GO = 0x02;
 
-static constexpr uint8_t PLAYCFG4_GO_ON = _BV(0);
-static constexpr uint8_t PLAYCFG4_STOP_ON = _BV(1);
+static constexpr uint8_t PLAYCFG4_GO_ON = 0x01;
+static constexpr uint8_t PLAYCFG4_STOP_ON = 0x02;
 
 static constexpr uint8_t MASK_GLB_STATE = 0x0F;
 static constexpr uint8_t STATE_STANDBY = 0;
@@ -79,9 +75,9 @@ static constexpr uint8_t F0_CALI_ACCURACY = 24;
 static constexpr uint8_t CONT_DRV1_TIME_VAL = 0x04;
 static constexpr uint8_t CONT_DRV2_TIME_VAL = 0x14;
 static constexpr uint8_t CONT_TRACK_MARGIN_VAL = 0x0F;
-static constexpr uint8_t GAIN_BYPASS_CHANGEABLE = _BV(6);
+static constexpr uint8_t GAIN_BYPASS_CHANGEABLE = 0x40;
 
-static constexpr uint8_t INT_MODE_EDGE = _BV(4);
+static constexpr uint8_t INT_MODE_EDGE = 0x10;
 static constexpr uint8_t INT_EDGE_MODE_POS = 0;
 
 
@@ -97,43 +93,43 @@ static constexpr uint8_t MASK_RESET  = 0xFF;  // write 0xAA to reset
 // ==============================================
 // Register : SYSST
 static constexpr uint8_t REG_SYSST    =  0x01;
-static constexpr uint8_t MASK_DONES   = _BV(0);
-static constexpr uint8_t MASK_OTS     = _BV(1);
-static constexpr uint8_t MASK_OCDS    = _BV(2);
-static constexpr uint8_t MASK_FF_AFS  = _BV(3);
-static constexpr uint8_t MASK_FF_AES  = _BV(4);
-static constexpr uint8_t MASK_UVLS    = _BV(5);
+static constexpr uint8_t MASK_DONES   = 0x01;
+static constexpr uint8_t MASK_OTS     = 0x02;
+static constexpr uint8_t MASK_OCDS    = 0x04;
+static constexpr uint8_t MASK_FF_AFS  = 0x08;
+static constexpr uint8_t MASK_FF_AES  = 0x10;
+static constexpr uint8_t MASK_UVLS    = 0x20;
 
 // ==============================================
 // 0x02 (RC)
 // ==============================================
 // Register : SYSINT
 static constexpr uint8_t REG_SYSINT   =  0x02;
-static constexpr uint8_t MASK_DONEI   = _BV(0);
-static constexpr uint8_t MASK_OTI     = _BV(1);
-static constexpr uint8_t MASK_OCDI    = _BV(2);
-static constexpr uint8_t MASK_FF_AFI  = _BV(3);
-static constexpr uint8_t MASK_FF_AEI  = _BV(4);
-static constexpr uint8_t MASK_UVLI    = _BV(5);
+static constexpr uint8_t MASK_DONEI   = 0x01;
+static constexpr uint8_t MASK_OTI     = 0x02;
+static constexpr uint8_t MASK_OCDI    = 0x04;
+static constexpr uint8_t MASK_FF_AFI  = 0x08;
+static constexpr uint8_t MASK_FF_AEI  = 0x10;
+static constexpr uint8_t MASK_UVLI    = 0x20;
 
 // ==============================================
 // 0x03 (RW)
 // ==============================================
 // Register : SYSINTM
 static constexpr uint8_t REG_SYSINTM  =  0x03;
-static constexpr uint8_t MASK_DONEM   = _BV(0);
-static constexpr uint8_t MASK_OTM     = _BV(1);
-static constexpr uint8_t MASK_OCDM    = _BV(2);
-static constexpr uint8_t MASK_FF_AFM  = _BV(3);
-static constexpr uint8_t MASK_FF_AEM  = _BV(4);
-static constexpr uint8_t MASK_UVLM    = _BV(5);
+static constexpr uint8_t MASK_DONEM   = 0x01;
+static constexpr uint8_t MASK_OTM     = 0x02;
+static constexpr uint8_t MASK_OCDM    = 0x04;
+static constexpr uint8_t MASK_FF_AFM  = 0x08;
+static constexpr uint8_t MASK_FF_AEM  = 0x10;
+static constexpr uint8_t MASK_UVLM    = 0x20;
 
 // ==============================================
 // 0x04 (RO)
 // ==============================================
 // Register : SYSST2
 static constexpr uint8_t REG_SYSST2   =  0x04;
-static constexpr uint8_t MASK_LDO_OK  = _BV(3);
+static constexpr uint8_t MASK_LDO_OK  = 0x08;
 
 // ==============================================
 // 0x07 (RW)
@@ -148,8 +144,8 @@ static constexpr uint8_t SHIFT_GAIN   = 0;
 // ==============================================
 // Register : PLAYCFG3
 static constexpr uint8_t REG_PLAYCFG3 =  0x08;
-static constexpr uint8_t MASK_STOP_MODE = _BV(5);
-static constexpr uint8_t MASK_BRK_EN    = _BV(2);
+static constexpr uint8_t MASK_STOP_MODE = 0x20;
+static constexpr uint8_t MASK_BRK_EN    = 0x04;
 static constexpr uint8_t MASK_PLAY_MODE = 0x03;
 static constexpr uint8_t SHIFT_PLAY_MODE = 0;
 
@@ -158,15 +154,15 @@ static constexpr uint8_t SHIFT_PLAY_MODE = 0;
 // ==============================================
 // Register : PLAYCFG4
 static constexpr uint8_t REG_PLAYCFG4 =  0x09;
-static constexpr uint8_t MASK_STOP     = _BV(1);
-static constexpr uint8_t MASK_GO       = _BV(0);
+static constexpr uint8_t MASK_STOP     = 0x02;
+static constexpr uint8_t MASK_GO       = 0x01;
 
 // ==============================================
 // 0x0A (RW)
 // ==============================================
 // Register : WAVCFG1
 static constexpr uint8_t REG_WAVCFG1  =  0x0A;
-static constexpr uint8_t MASK_SEQ1WAIT = _BV(7);
+static constexpr uint8_t MASK_SEQ1WAIT = 0x80;
 static constexpr uint8_t MASK_WAVSEQ1  = 0x7F;
 static constexpr uint8_t SHIFT_WAVSEQ1 = 0;
 
@@ -175,7 +171,7 @@ static constexpr uint8_t SHIFT_WAVSEQ1 = 0;
 // ==============================================
 // Register : WAVCFG2
 static constexpr uint8_t REG_WAVCFG2  =  0x0B;
-static constexpr uint8_t MASK_SEQ2WAIT = _BV(7);
+static constexpr uint8_t MASK_SEQ2WAIT = 0x80;
 static constexpr uint8_t MASK_WAVSEQ2  = 0x7F;
 static constexpr uint8_t SHIFT_WAVSEQ2 = 0;
 
@@ -184,7 +180,7 @@ static constexpr uint8_t SHIFT_WAVSEQ2 = 0;
 // ==============================================
 // Register : WAVCFG3
 static constexpr uint8_t REG_WAVCFG3  =  0x0C;
-static constexpr uint8_t MASK_SEQ3WAIT = _BV(7);
+static constexpr uint8_t MASK_SEQ3WAIT = 0x80;
 static constexpr uint8_t MASK_WAVSEQ3  = 0x7F;
 static constexpr uint8_t SHIFT_WAVSEQ3 = 0;
 
@@ -193,7 +189,7 @@ static constexpr uint8_t SHIFT_WAVSEQ3 = 0;
 // ==============================================
 // Register : WAVCFG4
 static constexpr uint8_t REG_WAVCFG4  =  0x0D;
-static constexpr uint8_t MASK_SEQ4WAIT = _BV(7);
+static constexpr uint8_t MASK_SEQ4WAIT = 0x80;
 static constexpr uint8_t MASK_WAVSEQ4  = 0x7F;
 static constexpr uint8_t SHIFT_WAVSEQ4 = 0;
 
@@ -202,7 +198,7 @@ static constexpr uint8_t SHIFT_WAVSEQ4 = 0;
 // ==============================================
 // Register : WAVCFG5
 static constexpr uint8_t REG_WAVCFG5  =  0x0E;
-static constexpr uint8_t MASK_SEQ5WAIT = _BV(7);
+static constexpr uint8_t MASK_SEQ5WAIT = 0x80;
 static constexpr uint8_t MASK_WAVSEQ5  = 0x7F;
 static constexpr uint8_t SHIFT_WAVSEQ5 = 0;
 
@@ -211,7 +207,7 @@ static constexpr uint8_t SHIFT_WAVSEQ5 = 0;
 // ==============================================
 // Register : WAVCFG6
 static constexpr uint8_t REG_WAVCFG6  =  0x0F;
-static constexpr uint8_t MASK_SEQ6WAIT = _BV(7);
+static constexpr uint8_t MASK_SEQ6WAIT = 0x80;
 static constexpr uint8_t MASK_WAVSEQ6  = 0x7F;
 static constexpr uint8_t SHIFT_WAVSEQ6 = 0;
 
@@ -220,7 +216,7 @@ static constexpr uint8_t SHIFT_WAVSEQ6 = 0;
 // ==============================================
 // Register : WAVCFG7
 static constexpr uint8_t REG_WAVCFG7  =  0x10;
-static constexpr uint8_t MASK_SEQ7WAIT = _BV(7);
+static constexpr uint8_t MASK_SEQ7WAIT = 0x80;
 static constexpr uint8_t MASK_WAVSEQ7  = 0x7F;
 static constexpr uint8_t SHIFT_WAVSEQ7 = 0;
 
@@ -229,7 +225,7 @@ static constexpr uint8_t SHIFT_WAVSEQ7 = 0;
 // ==============================================
 // Register : WAVCFG8
 static constexpr uint8_t REG_WAVCFG8  =  0x11;
-static constexpr uint8_t MASK_SEQ8WAIT = _BV(7);
+static constexpr uint8_t MASK_SEQ8WAIT = 0x80;
 static constexpr uint8_t MASK_WAVSEQ8  = 0x7F;
 static constexpr uint8_t SHIFT_WAVSEQ8 = 0;
 
@@ -290,8 +286,8 @@ static constexpr uint8_t SHIFT_MAINLOOP = 0;
 static constexpr uint8_t REG_CONTCFG1 =  0x18;
 static constexpr uint8_t MASK_EDGE_FRE   = 0xF0;
 static constexpr uint8_t SHIFT_EDGE_FRE  = 4;
-static constexpr uint8_t MASK_EN_F0_DET  = _BV(3);
-static constexpr uint8_t MASK_SIN_MODE   = _BV(0);
+static constexpr uint8_t MASK_EN_F0_DET  = 0x08;
+static constexpr uint8_t MASK_SIN_MODE   = 0x01;
 
 // ==============================================
 // 0x19 (RW)
@@ -322,7 +318,7 @@ static constexpr uint8_t SHIFT_BRK_GAIN = 0;
 // ==============================================
 // Register : CONTCFG6
 static constexpr uint8_t REG_CONTCFG6 =  0x1D;
-static constexpr uint8_t MASK_TRACK_EN  = _BV(7);
+static constexpr uint8_t MASK_TRACK_EN  = 0x80;
 static constexpr uint8_t MASK_DRV1_LVL  = 0x7F;
 static constexpr uint8_t SHIFT_DRV1_LVL = 0;
 
@@ -453,7 +449,7 @@ static constexpr uint8_t SHIFT_RTP_DATA = 0;
 // ==============================================
 // Register : TRGCFG1
 static constexpr uint8_t REG_TRGCFG1 = 0x33;
-static constexpr uint8_t MASK_TRG1_POS   = _BV(7);
+static constexpr uint8_t MASK_TRG1_POS   = 0x80;
 static constexpr uint8_t MASK_TRG1SEQ_P  = 0x7F;
 static constexpr uint8_t SHIFT_TRG1SEQ_P = 0;
 
@@ -462,7 +458,7 @@ static constexpr uint8_t SHIFT_TRG1SEQ_P = 0;
 // ==============================================
 // Register : TRGCFG4
 static constexpr uint8_t REG_TRGCFG4 = 0x36;
-static constexpr uint8_t MASK_TRG1_NEG   = _BV(7);
+static constexpr uint8_t MASK_TRG1_NEG   = 0x80;
 static constexpr uint8_t MASK_TRG1SEQ_N  = 0x7F;
 static constexpr uint8_t SHIFT_TRG1SEQ_N = 0;
 
@@ -471,9 +467,9 @@ static constexpr uint8_t SHIFT_TRG1SEQ_N = 0;
 // ==============================================
 // Register : TRGCFG7
 static constexpr uint8_t REG_TRGCFG7 = 0x39;
-static constexpr uint8_t MASK_TRG1_POLAR = _BV(7);
-static constexpr uint8_t MASK_TRG1_LEV   = _BV(6);
-static constexpr uint8_t MASK_TRG1_BRK   = _BV(5);
+static constexpr uint8_t MASK_TRG1_POLAR = 0x80;
+static constexpr uint8_t MASK_TRG1_LEV   = 0x40;
+static constexpr uint8_t MASK_TRG1_BRK   = 0x20;
 
 // ==============================================
 // 0x3A (RW)
@@ -482,7 +478,7 @@ static constexpr uint8_t MASK_TRG1_BRK   = _BV(5);
 static constexpr uint8_t REG_TRGCFG8 = 0x3A;
 static constexpr uint8_t MASK_TRG1_MODE = 0x18;  // bits 4:3
 static constexpr uint8_t SHIFT_TRG1_MODE = 3;
-static constexpr uint8_t MASK_TRG1_STOP = _BV(2);
+static constexpr uint8_t MASK_TRG1_STOP = 0x04;
 
 // ==============================================
 // 0x3C (RW)
@@ -538,18 +534,18 @@ static constexpr uint8_t SHIFT_RAMDATA = 0;
 // ==============================================
 // Register : SYSCTRL1
 static constexpr uint8_t REG_SYSCTRL1 = 0x43;
-static constexpr uint8_t MASK_VBAT_MODE  = _BV(7);
-static constexpr uint8_t MASK_EN_RAMINIT = _BV(3);
-static constexpr uint8_t MASK_EN_FIR     = _BV(2);
+static constexpr uint8_t MASK_VBAT_MODE  = 0x80;
+static constexpr uint8_t MASK_EN_RAMINIT = 0x08;
+static constexpr uint8_t MASK_EN_FIR     = 0x04;
 
 // ==============================================
 // 0x44 (RW)
 // ==============================================
 // Register : SYSCTRL2
 static constexpr uint8_t REG_SYSCTRL2 = 0x44;
-static constexpr uint8_t MASK_WAKE       = _BV(7);
-static constexpr uint8_t MASK_STANDBY    = _BV(6);
-static constexpr uint8_t MASK_INTN_PIN   = _BV(3);
+static constexpr uint8_t MASK_WAKE       = 0x80;
+static constexpr uint8_t MASK_STANDBY    = 0x40;
+static constexpr uint8_t MASK_INTN_PIN   = 0x08;
 static constexpr uint8_t MASK_WAVDAT_MODE = 0x03;
 static constexpr uint8_t SHIFT_WAVDAT_MODE = 0;
 
@@ -558,7 +554,7 @@ static constexpr uint8_t SHIFT_WAVDAT_MODE = 0;
 // ==============================================
 // Register : SYSCTRL7
 static constexpr uint8_t REG_SYSCTRL7 = 0x49;
-static constexpr uint8_t MASK_GAIN_BYPASS = _BV(6);
+static constexpr uint8_t MASK_GAIN_BYPASS = 0x40;
 static constexpr uint8_t MASK_D2S_GAIN    = 0x07;
 static constexpr uint8_t SHIFT_D2S_GAIN   = 0;
 
@@ -567,7 +563,7 @@ static constexpr uint8_t SHIFT_D2S_GAIN   = 0;
 // ==============================================
 // Register : PWMCFG1
 static constexpr uint8_t REG_PWMCFG1 = 0x4C;
-static constexpr uint8_t MASK_PRC_EN   = _BV(7);
+static constexpr uint8_t MASK_PRC_EN   = 0x80;
 static constexpr uint8_t MASK_PRCTIME  = 0x7F;
 static constexpr uint8_t SHIFT_PRCTIME = 0;
 
@@ -576,14 +572,14 @@ static constexpr uint8_t SHIFT_PRCTIME = 0;
 // ==============================================
 // Register : PWMCFG2
 static constexpr uint8_t REG_PWMCFG2 = 0x4D;
-static constexpr uint8_t MASK_PD_HWM   = _BV(4);  // shutdown half wave modulate
+static constexpr uint8_t MASK_PD_HWM   = 0x10;  // shutdown half wave modulate
 
 // ==============================================
 // 0x4E (RW)
 // ==============================================
 // Register : PWMCFG3
 static constexpr uint8_t REG_PWMCFG3 = 0x4E;
-static constexpr uint8_t MASK_PR_EN   = _BV(7);
+static constexpr uint8_t MASK_PR_EN   = 0x80;
 static constexpr uint8_t MASK_PRLVL   = 0x7F;
 static constexpr uint8_t SHIFT_PRLVL  = 0;
 
@@ -600,7 +596,7 @@ static constexpr uint8_t SHIFT_PRTIME = 0;
 // ==============================================
 // Register : DETCFG1
 static constexpr uint8_t REG_DETCFG1 = 0x51;
-static constexpr uint8_t MASK_RL_OS    = _BV(4);
+static constexpr uint8_t MASK_RL_OS    = 0x10;
 static constexpr uint8_t MASK_CLK_ADC  = 0x07;
 static constexpr uint8_t SHIFT_CLK_ADC = 0;
 
@@ -609,8 +605,8 @@ static constexpr uint8_t SHIFT_CLK_ADC = 0;
 // ==============================================
 // Register : DETCFG2
 static constexpr uint8_t REG_DETCFG2 = 0x52;
-static constexpr uint8_t MASK_VBAT_GO  = _BV(1);
-static constexpr uint8_t MASK_DIAG_GO  = _BV(0);
+static constexpr uint8_t MASK_VBAT_GO  = 0x02;
+static constexpr uint8_t MASK_DIAG_GO  = 0x01;
 
 // ==============================================
 // 0x53 (RO)
@@ -659,8 +655,8 @@ static constexpr uint8_t SHIFT_TRIM_LRA = 0;
 // ==============================================
 // Register : CHIPID
 static constexpr uint8_t REG_CHIPID = 0x64;
-static constexpr uint8_t MASK_CHIPID_H = _BV(6);
-static constexpr uint8_t MASK_CHIPID_L = _BV(0);
+static constexpr uint8_t MASK_CHIPID_H = 0x40;
+static constexpr uint8_t MASK_CHIPID_L = 0x01;
 
 // ==============================================
 // 0x77 (RW)

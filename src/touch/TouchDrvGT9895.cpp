@@ -167,7 +167,7 @@ uint32_t TouchDrvGT9895::getChipPID()
     addrToBeBuf(REG_FW_VERSION, buffer);
     for (int i = 0; i < 2; i++) {
         if (writeThenRead(buffer, 4, buffer, sizeof(buffer)) == -1) {
-            log_e("Failed to read firmware version");
+            SENSORLIB_LOG_E("Failed to read firmware version");
             ret = -1;
             hal->delay(5);
             continue;
@@ -176,22 +176,21 @@ uint32_t TouchDrvGT9895::getChipPID()
             ret = 0;
             break;
         }
-        log_e("Invalid fw version: checksum error!");
-        log_e("Firmware version:%*ph", (int)sizeof(buffer), buffer);
+        SENSORLIB_LOG_E("Invalid fw version: checksum error!");
         ret = -1;
         hal->delay(15);
     }
     if (ret == -1) {
-        log_e("Failed get valid firmware version");
+        SENSORLIB_LOG_E("Failed get valid firmware version");
         return 0;
     }
     memcpy(&info, buffer, sizeof(info));
     memcpy(temp_pid, info.rom_pid, sizeof(info.rom_pid));
-    log_d("ROM_PID:%s", (const char *)temp_pid);
-    log_d("ROM_VID:%*p", (int)sizeof(info.rom_vid), info.rom_vid);
-    log_d("PID:%s", (const char *)info.patch_pid);
-    log_d("VID:%*p", (int)sizeof(info.patch_vid), info.patch_vid);
-    log_d("Sensor ID:%d", info.sensor_id);
+    SENSORLIB_LOG_D("ROM_PID:%s", (const char *)temp_pid);
+    SENSORLIB_LOG_D("ROM_VID:%*p", (int)sizeof(info.rom_vid), info.rom_vid);
+    SENSORLIB_LOG_D("PID:%s", (const char *)info.patch_pid);
+    SENSORLIB_LOG_D("VID:%*p", (int)sizeof(info.patch_vid), info.patch_vid);
+    SENSORLIB_LOG_D("Sensor ID:%d", info.sensor_id);
     if (info.patch_pid[0] == '9' && info.patch_pid[1] == '8'
             && info.patch_pid[2] == '9' && info.patch_pid[3] == '5') {
         return CHIP_PID;

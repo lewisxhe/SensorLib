@@ -65,7 +65,7 @@ const TouchPoints &TouchDrvHI8561::getTouchPoints()
         uint8_t  pressure = buffer[offset + 4];
         // Once edge detection is triggered, subsequent touch points are untrusted and do not need to continue looping.
         if (x == UINT16_MAX || y == UINT16_MAX) {
-            log_e("Edge trigger detected, id %d set to invalid coordinates", i);
+            SENSORLIB_LOG_E("Edge trigger detected, id %d set to invalid coordinates", i);
             break;
         }
         _touchPoints.addPoint(x, y, pressure, i);
@@ -93,14 +93,14 @@ bool TouchDrvHI8561::initImpl(uint8_t)
     }
     uint32_t reg = buffer[0] + (buffer[1] << 8) + (buffer[2] << 16) + (buffer[3] << 24);
     if (reg != REG_INFO) {
-        log_e("Invalid touch info start address: 0x%08" PRIu32, reg);
+        SENSORLIB_LOG_E("Invalid touch info start address: 0x%08" PRIu32, reg);
         return false;
     }
 
     // Use fixed values ​​to identify chip models.
     _chipID = 0x8561;
 
-    log_d("HI8561 touch start address: 0x%08" PRIu32, reg);
+    SENSORLIB_LOG_D("HI8561 touch start address: 0x%08" PRIu32, reg);
 
     return true;
 }

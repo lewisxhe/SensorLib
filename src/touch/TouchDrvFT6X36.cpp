@@ -41,7 +41,7 @@ const TouchPoints &TouchDrvFT6X36::getTouchPoints()
     _touchPoints.clear(); // Clear cached touch points
     int numPoints = readReg(FT6X36_REG_STATUS);
     if (numPoints < 0) {
-        log_e("Failed to read touch points: %d", numPoints);
+        SENSORLIB_LOG_E("Failed to read touch points: %d", numPoints);
         return _touchPoints;
     }
     if (numPoints == 0 || numPoints > MAX_FINGER_NUM) {
@@ -172,7 +172,7 @@ bool TouchDrvFT6X36::initImpl(uint8_t)
     case FT_VEND_ID3:
         break;
     default:
-        log_e("Vendor id: 0x%X not match!", vendId);
+        SENSORLIB_LOG_E("Vendor id: 0x%X not match!", vendId);
         return false;
     }
 
@@ -187,18 +187,18 @@ bool TouchDrvFT6X36::initImpl(uint8_t)
     case FT3068_CHIP_ID:
         break;
     default:
-        log_e("Chip ID: 0x%lx not match!", _chipID);
+        SENSORLIB_LOG_E("Chip ID: 0x%" PRIx32 " not match!", _chipID);
         return false;
     }
 
-    log_i("Vend ID: 0x%X", vendId);
-    log_i("Chip ID: 0x%lx", _chipID);
-    log_i("Firmware Version: 0x%X", readReg(FT6X36_REG_FIRM_VERS));
-    log_i("Report Rate Hz: %u", readReg(FT6X36_REG_PERIOD_ACTIVE));
-    log_i("Threshold : %u", readReg(FT6X36_REG_THRESHOLD));
-    log_i("Library version : 0x%x", getLibraryVersion());
+    SENSORLIB_LOG_I("Vend ID: 0x%X", vendId);
+    SENSORLIB_LOG_I("Chip ID: 0x%" PRIx32, _chipID);
+    SENSORLIB_LOG_I("Firmware Version: 0x%X", readReg(FT6X36_REG_FIRM_VERS));
+    SENSORLIB_LOG_I("Report Rate Hz: %u", readReg(FT6X36_REG_PERIOD_ACTIVE));
+    SENSORLIB_LOG_I("Threshold : %u", readReg(FT6X36_REG_THRESHOLD));
+    SENSORLIB_LOG_I("Library version : 0x%x", getLibraryVersion());
     // This register describes period of monitor status, it should not less than 30.
-    log_i("Chip period of monitor status : 0x%x", readReg(FT6X36_REG_PERIOD_MONITOR));
+    SENSORLIB_LOG_I("Chip period of monitor status : 0x%x", readReg(FT6X36_REG_PERIOD_MONITOR));
     _maxTouchPoints = MAX_FINGER_NUM;
 
     return true;

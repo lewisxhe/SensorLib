@@ -74,7 +74,6 @@ public:
 #ifndef USEING_I2C_LEGACY
         if (_i2cDevice) {
             // Initialization failed, delete device
-            log_i("i2c_master_bus_rm_device");
             i2c_master_bus_rm_device(_i2cDevice);
         }
 #endif
@@ -237,7 +236,7 @@ private:
     // * which is useful when the bus shares multiple devices.
     bool init_ll_hal()
     {
-        log_i("Using ESP-IDF Driver interface.");
+        SENSORLIB_LOG_I("Using ESP-IDF Driver interface.");
 
         i2c_device_config_t devConf;
         if (_busHandle == NULL) return false;
@@ -254,11 +253,11 @@ private:
 #endif
 
         if (ESP_OK != i2c_master_bus_add_device(_busHandle, &devConf, &_i2cDevice)) {
-            log_i("i2c_master_bus_add_device failed !");
+            SENSORLIB_LOG_I("i2c_master_bus_add_device failed !");
             setError(SENSOR_ERR_COMM_INIT);
             return false;
         }
-        log_i("Added Device Address : 0x%X  New Dev Address: %p Speed :%lu ", addr, _i2cDevice, devConf.scl_speed_hz);
+        SENSORLIB_LOG_I("Added Device Address : 0x%X  New Dev Address: %p Speed :%" PRIu32 " ", addr, _i2cDevice, devConf.scl_speed_hz);
         return true;
     }
 #endif //ESP 5.X

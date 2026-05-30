@@ -68,34 +68,34 @@ public:
 
         int status = readReg(REG_0x06_STATUS);
         if (status < 0) {
-            log_e("Failed to read status register");
+            SENSORLIB_LOG_E("Failed to read status register");
             return false;
         }
 
         // OVL (Overflow)
-        if (isBitSet(status, 1)) {
+        if (sensorlib::_isBitSet(status, 1)) {
             data.overflow = true;
-            log_e("Data overflow detected");
+            SENSORLIB_LOG_E("Data overflow detected");
         } else {
             data.overflow = false;
         }
 
         // DOR (Data Skip)
-        if (isBitSet(status, 2)) {
-            log_e("Data skip detected");
+        if (sensorlib::_isBitSet(status, 2)) {
+            SENSORLIB_LOG_E("Data skip detected");
             data.skip_data = true;
         } else {
             data.skip_data = false;
         }
 
         // DRDY (Data Ready)
-        if (!isBitSet(status, 0)) {
-            // log_w("Data not ready");
+        if (!sensorlib::_isBitSet(status, 0)) {
+            // SENSORLIB_LOG_W("Data not ready");
             return false;
         }
 
         if (readRegBuff(REG_0x00_LSB_DX, buffer, 6) < 0) {
-            log_e("Failed to read magnetic field data");
+            SENSORLIB_LOG_E("Failed to read magnetic field data");
             return false;
         }
 
@@ -175,7 +175,7 @@ public:
      */
     bool selfTest() override
     {
-        log_e("QMC5883L not self-test function");
+        SENSORLIB_LOG_E("QMC5883L not self-test function");
         return true;
     }
 
@@ -204,11 +204,11 @@ public:
             full_scale = 2.0f;
             break;
         default:
-            log_e("Invalid magnetometer range");
+            SENSORLIB_LOG_E("Invalid magnetometer range");
             return false;
         }
         if (updateBits(REG_0x09_CMD1, 0x30, range_value) > 0) {
-            log_e("Failed to set full scale range");
+            SENSORLIB_LOG_E("Failed to set full scale range");
             return false;
         }
         _config.range = full_scale;
@@ -226,7 +226,7 @@ public:
     bool setOutputDataRate(float data_rate_hz) override
     {
         int rangeInt = static_cast<int>(data_rate_hz * 100 + 0.5);
-        log_d("Input: %.2f, Integer: %d\n", data_rate_hz, rangeInt);
+        SENSORLIB_LOG_D("Input: %.2f, Integer: %d\n", data_rate_hz, rangeInt);
         uint8_t regValue = 0;
         switch (rangeInt) {
         case 1000:         // 10.0
@@ -242,11 +242,11 @@ public:
             regValue = 0x03 << 2;
             break;
         default:
-            log_e("Invalid output data rate");
+            SENSORLIB_LOG_E("Invalid output data rate");
             return false;
         }
         if (updateBits(REG_0x09_CMD1, 0x0C, regValue) < 0) {
-            log_e("Failed to set bandwidth");
+            SENSORLIB_LOG_E("Failed to set bandwidth");
             return false;
         }
         _config.sample_rate = data_rate_hz;
@@ -272,11 +272,11 @@ public:
             mode_val = 0x01;
             break;
         default:
-            log_e("Invalid operation mode");
+            SENSORLIB_LOG_E("Invalid operation mode");
             return false;
         }
         if (updateBits(REG_0x09_CMD1, 0x03, mode_val) < 0) {
-            log_e("Failed to set operation mode");
+            SENSORLIB_LOG_E("Failed to set operation mode");
             return false;
         }
         _config.mode = mode;
@@ -315,7 +315,7 @@ public:
             _oversampling_rate = 64;
             break;
         default:
-            log_e("Invalid oversampling rate");
+            SENSORLIB_LOG_E("Invalid oversampling rate");
             return false;
         }
         return updateBits(REG_0x09_CMD1, 0xC0, osr_val) == 0;
@@ -328,7 +328,7 @@ public:
      */
     bool setDownsamplingRate(MagDownSampleRatio dsr) override
     {
-        log_e("QSTMagnetic does not support downsampling");
+        SENSORLIB_LOG_E("QSTMagnetic does not support downsampling");
         return false;
     }
 
@@ -345,7 +345,7 @@ public:
         uint8_t buffer[2] = {0};
 
         if (readRegBuff(REG_0x07_TOUT_LOW, buffer, 2) < 0) {
-            log_e("Failed to read temperature registers");
+            SENSORLIB_LOG_E("Failed to read temperature registers");
             return false;
         }
         raw_temp = (int16_t)((buffer[1] << 8) | buffer[0]);
@@ -380,19 +380,19 @@ public:
                             MagOverSampleRatio osr, MagDownSampleRatio dsr = MagDownSampleRatio::DSR_1) override
     {
         if (!setOperationMode(mode)) {
-            log_e("Failed to set operation mode");
+            SENSORLIB_LOG_E("Failed to set operation mode");
             return false;
         }
         if (!setFullScaleRange(range)) {
-            log_e("Failed to set full scale range");
+            SENSORLIB_LOG_E("Failed to set full scale range");
             return false;
         }
         if (!setOutputDataRate(data_rate_hz)) {
-            log_e("Failed to set bandwidth");
+            SENSORLIB_LOG_E("Failed to set bandwidth");
             return false;
         }
         if (!setOversamplingRate(osr)) {
-            log_e("Failed to set oversampling rate");
+            SENSORLIB_LOG_E("Failed to set oversampling rate");
             return false;
         }
         return true;
@@ -425,7 +425,7 @@ private:
         // It is recommended that the register 0BH is written by 0x01.
         uint8_t set_reset_period = 0x01;
         if (writeReg(REG_0x0B_CMD3, set_reset_period) < 0) {
-            log_e("Failed to set SET/RESET period");
+            SENSORLIB_LOG_E("Failed to set SET/RESET period");
             return false;
         }
         _info.uid = readReg(REG_0x0D_CHIP_ID);

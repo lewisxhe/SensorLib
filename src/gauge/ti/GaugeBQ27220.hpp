@@ -155,23 +155,23 @@ public:
     BatteryStatus(uint16_t bitmaps){
         uint8_t hsb = (bitmaps >> 8) & 0xFF;
         uint8_t lsb = bitmaps & 0xFF;
-        status.fullDischargeDetected = (hsb & _BV(7)) != 0;
-        status.ocvMeasurementUpdateComplete = (hsb & _BV(6)) != 0;
-        status.ocvReadFailedDueToCurrent = (hsb & _BV(5)) != 0;
-        status.inSleepMode = (hsb & _BV(4)) != 0;
-        status.overTemperatureDuringCharging = (hsb & _BV(3)) != 0;
-        status.overTemperatureDuringDischarge = (hsb & _BV(2)) != 0;
-        status.fullChargeDetected = (hsb & _BV(1)) != 0;
-        status.chargeInhibited = (hsb & _BV(0)) != 0;
+        status.fullDischargeDetected = (hsb & sensorlib::_bv(7)) != 0;
+        status.ocvMeasurementUpdateComplete = (hsb & sensorlib::_bv(6)) != 0;
+        status.ocvReadFailedDueToCurrent = (hsb & sensorlib::_bv(5)) != 0;
+        status.inSleepMode = (hsb & sensorlib::_bv(4)) != 0;
+        status.overTemperatureDuringCharging = (hsb & sensorlib::_bv(3)) != 0;
+        status.overTemperatureDuringDischarge = (hsb & sensorlib::_bv(2)) != 0;
+        status.fullChargeDetected = (hsb & sensorlib::_bv(1)) != 0;
+        status.chargeInhibited = (hsb & sensorlib::_bv(0)) != 0;
 
         // status.RSVD = (lsb & (1 << 7))!= 0;
-        status.chargingTerminationAlarm = (lsb & _BV(6)) != 0;
-        status.goodOcvMeasurement = (lsb & _BV(5)) != 0;
-        status.batteryInserted = (lsb & _BV(4)) != 0;
-        status.batteryPresent = (lsb & _BV(3)) != 0;
-        status.dischargeTerminationAlarm = (lsb & _BV(2)) != 0;
-        status.systemShutdownRequired = (lsb & _BV(1)) != 0;
-        status.inDischargeMode = (lsb & _BV(0)) != 0;
+        status.chargingTerminationAlarm = (lsb & sensorlib::_bv(6)) != 0;
+        status.goodOcvMeasurement = (lsb & sensorlib::_bv(5)) != 0;
+        status.batteryInserted = (lsb & sensorlib::_bv(4)) != 0;
+        status.batteryPresent = (lsb & sensorlib::_bv(3)) != 0;
+        status.dischargeTerminationAlarm = (lsb & sensorlib::_bv(2)) != 0;
+        status.systemShutdownRequired = (lsb & sensorlib::_bv(1)) != 0;
+        status.inDischargeMode = (lsb & sensorlib::_bv(0)) != 0;
     };
 
        /**
@@ -930,17 +930,17 @@ public:
     {
         return performConfigUpdate<bool>([this, newDesignCapacity, newFullChargeCapacity]() {
             // Set the design capacity
-            if (!setCapacity(newDesignCapacity, lowByte(BQ27220_ROM_DESIGN_CAPACITY),
-                             highByte(BQ27220_ROM_DESIGN_CAPACITY))) {
-                log_e("Failed to set design capacity!");
+            if (!setCapacity(newDesignCapacity, sensorlib::_lowByte(BQ27220_ROM_DESIGN_CAPACITY),
+                             sensorlib::_highByte(BQ27220_ROM_DESIGN_CAPACITY))) {
+                SENSORLIB_LOG_E("Failed to set design capacity!");
                 return false;
             }
             hal->delay(10);
 
             // Set full charge capacity
-            if (!setCapacity(newFullChargeCapacity, lowByte(BQ27220_ROM_FULL_CHARGE_CAPACITY),
-                             highByte(BQ27220_ROM_FULL_CHARGE_CAPACITY))) {
-                log_e("Failed to set full charge capacity!");
+            if (!setCapacity(newFullChargeCapacity, sensorlib::_lowByte(BQ27220_ROM_FULL_CHARGE_CAPACITY),
+                             sensorlib::_highByte(BQ27220_ROM_FULL_CHARGE_CAPACITY))) {
+                SENSORLIB_LOG_E("Failed to set full charge capacity!");
                 return false;
             }
             hal->delay(10);
@@ -961,9 +961,9 @@ public:
     OperationConfig getOperationConfig()
     {
         return performConfigUpdate<OperationConfig>([this]() {
-            writeReg(BQ27220_REG_ROM_START, lowByte(BQ27220_ROM_OPERATION_CONFIG_A));
+            writeReg(BQ27220_REG_ROM_START, sensorlib::_lowByte(BQ27220_ROM_OPERATION_CONFIG_A));
             hal->delay(10);
-            writeReg(BQ27220_REG_ROM_START + 1, highByte(BQ27220_ROM_OPERATION_CONFIG_A));
+            writeReg(BQ27220_REG_ROM_START + 1, sensorlib::_highByte(BQ27220_ROM_OPERATION_CONFIG_A));
             hal->delay(10);
             uint8_t buffer[4];
             readRegBuff(0x40, buffer, 4);
@@ -1098,8 +1098,8 @@ private:
     {
         uint8_t buffer[3];
         buffer[0] = 0x00;
-        buffer[1] = lowByte(subCmd);
-        buffer[2] = highByte(subCmd);
+        buffer[1] = sensorlib::_lowByte(subCmd);
+        buffer[2] = sensorlib::_highByte(subCmd);
         if (writeBuff(buffer, arraySize(buffer)) < 0) {
             return -1;
         }
@@ -1118,7 +1118,7 @@ private:
             }
             hal->delay(100);
         }
-        log_e("Subcommand failed!");
+        SENSORLIB_LOG_E("Subcommand failed!");
         return -1;
     }
 
@@ -1143,14 +1143,14 @@ private:
     {
         uint8_t buffer[3];
         buffer[0] = 0x00;
-        buffer[1] = lowByte((accessKey >> 24));
-        buffer[2] = lowByte((accessKey >> 16));
+        buffer[1] = sensorlib::_lowByte((accessKey >> 24));
+        buffer[2] = sensorlib::_lowByte((accessKey >> 16));
         if (writeBuff(buffer, arraySize(buffer)) < 0) {
             return -1;
         }
         hal->delay(10);
-        buffer[1] = lowByte((accessKey >> 8));
-        buffer[2] = lowByte((accessKey));
+        buffer[1] = sensorlib::_lowByte((accessKey >> 8));
+        buffer[2] = sensorlib::_lowByte((accessKey));
         if (writeBuff(buffer, arraySize(buffer)) < 0) {
             return -1;
         }
@@ -1194,7 +1194,7 @@ private:
             hal->delay(100);
         }
         if (!isConfigUpdate) {
-            log_e("The update mode has timed out. It may also be that the access key for full permissions is invalid!");
+            SENSORLIB_LOG_E("The update mode has timed out. It may also be that the access key for full permissions is invalid!");
             if (std::is_same<ResultType, bool>::value) {
                 return false;
             } else if (std::is_same<ResultType, OperationConfig>::value) {
@@ -1219,7 +1219,7 @@ private:
             hal->delay(100);
         }
         if (hal->millis() > timeout) {
-            log_e("Timed out waiting to exit update mode.");
+            SENSORLIB_LOG_E("Timed out waiting to exit update mode.");
             if (std::is_same<ResultType, bool>::value) {
                 return false;
             } else if (std::is_same<ResultType, OperationConfig>::value) {
@@ -1229,7 +1229,7 @@ private:
 
         // If the device was previously in SEALED state, return to SEALED mode by sending the Control(0x0030) subcommand
         if (isSealed) {
-            log_d("Restore Safe Mode!");
+            SENSORLIB_LOG_D("Restore Safe Mode!");
             exitSealMode();
         }
 
@@ -1250,8 +1250,8 @@ private:
         hal->delay(10);
 
         // Write two Capacity bytes starting from 0x40
-        uint8_t newCapacityMsb = highByte(newCapacity);
-        uint8_t newCapacityLsb = lowByte(newCapacity);
+        uint8_t newCapacityMsb = sensorlib::_highByte(newCapacity);
+        uint8_t newCapacityLsb = sensorlib::_lowByte(newCapacity);
         uint8_t capacityRaw[] = {newCapacityMsb, newCapacityLsb};
         writeRegBuff(BQ27220_REG_MAC_BUFFER_START, capacityRaw, 2);
 
@@ -1271,7 +1271,7 @@ private:
     {
         uint8_t buffer[2] = {0};
         if (writeThenRead(&reg, 1, buffer, arraySize(buffer)) < 0) {
-            log_e("Read register %02X failed!", reg);
+            SENSORLIB_LOG_E("Read register %" PRIu32 " failed!", reg);
             return UINT16_MAX;
         }
         return (buffer[1] << 8) | buffer[0];
@@ -1281,22 +1281,22 @@ private:
     {
         int chipID = getChipID();
         if (chipID != BQ27220_CHIP_ID) {
-            log_e("Chip id not match : %02X\n", chipID);
+            SENSORLIB_LOG_E("Chip id not match : %" PRIu32, chipID);
             return false;
         }
 
         int sw = getFirmwareVersion();
         if (sw < 0) {
-            log_e("Software version error!");
+            SENSORLIB_LOG_E("Software version error!");
         } else {
-            log_d("Software version 0x%04X", sw);
+            SENSORLIB_LOG_D("Software version 0x%" PRIu32, sw);
         }
         hal->delay(100);
         int hw = getHardwareVersion();
         if (hw < 0) {
-            log_e("Hardware version error!");
+            SENSORLIB_LOG_E("Hardware version error!");
         } else {
-            log_d("Hardware version 0x%04X", hw);
+            SENSORLIB_LOG_D("Hardware version 0x%" PRIu32, hw);
         }
 
         return true;

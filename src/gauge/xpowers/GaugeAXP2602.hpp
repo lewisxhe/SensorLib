@@ -194,7 +194,7 @@ public:
         if (!comm) return false;
 
         if (data.chipID != AXP2602_CHIP_ID) {
-            log_e("Chip id not match : %02X\n", data.chipID);
+            SENSORLIB_LOG_E("Chip id not match : %" PRIu32, data.chipID);
             return false;
         }
 
@@ -237,7 +237,7 @@ public:
             // Formula on page 10 of the manual: Temperature (°C) = (3415 - xDie) * 10 / 95 + 26
             data.actualDieTemperature = (3415.0 - data.tdieTemperatureRaw) * 10.0 / 95.0 + 26.0;
             if (data.actualDieTemperature < -40 || data.actualDieTemperature > 85) {
-                log_e("Die temperature out of range: %d\n", data.actualDieTemperature);
+                SENSORLIB_LOG_E("Die temperature out of range: %d", data.actualDieTemperature);
                 data.actualDieTemperature = 0; // Reset to 0 if out of range
             }
         }
@@ -268,9 +268,9 @@ public:
         // Read configuration
         int config = readReg(REG_COMM_CONFIG);
         if (config >= 0) {
-            data.thermalDieEnabled = (config & _BV(6)) != 0;
-            data.currentMeasurementEnabled = (config & _BV(5)) != 0;
-            data.batteryDetectionEnabled = (config & _BV(4)) != 0;
+            data.thermalDieEnabled = (config & sensorlib::_bv(6)) != 0;
+            data.currentMeasurementEnabled = (config & sensorlib::_bv(5)) != 0;
+            data.batteryDetectionEnabled = (config & sensorlib::_bv(4)) != 0;
             data.senseResistor = static_cast<CurrentSenseResistor>(config & 0x03);
         }
 
@@ -818,7 +818,7 @@ private:
     {
         data.chipID = getChipID();
         if (data.chipID != AXP2602_CHIP_ID) {
-            log_e("Chip id not match : %02X\n", data.chipID);
+            SENSORLIB_LOG_E("Chip id not match : %02X\n", data.chipID);
             return false;
         }
         reset();    // Reset Configuration

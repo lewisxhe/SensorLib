@@ -35,10 +35,6 @@
 namespace QMI8658Regs
 {
 
-#ifdef _BV
-#undef _BV
-#endif
-#define _BV(bit) (1U << (bit))
 
 static constexpr uint8_t QMI8658_WHO_AM_I_VAL          = 0x05;
 static constexpr uint8_t QMI8658_RESET_VAL             = 0xB0;
@@ -64,16 +60,16 @@ static constexpr uint8_t SHIFT_REVISION = 0;
 // 0x02 (RW) - CTRL1 - Interface and Reset Control
 // ==============================================
 static constexpr uint8_t REG_CTRL1            = 0x02;
-static constexpr uint8_t MASK_SIM             = _BV(7);
-static constexpr uint8_t MASK_ADDR_AI         = _BV(6);
-static constexpr uint8_t MASK_BIG_ENDIAN      = _BV(5);
-static constexpr uint8_t MASK_I2C_WDT         = _BV(2);
-static constexpr uint8_t MASK_I2C_INT2        = _BV(4);
-static constexpr uint8_t MASK_I2C_INT1        = _BV(3);
-static constexpr uint8_t MASK_SENSOR_DISABLE  = _BV(0);
+static constexpr uint8_t MASK_SIM             = 0x80;
+static constexpr uint8_t MASK_ADDR_AI         = 0x40;
+static constexpr uint8_t MASK_BIG_ENDIAN      = 0x20;
+static constexpr uint8_t MASK_I2C_WDT         = 0x04;
+static constexpr uint8_t MASK_I2C_INT2        = 0x10;
+static constexpr uint8_t MASK_I2C_INT1        = 0x08;
+static constexpr uint8_t MASK_SENSOR_DISABLE  = 0x01;
 static constexpr uint8_t MASK_SPI_MODE        = MASK_SIM;
 static constexpr uint8_t MASK_SOFT_RESET      = MASK_SENSOR_DISABLE;
-static constexpr uint8_t MASK_CTRL1_RESERVED  = _BV(1);
+static constexpr uint8_t MASK_CTRL1_RESERVED  = 0x02;
 static constexpr uint8_t SHIFT_SIM            = 7;
 static constexpr uint8_t SHIFT_ADDR_AI        = 6;
 static constexpr uint8_t SHIFT_BIG_ENDIAN     = 5;
@@ -89,7 +85,7 @@ static constexpr uint8_t SHIFT_SOFT_RESET     = 0;
 // 0x03 (RW) - CTRL2 - Accelerometer Control
 // ==============================================
 static constexpr uint8_t REG_CTRL2                 = 0x03;
-static constexpr uint8_t MASK_ACCEL_SELF_TEST     = _BV(7);
+static constexpr uint8_t MASK_ACCEL_SELF_TEST     = 0x80;
 static constexpr uint8_t MASK_ACCEL_RANGE        = 0x70;
 static constexpr uint8_t MASK_ACCEL_ODR           = 0x0F;
 static constexpr uint8_t SHIFT_ACCEL_SELF_TEST    = 7;
@@ -123,7 +119,7 @@ static constexpr uint8_t ACCEL_ODR_LP_3HZ    = 0x0F;
 // 0x04 (RW) - CTRL3 - Gyroscope Control
 // ==============================================
 static constexpr uint8_t REG_CTRL3                = 0x04;
-static constexpr uint8_t MASK_GYRO_SELF_TEST      = _BV(7);
+static constexpr uint8_t MASK_GYRO_SELF_TEST      = 0x80;
 static constexpr uint8_t MASK_GYRO_RANGE          = 0x70;
 static constexpr uint8_t MASK_GYRO_ODR           = 0x0F;
 static constexpr uint8_t SHIFT_GYRO_SELF_TEST    = 7;
@@ -157,9 +153,9 @@ static constexpr uint8_t GYRO_ODR_7_006HZ   = 0x0A;
 // 0x06 (RW) - CTRL5 - Low Pass Filter Configuration
 // ==============================================
 static constexpr uint8_t REG_CTRL5                  = 0x06;
-static constexpr uint8_t MASK_ACCEL_LPF_EN           = _BV(0);
+static constexpr uint8_t MASK_ACCEL_LPF_EN           = 0x01;
 static constexpr uint8_t MASK_ACCEL_LPF_ODR          = 0x06;
-static constexpr uint8_t MASK_GYRO_LPF_EN            = _BV(4);
+static constexpr uint8_t MASK_GYRO_LPF_EN            = 0x10;
 static constexpr uint8_t MASK_GYRO_LPF_ODR           = 0x60;
 static constexpr uint8_t SHIFT_ACCEL_LPF_EN          = 0;
 static constexpr uint8_t SHIFT_ACCEL_LPF_ODR         = 1;
@@ -176,12 +172,12 @@ static constexpr uint8_t LPF_MODE_3 = 0x03;  // 13.37%
 // 0x08 (RW) - CTRL7 - Sensor Enable
 // ==============================================
 static constexpr uint8_t REG_CTRL7               = 0x08;
-static constexpr uint8_t MASK_ACCEL_ENABLE        = _BV(0);
-static constexpr uint8_t MASK_GYRO_ENABLE         = _BV(1);
-static constexpr uint8_t MASK_SYNC_MODE           = _BV(7);
-static constexpr uint8_t MASK_SYNC_DATA_SELECT    = _BV(6);
-static constexpr uint8_t MASK_SYNC_DATA_LATCH     = _BV(5);
-static constexpr uint8_t MASK_I3C_ENABLE          = _BV(4);
+static constexpr uint8_t MASK_ACCEL_ENABLE        = 0x01;
+static constexpr uint8_t MASK_GYRO_ENABLE         = 0x02;
+static constexpr uint8_t MASK_SYNC_MODE           = 0x80;
+static constexpr uint8_t MASK_SYNC_DATA_SELECT    = 0x40;
+static constexpr uint8_t MASK_SYNC_DATA_LATCH     = 0x20;
+static constexpr uint8_t MASK_I3C_ENABLE          = 0x10;
 static constexpr uint8_t SHIFT_ACCEL_ENABLE       = 0;
 static constexpr uint8_t SHIFT_GYRO_ENABLE        = 1;
 static constexpr uint8_t SHIFT_SYNC_MODE          = 7;
@@ -193,12 +189,12 @@ static constexpr uint8_t SHIFT_I3C_ENABLE         = 4;
 // 0x09 (RW) - CTRL8 - Interrupt and Activity Configuration
 // ==============================================
 static constexpr uint8_t REG_CTRL8                     = 0x09;
-static constexpr uint8_t MASK_ACTIVITY_INT_MAP         = _BV(6);
-static constexpr uint8_t MASK_PEDOMETER_ENABLE         = _BV(4);
-static constexpr uint8_t MASK_SIGNIFICANT_MOTION_EN    = _BV(3);
-static constexpr uint8_t MASK_NO_MOTION_ENABLE         = _BV(2);
-static constexpr uint8_t MASK_ANY_MOTION_ENABLE        = _BV(1);
-static constexpr uint8_t MASK_TAP_DETECTION_ENABLE     = _BV(0);
+static constexpr uint8_t MASK_ACTIVITY_INT_MAP         = 0x40;
+static constexpr uint8_t MASK_PEDOMETER_ENABLE         = 0x10;
+static constexpr uint8_t MASK_SIGNIFICANT_MOTION_EN    = 0x08;
+static constexpr uint8_t MASK_NO_MOTION_ENABLE         = 0x04;
+static constexpr uint8_t MASK_ANY_MOTION_ENABLE        = 0x02;
+static constexpr uint8_t MASK_TAP_DETECTION_ENABLE     = 0x01;
 static constexpr uint8_t SHIFT_ACTIVITY_INT_MAP        = 6;
 static constexpr uint8_t SHIFT_PEDOMETER_ENABLE        = 4;
 static constexpr uint8_t SHIFT_SIGNIFICANT_MOTION_EN   = 3;
@@ -273,10 +269,10 @@ static constexpr uint8_t FIFO_SAMPLES_128 = 0x03;
 static constexpr uint8_t REG_FIFO_SMPL_CNT_L  = 0x15;
 static constexpr uint8_t REG_FIFO_SMPL_CNT_H  = 0x16;
 static constexpr uint8_t REG_FIFO_STATUS       = 0x16;
-static constexpr uint8_t MASK_FIFO_EMPTY       = _BV(4);
-static constexpr uint8_t MASK_FIFO_OVERFLOW    = _BV(5);
-static constexpr uint8_t MASK_FIFO_WTM_HIT     = _BV(6);
-static constexpr uint8_t MASK_FIFO_FULL        = _BV(7);
+static constexpr uint8_t MASK_FIFO_EMPTY       = 0x10;
+static constexpr uint8_t MASK_FIFO_OVERFLOW    = 0x20;
+static constexpr uint8_t MASK_FIFO_WTM_HIT     = 0x40;
+static constexpr uint8_t MASK_FIFO_FULL        = 0x80;
 
 // ==============================================
 // 0x18 (RO) - FIFO_DATA - FIFO Data Output
@@ -287,9 +283,9 @@ static constexpr uint8_t REG_FIFO_DATA = 0x17;
 // 0x2D (RO) - STATUS_INT - Interrupt Status
 // ==============================================
 static constexpr uint8_t REG_STATUS_INT        = 0x2D;
-static constexpr uint8_t MASK_INT_AVAIL        = _BV(0);
-static constexpr uint8_t MASK_INT_LOCKED       = _BV(1);
-static constexpr uint8_t MASK_INT_CTRL9_DONE   = _BV(7);
+static constexpr uint8_t MASK_INT_AVAIL        = 0x01;
+static constexpr uint8_t MASK_INT_LOCKED       = 0x02;
+static constexpr uint8_t MASK_INT_CTRL9_DONE   = 0x80;
 static constexpr uint8_t SHIFT_INT_AVAIL       = 0;
 static constexpr uint8_t SHIFT_INT_LOCKED      = 1;
 static constexpr uint8_t SHIFT_INT_CTRL9_DONE  = 7;
@@ -298,8 +294,8 @@ static constexpr uint8_t SHIFT_INT_CTRL9_DONE  = 7;
 // 0x2E (RO) - STATUS0 - Sensor Data Status
 // ==============================================
 static constexpr uint8_t REG_STATUS0          = 0x2E;
-static constexpr uint8_t MASK_ACCEL_DATA_RDY  = _BV(0);
-static constexpr uint8_t MASK_GYRO_DATA_RDY   = _BV(1);
+static constexpr uint8_t MASK_ACCEL_DATA_RDY  = 0x01;
+static constexpr uint8_t MASK_GYRO_DATA_RDY   = 0x02;
 static constexpr uint8_t SHIFT_ACCEL_DATA_RDY = 0;
 static constexpr uint8_t SHIFT_GYRO_DATA_RDY  = 1;
 
@@ -307,12 +303,12 @@ static constexpr uint8_t SHIFT_GYRO_DATA_RDY  = 1;
 // 0x2F (RO) - STATUS1 - Activity Status
 // ==============================================
 static constexpr uint8_t REG_STATUS1                   = 0x2F;
-static constexpr uint8_t MASK_TAP_EVENT                 = _BV(1);
-static constexpr uint8_t MASK_WOM_EVENT                 = _BV(2);
-static constexpr uint8_t MASK_PEDOMETER_EVENT          = _BV(4);
-static constexpr uint8_t MASK_ANY_MOTION_EVENT          = _BV(5);
-static constexpr uint8_t MASK_NO_MOTION_EVENT          = _BV(6);
-static constexpr uint8_t MASK_SIGNIFICANT_MOTION_EVENT = _BV(7);
+static constexpr uint8_t MASK_TAP_EVENT                 = 0x02;
+static constexpr uint8_t MASK_WOM_EVENT                 = 0x04;
+static constexpr uint8_t MASK_PEDOMETER_EVENT          = 0x10;
+static constexpr uint8_t MASK_ANY_MOTION_EVENT          = 0x20;
+static constexpr uint8_t MASK_NO_MOTION_EVENT          = 0x40;
+static constexpr uint8_t MASK_SIGNIFICANT_MOTION_EVENT = 0x80;
 static constexpr uint8_t SHIFT_TAP_EVENT                = 1;
 static constexpr uint8_t SHIFT_WOM_EVENT                = 2;
 static constexpr uint8_t SHIFT_PEDOMETER_EVENT         = 4;
@@ -349,14 +345,14 @@ static constexpr uint8_t REG_GZ_H         = 0x40;
 // 0x46 (RO) - COD_STATUS - Calibration On Demand Status
 // ==============================================
 static constexpr uint8_t REG_COD_STATUS            = 0x46;
-static constexpr uint8_t MASK_COD_FAIL             = _BV(0);
-static constexpr uint8_t MASK_COD_GYRO_ENABLED_ERR  = _BV(1);
-static constexpr uint8_t MASK_COD_GYRO_STARTUP_ERR  = _BV(2);
-static constexpr uint8_t MASK_COD_ACCEL_ERR        = _BV(3);
-static constexpr uint8_t MASK_COD_GYRO_Z_HIGH_ERR  = _BV(4);
-static constexpr uint8_t MASK_COD_GYRO_Z_LOW_ERR   = _BV(5);
-static constexpr uint8_t MASK_COD_GYRO_Y_HIGH_ERR   = _BV(6);
-static constexpr uint8_t MASK_COD_GYRO_Y_LOW_ERR    = _BV(7);
+static constexpr uint8_t MASK_COD_FAIL             = 0x01;
+static constexpr uint8_t MASK_COD_GYRO_ENABLED_ERR  = 0x02;
+static constexpr uint8_t MASK_COD_GYRO_STARTUP_ERR  = 0x04;
+static constexpr uint8_t MASK_COD_ACCEL_ERR        = 0x08;
+static constexpr uint8_t MASK_COD_GYRO_Z_HIGH_ERR  = 0x10;
+static constexpr uint8_t MASK_COD_GYRO_Z_LOW_ERR   = 0x20;
+static constexpr uint8_t MASK_COD_GYRO_Y_HIGH_ERR   = 0x40;
+static constexpr uint8_t MASK_COD_GYRO_Y_LOW_ERR    = 0x80;
 
 // ==============================================
 // 0x49-0x56 - Self-Test / Calibration Data Registers
@@ -382,7 +378,7 @@ static constexpr uint8_t REG_DVZ_H = 0x56;
 static constexpr uint8_t REG_TAP_STATUS         = 0x59;
 static constexpr uint8_t MASK_TAP_TYPE          = 0x03;
 static constexpr uint8_t MASK_TAP_AXIS          = 0x30;
-static constexpr uint8_t MASK_TAP_DIRECTION     = _BV(7);
+static constexpr uint8_t MASK_TAP_DIRECTION     = 0x80;
 static constexpr uint8_t SHIFT_TAP_TYPE         = 0;
 static constexpr uint8_t SHIFT_TAP_AXIS         = 4;
 static constexpr uint8_t SHIFT_TAP_DIRECTION    = 7;
@@ -408,7 +404,7 @@ static constexpr uint8_t MASK_RESET        = 0xFF;
 // 0x4D (RO) - RST_RESULT - Reset Result
 // ==============================================
 static constexpr uint8_t REG_RST_RESULT    = 0x4D;
-static constexpr uint8_t MASK_RST_RESULT   = _BV(7);
+static constexpr uint8_t MASK_RST_RESULT   = 0x80;
 
 // ==============================================
 // Constants for scale calculations
@@ -430,14 +426,14 @@ static constexpr float GYRO_SCALE_2048DPS = 2048.0f / 32768.0f;
 // ==============================================
 // Motion Control Configuration Masks
 // ==============================================
-static constexpr uint8_t MASK_ANY_MOTION_X_EN  = _BV(0);
-static constexpr uint8_t MASK_ANY_MOTION_Y_EN  = _BV(1);
-static constexpr uint8_t MASK_ANY_MOTION_Z_EN  = _BV(2);
-static constexpr uint8_t MASK_ANY_MOTION_LOGIC  = _BV(3);
-static constexpr uint8_t MASK_NO_MOTION_X_EN   = _BV(4);
-static constexpr uint8_t MASK_NO_MOTION_Y_EN   = _BV(5);
-static constexpr uint8_t MASK_NO_MOTION_Z_EN   = _BV(6);
-static constexpr uint8_t MASK_NO_MOTION_LOGIC  = _BV(7);
+static constexpr uint8_t MASK_ANY_MOTION_X_EN  = 0x01;
+static constexpr uint8_t MASK_ANY_MOTION_Y_EN  = 0x02;
+static constexpr uint8_t MASK_ANY_MOTION_Z_EN  = 0x04;
+static constexpr uint8_t MASK_ANY_MOTION_LOGIC  = 0x08;
+static constexpr uint8_t MASK_NO_MOTION_X_EN   = 0x10;
+static constexpr uint8_t MASK_NO_MOTION_Y_EN   = 0x20;
+static constexpr uint8_t MASK_NO_MOTION_Z_EN   = 0x40;
+static constexpr uint8_t MASK_NO_MOTION_LOGIC  = 0x80;
 
 // ==============================================
 // Tap Detection Priority

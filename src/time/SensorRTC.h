@@ -430,7 +430,7 @@ public:
         time_t timestamp = mktime(&t_tm);
         // Check if the mktime conversion was successful
         if (timestamp == -1) {
-            log_e("mktime failed");
+            SENSORLIB_LOG_E("mktime failed");
             return -1;
         }
         val.tv_sec = timestamp;
@@ -438,7 +438,7 @@ public:
 #if __BSD_VISIBLE
         // On supported BSD systems, attempt to set the new time to the system clock
         if (settimeofday(&val, tz) == -1) {
-            log_e("settimeofday failed");
+            SENSORLIB_LOG_E("settimeofday failed");
         }
 #endif /*__BSD_VISIBLE*/
         // Return the converted Unix timestamp
@@ -457,11 +457,11 @@ public:
         // Get the current system time as a Unix timestamp
         now = time(NULL);
         if (now == -1) {
-            log_e("time failed");
+            SENSORLIB_LOG_E("time failed");
             return -1;
         }
         if (localtime_r(&now, &info) == NULL) {
-            log_e("localtime_r failed");
+            SENSORLIB_LOG_E("localtime_r failed");
             return -1;
         }
         setDateTime(info);
@@ -599,7 +599,7 @@ public:
     {
         if (year < 0 || month < 1 || month > 12 || day < 1 || day > getDaysInMonth(month, year) ||
                 hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59) {
-            log_e("Invalid date or time input");
+            SENSORLIB_LOG_E("Invalid date or time input");
             return;
         }
 

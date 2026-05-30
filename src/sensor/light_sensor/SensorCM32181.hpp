@@ -179,13 +179,13 @@ public:
         uint8_t buffer[2] = {0};
 
         // High threshold window (REG_ALS_THDH)
-        buffer[1] = highByte(high_threshold);
-        buffer[0] = lowByte(high_threshold);
+        buffer[1] = sensorlib::_highByte(high_threshold);
+        buffer[0] = sensorlib::_lowByte(high_threshold);
         writeRegBuff(REG_ALS_THDH, buffer, 2);
 
         // Low threshold window (REG_ALS_THDL)
-        buffer[1] = highByte(low_threshold);
-        buffer[0] = lowByte(low_threshold);
+        buffer[1] = sensorlib::_highByte(low_threshold);
+        buffer[0] = sensorlib::_lowByte(low_threshold);
         writeRegBuff(REG_ALS_THDL, buffer, 2);
     }
 
@@ -232,10 +232,10 @@ public:
         // Keep original mapping:
         // bit15 => low threshold trigger
         // bit14 => high threshold trigger
-        if (bitRead(data, 15)) {
+        if (sensorlib::_bitRead(data, 15)) {
             return ALS_EVENT_LOW_TRIGGER;
         }
-        if (bitRead(data, 14)) {
+        if (sensorlib::_bitRead(data, 14)) {
             return ALS_EVENT_HIGH_TRIGGER;
         }
         return ALS_EVENT_NULL;
@@ -248,7 +248,7 @@ public:
     {
         uint16_t data = 0;
         readRegBuff(REG_ALS_CONF, (uint8_t *)&data, 2);
-        bitWrite(data, 1, 1);
+        sensorlib::_bitWrite(data, 1, 1);
         writeRegBuff(REG_ALS_CONF, (uint8_t *)&data, 2);
     }
 
@@ -259,7 +259,7 @@ public:
     {
         uint16_t data = 0;
         readRegBuff(REG_ALS_CONF, (uint8_t *)&data, 2);
-        bitWrite(data, 1, 0);
+        sensorlib::_bitWrite(data, 1, 0);
         writeRegBuff(REG_ALS_CONF, (uint8_t *)&data, 2);
     }
 
@@ -270,7 +270,7 @@ public:
     {
         uint16_t data = 0;
         readRegBuff(REG_ALS_CONF, (uint8_t *)&data, 2);
-        bitClear(data, 0);
+        sensorlib::_bitClear(data, 0);
         writeRegBuff(REG_ALS_CONF, (uint8_t *)&data, 2);
     }
 
@@ -281,7 +281,7 @@ public:
     {
         uint16_t data = 0;
         readRegBuff(REG_ALS_CONF, (uint8_t *)&data, 2);
-        bitSet(data, 0);
+        sensorlib::_bitSet(data, 0);
         writeRegBuff(REG_ALS_CONF, (uint8_t *)&data, 2);
     }
 
@@ -316,7 +316,7 @@ public:
     {
         uint8_t buffer[2] = {0};
         readRegBuff(REG_ID, buffer, 2);
-        return lowByte(buffer[0]);
+        return sensorlib::_lowByte(buffer[0]);
     }
 
 private:
@@ -353,7 +353,7 @@ private:
         setAck(false);
 
         int chipID = getChipID();
-        log_i("chipID:%d\n", chipID);
+        SENSORLIB_LOG_I("chipID:%d", chipID);
 
         if (chipID < 0) {
             return false;

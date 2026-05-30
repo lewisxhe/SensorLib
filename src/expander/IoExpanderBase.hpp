@@ -99,11 +99,11 @@ public:
     void configPins(uint16_t pinMask, uint8_t mode)
     {
         if (_pinModes == nullptr) {
-            log_e("Pin modes array not initialized");
+            SENSORLIB_LOG_E("Pin modes array not initialized");
             return;
         }
         if (mode != INPUT && mode != OUTPUT) {
-            log_e("Invalid pin mode");
+            SENSORLIB_LOG_E("Invalid pin mode");
             return;
         }
         configPinsImpl(pinMask, mode);
@@ -122,15 +122,15 @@ public:
     void pinMode(uint8_t pin, uint8_t mode)
     {
         if (pin >= _pinCount) {
-            log_e("Invalid pin number");
+            SENSORLIB_LOG_E("Invalid pin number");
             return;
         }
         if (_pinModes == nullptr) {
-            log_e("Pin modes array not initialized");
+            SENSORLIB_LOG_E("Pin modes array not initialized");
             return;
         }
         if (mode != INPUT && mode != OUTPUT) {
-            log_e("Invalid pin mode");
+            SENSORLIB_LOG_E("Invalid pin mode");
             return;
         }
 
@@ -150,19 +150,19 @@ public:
     void digitalWrite(uint8_t pin, bool value)
     {
         if (pin >= _pinCount) {
-            log_e("Invalid pin number");
+            SENSORLIB_LOG_E("Invalid pin number");
             return;
         }
         if (_pinModes == nullptr) {
-            log_e("Pin modes array not initialized");
+            SENSORLIB_LOG_E("Pin modes array not initialized");
             return;
         }
         if (_outputStates == nullptr) {
-            log_e("Output states array not initialized");
+            SENSORLIB_LOG_E("Output states array not initialized");
             return;
         }
         if (_pinModes[pin] != OUTPUT) {
-            log_e("Pin %d is not configured as OUTPUT", pin);
+            SENSORLIB_LOG_E("Pin %d is not configured as OUTPUT", pin);
             return;
         }
 
@@ -182,15 +182,15 @@ public:
     bool digitalRead(uint8_t pin)
     {
         if (pin >= _pinCount) {
-            log_e("Invalid pin number");
+            SENSORLIB_LOG_E("Invalid pin number");
             return false;
         }
         if (_pinModes == nullptr) {
-            log_e("Pin modes array not initialized");
+            SENSORLIB_LOG_E("Pin modes array not initialized");
             return false;
         }
         if (_pinModes[pin] != INPUT) {
-            log_e("Pin %d is not configured as INPUT", pin);
+            SENSORLIB_LOG_E("Pin %d is not configured as INPUT", pin);
             return false;
         }
 
@@ -207,11 +207,11 @@ public:
     void digitalToggle(uint8_t pin)
     {
         if (!_pinModes || !_outputStates) {
-            log_e("Expander not properly initialized");
+            SENSORLIB_LOG_E("Expander not properly initialized");
             return;
         }
         if (_pinModes[pin] != OUTPUT) {
-            log_e("Pin %d is not configured as OUTPUT", pin);
+            SENSORLIB_LOG_E("Pin %d is not configured as OUTPUT", pin);
             return;
         }
         int state = 1 - _outputStates[pin];
@@ -249,7 +249,7 @@ public:
     {
         uint16_t result = 0;
         if (!_pinModes || !_outputStates) {
-            log_e("Expander not properly initialized");
+            SENSORLIB_LOG_E("Expander not properly initialized");
             return 0;
         }
         for (uint8_t i = 0; i < _pinCount; i++) {
@@ -285,7 +285,7 @@ public:
     uint16_t pinToMask(uint8_t pin) const
     {
         if (pin >= _pinCount) {
-            log_e("Invalid pin number");
+            SENSORLIB_LOG_E("Invalid pin number");
             return 0;
         }
         return (1UL << pin);

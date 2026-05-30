@@ -260,8 +260,8 @@ public:
     void setLightSensorThreshold(uint16_t low, uint16_t high)
     {
         uint8_t buffer[4] = {
-            lowByte(high), highByte(high),
-            lowByte(low),  highByte(low)
+            sensorlib::_lowByte(high), sensorlib::_highByte(high),
+            sensorlib::_lowByte(low),  sensorlib::_highByte(low)
         };
         writeRegBuff(REG_ALS_THRES_UP_0, buffer, 4);
     }
@@ -376,10 +376,10 @@ public:
      */
     void setProximityThreshold(uint16_t low, uint16_t high)
     {
-        writeReg(REG_PS_THRES_UP_0, lowByte(high));
-        writeReg(REG_PS_THRES_UP_1, lowByte(high >> 8) & 0x0F);
-        writeReg(REG_PS_THRES_LOW_0, lowByte(low));
-        writeReg(REG_PS_THRES_LOW_1, lowByte(low >> 8) & 0x0F);
+        writeReg(REG_PS_THRES_UP_0, sensorlib::_lowByte(high));
+        writeReg(REG_PS_THRES_UP_1, sensorlib::_lowByte(high >> 8) & 0x0F);
+        writeReg(REG_PS_THRES_LOW_0, sensorlib::_lowByte(low));
+        writeReg(REG_PS_THRES_LOW_1, sensorlib::_lowByte(low >> 8) & 0x0F);
     }
 
     /**

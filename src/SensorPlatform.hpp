@@ -41,7 +41,6 @@
 #endif
 #include "platform/SensorCommCustom.hpp"
 #include "platform/SensorCommCustomHal.hpp"
-#include "platform/SensorCommDebug.hpp"
 #include "platform/SensorCommStatic.hpp"
 #include <assert.h>
 
@@ -68,7 +67,6 @@ bool beginCommonStatic(
         return false;
     }
     if (!comm->init()) {
-        log_e("Bus init failed!");
         return false;
     }
     staticComm = std::make_unique<SensorCommStatic>(comm.get(), hal.get());

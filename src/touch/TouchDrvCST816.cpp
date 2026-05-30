@@ -129,10 +129,10 @@ void TouchDrvCST816::enableAutoSleep()
 bool TouchDrvCST816::initImpl(uint8_t)
 {
     int chip_id = readReg(CST8xx_REG_CHIP_ID);
-    log_i("Chip ID:0x%x", chip_id);
+    SENSORLIB_LOG_I("Chip ID:0x%x", chip_id);
 
     int version = readReg(CST8xx_REG_FW_VERSION);
-    log_i("Version :0x%x", version);
+    SENSORLIB_LOG_I("Version :0x%x", version);
 
     // CST716  : 0x20
     // CST816S : 0xB4
@@ -144,14 +144,14 @@ bool TouchDrvCST816::initImpl(uint8_t)
             chip_id != CST820_CHIP_ID &&
             chip_id != CST816D_CHIP_ID &&
             (chip_id != CST716_CHIP_ID || version == 0)) {
-        log_e("Chip ID does not match, should be CST816S:0X%02X , CST816T:0X%02X , CST816D:0X%02X , CST820:0X%02X , CST716:0X%02X",
+        SENSORLIB_LOG_E("Chip ID does not match, should be CST816S:0X%02X , CST816T:0X%02X , CST816D:0X%02X , CST820:0X%02X , CST716:0X%02X",
               CST816S_CHIP_ID, CST816T_CHIP_ID, CST816D_CHIP_ID, CST820_CHIP_ID, CST716_CHIP_ID);
         return false;
     }
 
     _chipID = chip_id;
 
-    log_i("Touch type:%s", getModelName());
+    SENSORLIB_LOG_I("Touch type:%s", getModelName());
 
     _maxTouchPoints = 1;
 

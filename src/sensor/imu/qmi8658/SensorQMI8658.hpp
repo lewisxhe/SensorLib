@@ -962,12 +962,12 @@ protected:
     uint8_t findClosestGyroOdr(float hz);
     uint8_t findClosestAccelLpOdr(float hz);
 
-    static constexpr uint8_t STATUS_TAP_EVENT          = _BV(1);
-    static constexpr uint8_t STATUS_WOM_EVENT          = _BV(2);
-    static constexpr uint8_t STATUS_PEDOMETER_EVENT    = _BV(4);
-    static constexpr uint8_t STATUS_ANY_MOTION_EVENT   = _BV(5);
-    static constexpr uint8_t STATUS_NO_MOTION_EVENT    = _BV(6);
-    static constexpr uint8_t STATUS_SIGNIFICANT_MOTION = _BV(7);
+    static constexpr uint8_t STATUS_TAP_EVENT          = sensorlib::_bv(1);
+    static constexpr uint8_t STATUS_WOM_EVENT          = sensorlib::_bv(2);
+    static constexpr uint8_t STATUS_PEDOMETER_EVENT    = sensorlib::_bv(4);
+    static constexpr uint8_t STATUS_ANY_MOTION_EVENT   = sensorlib::_bv(5);
+    static constexpr uint8_t STATUS_NO_MOTION_EVENT    = sensorlib::_bv(6);
+    static constexpr uint8_t STATUS_SIGNIFICANT_MOTION = sensorlib::_bv(7);
 
     AccelFullScaleRange _accel_range;
     GyroFullScaleRange _gyro_range;

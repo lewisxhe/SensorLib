@@ -86,7 +86,7 @@ bool SensorBHI260AP_Klio::begin()
         return true;
     }
     if (!sensor) {
-        log_e("The sensor handle is null");
+        SENSORLIB_LOG_E("The sensor handle is null");
         return false;
     }
     const uint8_t PARAM_BUF_LEN = 252;
@@ -98,7 +98,7 @@ bool SensorBHI260AP_Klio::begin()
     int count = 0;
 
     if (!getParameter(KLIO_PARAM_ALGORITHM_VERSION, param_buf, &size)) {
-        log_e("Unable to get Klio firmware version.");
+        SENSORLIB_LOG_E("Unable to get Klio firmware version.");
         return false;
     }
 
@@ -107,11 +107,11 @@ bool SensorBHI260AP_Klio::begin()
     }
 
     if (major < 0 || minor < 0 || version < 0 || count != 3) {
-        log_e("Unable to get Klio firmware version.");
+        SENSORLIB_LOG_E("Unable to get Klio firmware version.");
         return false;
     }
 
-    log_d("Klio version %d.%d.%d - buf:%s", major, minor, version, param_buf);
+    SENSORLIB_LOG_D("Klio version %d.%d.%d - buf:%s", major, minor, version, param_buf);
 
     /* Get number of supported patterns */
     uint16_t length = sizeof(param_buf);
@@ -121,16 +121,16 @@ bool SensorBHI260AP_Klio::begin()
     max_patterns = *((uint16_t *) param_buf);
     similarity_result_buf = (float *)malloc(sizeof(float) * max_patterns);
     if (!similarity_result_buf) {
-        log_e("Klio result buffer allocate failed!");
+        SENSORLIB_LOG_E("Klio result buffer allocate failed!");
         return false;
     }
     similarity_idx_buf = (uint8_t *)malloc(sizeof(uint8_t) * max_patterns);
     if (!similarity_idx_buf) {
-        log_e("Klio index buffer allocate failed!");
+        SENSORLIB_LOG_E("Klio index buffer allocate failed!");
         free(similarity_result_buf);
         return false;
     }
-    log_d("Klio process allocate successfully!");
+    SENSORLIB_LOG_D("Klio process allocate successfully!");
 
     /* Get maximum supported pattern size */
     length = sizeof(param_buf);
@@ -140,8 +140,8 @@ bool SensorBHI260AP_Klio::begin()
         return false;
     }
     max_pattern_size = *((uint16_t *) param_buf);
-    log_d("Klio Max patterns   :%u", max_patterns);
-    log_d("Klio Max pattern len:%u", max_pattern_size);
+    SENSORLIB_LOG_D("Klio Max patterns   :%u", max_patterns);
+    SENSORLIB_LOG_D("Klio Max pattern len:%u", max_pattern_size);
 
     uint8_t ignore_insignificant_movement = 1;
     /* Prevent learning with small movements, parameter writes should be done after reset and before sensor enable */
@@ -170,7 +170,7 @@ SensorBHI260AP_Klio::KlioState SensorBHI260AP_Klio::getState()
 {
     bhy2_klio_sensor_state_t sensor_state;
     if (!sensor) {
-        log_e("The sensor handle is null");
+        SENSORLIB_LOG_E("The sensor handle is null");
         return {};
     }
     bhy2_klio_get_state(&sensor_state, sensor->getDev());
@@ -180,7 +180,7 @@ SensorBHI260AP_Klio::KlioState SensorBHI260AP_Klio::getState()
 bool SensorBHI260AP_Klio::setState(KlioState sensor_state)
 {
     if (!sensor) {
-        log_e("The sensor handle is null");
+        SENSORLIB_LOG_E("The sensor handle is null");
         return false;
     }
     return bhy2_klio_set_state(&sensor_state, sensor->getDev()) == BHY2_OK;
@@ -196,7 +196,7 @@ bool SensorBHI260AP_Klio::learning()
 bool SensorBHI260AP_Klio::recognition(const uint8_t *pattern_ids, size_t size)
 {
     if (!KlioTemplate(bhy2_klio_set_pattern_states, KLIO_PATTERN_STATE_ENABLE, pattern_ids, size)) {
-        log_e("Klio set pattern idx failed!");
+        SENSORLIB_LOG_E("Klio set pattern idx failed!");
         return false;
     }
     k_state =  getState();
@@ -251,7 +251,7 @@ void SensorBHI260AP_Klio::klio_log_call_local(uint8_t sensor_id, const uint8_t *
 {
     bhy2_klio_log_frame_t data;
     memcpy(&data, data_ptr, sizeof(data));
-    log_d("ax: %.9g, ay: %.9g, az: %.9g, gx: %.9g, gy: %.9g, gz: %.9g\n",
+    SENSORLIB_LOG_D("ax: %.9g, ay: %.9g, az: %.9g, gx: %.9g, gy: %.9g, gz: %.9g\n",
           data.accel[0],
           data.accel[1],
           data.accel[2],
@@ -279,7 +279,7 @@ bool SensorBHI260AP_Klio::writeMultiplePatterns(const uint8_t *ids, const uint8_
 {
     for (uint8_t i = 0; i < count; ++i) {
         if (!KlioTemplate(bhy2_klio_write_pattern, ids[i], parameter_data_array[i], sizes[i])) {
-            log_d("Write pattern with ID :%u failed", ids[i]);
+            SENSORLIB_LOG_D("Write pattern with ID :%u failed", ids[i]);
             return false;
         }
     }
@@ -304,7 +304,7 @@ bool SensorBHI260AP_Klio::readPattern(uint8_t idx, uint8_t *buffer, uint16_t *le
 bool SensorBHI260AP_Klio::enable(float sample_rate, uint32_t report_latency_ms)
 {
     if (!sensor) {
-        log_e("The sensor handle is null");
+        SENSORLIB_LOG_E("The sensor handle is null");
         return false;
     }
     return sensor->configure(BoschSensorID::KLIO, sample_rate, report_latency_ms);
@@ -313,7 +313,7 @@ bool SensorBHI260AP_Klio::enable(float sample_rate, uint32_t report_latency_ms)
 void SensorBHI260AP_Klio::disable()
 {
     if (!sensor) {
-        log_e("The sensor handle is null");
+        SENSORLIB_LOG_E("The sensor handle is null");
         return;
     }
     sensor->configure(BoschSensorID::KLIO, 0, 0);
@@ -322,7 +322,7 @@ void SensorBHI260AP_Klio::disable()
 bool SensorBHI260AP_Klio::logout(float sample_rate, uint32_t report_latency_ms)
 {
     if (!sensor) {
-        log_e("The sensor handle is null");
+        SENSORLIB_LOG_E("The sensor handle is null");
         return false;
     }
     return sensor->configure(BoschSensorID::KLIO_LOG, sample_rate, report_latency_ms);
@@ -343,7 +343,7 @@ void SensorBHI260AP_Klio::setRecognitionCallback(RecognitionCallback cb, void *u
 bool SensorBHI260AP_Klio::checkError()
 {
     if (!sensor) {
-        log_e("The sensor handle is null");
+        SENSORLIB_LOG_E("The sensor handle is null");
         return false;
     }
     uint32_t klio_status;
@@ -374,16 +374,16 @@ template<typename Func, typename... Args>
 bool SensorBHI260AP_Klio::KlioTemplate(Func func, Args &&... args)
 {
     if (!sensor) {
-        log_e("The sensor handle is null");
+        SENSORLIB_LOG_E("The sensor handle is null");
         return false;
     }
     int8_t rslt = func(std::forward<Args>(args)..., sensor->getDev());
     if (rslt != BHY2_OK) {
-        log_e("Interface access error, %s", BoschSensorUtils::get_api_error(rslt));
+        SENSORLIB_LOG_E("Interface access error, %s", BoschSensorUtils::get_api_error(rslt));
         return false;
     }
     if (checkError()) {
-        log_e("%s", errorToString());
+        SENSORLIB_LOG_E("%s", errorToString());
         return false;
     }
     return true;

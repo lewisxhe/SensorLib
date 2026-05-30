@@ -128,14 +128,14 @@ bool TouchDrvCST226::initImpl(uint8_t)
     writeThenRead(write_buffer, 2, buffer, 4);
 
     uint32_t checkcode = (buffer[3] << 24) | (buffer[2] << 16) | (buffer[1] << 8) | buffer[0];
-    log_i("Chip checkcode:0x%lX.", checkcode);
+    SENSORLIB_LOG_I("Chip checkcode:0x%" PRIX32 ".", checkcode);
 
     write_buffer[0] = 0xD1;
     write_buffer[1] = 0xF8;
     writeThenRead(write_buffer, 2, buffer, 4);
     _touchConfig.resolutionX = ( buffer[1] << 8) | buffer[0];
     _touchConfig.resolutionY = ( buffer[3] << 8) | buffer[2];
-    log_i("Chip resolution X:%u Y:%u", _touchConfig.resolutionX, _touchConfig.resolutionY);
+    SENSORLIB_LOG_I("Chip resolution X:%u Y:%u", _touchConfig.resolutionX, _touchConfig.resolutionY);
 
     write_buffer[0] = 0xD2;
     write_buffer[1] = 0x04;
@@ -148,7 +148,7 @@ bool TouchDrvCST226::initImpl(uint8_t)
     uint32_t ProjectID = buffer[1];
     ProjectID <<= 8;
     ProjectID |= buffer[0];
-    log_i("Chip type: 0x%04" PRIX32 ", ProjectID: 0x%04" PRIX32, chipType, ProjectID);
+    SENSORLIB_LOG_I("Chip type: 0x%04" PRIX32 ", ProjectID: 0x%04" PRIX32, chipType, ProjectID);
 
 
     write_buffer[0] = 0xD2;
@@ -171,15 +171,15 @@ bool TouchDrvCST226::initImpl(uint8_t)
     checksum <<= 8;
     checksum |= buffer[4];
 
-    log_i("Chip ic version:0x%lx, checksum:0x%lx",
+    SENSORLIB_LOG_I("Chip ic version:0x%" PRIx32 ", checksum:0x%" PRIx32,
           fwVersion, checksum);
 
     if (fwVersion == 0xA5A5A5A5) {
-        log_e("Chip ic don't have firmware.");
+        SENSORLIB_LOG_E("Chip ic don't have firmware.");
         return false;
     }
     if ((checkcode & 0xffff0000) != 0xCACA0000) {
-        log_e("Firmware info read error.");
+        SENSORLIB_LOG_E("Firmware info read error.");
         return false;
     }
 
@@ -189,7 +189,7 @@ bool TouchDrvCST226::initImpl(uint8_t)
     case CST328_CHIPTYPE:
         break;
     default:
-        log_e("Chip ID does not match, should be 0x%02" PRIX8 " ,but is 0x%02" PRIX32, CST226SE_CHIPTYPE, chipType);
+        SENSORLIB_LOG_E("Chip ID does not match, should be 0x%02" PRIX8 " ,but is 0x%02" PRIX32, CST226SE_CHIPTYPE, chipType);
         return false;
     }
 

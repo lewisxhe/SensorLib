@@ -103,7 +103,7 @@ bool SY6970Core::initImpl(uint8_t param)
     (void)param;
     uint8_t rev = getDeviceRevision();
     if (rev != SY6970_DEV_REV) {
-        log_e("Device revision mismatch: expected 0x%02X, got 0x%02X", SY6970_DEV_REV, rev);
+        SENSORLIB_LOG_E("Device revision mismatch: expected 0x%" PRIx32 ", got 0x%" PRIx32, SY6970_DEV_REV, rev);
         return false;
     }
     // Perform a reset to ensure device is in known state

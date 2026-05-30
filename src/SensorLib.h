@@ -28,6 +28,7 @@
  */
 
 #pragma once
+
 #if defined(ARDUINO)
 #include <Arduino.h>
 #include <SPI.h>
@@ -40,137 +41,69 @@
 
 #include "SensorLib_Version.h"
 
-#if !defined(ARDUINO_ARCH_MBED) && !defined(ARDUINO_ARCH_ZEPHYR)
-#define PLATFORM_HAS_PRINTF
+#if defined(INCLUDE_DEVICES_PINS)
+#include "DevicesPins.h"
 #endif
 
 #if defined(ARDUINO_ARCH_RP2040) && !defined(ARDUINO_ARCH_MBED)
 #define SPIClass SPIClassRP2040
 #endif
 
-#if defined(INCLUDE_DEVICES_PINS)
-#include "DevicesPins.h"
-#endif
+// ═══════════════════════════════════════════════════════════════════════════
+//  Core utilities in namespace sensorlib
+// ═══════════════════════════════════════════════════════════════════════════
 
-#ifdef _BV
-#undef _BV
-#endif
-#define _BV(b)                          (1UL << (uint32_t)(b))
+namespace sensorlib {
 
-#ifndef lowByte
-#define lowByte(w)                      ((uint8_t) ((w) & 0xff))
-#endif
+// ── Bit shift helpers (constexpr, type-safe) ────────────────────────────────
 
-#ifndef highByte
-#define highByte(w)                     ((uint8_t) ((w) >> 8))
-#endif
+constexpr uint32_t _bv(uint8_t b) { return static_cast<uint32_t>(1) << b; }
 
-#ifndef bitRead
-#define bitRead(value, bit)             (((value) >> (bit)) & 0x01)
-#endif
+// ── Byte extraction ─────────────────────────────────────────────────────────
 
-#ifndef bitSet
-#define bitSet(value, bit)              ((value) |= (1UL << (bit)))
-#endif
+constexpr uint8_t _lowByte(uint16_t w)  { return static_cast<uint8_t>(w & 0xFF); }
+constexpr uint8_t _highByte(uint16_t w) { return static_cast<uint8_t>(w >> 8);   }
 
-#ifndef bitClear
-#define bitClear(value, bit)            ((value) &= ~(1UL << (bit)))
-#endif
+// ── Bit manipulation (template, type-safe) ──────────────────────────────────
 
-#ifndef bitToggle
-#define bitToggle(value, bit)           ((value) ^= (1UL << (bit)))
-#endif
+template<typename T>
+constexpr T _bitRead(T value, uint8_t bit)
+{
+    return (value >> bit) & static_cast<T>(1);
+}
 
-#ifndef bitWrite
-#define bitWrite(value, bit, bitvalue)  ((bitvalue) ? bitSet(value, bit) : bitClear(value, bit))
-#endif
+template<typename T>
+inline void _bitSet(T &value, uint8_t bit)
+{
+    value |= (static_cast<T>(1) << bit);
+}
 
-#ifndef isBitSet
-#define isBitSet(value, bit)            (((value) & (1UL << (bit))) == (1UL << (bit)))
-#endif
+template<typename T>
+inline void _bitClear(T &value, uint8_t bit)
+{
+    value &= ~(static_cast<T>(1) << bit);
+}
 
-#define ATTR_NOT_IMPLEMENTED            __attribute__((error("Not implemented")))
+template<typename T>
+inline void _bitToggle(T &value, uint8_t bit)
+{
+    value ^= (static_cast<T>(1) << bit);
+}
 
+template<typename T>
+inline void _bitWrite(T &value, uint8_t bit, bool bitvalue)
+{
+    if (bitvalue) _bitSet(value, bit);
+    else          _bitClear(value, bit);
+}
 
-#if !defined(ARDUINO_ARCH_ESP32) && defined(LOG_PORT) && defined(ARDUINO) && !defined(ARDUINO_ARCH_MBED) && !defined(ARDUINO_ARCH_ZEPHYR)
+template<typename T>
+constexpr bool _isBitSet(T value, uint8_t bit)
+{
+    return (value & (static_cast<T>(1) << bit)) == (static_cast<T>(1) << bit);
+}
 
-#define LOG_FILE_LINE_INFO __FILE__, __LINE__
-
-#ifndef log_e
-#define log_e(fmt, ...)                 LOG_PORT.printf("[E][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
-#endif  /*log_e*/
-
-#ifndef log_i
-#define log_i(fmt, ...)                 LOG_PORT.printf("[I][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
-#endif  /*log_i*/
-
-#ifndef log_d
-#define log_d(fmt, ...)                 LOG_PORT.printf("[D][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
-#endif  /*log_d*/
-
-#ifndef log_w
-#define log_w(fmt, ...)                 LOG_PORT.printf("[W][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
-#endif  /*log_w*/
-
-#elif defined(ARDUINO_ARCH_MBED) || defined(ARDUINO_ARCH_ZEPHYR)
-
-#define LOG_FILE_LINE_INFO __FILE__, __LINE__
-
-#ifndef log_e
-#define log_e(fmt, ...)                 printf("[E][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
-#endif  /*log_e*/
-
-#ifndef log_i
-#define log_i(fmt, ...)                 printf("[I][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
-#endif  /*log_i*/
-
-#ifndef log_d
-#define log_d(fmt, ...)                 printf("[D][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
-#endif  /*log_d*/
-
-#ifndef log_w
-#define log_w(fmt, ...)                 printf("[W][%s:%d] " fmt "\n", LOG_FILE_LINE_INFO, ##__VA_ARGS__)
-#endif  /*log_w*/
-
-#elif defined(ESP_PLATFORM) && !defined(ARDUINO)
-
-#include "esp_log.h"
-
-#define ESP_TAG_LIB                     "SensorLib"
-#if defined(__cplusplus) && (__cplusplus >  201703L)
-#define log_e(format, ... )             ESP_LOG_LEVEL_LOCAL(ESP_LOG_ERROR,   ESP_TAG_LIB, format __VA_OPT__(,) __VA_ARGS__)
-#define log_w(format, ... )             ESP_LOG_LEVEL_LOCAL(ESP_LOG_WARN,    ESP_TAG_LIB, format __VA_OPT__(,) __VA_ARGS__)
-#define log_i(format, ... )             ESP_LOG_LEVEL_LOCAL(ESP_LOG_INFO,    ESP_TAG_LIB, format __VA_OPT__(,) __VA_ARGS__)
-#define log_d(format, ... )             ESP_LOG_LEVEL_LOCAL(ESP_LOG_DEBUG,   ESP_TAG_LIB, format __VA_OPT__(,) __VA_ARGS__)
-#define log_v(format, ... )             ESP_LOG_LEVEL_LOCAL(ESP_LOG_VERBOSE, ESP_TAG_LIB, format __VA_OPT__(,) __VA_ARGS__)
-#else // !(defined(__cplusplus) && (__cplusplus >  201703L))
-#define log_e(format, ... )             ESP_LOG_LEVEL_LOCAL(ESP_LOG_ERROR,   ESP_TAG_LIB, format, ##__VA_ARGS__)
-#define log_w(format, ... )             ESP_LOG_LEVEL_LOCAL(ESP_LOG_WARN,    ESP_TAG_LIB, format, ##__VA_ARGS__)
-#define log_i(format, ... )             ESP_LOG_LEVEL_LOCAL(ESP_LOG_INFO,    ESP_TAG_LIB, format, ##__VA_ARGS__)
-#define log_d(format, ... )             ESP_LOG_LEVEL_LOCAL(ESP_LOG_DEBUG,   ESP_TAG_LIB, format, ##__VA_ARGS__)
-#define log_v(format, ... )             ESP_LOG_LEVEL_LOCAL(ESP_LOG_VERBOSE, ESP_TAG_LIB, format, ##__VA_ARGS__)
-#endif // !(defined(__cplusplus) && (__cplusplus >  201703L))
-
-
-#else   /*ESP_PLATFORM*/
-
-#ifndef log_e
-#define log_e(...)
-#endif
-
-#ifndef log_i
-#define log_i(...)
-#endif
-
-#ifndef log_d
-#define log_d(...)
-#endif
-
-#ifndef log_w
-#define log_w(...)
-#endif
-
-#endif /*ARDUINO*/
+} // namespace sensorlib
 
 #if !defined(ARDUINO)  && defined(ESP_PLATFORM)
 
@@ -200,3 +133,4 @@
 
 #endif
 
+#include "platform/SensorLibLog.hpp"

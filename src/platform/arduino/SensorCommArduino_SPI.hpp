@@ -56,7 +56,6 @@ public:
     bool init() override
     {
         if (!hal) {
-            log_e("hal pointer is null");
             setError(SENSOR_ERR_INVALID_ARG);
             return false;
         }

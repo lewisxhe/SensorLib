@@ -81,26 +81,26 @@ public:
 
         int status = readReg(REG_0x09_STAT);
         if (status < 0) {
-            log_e("Failed to read status register");
+            SENSORLIB_LOG_E("Failed to read status register");
             return false;
         }
 
         // OVL (Overflow)
-        if (isBitSet(status, 1)) {
+        if (sensorlib::_isBitSet(status, 1)) {
             data.overflow = true;
-            log_w("Data overflow detected");
+            SENSORLIB_LOG_W("Data overflow detected");
         } else {
             data.overflow = false;
         }
 
         // DRDY (Data Ready)
-        if (!isBitSet(status, 0)) {
-            // log_e("Data not ready");
+        if (!sensorlib::_isBitSet(status, 0)) {
+            // SENSORLIB_LOG_E("Data not ready");
             return false;
         }
 
         if (readRegBuff(REG_0x01_LSB_DX, buffer, sizeof(buffer)) < 0) {
-            log_e("Failed to read magnetic field data");
+            SENSORLIB_LOG_E("Failed to read magnetic field data");
             return false;
         }
         data.raw.x = (int16_t)(buffer[1] << 8) | (buffer[0]);  // Combine X LSB and MSB
@@ -178,11 +178,11 @@ public:
     bool reset() override
     {
         if (writeReg(REG_0x0B_CMD2, 0x80) < 0) {
-            log_e("Failed to set soft reset");
+            SENSORLIB_LOG_E("Failed to set soft reset");
             return false;
         }
         if (writeReg(REG_0x0B_CMD2, 0x00) < 0) {
-            log_e("Failed to clear soft reset");
+            SENSORLIB_LOG_E("Failed to clear soft reset");
             return false;
         }
 
@@ -191,13 +191,13 @@ public:
         uint8_t retry = 0;
         while (retry++ < 5) {
             int status = readReg(REG_0x09_STAT);
-            if (status >= 0 && isBitSet(status, 4) && isBitSet(status, 3)) {
+            if (status >= 0 && sensorlib::_isBitSet(status, 4) && sensorlib::_isBitSet(status, 3)) {
                 return true;
             }
             hal->delay(1);
         }
 
-        log_e("NVM not ready after soft reset");
+        SENSORLIB_LOG_E("NVM not ready after soft reset");
         return false;
     }
 
@@ -223,19 +223,19 @@ public:
     bool selfTest(int16_t &x_result, int16_t &y_result, int16_t &z_result)
     {
         if (!setOperationMode(OperationMode::SUSPEND)) {
-            log_e("Failed to set SUSPEND mode for selfTest");
+            SENSORLIB_LOG_E("Failed to set SUSPEND mode for selfTest");
             return false;
         }
 
         if (!setOperationMode(OperationMode::CONTINUOUS_MEASUREMENT)) {
-            log_e("Failed to set CONTINUOUS_MEASUREMENT for selfTest");
+            SENSORLIB_LOG_E("Failed to set CONTINUOUS_MEASUREMENT for selfTest");
             return false;
         }
 
         hal->delay(20);
 
         if (writeReg(REG_0x0E_SELFTEST_CTRL, MASK_SOFT_RST) < 0) {
-            log_e("Failed to trigger self-test");
+            SENSORLIB_LOG_E("Failed to trigger self-test");
             return false;
         }
 
@@ -244,7 +244,7 @@ public:
             hal->delay(5);
         }
         if (retry > 50) {
-            log_e("Self-test not ready (ST_RDY bit is 0)");
+            SENSORLIB_LOG_E("Self-test not ready (ST_RDY bit is 0)");
             return false;
         }
 
@@ -252,7 +252,7 @@ public:
         int y_test = readReg(REG_0x14_SELFTEST_Y);
         int z_test = readReg(REG_0x15_SELFTEST_Z);
         if (x_test < 0 || y_test < 0 || z_test < 0) {
-            log_e("Failed to read self-test result");
+            SENSORLIB_LOG_E("Failed to read self-test result");
             return false;
         }
 
@@ -271,7 +271,7 @@ public:
         bool z_ok = (z_abs >= 1 && z_abs <= 50);
 
         if (!x_ok || !y_ok || !z_ok) {
-            log_w("Self-test data out of range: X=%d, Y=%d, Z=%d (expected abs in 1..50)",
+            SENSORLIB_LOG_W("Self-test data out of range: X=%d, Y=%d, Z=%d (expected abs in 1..50)",
                   x_result, y_result, z_result);
         }
 
@@ -308,12 +308,12 @@ public:
             full_scale = 8.0f;
             break;
         default:
-            log_e("Invalid magnetometer range.");
+            SENSORLIB_LOG_E("Invalid magnetometer range.");
             return false;
         }
 
         if (updateBits(REG_0x0B_CMD2, 0x0C, range_value) < 0) {
-            log_e("Failed to set full scale range.");
+            SENSORLIB_LOG_E("Failed to set full scale range.");
             return false;
         }
         _sensitivity = sensitivity;
@@ -348,11 +348,11 @@ public:
             regValue = 0x04 << 4;
             break;
         default:
-            log_e("Invalid output data rate");
+            SENSORLIB_LOG_E("Invalid output data rate");
             return false;
         }
         if (updateBits(REG_0x0A_CMD1, 0x70, regValue) < 0) {
-            log_e("Failed to set bandwidth");
+            SENSORLIB_LOG_E("Failed to set bandwidth");
             return false;
         }
         _config.sample_rate = data_rate_hz;
@@ -383,11 +383,11 @@ public:
             mode_val = 0x03;
             break;
         default:
-            log_e("Invalid operation mode");
+            SENSORLIB_LOG_E("Invalid operation mode");
             return false;
         }
         if (updateBits(REG_0x0A_CMD1, 0x03, mode_val) < 0) {
-            log_e("Failed to set operation mode");
+            SENSORLIB_LOG_E("Failed to set operation mode");
             return false;
         }
         _config.mode = mode;
@@ -422,7 +422,7 @@ public:
             _oversampling_rate = 1;
             break;
         default:
-            log_e("Invalid oversampling rate");
+            SENSORLIB_LOG_E("Invalid oversampling rate");
             return false;
         }
         return updateBits(REG_0x0A_CMD1, 0x18, osr_val) == 0;
@@ -434,7 +434,7 @@ public:
     */
     bool setDownsamplingRate(MagDownSampleRatio dsr) override
     {
-        log_e("QMC6309 does not support downsampling rate setting");
+        SENSORLIB_LOG_E("QMC6309 does not support downsampling rate setting");
         return false;
     }
 
@@ -465,7 +465,7 @@ public:
             lpf_val = 0x04 << 5;
             break;
         default:
-            log_e("Invalid low-pass filter");
+            SENSORLIB_LOG_E("Invalid low-pass filter");
             return false;
         }
         return updateBits(REG_0x0A_CMD1, 0xE0, lpf_val) == 0;
@@ -533,7 +533,7 @@ public:
             sr_val = 0x03;
             break;
         default:
-            log_e("Invalid set/reset mode");
+            SENSORLIB_LOG_E("Invalid set/reset mode");
             return false;
         }
         return updateBits(REG_0x0B_CMD2, 0x03, sr_val) == 0;
@@ -594,7 +594,7 @@ private:
 
         int reg = readReg(REG_0x40_IO_CONFIG);
         if (reg < 0) {
-            log_e("Failed to read QMC6309H IO config");
+            SENSORLIB_LOG_E("Failed to read QMC6309H IO config");
             return false;
         }
 
@@ -611,7 +611,7 @@ private:
         }
 
         if (writeReg(REG_0x40_IO_CONFIG, value) < 0) {
-            log_e("Failed to write QMC6309H IO config");
+            SENSORLIB_LOG_E("Failed to write QMC6309H IO config");
             return false;
         }
         hal->delay(1);
@@ -630,14 +630,14 @@ private:
 
             for (uint8_t count = 0; count < 100; ++count) {
                 int status = readReg(REG_0x09_STAT);
-                if (status >= 0 && isBitSet(status, 4)) {
+                if (status >= 0 && sensorlib::_isBitSet(status, 4)) {
                     return true;
                 }
                 hal->delay(1);
             }
         }
 
-        log_e("Failed to reload OTP");
+        SENSORLIB_LOG_E("Failed to reload OTP");
         return false;
     }
 
@@ -666,7 +666,7 @@ private:
             _is_qmc6309h = true;
             _info.model = "QMC6309H";
         } else {
-            log_e("Unsupported chip ID");
+            SENSORLIB_LOG_E("Unsupported chip ID");
             return false;
         }
 

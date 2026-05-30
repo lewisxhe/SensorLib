@@ -106,7 +106,7 @@ bool SensorBMM150::setFullScaleRange(MagFullScaleRange range)
         _config.range = 16.0f;
         return true;
     default:
-        log_e("BMM150 does not support configurable full-scale range");
+        SENSORLIB_LOG_E("BMM150 does not support configurable full-scale range");
         return false;
     }
 }
@@ -145,7 +145,7 @@ bool SensorBMM150::setOutputDataRate(float odr)
         data_rate = BMM150_DATA_RATE_30HZ;
         break;
     default:
-        log_e("Invalid BMM150 output data rate: %.2f", odr);
+        SENSORLIB_LOG_E("Invalid BMM150 output data rate: %.2f", odr);
         return false;
     }
 
@@ -231,7 +231,7 @@ bool SensorBMM150::setOversamplingRate(MagOverSampleRatio osr)
 bool SensorBMM150::setDownsamplingRate(MagDownSampleRatio dsr)
 {
     (void)dsr;
-    log_e("BMM150 does not support downsampling rate setting");
+    SENSORLIB_LOG_E("BMM150 does not support downsampling rate setting");
     return false;
 }
 
@@ -266,7 +266,7 @@ bool SensorBMM150::initImpl(uint8_t param)
 
     _dev = std::make_unique<struct bmm150_dev>();
     if (!_dev) {
-        log_e("Device handler alloc failed");
+        SENSORLIB_LOG_E("Device handler alloc failed");
         return false;
     }
     std::memset(_dev.get(), 0, sizeof(struct bmm150_dev));

@@ -34,10 +34,6 @@
 namespace Paw350Regs
 {
 
-#ifdef _BV
-#undef _BV
-#endif
-#define _BV(bit)  (1U << (bit))
 
 static constexpr uint8_t SOFTRESET_VAL = 0x5A;
 
@@ -87,9 +83,9 @@ static constexpr uint8_t SHIFT_RID       = 0;
 // ==============================================
 // Register : EVENT
 static constexpr uint8_t REG_EVENT       = 0x02;
-static constexpr uint8_t MASK_MOTION      = _BV(7);
-static constexpr uint8_t MASK_RESET_ST    = _BV(3);
-static constexpr uint8_t MASK_FPD_ST     = _BV(0);
+static constexpr uint8_t MASK_MOTION      = 0x80;
+static constexpr uint8_t MASK_RESET_ST    = 0x08;
+static constexpr uint8_t MASK_FPD_ST     = 0x01;
 
 // ==============================================
 // 0x03 (RO)
@@ -160,7 +156,7 @@ static constexpr uint8_t SHIFT_R3R        = 0;
 // ==============================================
 // Register : LED_CTRL
 static constexpr uint8_t REG_LED_CTRL    = 0x1A;
-static constexpr uint8_t MASK_LED_ON     = _BV(3);
+static constexpr uint8_t MASK_LED_ON     = 0x08;
 static constexpr uint8_t MASK_LED_DRV     = 0x07;
 static constexpr uint8_t SHIFT_LED_DRV    = 0;
 
@@ -208,6 +204,6 @@ static constexpr uint8_t SHIFT_MOTION_INT_THRES = 0;
 // ==============================================
 // Register : FPD_FLAG
 static constexpr uint8_t REG_FPD_FLAG    = 0x7A;
-static constexpr uint8_t MASK_FPD        = _BV(0);
+static constexpr uint8_t MASK_FPD        = 0x01;
 
 } // namespace Paw350Regs

@@ -308,7 +308,7 @@ bool SensorQMI8658::reset()
         hal->delay(10);
     }
 
-    log_e("QMI8658 reset timeout");
+    SENSORLIB_LOG_E("QMI8658 reset timeout");
     return false;
 }
 
@@ -839,7 +839,7 @@ bool SensorQMI8658::configureFifo(bool enable, uint8_t watermark_samples)
     }
 
     if (writeCommand(CTRL_CMD_RST_FIFO) != 0) {
-        log_e("Failed to reset FIFO");
+        SENSORLIB_LOG_E("Failed to reset FIFO");
         return false;
     }
 
@@ -936,7 +936,7 @@ uint16_t SensorQMI8658::readFromFifo(AccelerometerData *accel_data, uint16_t acc
 
     uint8_t status = getFifoStatus();
     if (!(status & MASK_FIFO_EMPTY)) {
-        log_d("FIFO is empty");
+        SENSORLIB_LOG_D("FIFO is empty");
         return 0;
     }
 
@@ -957,14 +957,14 @@ uint16_t SensorQMI8658::readFromFifo(AccelerometerData *accel_data, uint16_t acc
         if (_fifo_buffer) free(_fifo_buffer);
         _fifo_buffer = (uint8_t *)malloc(buffer_size);
         if (!_fifo_buffer) {
-            log_e("Failed to allocate FIFO buffer");
+            SENSORLIB_LOG_E("Failed to allocate FIFO buffer");
             return 0;
         }
         _fifo_buffer_size = buffer_size;
     }
 
     if (writeCommand(CTRL_CMD_REQ_FIFO) != 0) {
-        log_e("Failed to request FIFO");
+        SENSORLIB_LOG_E("Failed to request FIFO");
         return 0;
     }
 
@@ -976,7 +976,7 @@ uint16_t SensorQMI8658::readFromFifo(AccelerometerData *accel_data, uint16_t acc
     while (remaining > 0) {
         uint16_t chunk = remaining > kFifoReadChunk ? kFifoReadChunk : remaining;
         if (readRegBuff(REG_FIFO_DATA, _fifo_buffer + offset, chunk) != 0) {
-            log_e("Failed to read FIFO data");
+            SENSORLIB_LOG_E("Failed to read FIFO data");
             return 0;
         }
         offset += chunk;
@@ -1115,7 +1115,7 @@ bool SensorQMI8658::calibrate(uint16_t *gyro_x_gain, uint16_t *gyro_y_gain, uint
     }
 
     if (writeCommand(CTRL_CMD_ON_DEMAND_CALIBRATION, 3000) != 0) {
-        log_e("Calibration command failed");
+        SENSORLIB_LOG_E("Calibration command failed");
         return false;
     }
 
@@ -1123,19 +1123,19 @@ bool SensorQMI8658::calibrate(uint16_t *gyro_x_gain, uint16_t *gyro_y_gain, uint
 
     uint8_t status = readReg(REG_COD_STATUS);
     if (status & MASK_COD_FAIL) {
-        log_e("Calibration failed");
+        SENSORLIB_LOG_E("Calibration failed");
         return false;
     }
     if (status & MASK_COD_GYRO_ENABLED_ERR) {
-        log_e("Gyro enabled during calibration");
+        SENSORLIB_LOG_E("Gyro enabled during calibration");
         return false;
     }
     if (status & MASK_COD_GYRO_STARTUP_ERR) {
-        log_e("Gyro startup error during calibration");
+        SENSORLIB_LOG_E("Gyro startup error during calibration");
         return false;
     }
     if (status & MASK_COD_ACCEL_ERR) {
-        log_e("Accelerometer error during calibration");
+        SENSORLIB_LOG_E("Accelerometer error during calibration");
         return false;
     }
 
@@ -1227,7 +1227,7 @@ bool SensorQMI8658::selfTestAccel()
     }
 
     if (retry == 0) {
-        log_e("Accelerometer self-test timeout");
+        SENSORLIB_LOG_E("Accelerometer self-test timeout");
         return false;
     }
 
@@ -1250,7 +1250,7 @@ bool SensorQMI8658::selfTestAccel()
         return true;
     }
 
-    log_e("Accelerometer self-test failed: dVX=%.1f, dVY=%.1f, dVZ=%.1f", dVX_mg, dVY_mg, dVZ_mg);
+    SENSORLIB_LOG_E("Accelerometer self-test failed: dVX=%.1f, dVY=%.1f, dVZ=%.1f", dVX_mg, dVY_mg, dVZ_mg);
     return false;
 }
 
@@ -1277,7 +1277,7 @@ bool SensorQMI8658::selfTestGyro()
     }
 
     if (retry == 0) {
-        log_e("Gyroscope self-test timeout");
+        SENSORLIB_LOG_E("Gyroscope self-test timeout");
         return false;
     }
 
@@ -1300,7 +1300,7 @@ bool SensorQMI8658::selfTestGyro()
         return true;
     }
 
-    log_e("Gyroscope self-test failed: dVX=%.1f, dVY=%.1f, dVZ=%.1f", dVX, dVY, dVZ);
+    SENSORLIB_LOG_E("Gyroscope self-test failed: dVX=%.1f, dVY=%.1f, dVZ=%.1f", dVX, dVY, dVZ);
     return false;
 }
 
@@ -2044,14 +2044,14 @@ void SensorQMI8658::dumpRegisters()
     uint8_t buffer[9];
     if (readRegBuff(REG_CTRL1, buffer, 9) == 0) {
         for (int i = 0; i < 9; ++i) {
-            log_i("CTRL%d: 0x%02X", i + 1, buffer[i]);
+            SENSORLIB_LOG_I("CTRL%d: 0x%02X", i + 1, buffer[i]);
         }
     }
 
-    log_i("FIFO_CTRL: 0x%02X", readReg(REG_FIFO_CTRL));
-    log_i("STATUS_INT: 0x%02X", readReg(REG_STATUS_INT));
-    log_i("STATUS0: 0x%02X", readReg(REG_STATUS0));
-    log_i("STATUS1: 0x%02X", readReg(REG_STATUS1));
+    SENSORLIB_LOG_I("FIFO_CTRL: 0x%02X", readReg(REG_FIFO_CTRL));
+    SENSORLIB_LOG_I("STATUS_INT: 0x%02X", readReg(REG_STATUS_INT));
+    SENSORLIB_LOG_I("STATUS0: 0x%02X", readReg(REG_STATUS0));
+    SENSORLIB_LOG_I("STATUS1: 0x%02X", readReg(REG_STATUS1));
 }
 
 void SensorQMI8658::getChipUsid(uint8_t *buffer, uint8_t length)
@@ -2360,7 +2360,7 @@ bool SensorQMI8658::hardwareSelfTest(bool includeAccel, bool includeGyro)
         if (fabs(_hw_st_accel_result[0]) <= HW_ST_ACCEL_THRESHOLD_MG ||
                 fabs(_hw_st_accel_result[1]) <= HW_ST_ACCEL_THRESHOLD_MG ||
                 fabs(_hw_st_accel_result[2]) <= HW_ST_ACCEL_THRESHOLD_MG) {
-            log_e("HW Self-test Accel failed: X=%.1f Y=%.1f Z=%.1f mg",
+            SENSORLIB_LOG_E("HW Self-test Accel failed: X=%.1f Y=%.1f Z=%.1f mg",
                   _hw_st_accel_result[0], _hw_st_accel_result[1], _hw_st_accel_result[2]);
             if (accel_en) enableAccel();
             if (gyro_en) enableGyro();
@@ -2409,7 +2409,7 @@ bool SensorQMI8658::hardwareSelfTest(bool includeAccel, bool includeGyro)
         if (fabs(_hw_st_gyro_result[0]) <= HW_ST_GYRO_THRESHOLD_DPS ||
                 fabs(_hw_st_gyro_result[1]) <= HW_ST_GYRO_THRESHOLD_DPS ||
                 fabs(_hw_st_gyro_result[2]) <= HW_ST_GYRO_THRESHOLD_DPS) {
-            log_e("HW Self-test Gyro failed: X=%.1f Y=%.1f Z=%.1f dps",
+            SENSORLIB_LOG_E("HW Self-test Gyro failed: X=%.1f Y=%.1f Z=%.1f dps",
                   _hw_st_gyro_result[0], _hw_st_gyro_result[1], _hw_st_gyro_result[2]);
             if (accel_en) enableAccel();
             if (gyro_en) enableGyro();
@@ -2446,14 +2446,14 @@ bool SensorQMI8658::initImpl(uint8_t param)
 
     uint8_t id = getChipID();
     if (id != QMI8658_WHO_AM_I_VAL) {
-        log_e("QMI8658 ID mismatch: expected 0x%02X, got 0x%02X", QMI8658_WHO_AM_I_VAL, id);
+        SENSORLIB_LOG_E("QMI8658 ID mismatch: expected 0x%02X, got 0x%02X", QMI8658_WHO_AM_I_VAL, id);
         return false;
     }
 
     writeReg(REG_CTRL8, 0x80);
 
     if (writeCommand(CTRL_CMD_COPY_USID, 100) != 0) {
-        log_e("Failed to copy USID");
+        SENSORLIB_LOG_E("Failed to copy USID");
         return false;
     }
 
@@ -2463,7 +2463,7 @@ bool SensorQMI8658::initImpl(uint8_t param)
     }
 
     if (readRegBuff(REG_DVX_L, _usid, 6) != 0) {
-        log_e("Failed to read USID");
+        SENSORLIB_LOG_E("Failed to read USID");
         return false;
     }
 

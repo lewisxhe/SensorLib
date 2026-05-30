@@ -193,12 +193,12 @@ public:
     {
         if (feature & BMA456H_STEP_COUNTER_EN) {
             if (bma456h_step_detector_enable(BMA4_ENABLE, dev.get()) != 0) {
-                log_e("bma456h_step_detector_enable failed");
+                SENSORLIB_LOG_E("bma456h_step_detector_enable failed");
                 return false;
             }
         }
         if (bma456h_feature_enable(feature, enable, dev.get()) != 0) {
-            log_e("bma456h_feature_enable failed");
+            SENSORLIB_LOG_E("bma456h_feature_enable failed");
             return false;
         }
         return true;
@@ -231,13 +231,13 @@ public:
     {
 
         if (bma456h_step_counter_set_watermark(step_counter_wm, dev.get()) != 0) {
-            log_e("Failed to set step counter watermark");
+            SENSORLIB_LOG_E("Failed to set step counter watermark");
             return false;
         }
 
         if (reset_counter) {
             if (bma456h_reset_step_counter(dev.get()) != 0) {
-                log_e("Failed to reset step counter");
+                SENSORLIB_LOG_E("Failed to reset step counter");
                 return false;
             }
         }
@@ -502,11 +502,11 @@ public:
         int8_t rslt = 0;
 
         if (threshold > 16380) {  // Max threshold based on 0.48mg resolution for 16g range
-            log_e("Threshold %u exceeds recommended maximum (16380)", threshold);
+            SENSORLIB_LOG_E("Threshold %u exceeds recommended maximum (16380)", threshold);
         }
 
         if (duration > 16383) {  // Maximum 14-bit value
-            log_e("Duration %u exceeds recommended maximum (16383)", duration);
+            SENSORLIB_LOG_E("Duration %u exceeds recommended maximum (16383)", duration);
         }
 
         struct bma456h_any_no_mot_config any_mot_config = {0, 0, 0, 0};
@@ -514,13 +514,13 @@ public:
         if (any_motion) {
             rslt = bma456h_get_any_mot_config(&any_mot_config, dev.get());
             if (rslt != 0) {
-                log_e("bma456h_an_get_any_mot_config failed");
+                SENSORLIB_LOG_E("bma456h_an_get_any_mot_config failed");
                 return false;
             }
         } else {
             rslt = bma456h_get_no_mot_config(&any_mot_config, dev.get());
             if (rslt != 0) {
-                log_e("bma456h_get_no_mot_config failed");
+                SENSORLIB_LOG_E("bma456h_get_no_mot_config failed");
                 return false;
             }
         }
@@ -528,18 +528,18 @@ public:
         any_mot_config.threshold = threshold;
         any_mot_config.duration = duration;
 
-        log_d("Configuring motion detection: threshold=%u LSB (%.2f mG), duration=%u LSB (%.2f ms at 50Hz)",
+        SENSORLIB_LOG_D("Configuring motion detection: threshold=%u LSB (%.2f mG), duration=%u LSB (%.2f ms at 50Hz)",
               threshold, threshold * 0.48f,
               duration, duration * 20.0f);
 
         if (any_motion) {
             if (bma456h_set_any_mot_config(&any_mot_config, dev.get()) != 0) {
-                log_e("Failed to configure any-motion detection");
+                SENSORLIB_LOG_E("Failed to configure any-motion detection");
                 return false;
             }
         } else {
             if (bma456h_set_no_mot_config(&any_mot_config, dev.get()) != 0) {
-                log_e("Failed to configure no-motion detection");
+                SENSORLIB_LOG_E("Failed to configure no-motion detection");
                 return false;
             }
         }
@@ -562,7 +562,7 @@ public:
         uint16_t threshold_lsb = static_cast<uint16_t>(threshold_mg / 0.48f + 0.5f);
         uint16_t duration_lsb = static_cast<uint16_t>(duration_ms / 20.0f + 0.5f);
 
-        log_d("Converting: %.2f mg -> %u LSB, %.2f ms -> %u LSB",
+        SENSORLIB_LOG_D("Converting: %.2f mg -> %u LSB, %.2f ms -> %u LSB",
               threshold_mg, threshold_lsb, duration_ms, duration_lsb);
 
         return configAnyMotion(threshold_lsb, duration_lsb);
@@ -584,7 +584,7 @@ public:
         uint16_t threshold_lsb = static_cast<uint16_t>(threshold_mg / 0.48f + 0.5f);
         uint16_t duration_lsb = static_cast<uint16_t>(duration_ms / 20.0f + 0.5f);
 
-        log_d("Converting: %.2f mg -> %u LSB, %.2f ms -> %u LSB",
+        SENSORLIB_LOG_D("Converting: %.2f mg -> %u LSB, %.2f ms -> %u LSB",
               threshold_mg, threshold_lsb, duration_ms, duration_lsb);
 
         return configNoMotion(threshold_lsb, duration_lsb);
@@ -602,14 +602,14 @@ public:
     {
         struct bma456h_any_no_mot_config any_mot_config;
         if (bma456h_get_any_mot_config(&any_mot_config, dev.get()) != 0) {
-            log_e("Failed to read motion configuration");
+            SENSORLIB_LOG_E("Failed to read motion configuration");
             return false;
         }
 
         threshold_mg = any_mot_config.threshold * 0.48f;
         duration_ms = any_mot_config.duration * 20.0f;
 
-        log_d("Current config: threshold=%u LSB (%.2f mg), duration=%u LSB (%.2f ms)",
+        SENSORLIB_LOG_D("Current config: threshold=%u LSB (%.2f mg), duration=%u LSB (%.2f ms)",
               any_mot_config.threshold, threshold_mg,
               any_mot_config.duration, duration_ms);
 
@@ -628,14 +628,14 @@ public:
     {
         struct bma456h_any_no_mot_config no_mot_config;
         if (bma456h_get_no_mot_config(&no_mot_config, dev.get()) != 0) {
-            log_e("Failed to read no-motion configuration");
+            SENSORLIB_LOG_E("Failed to read no-motion configuration");
             return false;
         }
 
         threshold_mg = no_mot_config.threshold * 0.48f;
         duration_ms = no_mot_config.duration * 20.0f;
 
-        log_d("Current no-motion config: threshold=%u LSB (%.2f mg), duration=%u LSB (%.2f ms)",
+        SENSORLIB_LOG_D("Current no-motion config: threshold=%u LSB (%.2f mg), duration=%u LSB (%.2f ms)",
               no_mot_config.threshold, threshold_mg,
               no_mot_config.duration, duration_ms);
 
@@ -652,7 +652,7 @@ public:
     {
         uint32_t step_count = 0;
         if (bma456h_step_counter_output(&step_count, dev.get()) != 0) {
-            log_e("Failed to read step count");
+            SENSORLIB_LOG_E("Failed to read step count");
             return 0;
         }
         return step_count;
@@ -678,7 +678,7 @@ public:
     {
         bma456h_out_state  activity_type = {0, 0, 0, 0};
         if (bma456h_output_state(&activity_type, dev.get()) != 0) {
-            log_e("bma456h_get_activity_type failed");
+            SENSORLIB_LOG_E("bma456h_get_activity_type failed");
             return ActivityType::UNKNOWN;
         }
         return static_cast<ActivityType>(activity_type.activity_type);
@@ -694,7 +694,7 @@ public:
     {
         bma456h_out_state tap_type = { 0, 0, 0, 0 };
         if (bma456h_output_state(&tap_type, dev.get()) != 0) {
-            log_e("bma456h_get_tap_type failed");
+            SENSORLIB_LOG_E("bma456h_get_tap_type failed");
             return TapType::NO_TAP;
         }
         if (tap_type.triple_tap) {
@@ -770,12 +770,12 @@ private:
     {
         int8_t rslt = bma456h_init(dev.get());
         if ( rslt != 0 ) {
-            log_e("bma456h_init failed with code %d", rslt);
+            SENSORLIB_LOG_E("bma456h_init failed with code %d", rslt);
             return false;
         }
         rslt = bma456h_write_config_file(dev.get());
         if (rslt != 0) {
-            log_e("bma456h_write_config_file failed with code %d", rslt);
+            SENSORLIB_LOG_E("bma456h_write_config_file failed with code %d", rslt);
             return false;
         }
         return true;

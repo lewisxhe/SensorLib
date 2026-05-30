@@ -83,26 +83,26 @@ public:
 
         int status = readReg(REG_0x09_STAT);
         if (status < 0) {
-            log_e("Failed to read status register");
+            SENSORLIB_LOG_E("Failed to read status register");
             return false;
         }
 
         // OVL (Overflow)
-        if (isBitSet(status, 1)) {
+        if (sensorlib::_isBitSet(status, 1)) {
             data.overflow = true;
-            log_w("Data overflow detected");
+            SENSORLIB_LOG_W("Data overflow detected");
         } else {
             data.overflow = false;
         }
 
         // DRDY (Data Ready)
-        if (!isBitSet(status, 0)) {
-            // log_e("Data not ready");
+        if (!sensorlib::_isBitSet(status, 0)) {
+            // SENSORLIB_LOG_E("Data not ready");
             return false;
         }
 
         if (readRegBuff(REG_0x01_LSB_DX, buffer, 6) < 0) {
-            log_e("Failed to read magnetic field data");
+            SENSORLIB_LOG_E("Failed to read magnetic field data");
             return false;
         }
 
@@ -189,7 +189,7 @@ public:
     bool selfTest(int16_t &x_result, int16_t &y_result, int16_t &z_result)
     {
         if (!setOperationMode(OperationMode::CONTINUOUS_MEASUREMENT)) {
-            log_e("Failed to set CONTINUOUS_MEASUREMENT for selfTest");
+            SENSORLIB_LOG_E("Failed to set CONTINUOUS_MEASUREMENT for selfTest");
             return false;
         }
         hal->delay(20);
@@ -197,7 +197,7 @@ public:
         MagnetometerData data;
 
         if (!readData(data)) {
-            log_e("Failed to read data before selfTest");
+            SENSORLIB_LOG_E("Failed to read data before selfTest");
             return false;
         }
         int16_t x_pre = data.raw.x;
@@ -208,7 +208,7 @@ public:
         hal->delay(5);
 
         if (!readData(data)) {
-            log_e("Failed to read data before selfTest");
+            SENSORLIB_LOG_E("Failed to read data before selfTest");
             return false;
         }
         x_result = data.raw.x - x_pre;
@@ -255,12 +255,12 @@ public:
             full_scale = 2.0f;
             break;
         default:
-            log_e("Invalid magnetometer range");
+            SENSORLIB_LOG_E("Invalid magnetometer range");
             return false;
         }
 
         if (updateBits(REG_0x0B_CMD2, 0x0C, range_value) < 0) {
-            log_e("Failed to set full scale range.");
+            SENSORLIB_LOG_E("Failed to set full scale range.");
             return false;
         }
         _sensitivity = sensitivity;
@@ -277,7 +277,7 @@ public:
     bool setOutputDataRate(float odr) override
     {
         int rangeInt = static_cast<int>(odr * 100 + 0.5);
-        log_d("Input: %.2f, Integer: %d\n", odr, rangeInt);
+        SENSORLIB_LOG_D("Input: %.2f, Integer: %d\n", odr, rangeInt);
         uint8_t regValue = 0;
         switch (rangeInt) {
         case 1000:         // 10.0
@@ -293,11 +293,11 @@ public:
             regValue = 0x03 << 2;
             break;
         default:
-            log_e("Invalid output data rate");
+            SENSORLIB_LOG_E("Invalid output data rate");
             return false;
         }
         if (updateBits(REG_0x0A_CMD1, 0x0C, regValue) < 0) {
-            log_e("Failed to set bandwidth");
+            SENSORLIB_LOG_E("Failed to set bandwidth");
             return false;
         }
         _config.sample_rate = odr;
@@ -328,11 +328,11 @@ public:
             mode_val = 0x03;
             break;
         default:
-            log_e("Invalid operation mode");
+            SENSORLIB_LOG_E("Invalid operation mode");
             return false;
         }
         if (updateBits(REG_0x0A_CMD1, 0x03, mode_val) < 0) {
-            log_e("Failed to set operation mode");
+            SENSORLIB_LOG_E("Failed to set operation mode");
             return false;
         }
         _config.mode = mode;
@@ -367,7 +367,7 @@ public:
             _oversampling_rate = 1;
             break;
         default:
-            log_e("Invalid oversampling rate");
+            SENSORLIB_LOG_E("Invalid oversampling rate");
             return false;
         }
         return updateBits(REG_0x0A_CMD1, 0x30, osr_val) == 0;
@@ -397,7 +397,7 @@ public:
             dsr_val = 0x03 << 6;
             break;
         default:
-            log_e("Invalid downsampling rate");
+            SENSORLIB_LOG_E("Invalid downsampling rate");
             return false;
         }
         return updateBits(REG_0x0A_CMD1, 0xC0, dsr_val) == 0;
@@ -500,16 +500,16 @@ private:
         }
 
         if (_info.uid == 0) {
-            log_e("Failed to read chip ID.");
+            SENSORLIB_LOG_E("Failed to read chip ID.");
             return false;
         }
 
         if (_info.uid != _chipId) {
-            log_e("Unexpected chip ID: 0x%02X", _chipId);
+            SENSORLIB_LOG_E("Unexpected chip ID: 0x%02X", _chipId);
             return false;
         }
 
-        log_d("Magnetometer initialized successfully. read chip ID: 0x%02X", _info.uid );
+        SENSORLIB_LOG_D("Magnetometer initialized successfully. read chip ID: 0x%02X", _info.uid );
         // Set default configuration
         configMagnetometer(OperationMode::SUSPEND,
                            MagFullScaleRange::FS_8G,

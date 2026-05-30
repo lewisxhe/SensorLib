@@ -197,20 +197,20 @@ protected:
             result.multi_tap = static_cast<bhi360_event_data_multi_tap>(data[0]);
             break;
         case BHI360_SENSOR_ID_AR_WEAR_WU:
-            log_d("AR wear detected");
+            SENSORLIB_LOG_D("AR wear detected");
             break;
         case BHI360_SENSOR_ID_WRIST_GEST_DETECT_LP_WU:
-            log_d("Wrist gesture detected");
+            SENSORLIB_LOG_D("Wrist gesture detected");
             break;
         case BHI360_SENSOR_ID_WRIST_WEAR_LP_WU:
-            log_d("Wrist wear detected");
+            SENSORLIB_LOG_D("Wrist wear detected");
             break;
         case BHI360_SENSOR_ID_NO_MOTION_LP_WU:
-            log_d("No motion detected");
+            SENSORLIB_LOG_D("No motion detected");
             result.detected = true;
             break;
         default:
-            log_e("Sensor ID Undefined : %d", sensor_id);
+            SENSORLIB_LOG_E("Sensor ID Undefined : %d", sensor_id);
             break;
         }
         return result;
@@ -532,7 +532,7 @@ public:
         } else if (_handle.getChipID() == BHI260_CHIP_ID) {
             _sensor_id = BoschSensorID::STEP_COUNTER;
         } else {
-            log_e("Unknown chip ID 0x%02X. Step Counter sensor may not function correctly.", _handle.getChipID());
+            SENSORLIB_LOG_E("Unknown chip ID 0x%" PRIx32 ". Step Counter sensor may not function correctly.", _handle.getChipID());
         }
     }
 
@@ -559,7 +559,7 @@ public:
         } else if (_handle.getChipID() == BHI260_CHIP_ID) {
             _sensor_id = BoschSensorID::STEP_DETECTOR;
         } else {
-            log_e("Unknown chip ID 0x%02X. Step Detector sensor may not function correctly.", _handle.getChipID());
+            SENSORLIB_LOG_E("Unknown chip ID 0x%" PRIx32 ". Step Detector sensor may not function correctly.", _handle.getChipID());
         }
     }
 
@@ -868,7 +868,7 @@ public:
         : SensorTemplateBase<bhi360_event_data_multi_tap>(BoschSensorID::MULTI_TAP, handle)
     {
         if (_handle.getChipID() == BHI260_CHIP_ID) {
-            log_e("BHI260 does not support Multi Tap sensor.");
+            SENSORLIB_LOG_E("BHI260 does not support Multi Tap sensor.");
         }
     }
 protected:
@@ -893,7 +893,7 @@ public:
         : SensorTemplateBase<bool>(SensorID, handle), _mode(MotionMode::OFF)
     {
         if (_handle.getChipID() == BHI260_CHIP_ID) {
-            log_e("BHI260 does not support this motion sensor.");
+            SENSORLIB_LOG_E("BHI260 does not support this motion sensor.");
         }
         _handle.onEvent(staticEventCallback, SensorID, this);
     }

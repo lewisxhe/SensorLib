@@ -130,13 +130,13 @@ public:
 
         time_t epoch_seconds = mktime(&tm_time);
         if (epoch_seconds == (time_t) -1) {
-            log_e("Invalid date and time");
+            SENSORLIB_LOG_E("Invalid date and time");
             return;
         }
         ts.tv_sec = epoch_seconds;
         ts.tv_nsec = 0;
         if (clock_settime(CLOCK_REALTIME, &ts) == -1) {
-            log_e("set system time failed");
+            SENSORLIB_LOG_E("set system time failed");
         }
     }
 

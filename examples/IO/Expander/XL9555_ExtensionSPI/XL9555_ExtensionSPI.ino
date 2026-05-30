@@ -30,7 +30,7 @@
  */
 #include <IoExpanderDrv.hpp>
 
-#ifdef ARDUINO_ARCH_ESP32
+#if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_IDF_TARGET_ESP32S3)
 
 #include <esp_lcd_panel_io.h>
 #include <esp_lcd_panel_ops.h>
@@ -343,6 +343,6 @@ void setup()
 
 void loop()
 {
-    Serial.println("The example only support your esp32 platform"); delay(1000);
+    Serial.println("The example only support your esp32s3 platform"); delay(1000);
 }
 #endif /*ARDUINO_ARCH_ESP32*/

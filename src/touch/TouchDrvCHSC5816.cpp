@@ -80,7 +80,7 @@ bool TouchDrvCHSC5816::initImpl(uint8_t)
 
     addrToBeBuf(REG_BOOT_STATE, buffer);
     if (writeBuff(buffer, arraySize(buffer)) < 0) {
-        log_e("writeBuff clean boot state failed!");
+        SENSORLIB_LOG_E("writeBuff clean boot state failed!");
         return false;
     }
 
@@ -99,7 +99,7 @@ bool TouchDrvCHSC5816::initImpl(uint8_t)
         // Check if the signature matches
         // When device is startup , reg will report 0x43 0x48 0x53 0x43
         if (buffer[0] == 0x43 && buffer[1] == 0x48 && buffer[2] == 0x53 && buffer[3] == 0x43) {
-            log_d("Signature matched!");
+            SENSORLIB_LOG_D("Signature matched!");
             success = true;
             break;
 

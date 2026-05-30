@@ -78,7 +78,7 @@ public:
         // Read current output state
         uint8_t current;
         if (readBuff(&current, 1) < 0) {
-            log_e("Failed to read current output state");
+            SENSORLIB_LOG_E("Failed to read current output state");
             return;
         }
 
@@ -96,7 +96,7 @@ public:
 
         // Write back the new value
         if (writeRegBuff(newVal, nullptr, 0) < 0) {
-            log_e("Failed to write output state");
+            SENSORLIB_LOG_E("Failed to write output state");
             return;
         }
 
@@ -117,7 +117,7 @@ public:
     {
         uint8_t state;
         if (readBuff(&state, 1) < 0) {
-            log_e("Failed to read output state");
+            SENSORLIB_LOG_E("Failed to read output state");
             return 0;
         }
         return state & 0x0F;  // Only low 4 bits are valid
@@ -138,7 +138,7 @@ protected:
     void pinModeImpl(uint8_t pin, uint8_t mode) override
     {
         if (mode != OUTPUT) {
-            log_e("Invalid pin mode, only OUTPUT is supported");
+            SENSORLIB_LOG_E("Invalid pin mode, only OUTPUT is supported");
             return;
         }
         // No hardware configuration needed; all pins are fixed as outputs.
@@ -162,7 +162,7 @@ protected:
     {
         // PCA9570 only supports output mode; ignore any input request
         if (mode != OUTPUT) {
-            log_e("PCA9570 only supports OUTPUT mode");
+            SENSORLIB_LOG_E("PCA9570 only supports OUTPUT mode");
             return;
         }
         // No hardware configuration needed; all pins are fixed as outputs.
@@ -224,7 +224,7 @@ protected:
     {
         uint8_t buffer[3] = {};
         if (readRegBuff(PCA9570_DEVICE_ID_READ, buffer, 3) < 0 ) {
-            log_e("Failed to read device ID");
+            SENSORLIB_LOG_E("Failed to read device ID");
             return false;
         }
         uint16_t manufacturerID, partID;
@@ -232,7 +232,10 @@ protected:
         manufacturerID = (buffer[0] << 4) | ((buffer[1] >> 4) & 0x0F);  // 12‑bit manufacturer ID
         partID         = ((buffer[1] & 0x0F) << 5) | ((buffer[2] >> 3) & 0x1F); // 9‑bit part ID
         revision       = buffer[2] & 0x07;                               // 3‑bit revision
-        log_d("ManufacturerID:0x%03X, PartID:0x%03X, Revision:0x%02X",
+        (void)manufacturerID;
+        (void)partID;
+        (void)revision;
+        SENSORLIB_LOG_D("ManufacturerID:0x%" PRIx16 ", PartID:0x%" PRIx16 ", Revision:0x%" PRIx8,
               manufacturerID, partID, revision);
         return true;
     }

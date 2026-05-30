@@ -59,7 +59,7 @@ public:
     static uint16_t mgToThreshold5_11(float threshold_mg)
     {
         if (threshold_mg < 0 || threshold_mg > 1000.0f) {
-            log_e("Threshold out of range (0-1000mg): %.1f mg, will be clamped", threshold_mg);
+            SENSORLIB_LOG_E("Threshold out of range (0-1000mg): %.1f mg, will be clamped", threshold_mg);
             threshold_mg = (threshold_mg < 0) ? 0 : 1000.0f;
         }
         float g_value = threshold_mg / 1000.0f;  // Convert mg to g
@@ -292,7 +292,7 @@ public:
         const uint16_t motion_mask = BMA423_ANY_MOTION | BMA423_NO_MOTION;
 
         if ((feature & (BMA423_ANY_MOTION | BMA423_NO_MOTION)) == (BMA423_ANY_MOTION | BMA423_NO_MOTION)) {
-            log_e("Both any-motion and no-motion are specified, only any-motion will be enabled.");
+            SENSORLIB_LOG_E("Both any-motion and no-motion are specified, only any-motion will be enabled.");
             feature &= (~BMA423_NO_MOTION);
         }
 
@@ -301,24 +301,24 @@ public:
             if (_mon_cfg.motion_feature_enabled != 0 &&
                     _mon_cfg.motion_feature_enabled != motion_to_enable) {
                 if (bma423_feature_enable(_mon_cfg.motion_feature_enabled, 0, dev.get()) != 0) {
-                    log_e("Failed to disable motion feature 0x%02X",
+                    SENSORLIB_LOG_E("Failed to disable motion feature 0x%02X",
                           _mon_cfg.motion_feature_enabled);
                     return false;
                 }
-                log_d("Disabled previous motion feature 0x%02X",
+                SENSORLIB_LOG_D("Disabled previous motion feature 0x%02X",
                       _mon_cfg.motion_feature_enabled);
             }
         }
 
         if (feature & BMA423_STEP_CNTR) {
             if (bma423_step_detector_enable(enable ? BMA4_ENABLE : BMA4_DISABLE, dev.get()) != 0) {
-                log_e("Failed to %s step detector", enable ? "enable" : "disable");
+                SENSORLIB_LOG_E("Failed to %s step detector", enable ? "enable" : "disable");
                 return false;
             }
         }
 
         if (bma423_feature_enable(feature, enable, dev.get()) != 0) {
-            log_e("Failed to %s feature 0x%04X",
+            SENSORLIB_LOG_E("Failed to %s feature 0x%04X",
                   enable ? "enable" : "disable", feature);
             return false;
         }
@@ -363,13 +363,13 @@ public:
     {
         if (enable) {
             if (bma423_step_counter_set_watermark(step_counter_wm, dev.get()) != 0) {
-                log_e("Failed to set step counter watermark");
+                SENSORLIB_LOG_E("Failed to set step counter watermark");
                 return false;
             }
         }
         if (reset_counter) {
             if (bma423_reset_step_counter(dev.get()) != 0) {
-                log_e("Failed to reset step counter");
+                SENSORLIB_LOG_E("Failed to reset step counter");
                 return false;
             }
         }
@@ -510,7 +510,7 @@ public:
         uint16_t axis = 0;
 
         if (cfg.x_axis == 0 && cfg.y_axis == 0 && cfg.z_axis == 0 && enable) {
-            log_e("No motion detection axis enabled");
+            SENSORLIB_LOG_E("No motion detection axis enabled");
             return false;
         }
 
@@ -519,7 +519,7 @@ public:
         if (cfg.z_axis) axis |= BMA423_Z_AXIS_EN;
 
         if (bma423_anymotion_enable_axis(axis, dev.get()) != 0) {
-            log_e("Failed to configure any-motion axes");
+            SENSORLIB_LOG_E("Failed to configure any-motion axes");
             return false;
         }
 
@@ -551,7 +551,7 @@ public:
         uint16_t axis = 0;
 
         if (cfg.x_axis == 0 && cfg.y_axis == 0 && cfg.z_axis == 0 && enable) {
-            log_e("No motion detection axis enabled");
+            SENSORLIB_LOG_E("No motion detection axis enabled");
             return false;
         }
 
@@ -560,7 +560,7 @@ public:
         if (cfg.z_axis) axis |= BMA423_Z_AXIS_EN;
 
         if (bma423_anymotion_enable_axis(axis, dev.get()) != 0) {
-            log_e("Failed to configure no-motion axes");
+            SENSORLIB_LOG_E("Failed to configure no-motion axes");
             return false;
         }
 
@@ -646,7 +646,7 @@ public:
             _mon_cfg.no_motion_duration = duration;
         }
 
-        log_d("BMA423 motion config (raw): threshold=0x%04X, duration=%u, type: %s",
+        SENSORLIB_LOG_D("BMA423 motion config (raw): threshold=0x%04X, duration=%u, type: %s",
               threshold, duration,
               any_motion ? "Any-motion" : "No-motion");
 
@@ -669,7 +669,7 @@ public:
     {
         struct bma423_anymotion_config any_motion;
         if (bma423_get_any_motion_config(&any_motion, dev.get()) != 0) {
-            log_e("Failed to read BMA423 motion configuration");
+            SENSORLIB_LOG_E("Failed to read BMA423 motion configuration");
             return false;
         }
         threshold = any_motion.threshold;
@@ -689,7 +689,7 @@ public:
     {
         uint32_t step_count = 0;
         if (bma423_step_counter_output(&step_count, dev.get()) != 0) {
-            log_e("Failed to read step count");
+            SENSORLIB_LOG_E("Failed to read step count");
             return 0;
         }
         return step_count;
@@ -715,7 +715,7 @@ public:
     {
         uint8_t activity_type = 0;
         if (bma423_activity_output(&activity_type, dev.get()) != 0) {
-            log_e("Failed to get activity type");
+            SENSORLIB_LOG_E("Failed to get activity type");
             return ActivityType::UNKNOWN;
         }
         return static_cast<ActivityType>(activity_type);
@@ -756,7 +756,7 @@ public:
     void update() override
     {
         if (bma4_read_int_status(&_status, dev.get()) != 0) {
-            log_e("Failed to read interrupt status");
+            SENSORLIB_LOG_E("Failed to read interrupt status");
             return;
         }
 
@@ -811,7 +811,7 @@ private:
     {
         int8_t rslt = bma423_init(dev.get());
         if ( rslt != 0 ) {
-            log_e("bma423_init failed with code %d", rslt);
+            SENSORLIB_LOG_E("bma423_init failed with code %d", rslt);
             return false;
         }
 
@@ -819,7 +819,7 @@ private:
 
         rslt = bma423_write_config_file(dev.get());
         if (rslt != 0) {
-            log_e("bma423_write_config_file failed with code %d", rslt);
+            SENSORLIB_LOG_E("bma423_write_config_file failed with code %d", rslt);
             return false;
         }
         return true;

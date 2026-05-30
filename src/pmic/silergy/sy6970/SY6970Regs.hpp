@@ -85,10 +85,6 @@
 
 namespace SY6970Regs {
 
-#ifdef _BV
-#undef _BV
-#endif
-#define _BV(bit)  (1U << (bit))
 
 // ==============================================
 // Device Revision Register
@@ -222,8 +218,8 @@ static constexpr uint16_t VCLAMP_MAX = 224;
 // REG00 (RW) - Input Source Control Register
 // ==============================================
 static constexpr uint8_t REG_PWR_INPUT     = 0x00;
-static constexpr uint8_t MASK_EN_HIZ       = _BV(7);   ///< Enable HIZ mode (high impedance)
-static constexpr uint8_t MASK_EN_ILIM      = _BV(6);  ///< Enable input current limit
+static constexpr uint8_t MASK_EN_HIZ       = 0x80;   ///< Enable HIZ mode (high impedance)
+static constexpr uint8_t MASK_EN_ILIM      = 0x40;  ///< Enable input current limit
 static constexpr uint8_t MASK_IINLIM       = 0x3F;   ///< Input current limit (6-bit)
 static constexpr uint8_t SHIFT_IINLIM      = 0;
 
@@ -233,7 +229,7 @@ static constexpr uint8_t SHIFT_IINLIM      = 0;
 static constexpr uint8_t REG_PWR_VINDPM    = 0x01;
 static constexpr uint8_t MASK_BHOT         = 0xC0;    ///< Battery HOT threshold (2-bit)
 static constexpr uint8_t SHIFT_BHOT        = 6;
-static constexpr uint8_t MASK_BCOLD        = _BV(5);  ///< Battery COLD threshold
+static constexpr uint8_t MASK_BCOLD        = 0x20;  ///< Battery COLD threshold
 static constexpr uint8_t MASK_VINDPM_OS    = 0x1F;   ///< VINDPM offset (5-bit)
 static constexpr uint8_t SHIFT_VINDPM_OS    = 0;
 
@@ -241,23 +237,23 @@ static constexpr uint8_t SHIFT_VINDPM_OS    = 0;
 // REG02 (RW) - Power On/Off Control Register
 // ==============================================
 static constexpr uint8_t REG_PWR_ONOFF     = 0x02;
-static constexpr uint8_t MASK_CONV_START   = _BV(7);   ///< ADC conversion start
-static constexpr uint8_t MASK_CONV_RATE    = _BV(6);   ///< ADC conversion rate (continuous if set)
-static constexpr uint8_t MASK_BOOST_FREQ   = _BV(5);  ///< Boost frequency (500kHz/1MHz)
-static constexpr uint8_t MASK_AICL_EN      = _BV(4);  ///< AICL (Auto Input Current Limit) enable
-static constexpr uint8_t MASK_HVDCP_EN     = _BV(3);  ///< HVDCP enable
-static constexpr uint8_t MASK_HV_TYPE      = _BV(2);   ///< High voltage type
-static constexpr uint8_t MASK_FORCE_DPDM   = _BV(1);   ///< Force DPDM detection
-static constexpr uint8_t MASK_AUTO_DPDM_EN = _BV(0);   ///< Auto DPDM enable
+static constexpr uint8_t MASK_CONV_START   = 0x80;   ///< ADC conversion start
+static constexpr uint8_t MASK_CONV_RATE    = 0x40;   ///< ADC conversion rate (continuous if set)
+static constexpr uint8_t MASK_BOOST_FREQ   = 0x20;  ///< Boost frequency (500kHz/1MHz)
+static constexpr uint8_t MASK_AICL_EN      = 0x10;  ///< AICL (Auto Input Current Limit) enable
+static constexpr uint8_t MASK_HVDCP_EN     = 0x08;  ///< HVDCP enable
+static constexpr uint8_t MASK_HV_TYPE      = 0x04;   ///< High voltage type
+static constexpr uint8_t MASK_FORCE_DPDM   = 0x02;   ///< Force DPDM detection
+static constexpr uint8_t MASK_AUTO_DPDM_EN = 0x01;   ///< Auto DPDM enable
 
 // ==============================================
 // REG03 (RW) - Charge Control Register
 // ==============================================
 static constexpr uint8_t REG_CHG_CTRL      = 0x03;
-static constexpr uint8_t MASK_BAT_LOAD_EN  = _BV(7);   ///< Battery load enable
-static constexpr uint8_t MASK_WD_RST       = _BV(6);   ///< Watchdog timer reset
-static constexpr uint8_t MASK_OTG_CONFIG   = _BV(5);   ///< OTG configuration (boost mode)
-static constexpr uint8_t MASK_CHG_CONFIG   = _BV(4);   ///< Charge configuration (enable)
+static constexpr uint8_t MASK_BAT_LOAD_EN  = 0x80;   ///< Battery load enable
+static constexpr uint8_t MASK_WD_RST       = 0x40;   ///< Watchdog timer reset
+static constexpr uint8_t MASK_OTG_CONFIG   = 0x20;   ///< OTG configuration (boost mode)
+static constexpr uint8_t MASK_CHG_CONFIG   = 0x10;   ///< Charge configuration (enable)
 static constexpr uint8_t MASK_SYS_MIN       = 0x0E;   ///< System minimum voltage (3-bit)
 static constexpr uint8_t SHIFT_SYS_MIN     = 1;
 
@@ -283,21 +279,21 @@ static constexpr uint8_t SHIFT_ITERM       = 0;
 static constexpr uint8_t REG_CHG_VOLT      = 0x06;
 static constexpr uint8_t MASK_VREG         = 0xFC;   ///< Charge voltage (6-bit)
 static constexpr uint8_t SHIFT_VREG        = 2;
-static constexpr uint8_t MASK_BATLOWV      = _BV(1);   ///< Battery low voltage threshold
-static constexpr uint8_t MASK_VRECHG       = _BV(0);   ///< Recharge voltage threshold
+static constexpr uint8_t MASK_BATLOWV      = 0x02;   ///< Battery low voltage threshold
+static constexpr uint8_t MASK_VRECHG       = 0x01;   ///< Recharge voltage threshold
 
 // ==============================================
 // REG07 (RW) - Charge Timer/Control Register
 // ==============================================
 static constexpr uint8_t REG_CHG_TIMER     = 0x07;
-static constexpr uint8_t MASK_EN_TERM      = _BV(7);   ///< Enable termination
-static constexpr uint8_t MASK_STAT_DIS     = _BV(6);   ///< Disable STAT pin
+static constexpr uint8_t MASK_EN_TERM      = 0x80;   ///< Enable termination
+static constexpr uint8_t MASK_STAT_DIS     = 0x40;   ///< Disable STAT pin
 static constexpr uint8_t MASK_WATCHDOG     = 0x30;   ///< Watchdog timer (2-bit)
 static constexpr uint8_t SHIFT_WATCHDOG    = 4;
-static constexpr uint8_t MASK_EN_TIMER     = _BV(3);   ///< Enable charge timer
+static constexpr uint8_t MASK_EN_TIMER     = 0x08;   ///< Enable charge timer
 static constexpr uint8_t MASK_CHG_TIMER    = 0x06;   ///< Charge timer (2-bit)
 static constexpr uint8_t SHIFT_CHG_TIMER   = 1;
-static constexpr uint8_t MASK_JEITA_ISET   = _BV(0);   ///< JEITA ISET
+static constexpr uint8_t MASK_JEITA_ISET   = 0x01;   ///< JEITA ISET
 
 // ==============================================
 // REG08 (RW) - IR Compensation/Thermal Control
@@ -314,14 +310,14 @@ static constexpr uint8_t SHIFT_TREG        = 0;
 // REG09 (RW) - Misc Control Register
 // ==============================================
 static constexpr uint8_t REG_MISC_CTRL     = 0x09;
-static constexpr uint8_t MASK_FORCE_AICL   = _BV(7);   ///< Force AICL
-static constexpr uint8_t MASK_TMR2X_EN    = _BV(6);   ///< Timer 2x enable
-static constexpr uint8_t MASK_BATFET_DIS   = _BV(5);   ///< Battery FET disable
-static constexpr uint8_t MASK_JEITA_VSET   = _BV(4);   ///< JEITA voltage selection
-static constexpr uint8_t MASK_BATFET_DLY   = _BV(3);   ///< Battery FET delay
-static constexpr uint8_t MASK_BATFET_RST_EN= _BV(2);   ///< Battery FET reset enable
-static constexpr uint8_t MASK_PUMPX_UP     = _BV(1);   ///< PumpEX up
-static constexpr uint8_t MASK_PUMPX_DN     = _BV(0);   ///< PumpEX down
+static constexpr uint8_t MASK_FORCE_AICL   = 0x80;   ///< Force AICL
+static constexpr uint8_t MASK_TMR2X_EN    = 0x40;   ///< Timer 2x enable
+static constexpr uint8_t MASK_BATFET_DIS   = 0x20;   ///< Battery FET disable
+static constexpr uint8_t MASK_JEITA_VSET   = 0x10;   ///< JEITA voltage selection
+static constexpr uint8_t MASK_BATFET_DLY   = 0x08;   ///< Battery FET delay
+static constexpr uint8_t MASK_BATFET_RST_EN= 0x04;   ///< Battery FET reset enable
+static constexpr uint8_t MASK_PUMPX_UP     = 0x02;   ///< PumpEX up
+static constexpr uint8_t MASK_PUMPX_DN     = 0x01;   ///< PumpEX down
 
 // ==============================================
 // REG0A (RW) - Boost Control Register
@@ -340,19 +336,19 @@ static constexpr uint8_t MASK_BUS_STAT     = 0xE0;   ///< Bus state (3-bit)
 static constexpr uint8_t SHIFT_BUS_STAT    = 5;
 static constexpr uint8_t MASK_CHRG_STAT    = 0x18;   ///< Charge state (2-bit)
 static constexpr uint8_t SHIFT_CHRG_STAT   = 3;
-static constexpr uint8_t MASK_PG_STAT       = _BV(2);   ///< Power good status
-static constexpr uint8_t MASK_SDP_STAT     = _BV(1);   ///< SDP status
-static constexpr uint8_t MASK_VSYS_STAT    = _BV(0);   ///< VSYS status
+static constexpr uint8_t MASK_PG_STAT       = 0x04;   ///< Power good status
+static constexpr uint8_t MASK_SDP_STAT     = 0x02;   ///< SDP status
+static constexpr uint8_t MASK_VSYS_STAT    = 0x01;   ///< VSYS status
 
 // ==============================================
 // REG0C (RO) - Fault Register
 // ==============================================
 static constexpr uint8_t REG_FAULT         = 0x0C;
-static constexpr uint8_t MASK_WD_FAULT     = _BV(7);   ///< Watchdog fault
-static constexpr uint8_t MASK_BOOST_FAULT  = _BV(6);   ///< Boost fault
+static constexpr uint8_t MASK_WD_FAULT     = 0x80;   ///< Watchdog fault
+static constexpr uint8_t MASK_BOOST_FAULT  = 0x40;   ///< Boost fault
 static constexpr uint8_t MASK_CHRG_FAULT  = 0x30;   ///< Charge fault (2-bit)
 static constexpr uint8_t SHIFT_CHRG_FAULT  = 4;
-static constexpr uint8_t MASK_BAT_FAULT    = _BV(3);   ///< Battery fault
+static constexpr uint8_t MASK_BAT_FAULT    = 0x08;   ///< Battery fault
 static constexpr uint8_t MASK_NTC_FAULT    = 0x07;   ///< NTC fault (3-bit)
 static constexpr uint8_t SHIFT_NTC_FAULT   = 0;
 
@@ -360,7 +356,7 @@ static constexpr uint8_t SHIFT_NTC_FAULT   = 0;
 // REG0D (RW) - VINDPM Register
 // ==============================================
 static constexpr uint8_t REG_VINDPM         = 0x0D;
-static constexpr uint8_t MASK_VINDPM_MODE   = _BV(7);   ///< VINDPM mode
+static constexpr uint8_t MASK_VINDPM_MODE   = 0x80;   ///< VINDPM mode
 static constexpr uint8_t MASK_VINDPM        = 0x7F;   ///< VINDPM voltage (7-bit)
 static constexpr uint8_t SHIFT_VINDPM       = 0;
 
@@ -368,7 +364,7 @@ static constexpr uint8_t SHIFT_VINDPM       = 0;
 // REG0E (RO) - Battery Voltage ADC
 // ==============================================
 static constexpr uint8_t REG_ADC_BATV       = 0x0E;
-static constexpr uint8_t MASK_THERM_STAT    = _BV(7);   ///< Thermal status
+static constexpr uint8_t MASK_THERM_STAT    = 0x80;   ///< Thermal status
 static constexpr uint8_t MASK_BATV          = 0x7F;   ///< VBAT ADC value (7-bit)
 static constexpr uint8_t SHIFT_BATV         = 0;
 
@@ -390,7 +386,7 @@ static constexpr uint8_t SHIFT_NTPCPT       = 0;
 // REG11 (RO) - VBUS Voltage ADC
 // ==============================================
 static constexpr uint8_t REG_ADC_BUSV       = 0x11;
-static constexpr uint8_t MASK_BUS_GD        = _BV(7);   ///< VBUS good status
+static constexpr uint8_t MASK_BUS_GD        = 0x80;   ///< VBUS good status
 static constexpr uint8_t MASK_BUSV          = 0x7F;   ///< VBUS ADC value (7-bit)
 static constexpr uint8_t SHIFT_BUSV         = 0;
 
@@ -405,8 +401,8 @@ static constexpr uint8_t SHIFT_ICHGR        = 0;
 // REG13 (RO) - Input Current Limit Status
 // ==============================================
 static constexpr uint8_t REG_IDPM_STATUS    = 0x13;
-static constexpr uint8_t MASK_VDPM_STAT     = _BV(7);   ///< VINDPM status
-static constexpr uint8_t MASK_IDPM_STAT     = _BV(6);   ///< IDPM status
+static constexpr uint8_t MASK_VDPM_STAT     = 0x80;   ///< VINDPM status
+static constexpr uint8_t MASK_IDPM_STAT     = 0x40;   ///< IDPM status
 static constexpr uint8_t MASK_IDPM_LIM     = 0x3F;   ///< Input current limit (6-bit)
 static constexpr uint8_t SHIFT_IDPM_LIM    = 0;
 
@@ -414,11 +410,11 @@ static constexpr uint8_t SHIFT_IDPM_LIM    = 0;
 // REG14 (RW) - Device Revision Register
 // ==============================================
 static constexpr uint8_t REG_DEVICE_REV     = 0x14;
-static constexpr uint8_t MASK_REG_RST       = _BV(7);   ///< Register reset
-static constexpr uint8_t MASK_AICL_OPTIMIZED = _BV(6);  ///< AICL optimized
+static constexpr uint8_t MASK_REG_RST       = 0x80;   ///< Register reset
+static constexpr uint8_t MASK_AICL_OPTIMIZED = 0x40;  ///< AICL optimized
 static constexpr uint8_t MASK_PN            = 0x38;   ///< Part number (3-bit)
 static constexpr uint8_t SHIFT_PN           = 3;
-static constexpr uint8_t MASK_NTC_PROFILE   = _BV(2);   ///< NTC profile
+static constexpr uint8_t MASK_NTC_PROFILE   = 0x04;   ///< NTC profile
 static constexpr uint8_t MASK_DEV_REV       = 0x03;   ///< Device revision (2-bit)
 static constexpr uint8_t SHIFT_DEV_REV      = 0;
 

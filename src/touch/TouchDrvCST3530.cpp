@@ -124,16 +124,16 @@ bool TouchDrvCST3530::initImpl(uint8_t)
                 _touchConfig.resolutionY = (buffer[31] << 8) | buffer[30];
                 _touchConfig.resolutionX = (buffer[29] << 8) | buffer[28];
                 _chipID = buffer[3] << 24 | buffer[2] << 16 | buffer[1] << 8 | buffer[0];
-                log_d("Model:CST3530");
-                log_d("RST Pin:%d", _pinsCfg.rstPin);
-                log_d("IRQ Pin:%d", _pinsCfg.irqPin);
-                log_d("Tx Channel:%d", buffer[48]);
-                log_d("Rx Channel:%d", buffer[49]);
-                log_d("Key Number:%d", buffer[27]);
-                log_d("Resolution: %d x %d", _touchConfig.resolutionX, _touchConfig.resolutionY);
-                log_d("Project ID:%04X", buffer[39] << 24 | buffer[38] << 16 | buffer[37] << 8 | buffer[36]);
-                log_d("Chip Type:%04" PRIX32, _chipID);
-                log_d("Firmware Version:%04X", buffer[35] << 24 | buffer[34] << 16 | buffer[33] << 8 | buffer[32]);
+                SENSORLIB_LOG_D("Model:CST3530");
+                SENSORLIB_LOG_D("RST Pin:%d", _pinsCfg.rstPin);
+                SENSORLIB_LOG_D("IRQ Pin:%d", _pinsCfg.irqPin);
+                SENSORLIB_LOG_D("Tx Channel:%d", buffer[48]);
+                SENSORLIB_LOG_D("Rx Channel:%d", buffer[49]);
+                SENSORLIB_LOG_D("Key Number:%d", buffer[27]);
+                SENSORLIB_LOG_D("Resolution: %d x %d", _touchConfig.resolutionX, _touchConfig.resolutionY);
+                SENSORLIB_LOG_D("Project ID:%04X", buffer[39] << 24 | buffer[38] << 16 | buffer[37] << 8 | buffer[36]);
+                SENSORLIB_LOG_D("Chip Type:%04" PRIX32, _chipID);
+                SENSORLIB_LOG_D("Firmware Version:%04X", buffer[35] << 24 | buffer[34] << 16 | buffer[33] << 8 | buffer[32]);
                 return true;
             }
         }

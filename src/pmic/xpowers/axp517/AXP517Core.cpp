@@ -98,20 +98,20 @@ bool AXP517Core::initImpl(uint8_t param)
     }
     vendorId = (buffer[1] << 8) | buffer[0];
     if (vendorId != axp517::tcpc::VENDOR_ID) {
-        log_e("AXP517 not found, vendor ID: 0x%04X", vendorId);
+        SENSORLIB_LOG_E("AXP517 not found, vendor ID: 0x%" PRIx32, vendorId);
         return false;
     }
 #endif
     // Enable CC module clock (REG 0BH bit3 = Type-C CC detect enable)
-    log_d("AXP517: Enabling CC module clock...");
+    SENSORLIB_LOG_D("AXP517: Enabling CC module clock...");
     if (!enableModule(Module::TYPEC, true)) {
-        log_e("Failed to enable CC clock");
+        SENSORLIB_LOG_E("Failed to enable CC clock");
         // Continue anyway - may not be fatal
     }
     // Wait for CC module ready
     hal->delay(20);
 
-    log_d("AXP517: Init complete, initializing...");
+    SENSORLIB_LOG_D("AXP517: Init complete, initializing...");
 
 
     int cur = readReg(axp517_regs::ctrl::INPUT_VOLT_LIMIT);

@@ -167,7 +167,7 @@ void BoschSensorBase::reset()
 void BoschSensorBase::update()
 {
     if (!_processBuffer) {
-        log_e("Process buffer is not allocated.");
+        SENSORLIB_LOG_E("Process buffer is not allocated.");
         return;
     }
     bhy2_get_and_process_fifo(_processBuffer, _processBufferSize, dev.get());
@@ -236,7 +236,7 @@ void BoschSensorBase::removeEvent(uint8_t sensor_id)
 bool BoschSensorBase::onResultEvent(uint8_t sensor_id, SensorDataParseCallback callback, void *user_data)
 {
     if (!bhy2_is_sensor_available(sensor_id, dev.get())) {
-        log_e("%s not present", getSensorName(sensor_id)); return false;
+        SENSORLIB_LOG_E("%s not present", getSensorName(sensor_id)); return false;
     }
     return  _callback_manager.add(sensor_id, callback, user_data);
 }
@@ -244,7 +244,7 @@ bool BoschSensorBase::onResultEvent(uint8_t sensor_id, SensorDataParseCallback c
 bool BoschSensorBase::removeResultEvent(uint8_t sensor_id, SensorDataParseCallback callback)
 {
     if (!bhy2_is_sensor_available(sensor_id, dev.get())) {
-        log_e("%s not present", getSensorName(sensor_id)); return false;
+        SENSORLIB_LOG_E("%s not present", getSensorName(sensor_id)); return false;
     }
     return  _callback_manager.remove(sensor_id, callback);
 }
@@ -252,7 +252,7 @@ bool BoschSensorBase::removeResultEvent(uint8_t sensor_id, SensorDataParseCallba
 void BoschSensorBase::setProcessBufferSize(uint32_t size)
 {
     if (_processBuffer) {
-        log_e("Process buffer setting is invalid. You must call `setProcessBufferSize()` before calling `begin()`.");
+        SENSORLIB_LOG_E("Process buffer setting is invalid. You must call `setProcessBufferSize()` before calling `begin()`.");
         return;
     }
     _processBufferSize = size;
@@ -267,14 +267,14 @@ const char *BoschSensorBase::getError()
 bool BoschSensorBase::configure(uint8_t sensor_id, float sample_rate, uint32_t report_latency_ms)
 {
     if (!bhy2_is_sensor_available(sensor_id, dev.get())) {
-        log_e("%s not present", getSensorName(sensor_id)); return false;
+        SENSORLIB_LOG_E("%s not present", getSensorName(sensor_id)); return false;
     }
     _error_code = bhy2_set_virt_sensor_cfg(sensor_id, sample_rate, report_latency_ms, dev.get());
     if (_error_code != BHY2_OK) {
-        log_e("Failed to set virt sensor cfg with error code %d", _error_code);
+        SENSORLIB_LOG_E("Failed to set virt sensor cfg with error code %d", _error_code);
         return false;
     }
-    log_d("Enable %s at %.2fHz.", BoschSensorUtils::get_sensor_name(sensor_id), sample_rate);
+    SENSORLIB_LOG_D("Enable %s at %.2fHz.", BoschSensorUtils::get_sensor_name(sensor_id), sample_rate);
     return true;
 }
 
@@ -288,7 +288,7 @@ SensorConfig BoschSensorBase::getConfigure(uint8_t sensor_id)
 {
     bhy2_virt_sensor_conf conf {};
     bhy2_get_virt_sensor_cfg(sensor_id, &conf, dev.get());
-    log_d("Range:%u sample_rate:%f latency:%lu sensitivity:%u\n", conf.range, conf.sample_rate, conf.latency, conf.sensitivity);
+    SENSORLIB_LOG_D("Range:%" PRIu16 " sample_rate:%f latency:%" PRIu32 " sensitivity:%" PRIu16, conf.range, conf.sample_rate, conf.latency, conf.sensitivity);
     return SensorConfig{SensorType::MULTI_AXIS, static_cast<float>(conf.range), conf.sample_rate, conf.latency, OperationMode::NORMAL};
 }
 
@@ -389,28 +389,28 @@ BoschSensorInfo BoschSensorBase::getSensorInfo()
     uint8_t sensor_error;
 
     if (bhy2_get_product_id(&product_id, dev.get()) != BHY2_OK) {
-        log_e("Failed to get product id");
+        SENSORLIB_LOG_E("Failed to get product id");
     }
     if (bhy2_get_kernel_version(&kernel_version, dev.get()) != BHY2_OK) {
-        log_e("Failed to get kernel version");
+        SENSORLIB_LOG_E("Failed to get kernel version");
     }
     if (bhy2_get_user_version(&user_version, dev.get()) != BHY2_OK) {
-        log_e("Failed to get user version");
+        SENSORLIB_LOG_E("Failed to get user version");
     }
     if (bhy2_get_rom_version(&rom_version, dev.get()) != BHY2_OK) {
-        log_e("Failed to get ROM version");
+        SENSORLIB_LOG_E("Failed to get ROM version");
     }
     if (bhy2_get_host_status(&host_status, dev.get()) != BHY2_OK) {
-        log_e("Failed to get host status");
+        SENSORLIB_LOG_E("Failed to get host status");
     }
     if (bhy2_get_feature_status(&feat_status, dev.get()) != BHY2_OK) {
-        log_e("Failed to get feature status");
+        SENSORLIB_LOG_E("Failed to get feature status");
     }
     if (bhy2_get_boot_status(&boot_status, dev.get()) != BHY2_OK) {
-        log_e("Failed to get boot status");
+        SENSORLIB_LOG_E("Failed to get boot status");
     }
     if (bhy2_get_error_value(&sensor_error, dev.get()) != BHY2_OK) {
-        log_e("Failed to get error value");
+        SENSORLIB_LOG_E("Failed to get error value");
     }
     sensorInfo.setProductId(product_id);
     sensorInfo.setKernelVersion(kernel_version);
@@ -428,7 +428,7 @@ BoschSensorInfo BoschSensorBase::getSensorInfo()
 void BoschSensorBase::setMaxiTransferSize(uint16_t size_of_bytes)
 {
     if (_processBuffer) {
-        log_e("Must be called before begin");
+        SENSORLIB_LOG_E("Must be called before begin");
         return;
     }
     _max_rw_length = size_of_bytes;
@@ -459,7 +459,7 @@ const char *BoschSensorBase::getModelName()
 bool BoschSensorBase::setRemapAxes(SensorRemap remap)
 {
     if (remap > SensorRemap::BOTTOM_LAYER_BOTTOM_LEFT_CORNER) {
-        log_e("Invalid SensorRemap value passed to setRemapAxes!");
+        SENSORLIB_LOG_E("Invalid SensorRemap value passed to setRemapAxes!");
         return false;
     }
 
@@ -507,13 +507,13 @@ bool BoschSensorBase::setRemapAxes(SensorRemap remap)
     // Set the orientation matrix for the accelerometer
     _error_code = bhy2_set_orientation_matrix(BHY2_PHYS_SENSOR_ID_ACCELEROMETER, acc_matrices[remap_index], dev.get());
     if (_error_code != BHY2_OK) {
-        log_e("Failed to set acceleration orientation matrix!");
+        SENSORLIB_LOG_E("Failed to set acceleration orientation matrix!");
         return false;
     }
     // Set the orientation matrix for the gyroscope
     _error_code = bhy2_set_orientation_matrix(BHY2_PHYS_SENSOR_ID_GYROSCOPE, gyro_matrices[remap_index], dev.get());
     if (_error_code != BHY2_OK) {
-        log_e("Failed to set gyroscope orientation matrix!");
+        SENSORLIB_LOG_E("Failed to set gyroscope orientation matrix!");
         return false;
     }
     return true;
@@ -526,11 +526,11 @@ bool BoschSensorBase::bootFromFlash()
     uint8_t error_val = 0;
     uint16_t tries = 300; /* Wait for up to little over 3s */
 
-    log_d("Waiting for firmware verification to complete");
+    SENSORLIB_LOG_D("Waiting for firmware verification to complete");
     do {
         _error_code = bhy2_get_boot_status(&boot_status, dev.get());
         if (_error_code != BHY2_OK) {
-            log_e("Failed to get boot status");
+            SENSORLIB_LOG_E("Failed to get boot status");
             return false;
         }
         hal->delay(10);
@@ -538,7 +538,7 @@ bool BoschSensorBase::bootFromFlash()
 
     _error_code = bhy2_get_boot_status(&boot_status, dev.get());
     if (_error_code != BHY2_OK) {
-        log_e("Failed to get boot status");
+        SENSORLIB_LOG_E("Failed to get boot status");
         return false;
     }
     print_boot_status(boot_status);
@@ -548,13 +548,13 @@ bool BoschSensorBase::bootFromFlash()
         if (boot_status & BHY2_BST_FLASH_DETECTED) {
 
             // If no firmware is running, boot from Flash
-            log_d("Booting from flash");
+            SENSORLIB_LOG_D("Booting from flash");
             rslt = bhy2_boot_from_flash(dev.get());
             if (rslt != BHY2_OK) {
-                log_e("%s. Booting from flash failed.\r\n", BoschSensorUtils::get_api_error(rslt));
+                SENSORLIB_LOG_E("%s. Booting from flash failed.\r\n", BoschSensorUtils::get_api_error(rslt));
                 _error_code = bhy2_get_regs(BHY2_REG_ERROR_VALUE, &error_val, 1, dev.get());
                 if (_error_code != BHY2_OK) {
-                    log_e("Failed to get error registers");
+                    SENSORLIB_LOG_E("Failed to get error registers");
                     return false;
                 }
                 return false;
@@ -562,73 +562,73 @@ bool BoschSensorBase::bootFromFlash()
 
             _error_code = bhy2_get_boot_status(&boot_status, dev.get());
             if (_error_code != BHY2_OK) {
-                log_e("Failed to get boot status");
+                SENSORLIB_LOG_E("Failed to get boot status");
                 return false;
             }
             print_boot_status(boot_status);
 
             if (!(boot_status & BHY2_BST_HOST_INTERFACE_READY)) {
                 /* hub is not ready, need reset hub */
-                log_d("Host interface is not ready, triggering a reset");
+                SENSORLIB_LOG_D("Host interface is not ready, triggering a reset");
                 _error_code = bhy2_soft_reset(dev.get());
                 if (_error_code != BHY2_OK) {
-                    log_e("Failed to reset device");
+                    SENSORLIB_LOG_E("Failed to reset device");
                     return false;
                 }
             }
 
             _error_code = (bhy2_get_feature_status(&feat_status, dev.get()));
             if (_error_code != BHY2_OK) {
-                log_e("Failed to get feature status");
+                SENSORLIB_LOG_E("Failed to get feature status");
                 return false;
             }
 
         } else {
-            log_e("Can't detect external flash");
+            SENSORLIB_LOG_E("Can't detect external flash");
             return false;
         }
     } else {
-        log_e("Host interface is not ready");
+        SENSORLIB_LOG_E("Host interface is not ready");
         return false;
     }
 
-    log_d("Booting from flash successful");
+    SENSORLIB_LOG_D("Booting from flash successful");
     return true;
 }
 
 void BoschSensorBase::print_boot_status(uint8_t boot_status)
 {
-    log_d("Boot Status : 0x%02x: ", boot_status);
+    SENSORLIB_LOG_D("Boot Status : 0x%" PRIx8 ": ", boot_status);
     if (boot_status & BHY2_BST_FLASH_DETECTED) {
-        log_d("Flash detected. ");
+        SENSORLIB_LOG_D("Flash detected. ");
     }
 
     if (boot_status & BHY2_BST_FLASH_VERIFY_DONE) {
-        log_d("Flash verify done. ");
+        SENSORLIB_LOG_D("Flash verify done. ");
     }
 
     if (boot_status & BHY2_BST_FLASH_VERIFY_ERROR) {
-        log_d("Flash verification failed. ");
+        SENSORLIB_LOG_D("Flash verification failed. ");
     }
 
     if (boot_status & BHY2_BST_NO_FLASH) {
-        log_d("No flash installed. ");
+        SENSORLIB_LOG_D("No flash installed. ");
     }
 
     if (boot_status & BHY2_BST_HOST_INTERFACE_READY) {
-        log_d("Host interface ready. ");
+        SENSORLIB_LOG_D("Host interface ready. ");
     }
 
     if (boot_status & BHY2_BST_HOST_FW_VERIFY_DONE) {
-        log_d("Firmware verification done. ");
+        SENSORLIB_LOG_D("Firmware verification done. ");
     }
 
     if (boot_status & BHY2_BST_HOST_FW_VERIFY_ERROR) {
-        log_d("Firmware verification error. ");
+        SENSORLIB_LOG_D("Firmware verification error. ");
     }
 
     if (boot_status & BHY2_BST_HOST_FW_IDLE) {
-        log_d("Firmware halted. ");
+        SENSORLIB_LOG_D("Firmware halted. ");
     }
 }
 
@@ -662,8 +662,8 @@ void BoschSensorBase::parseData(const struct bhy2_fifo_parse_data_info *fifo, vo
         return;
     }
 #ifdef BOSCH_PARSE_DATA_DUMP
-    log_i("ID:[%d]:%s: DATA LEN:%u", fifo->sensor_id, BoschSensorUtils::get_sensor_name(fifo->sensor_id), fifo->data_size);
-    SensorLibDumpBuffer(fifo->data_ptr, fifo->data_size);
+    SENSORLIB_LOG_I("ID:[%d]:%s: DATA LEN:%" PRIu32, fifo->sensor_id, BoschSensorUtils::get_sensor_name(fifo->sensor_id), fifo->data_size);
+    DUMP_BUFFER(fifo->data_ptr, fifo->data_size);
 #endif
     if (_callback_manager.contains(fifo->sensor_id)) {
         _callback_manager.call(fifo->sensor_id, fifo->data_ptr, fifo->data_size, fifo->time_stamp);
@@ -695,58 +695,58 @@ void BoschSensorBase::parseMetaEvent(const struct bhy2_fifo_parse_data_info *cal
     MetaEventType event = static_cast<MetaEventType>(meta_event_type);
     switch (event) {
     case MetaEventType::BOSCH_META_EVENT_FLUSH_COMPLETE:
-        log_d("%s Flush complete for sensor id %u", event_text, sensor_id);
+        SENSORLIB_LOG_D("%s Flush complete for sensor id %u", event_text, sensor_id);
         break;
     case MetaEventType::BOSCH_META_EVENT_SAMPLE_RATE_CHANGED:
-        log_d("%s Sample rate changed for sensor id %u", event_text, sensor_id);
+        SENSORLIB_LOG_D("%s Sample rate changed for sensor id %u", event_text, sensor_id);
         break;
     case MetaEventType::BOSCH_META_EVENT_POWER_MODE_CHANGED:
-        log_d("%s Power mode changed for sensor id %u value: %u", event_text, sensor_id, byte2);
+        SENSORLIB_LOG_D("%s Power mode changed for sensor id %u value: %u", event_text, sensor_id, byte2);
         break;
     case MetaEventType::BOSCH_META_EVENT_ALGORITHM_EVENTS:
-        log_d("%s Algorithm event", event_text);
+        SENSORLIB_LOG_D("%s Algorithm event", event_text);
         break;
     case MetaEventType::BOSCH_META_EVENT_SENSOR_STATUS:
-        log_d("%s Accuracy for sensor id %u changed to %u", event_text, sensor_id, byte2);
+        SENSORLIB_LOG_D("%s Accuracy for sensor id %u changed to %u", event_text, sensor_id, byte2);
         _accuracy = byte2;
         break;
     case MetaEventType::BOSCH_META_EVENT_BSX_DO_STEPS_MAIN:
-        log_d("%s BSX event (do steps main)", event_text);
+        SENSORLIB_LOG_D("%s BSX event (do steps main)", event_text);
         break;
     case MetaEventType::BOSCH_META_EVENT_BSX_DO_STEPS_CALIB:
-        log_d("%s BSX event (do steps calibration)", event_text);
+        SENSORLIB_LOG_D("%s BSX event (do steps calibration)", event_text);
         break;
     case MetaEventType::BOSCH_META_EVENT_BSX_GET_OUTPUT_SIGNAL:
-        log_d("%s BSX event (get output signal)", event_text);
+        SENSORLIB_LOG_D("%s BSX event (get output signal)", event_text);
         break;
     case MetaEventType::BOSCH_META_EVENT_SENSOR_ERROR:
-        log_d("%s Sensor id %u reported error 0x%02X", event_text, sensor_id, byte2);
+        SENSORLIB_LOG_D("%s Sensor id %u reported error 0x%02X", event_text, sensor_id, byte2);
         break;
     case MetaEventType::BOSCH_META_EVENT_FIFO_OVERFLOW:
-        log_d("%s FIFO overflow", event_text);
+        SENSORLIB_LOG_D("%s FIFO overflow", event_text);
         break;
     case MetaEventType::BOSCH_META_EVENT_DYNAMIC_RANGE_CHANGED:
-        log_d("%s Dynamic range changed for sensor id %u", event_text, sensor_id);
+        SENSORLIB_LOG_D("%s Dynamic range changed for sensor id %u", event_text, sensor_id);
         break;
     case MetaEventType::BOSCH_META_EVENT_FIFO_WATERMARK:
-        log_d("%s FIFO watermark reached", event_text);
+        SENSORLIB_LOG_D("%s FIFO watermark reached", event_text);
         break;
     case MetaEventType::BOSCH_META_EVENT_INITIALIZED:
-        log_d("%s Firmware initialized. Firmware version %u", event_text, ((uint16_t)byte2 << 8) | sensor_id);
+        SENSORLIB_LOG_D("%s Firmware initialized. Firmware version %u", event_text, ((uint16_t)byte2 << 8) | sensor_id);
         break;
     case MetaEventType::BOSCH_META_TRANSFER_CAUSE:
-        log_d("%s Transfer cause for sensor id %u", event_text, sensor_id);
+        SENSORLIB_LOG_D("%s Transfer cause for sensor id %u", event_text, sensor_id);
         break;
     case MetaEventType::BOSCH_META_EVENT_SENSOR_FRAMEWORK:
-        log_d("%s Sensor framework event for sensor id %u", event_text, sensor_id);
+        SENSORLIB_LOG_D("%s Sensor framework event for sensor id %u", event_text, sensor_id);
         break;
     case MetaEventType::BOSCH_META_EVENT_RESET:
-        log_d("%s Reset event", event_text);
+        SENSORLIB_LOG_D("%s Reset event", event_text);
         break;
     case MetaEventType::BOSCH_META_EVENT_SPACER:
         return;
     default:
-        log_d("%s Unknown meta event with id: %u", event_text, meta_event_type);
+        SENSORLIB_LOG_D("%s Unknown meta event with id: %u", event_text, meta_event_type);
         break;
     }
 
@@ -763,13 +763,13 @@ void BoschSensorBase::parseDebugMessage(const struct bhy2_fifo_parse_data_info *
     uint8_t msg_length = 0;
     uint8_t debug_msg[17] = { 0 }; /* Max payload size is 16 bytes, adds a trailing zero if the payload is full */
     if (!callback_info) {
-        log_i("Invalid debug message callback info");
+        SENSORLIB_LOG_I("Invalid debug message callback info");
         return;
     }
     msg_length = callback_info->data_ptr[0];
     memcpy(debug_msg, &callback_info->data_ptr[1], msg_length);
     debug_msg[msg_length] = '\0'; /* Terminate the string */
-    log_d("[DEBUG MSG]: %s", debug_msg);
+    SENSORLIB_LOG_D("[DEBUG MSG]: %s", debug_msg);
 
     if (cbs.onDebug) {
         cbs.onDebug((const char *)debug_msg);
@@ -781,72 +781,72 @@ bool BoschSensorBase::uploadFirmware(const uint8_t *firmware, uint32_t length, b
     uint8_t sensor_error;
     uint8_t boot_status;
 
-    log_d("Upload Firmware ...");
+    SENSORLIB_LOG_D("Upload Firmware ...");
     _error_code = bhy2_get_boot_status(&boot_status, dev.get());
     if (_error_code != BHY2_OK) {
-        log_e("Failed to get boot status");
+        SENSORLIB_LOG_E("Failed to get boot status");
         return false;
     }
     if (write2Flash) {
         if (boot_status & BHY2_BST_FLASH_DETECTED) {
             uint32_t start_addr = BHY2_FLASH_SECTOR_START_ADDR;
             uint32_t end_addr = start_addr + length;
-            log_d("Flash detected. Erasing flash to upload firmware");
+            SENSORLIB_LOG_D("Flash detected. Erasing flash to upload firmware");
             _error_code = bhy2_erase_flash(start_addr, end_addr, dev.get());
             if (_error_code != BHY2_OK) {
-                log_e("Failed to erase flash");
+                SENSORLIB_LOG_E("Failed to erase flash");
                 return false;
             }
         } else {
-            log_e("Flash not detected");
+            SENSORLIB_LOG_E("Flash not detected");
             return false;
         }
-        log_d("Loading firmware into FLASH.");
+        SENSORLIB_LOG_D("Loading firmware into FLASH.");
         _error_code = bhy2_upload_firmware_to_flash(firmware, length,
                       _process_callback,
                       _process_callback_user_data, dev.get());
         if (_error_code != BHY2_OK) {
-            log_e("Failed to upload firmware to flash");
+            SENSORLIB_LOG_E("Failed to upload firmware to flash");
             return false;
         }
-        log_d("Loading firmware into FLASH Done");
+        SENSORLIB_LOG_D("Loading firmware into FLASH Done");
     } else {
-        log_d("Loading firmware into RAM.");
-        log_d("upload size = %lu", length);
+        SENSORLIB_LOG_D("Loading firmware into RAM.");
+        SENSORLIB_LOG_D("upload size = %" PRIu32, length);
         _error_code = bhy2_upload_firmware_to_ram(firmware, length,
                       _process_callback,
                       _process_callback_user_data, dev.get());
         if (_error_code != BHY2_OK) {
-            log_e("Failed to upload firmware to ram");
+            SENSORLIB_LOG_E("Failed to upload firmware to ram");
             return false;
         }
-        log_d("Loading firmware into RAM Done");
+        SENSORLIB_LOG_D("Loading firmware into RAM Done");
     }
 
     _error_code = bhy2_get_error_value(&sensor_error, dev.get());
     if (_error_code != BHY2_OK) {
-        log_e("Failed to get error value");
+        SENSORLIB_LOG_E("Failed to get error value");
         return false;
     }
     if (sensor_error != BHY2_OK) {
         _error_code = bhy2_get_error_value(&sensor_error, dev.get());
-        log_e("%s", BoschSensorUtils::get_sensor_error_text(sensor_error));
+        SENSORLIB_LOG_E("%s", BoschSensorUtils::get_sensor_error_text(sensor_error));
         return false;
     }
     if (write2Flash) {
-        log_d("Booting from FLASH.");
+        SENSORLIB_LOG_D("Booting from FLASH.");
         _error_code = bhy2_boot_from_flash(dev.get());
     } else {
-        log_d("Booting from RAM.");
+        SENSORLIB_LOG_D("Booting from RAM.");
         _error_code = bhy2_boot_from_ram(dev.get());
     }
     if (_error_code != BHY2_OK) {
-        log_e("Failed to boot device!");
+        SENSORLIB_LOG_E("Failed to boot device!");
         return false;
     }
     _error_code = bhy2_get_error_value(&sensor_error, dev.get());
     if (sensor_error) {
-        log_e("%s", BoschSensorUtils::get_sensor_error_text(sensor_error));
+        SENSORLIB_LOG_E("%s", BoschSensorUtils::get_sensor_error_text(sensor_error));
         return false;
     }
     return sensor_error == BHY2_OK;
@@ -864,7 +864,7 @@ bool BoschSensorBase::initImpl(CommInterface interface)
 
     dev = std::make_unique<struct bhy2_dev>();
     if (!dev) {
-        log_e("Failed to allocate device handler!");
+        SENSORLIB_LOG_E("Failed to allocate device handler!");
         return false;
     }
 
@@ -898,39 +898,39 @@ bool BoschSensorBase::initImpl(CommInterface interface)
                             _max_rw_length,
                             staticComm.get(), dev.get());
     if (_error_code != BHY2_OK) {
-        log_e("Failed to initialize device");
+        SENSORLIB_LOG_E("Failed to initialize device");
         return false;
     }
 
     _error_code = bhy2_soft_reset(dev.get());
     if (_error_code != BHY2_OK) {
-        log_e("Failed to reset device");
+        SENSORLIB_LOG_E("Failed to reset device");
         return false;
     }
 
     _error_code = bhy2_get_chip_id(&chip_id, dev.get());
     if (_error_code != BHY2_OK) {
-        log_e("Failed to get chip ID");
+        SENSORLIB_LOG_E("Failed to get chip ID");
         return false;
     }
 
     bhy2_get_product_id(&product_id, dev.get());
     if (_error_code != BHY2_OK) {
-        log_e("Failed to get product ID");
+        SENSORLIB_LOG_E("Failed to get product ID");
         return false;
     }
 
     // Check for a valid product ID
     if (chip_id != BHI260_CHIP_ID && chip_id != BHI360_CHIP_ID) {
-        log_e("Chip ID read 0x%02X. Expected 0x%02X or 0x%02X", chip_id, BHI260_CHIP_ID, BHI360_CHIP_ID);
+        SENSORLIB_LOG_E("Chip ID read 0x%" PRIx8 ". Expected 0x%" PRIx8 " or 0x%" PRIx8, chip_id, BHI260_CHIP_ID, BHI360_CHIP_ID);
         return false;
     } else {
-        log_i("%s found. Chip ID read 0x%02X, Product ID read 0x%02X", chip_id == BHI260_CHIP_ID ? "BHI260" : "BHI360", chip_id, product_id);
+        SENSORLIB_LOG_I("%s found. Chip ID read 0x%" PRIx8 ", Product ID read 0x%" PRIx8, chip_id == BHI260_CHIP_ID ? "BHI260" : "BHI360", chip_id, product_id);
     }
 
     // Check confirmation ID
     if (getConfirmationIDImpl() != chip_id) {
-        log_e("Confirmation ID mismatch: expected 0x%02X, got 0x%02X", chip_id, getConfirmationIDImpl());
+        SENSORLIB_LOG_E("Confirmation ID mismatch: expected 0x%" PRIx8 ", got 0x%" PRIx16, chip_id, getConfirmationIDImpl());
         return false;
     }
 
@@ -952,14 +952,14 @@ bool BoschSensorBase::initImpl(CommInterface interface)
     bhy2_set_host_interrupt_ctrl(data, dev.get());
     bhy2_get_host_interrupt_ctrl(&data, dev.get());
     if (data != data_exp) {
-        log_d("Expected Host Interrupt Control (0x07) to have value 0x%x but instead read 0x%x\r\n", data_exp, data);
+        SENSORLIB_LOG_D("Expected Host Interrupt Control (0x07) to have value 0x%" PRIx8 " but instead read 0x%" PRIx8, data_exp, data);
     }
 
     // Config status channel
     bhy2_set_host_intf_ctrl(BHY2_HIF_CTRL_ASYNC_STATUS_CHANNEL, dev.get());
     bhy2_get_host_intf_ctrl(&data, dev.get());
     if (!(data & BHY2_HIF_CTRL_ASYNC_STATUS_CHANNEL)) {
-        log_d("Expected Host Interface Control (0x06) to have bit 0x%x to be set\r\n", BHY2_HIF_CTRL_ASYNC_STATUS_CHANNEL);
+        SENSORLIB_LOG_D("Expected Host Interface Control (0x06) to have bit 0x%" PRIx8 " to be set", BHY2_HIF_CTRL_ASYNC_STATUS_CHANNEL);
     }
 
     if (_boot_from_flash) {
@@ -968,56 +968,56 @@ bool BoschSensorBase::initImpl(CommInterface interface)
         }
         if (_force_update) {
             if ((_firmware_stream == NULL) || (_firmware_size == 0)) {
-                log_e("No valid firmware is set. Please use the \"setFirmware\" method to set the valid firmware.");
+                SENSORLIB_LOG_E("No valid firmware is set. Please use the \"setFirmware\" method to set the valid firmware.");
                 return false;
             }
             _error_code = bhy2_soft_reset(dev.get());
             if (_error_code != BHY2_OK) {
-                log_e("Failed to reset device");
+                SENSORLIB_LOG_E("Failed to reset device");
                 return false;
             }
-            log_i("Force update firmware.");
+            SENSORLIB_LOG_I("Force update firmware.");
             if (!uploadFirmware(_firmware_stream, _firmware_size, _write_flash)) {
-                log_e("Failed to upload firmware to flash");
+                SENSORLIB_LOG_E("Failed to upload firmware to flash");
                 return false;
             }
         }
     } else {
         if ((_firmware_stream == NULL) || (_firmware_size == 0)) {
-            log_e("No valid firmware is set. Please use the \"setFirmware\" method to set the valid firmware.");
+            SENSORLIB_LOG_E("No valid firmware is set. Please use the \"setFirmware\" method to set the valid firmware.");
             return false;
         }
 
         // Upload firmware to RAM
         if (!uploadFirmware(_firmware_stream, _firmware_size, false)) {
-            log_e("Failed to upload firmware to RAM");
+            SENSORLIB_LOG_E("Failed to upload firmware to RAM");
             return false;
         }
     }
 
     uint16_t version = getKernelVersion();
     if (version == 0) {
-        log_e("Failed to get kernel version");
+        SENSORLIB_LOG_E("Failed to get kernel version");
         return false;
     }
-    log_i("Boot successful. Kernel version %u.", version);
+    SENSORLIB_LOG_I("Boot successful. Kernel version %u.", version);
 
     _error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT, bosch_static_parse_data, this, dev.get());
     if (_error_code != BHY2_OK) {
-        log_e("Failed to register FIFO parse callback for META_EVENT");
+        SENSORLIB_LOG_E("Failed to register FIFO parse callback for META_EVENT");
         return false;
     }
 
     _error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT_WU, bosch_static_parse_meta_event, this, dev.get());
     if (_error_code != BHY2_OK) {
-        log_e("Failed to register FIFO parse callback for META_EVENT_WU");
+        SENSORLIB_LOG_E("Failed to register FIFO parse callback for META_EVENT_WU");
         return false;
     }
 
     if (_debugKernel) {
         _error_code = bhy2_register_fifo_parse_callback(BHY2_SYS_ID_DEBUG_MSG, bosch_static_parse_debug_message, this, dev.get());
         if (_error_code != BHY2_OK) {
-            log_e("Failed to register FIFO parse callback for DEBUG_MSG");
+            SENSORLIB_LOG_E("Failed to register FIFO parse callback for DEBUG_MSG");
             return false;
         }
     }
@@ -1028,7 +1028,7 @@ bool BoschSensorBase::initImpl(CommInterface interface)
         // In older versions of esp-core, even if psramFound returns true, it may not initialize psram correctly.
         // This situation is common when OPI type SPI-RAM is selected as QSPI, or QSPI is selected as OPI.
         if (!_processBuffer) {
-            log_e("Failed to allocate PSRAM buffer, trying to allocate SRAM buffer!");
+            SENSORLIB_LOG_E("Failed to allocate PSRAM buffer, trying to allocate SRAM buffer!");
             _processBuffer = (uint8_t *)malloc(_processBufferSize);
         }
     } else {
@@ -1039,13 +1039,13 @@ bool BoschSensorBase::initImpl(CommInterface interface)
 #endif
 
     if (!_processBuffer) {
-        log_e("Failed to allocate process buffer");
+        SENSORLIB_LOG_E("Failed to allocate process buffer");
         return false;
     }
 
     _error_code = bhy2_get_and_process_fifo(_processBuffer, _processBufferSize, dev.get());
     if (_error_code != BHY2_OK) {
-        log_e("Failed to get and process FIFO");
+        SENSORLIB_LOG_E("Failed to get and process FIFO");
         free(_processBuffer);
         _processBuffer = nullptr;
         return false;

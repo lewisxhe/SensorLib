@@ -145,7 +145,7 @@ public:
         uint8_t lowByte = values & 0xFF;
         uint8_t highByte = (values >> 8) & 0xFF;
         if (!_outputStates) {
-            log_e("Output states array not initialized");
+            SENSORLIB_LOG_E("Output states array not initialized");
             return;
         }
         if (mask & 0x00FF) {
@@ -194,7 +194,7 @@ protected:
     void pinModeImpl(uint8_t pin, uint8_t mode) override
     {
         if (pin >= XL9555_PINS_COUNT) {
-            log_e("Invalid pin number, pin range is 0-%d", XL9555_PINS_COUNT - 1);
+            SENSORLIB_LOG_E("Invalid pin number, pin range is 0-%d", XL9555_PINS_COUNT - 1);
             return;
         }
         uint8_t reg = (pin < 8) ? XL9555_CTRL_CFG0 : XL9555_CTRL_CFG1;
@@ -283,7 +283,7 @@ protected:
     void digitalWriteImpl(uint8_t pin, bool value) override
     {
         if (pin >= XL9555_PINS_COUNT) {
-            log_e("Invalid pin number, pin range is 0-%d", XL9555_PINS_COUNT - 1);
+            SENSORLIB_LOG_E("Invalid pin number, pin range is 0-%d", XL9555_PINS_COUNT - 1);
             return;
         }
         uint8_t reg = (pin < 8) ? XL9555_CTRL_OUTP0 : XL9555_CTRL_OUTP1;
@@ -307,7 +307,7 @@ protected:
     bool digitalReadImpl(uint8_t pin) override
     {
         if (pin >= XL9555_PINS_COUNT) {
-            log_e("Invalid pin number, pin range is 0-%d", XL9555_PINS_COUNT - 1);
+            SENSORLIB_LOG_E("Invalid pin number, pin range is 0-%d", XL9555_PINS_COUNT - 1);
             return false;
         }
         if (!ensureValid()) {
@@ -334,16 +334,16 @@ protected:
     bool initImpl(uint8_t param) override
     {
         if (param == XL9555_UNKNOWN_ADDRESS) {
-            log_d("Try to automatically discover the device");
+            SENSORLIB_LOG_D("Try to automatically discover the device");
             for (uint8_t address = XL9555_SLAVE_ADDRESS0; address <= XL9555_SLAVE_ADDRESS7; ++address) {
                 setAddress(address);
-                log_d("Try to use 0x%02x address.", address);
+                SENSORLIB_LOG_D("Try to use 0x%" PRIx8 " address.", address);
                 if (readReg(XL9555_CTRL_INP0) != -1) {
-                    log_d("Found the xl9555 chip address is 0x%X", address);
+                    SENSORLIB_LOG_D("Found the xl9555 chip address is 0x%" PRIx8, address);
                     return true;
                 }
             }
-            log_e("No found xl9555 chip ...");
+            SENSORLIB_LOG_E("No found xl9555 chip ...");
             return false;
         }
         if (readReg(XL9555_CTRL_INP0) < 0 ) {

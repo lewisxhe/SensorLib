@@ -224,10 +224,10 @@ bool TouchDrvGT911::writeConfig(const uint8_t *config_buffer, size_t buffer_size
     }
     check_sum =  (~check_sum) + 1;
     if (check_sum != config_buffer[GT911_REG_LENGTH - 2]) {
-        log_e("Config checksum error !");
+        SENSORLIB_LOG_E("Config checksum error !");
         return false;
     }
-    log_d("Update touch config , write %lu Bytes check sum:0x%X", buffer_size, check_sum);
+    SENSORLIB_LOG_D("Update touch config , write %zu Bytes check sum:0x%X", buffer_size, check_sum);
     uint8_t cmd[] = {lowByte(GT911_CONFIG_VERSION), highByte(GT911_CONFIG_VERSION)};
     int err =  writeBuff(GT911_CONFIG_VERSION, (uint8_t *)config_buffer, buffer_size);
     return err == 0;
@@ -275,7 +275,7 @@ bool TouchDrvGT911::reloadConfig()
         check_sum += buffer[i];
     }
     check_sum =  (~check_sum) + 1;
-    log_d("reloadConfig check_sum : 0x%X\n", check_sum);
+    SENSORLIB_LOG_D("reloadConfig check_sum : 0x%X\n", check_sum);
     writeGT911(GT911_CONFIG_CHKSUM, check_sum);
     writeGT911(GT911_CONFIG_FRESH, 0x01);
     return true;
@@ -324,12 +324,12 @@ bool TouchDrvGT911::probeAddress()
         for (int retry = 0; retry < 3; ++retry) {
             _chipID = getChipID();
             if (_chipID == GT911_DEV_ID) {
-                log_i("Touch device address found is : 0x%X", device_address[i]);
+                SENSORLIB_LOG_I("Touch device address found is : 0x%X", device_address[i]);
                 return true;
             }
         }
     }
-    log_e("GT911 not found, touch device 7-bit address should be 0x5D or 0x14");
+    SENSORLIB_LOG_E("GT911 not found, touch device 7-bit address should be 0x5D or 0x14");
     return false;
 }
 
@@ -337,7 +337,7 @@ bool TouchDrvGT911::initImpl(uint8_t)
 {
     if (_addr == GT911_SLAVE_ADDRESS_H  && _pinsCfg.rstPin != -1 && _pinsCfg.irqPin != -1) {
 
-        log_i("Try using 0x14 as the device address");
+        SENSORLIB_LOG_I("Try using 0x14 as the device address");
 
         hal->pinMode(_pinsCfg.rstPin, OUTPUT);
         hal->pinMode(_pinsCfg.irqPin, OUTPUT);
@@ -353,7 +353,7 @@ bool TouchDrvGT911::initImpl(uint8_t)
 
     } else if (_addr == GT911_SLAVE_ADDRESS_L && _pinsCfg.rstPin != -1 && _pinsCfg.irqPin != -1) {
 
-        log_i("Try using 0x5D as the device address");
+        SENSORLIB_LOG_I("Try using 0x5D as the device address");
 
         hal->pinMode(_pinsCfg.rstPin, OUTPUT);
         hal->pinMode(_pinsCfg.irqPin, OUTPUT);
@@ -382,7 +382,7 @@ bool TouchDrvGT911::initImpl(uint8_t)
     *
     * TODO: NEED FIX
     if (!this->reallocBuffer(GT911_REG_LENGTH + 2)) {
-        log_e("realloc i2c buffer failed !");
+        SENSORLIB_LOG_E("realloc i2c buffer failed !");
         return false;
     }
      */
@@ -390,7 +390,7 @@ bool TouchDrvGT911::initImpl(uint8_t)
     _chipID = getChipID();
 
     if (_chipID != GT911_DEV_ID) {
-        log_i("Not found device GT911,Try to found the GT911");
+        SENSORLIB_LOG_I("Not found device GT911,Try to found the GT911");
         if (!autoProbe()) {
             return false;
         }
@@ -406,34 +406,34 @@ bool TouchDrvGT911::initImpl(uint8_t)
 
     _touchConfig.resolutionX = x_resolution[0] | (x_resolution[1] << 8);
     _touchConfig.resolutionY = y_resolution[0] | (y_resolution[1] << 8);
-    log_d("Model:GT911");
-    log_d("RST Pin:%d", _pinsCfg.rstPin);
-    log_d("IRQ Pin:%d", _pinsCfg.irqPin);
-    log_i("Product id:%ld", _chipID);
-    log_d("Firmware version: 0x%x", getFwVersion());
-    log_d("Resolution : X = %d Y = %d", _touchConfig.resolutionX, _touchConfig.resolutionY);
-    log_d("Vendor id:%d", getVendorID());
-    log_d("Refresh Rate:%d ms", getRefreshRate());
+    SENSORLIB_LOG_D("Model:GT911");
+    SENSORLIB_LOG_D("RST Pin:%d", _pinsCfg.rstPin);
+    SENSORLIB_LOG_D("IRQ Pin:%d", _pinsCfg.irqPin);
+    SENSORLIB_LOG_I("Product id:%" PRId32, _chipID);
+    SENSORLIB_LOG_D("Firmware version: 0x%x", getFwVersion());
+    SENSORLIB_LOG_D("Resolution : X = %d Y = %d", _touchConfig.resolutionX, _touchConfig.resolutionY);
+    SENSORLIB_LOG_D("Vendor id:%d", getVendorID());
+    SENSORLIB_LOG_D("Refresh Rate:%d ms", getRefreshRate());
     _maxTouchPoints = readGT911(GT911_TOUCH_NUMBER) & 0x0F;
-    log_d("MaxTouchPoint:%d", _maxTouchPoints);
+    SENSORLIB_LOG_D("MaxTouchPoint:%d", _maxTouchPoints);
 
     // Get the default interrupt trigger mode of the current screen
     uint8_t irqMode = getInterruptMode();
     switch (irqMode) {
     case 0:     ///< RISING
-        log_d("Interrupt Mode:  RISING");
+        SENSORLIB_LOG_D("Interrupt Mode:  RISING");
         break;
     case 1:    ///< FALLING
-        log_d("Interrupt Mode:  FALLING");
+        SENSORLIB_LOG_D("Interrupt Mode:  FALLING");
         break;
     case 2:   ///< LOW_LEVEL_QUERY
-        log_d("Interrupt Mode:  LOW_LEVEL_QUERY");
+        SENSORLIB_LOG_D("Interrupt Mode:  LOW_LEVEL_QUERY");
         break;
     case 3:  ///< HIGH_LEVEL_QUERY
-        log_d("Interrupt Mode:  HIGH_LEVEL_QUERY");
+        SENSORLIB_LOG_D("Interrupt Mode:  HIGH_LEVEL_QUERY");
         break;
     default:
-        log_e("Interrupt Mode:  UNKNOWN");
+        SENSORLIB_LOG_E("Interrupt Mode:  UNKNOWN");
         break;
     }
 

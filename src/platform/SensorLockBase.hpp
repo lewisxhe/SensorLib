@@ -29,8 +29,6 @@
  */
 #pragma once
 
-#include "../SensorLib.h"
-
 class SensorLockBase
 {
 public:

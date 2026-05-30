@@ -220,12 +220,12 @@ public:
     bool readData(AccelerometerData &data) override
     {
         if (!dev) {
-            log_e("Device not initialized");
+            SENSORLIB_LOG_E("Device not initialized");
             return false;
         }
         struct bma4_accel sens_data = { 0, 0, 0 };
         if (bma4_read_accel_xyz(&sens_data, dev.get()) != 0) {
-            log_e("Failed to read acceleration data");
+            SENSORLIB_LOG_E("Failed to read acceleration data");
             return false;
         }
         data.raw.x = sens_data.x - _x_offset;
@@ -265,7 +265,7 @@ public:
     bool reset() override
     {
         if (!dev) {
-            log_e("Device not initialized");
+            SENSORLIB_LOG_E("Device not initialized");
             return false;
         }
         return bma4_soft_reset(dev.get()) == 0;
@@ -279,12 +279,12 @@ public:
     bool selfTest() override
     {
         if (!dev) {
-            log_e("Device not initialized");
+            SENSORLIB_LOG_E("Device not initialized");
             return false;
         }
         int8_t selftest_rslt = 0;
         if (bma4_perform_accel_selftest(&selftest_rslt, dev.get()) != 0) {
-            log_i("Self test failed");
+            SENSORLIB_LOG_I("Self test failed");
             return false;
         }
         return selftest_rslt == 0;
@@ -314,7 +314,7 @@ public:
             regValue = BMA4_ACCEL_RANGE_16G;
             break;
         default:
-            log_e("Error: Invalid range %d\n", static_cast<int>(range));
+            SENSORLIB_LOG_E("Error: Invalid range %d\n", static_cast<int>(range));
             return false;
         }
         _accel_conf.range = regValue;
@@ -337,7 +337,7 @@ public:
     bool setOutputDataRate(float data_rate_hz) override
     {
         int rangeInt = static_cast<int>(data_rate_hz * 100 + 0.5);
-        log_d("Input: %.2f, Integer: %d\n", data_rate_hz, rangeInt);
+        SENSORLIB_LOG_D("Input: %.2f, Integer: %d\n", data_rate_hz, rangeInt);
         uint8_t regValue = 0;
         switch (rangeInt) {
         case 78: // 0.78HZ
@@ -377,7 +377,7 @@ public:
             regValue = BMA4_OUTPUT_DATA_RATE_1600HZ;
             break;
         default:
-            log_e("Error: Invalid range %.2f\n", data_rate_hz);
+            SENSORLIB_LOG_E("Error: Invalid range %.2f\n", data_rate_hz);
             break;
         }
         _accel_conf.odr = regValue;
@@ -423,7 +423,7 @@ public:
             regValue = BMA4_ACCEL_RES_AVG128;
             break;
         default:
-            log_e("Error: Invalid bandwidth %d\n", static_cast<int>(bandwidth));
+            SENSORLIB_LOG_E("Error: Invalid bandwidth %d\n", static_cast<int>(bandwidth));
             return false;
         }
         _accel_conf.bandwidth = regValue;
@@ -452,7 +452,7 @@ public:
             regValue = BMA4_CONTINUOUS_MODE;
             break;
         default:
-            log_e("Error: Invalid performance mode %d\n", static_cast<int>(mode));
+            SENSORLIB_LOG_E("Error: Invalid performance mode %d\n", static_cast<int>(mode));
             return false;
         }
         _accel_conf.perf_mode = regValue;
@@ -479,7 +479,7 @@ public:
             enable = true;
             break;
         default:
-            log_e("Error: Invalid operation mode %d\n", static_cast<int>(mode));
+            SENSORLIB_LOG_E("Error: Invalid operation mode %d\n", static_cast<int>(mode));
             break;
         }
         if (bma4_set_accel_enable(enable, dev.get()) == 0) {
@@ -638,13 +638,13 @@ public:
             int_line = 0x01;
             break;
         default:
-            log_e("Invalid interrupt pin specified");
+            SENSORLIB_LOG_E("Invalid interrupt pin specified");
             return false;
         }
 
         int8_t result = bma4_map_interrupt(int_line, interrupt_sources, enable, dev.get());
         if (result != 0) {
-            log_e("Failed to %s interrupt 0x%04X on pin %d: %d",
+            SENSORLIB_LOG_E("Failed to %s interrupt 0x%04X on pin %d: %d",
                   enable ? "enable" : "disable",
                   interrupt_sources,
                   (pin_map == InterruptPinMap::PIN1) ? 1 : 2,
@@ -664,7 +664,7 @@ public:
     virtual bool setRemapAxes(SensorRemap remap)
     {
         if (_remap_reg_offset == 0) {
-            log_e("Remap feature not supported for this model");
+            SENSORLIB_LOG_E("Remap feature not supported for this model");
             return false;
         }
         struct bma4_remap remap_data;
@@ -710,10 +710,10 @@ public:
             remap_data.z = BMA4_NEG_Z;
             break;
         default:
-            log_e("Invalid remap option");
+            SENSORLIB_LOG_E("Invalid remap option");
             return false;
         }
-        log_d("Remap register offset: 0x%X", _remap_reg_offset);
+        SENSORLIB_LOG_D("Remap register offset: 0x%X", _remap_reg_offset);
         auto feature_config = std::unique_ptr<uint8_t[]>(new uint8_t[dev->feature_len]());
         return bma4_set_remap_axes(&remap_data, feature_config.get(),
                                    _remap_reg_offset, dev->feature_len, dev.get()) == 0;
@@ -727,7 +727,7 @@ public:
     const char *getModelName() const
     {
         if (!dev) {
-            log_e("Device not initialized");
+            SENSORLIB_LOG_E("Device not initialized");
             return "Unknown";
         }
         switch (dev->chip_id) {
@@ -956,7 +956,7 @@ private:
     {
         dev = std::make_unique<struct bma4_dev>();
         if (!dev) {
-            log_e(" Device handler malloc failed!");
+            SENSORLIB_LOG_E(" Device handler malloc failed!");
             return false;
         }
         switch (_iface) {
@@ -977,14 +977,14 @@ private:
         dev->perf_mode_status = BMA4_DISABLE;
 
         if (bma4_soft_reset(dev.get()) != 0) {
-            log_e("BMA4xx soft reset failed");
+            SENSORLIB_LOG_E("BMA4xx soft reset failed");
             return false;
         }
         hal->delay(20);
 
 
         if (!boschInitImpl()) {
-            log_e("BMA4xx sensor initialization failed");
+            SENSORLIB_LOG_E("BMA4xx sensor initialization failed");
             return false;
         }
 
@@ -1020,18 +1020,18 @@ private:
         // Calculate half scale
         _half_scale = powf(2.0f, (float)dev->resolution) / 2.0f;
 
-        log_d("Half scale calculated: %.0f (for %d-bit sensor)",
+        SENSORLIB_LOG_D("Half scale calculated: %.0f (for %d-bit sensor)",
               _half_scale, dev->resolution);
 
         // Set default full scale range to 2g
         if (!setFullScaleRange(AccelFullScaleRange::FS_2G)) {
-            log_e("Failed to set default 2g range");
+            SENSORLIB_LOG_E("Failed to set default 2g range");
             return false;
         }
 
         // Set default output data rate to 50Hz
         if (!setOutputDataRate(50.0f)) {
-            log_e("Failed to set default ODR 50Hz");
+            SENSORLIB_LOG_E("Failed to set default ODR 50Hz");
             return false;
         }
 

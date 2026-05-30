@@ -157,7 +157,7 @@ uint32_t TouchDrvCST92xx::readWordFromMem(uint8_t type, uint16_t mem_addr)
 
     res =  writeBuff(write_buffer, 3);
     if (res != 0) {
-        log_e("Write 0A010 failed");
+        SENSORLIB_LOG_E("Write 0A010 failed");
         goto ERROR;
     }
 
@@ -168,7 +168,7 @@ uint32_t TouchDrvCST92xx::readWordFromMem(uint8_t type, uint16_t mem_addr)
 
     res = writeBuff(write_buffer, 4);
     if (res != 0) {
-        log_e("Write 0A00C failed");
+        SENSORLIB_LOG_E("Write 0A00C failed");
         goto ERROR;
     }
 
@@ -178,7 +178,7 @@ uint32_t TouchDrvCST92xx::readWordFromMem(uint8_t type, uint16_t mem_addr)
 
     res = writeBuff(write_buffer, 3);
     if (res != 0) {
-        log_e("Write 0A004E4 failed");
+        SENSORLIB_LOG_E("Write 0A004E4 failed");
         goto ERROR;
     }
 
@@ -190,7 +190,7 @@ uint32_t TouchDrvCST92xx::readWordFromMem(uint8_t type, uint16_t mem_addr)
         write_buffer[1] = 0x04;
         res = writeThenRead(write_buffer, 2, read_buffer, 1);
         if (res != 0) {
-            log_e("Write 0A004 failed");
+            SENSORLIB_LOG_E("Write 0A004 failed");
             goto ERROR;
         }
 
@@ -242,7 +242,7 @@ bool TouchDrvCST92xx::enterBootloader(void)
     for (uint8_t i = 10;; i += 2) {
 
         if (i > 20) {
-            log_e("Enter boot:try timeout");
+            SENSORLIB_LOG_E("Enter boot:try timeout");
             goto ERROR;
         }
 
@@ -281,13 +281,13 @@ bool TouchDrvCST92xx::enterBootloader(void)
     write_buffer[2] = 0x00;
     res = writeBuff(write_buffer, 3);
     if (res != 0) {
-        log_e("Enter boot exit error");
+        SENSORLIB_LOG_E("Enter boot exit error");
         goto ERROR;
     }
     if (_slave_addr != -1 && _slave_addr != CST92XX_BOOT_ADDRESS) {
         setAddress(_slave_addr);
     }
-    log_d("Enter boot mode success!");
+    SENSORLIB_LOG_D("Enter boot mode success!");
     return true;
 
 ERROR:
@@ -320,14 +320,14 @@ bool TouchDrvCST92xx::getAttribute()
     checkcode <<= 8;
     checkcode |= buffer[0];
 
-    log_i("Chip checkcode:0x%lx.", checkcode);
+    SENSORLIB_LOG_I("Chip checkcode:0x%" PRIx32 ".", checkcode);
 
     write_buffer[0] = 0xD1;
     write_buffer[1] = 0xF8;
     writeThenRead(write_buffer, 2, buffer, 4);
     _touchConfig.resolutionX = ( buffer[1] << 8) | buffer[0];
     _touchConfig.resolutionY = ( buffer[3] << 8) | buffer[2];
-    log_i("Chip resolution X:%u Y:%u", _touchConfig.resolutionX, _touchConfig.resolutionY);
+    SENSORLIB_LOG_I("Chip resolution X:%u Y:%u", _touchConfig.resolutionX, _touchConfig.resolutionY);
 
     write_buffer[0] = 0xD2;
     write_buffer[1] = 0x04;
@@ -340,8 +340,7 @@ bool TouchDrvCST92xx::getAttribute()
     uint32_t ProjectID = buffer[1];
     ProjectID <<= 8;
     ProjectID |= buffer[0];
-    log_i("Chip type :0x%x, ProjectID:0X%lx",
-          chipType, ProjectID);
+    SENSORLIB_LOG_I("Chip type :0x%x, ProjectID:0x%" PRIx32, chipType, ProjectID);
 
     write_buffer[0] = 0xD2;
     write_buffer[1] = 0x08;
@@ -363,20 +362,20 @@ bool TouchDrvCST92xx::getAttribute()
     checksum <<= 8;
     checksum |= buffer[4];
 
-    log_i("Chip ic version:0x%lx, checksum:0x%lx",
-          fwVersion, checksum);
+    SENSORLIB_LOG_I("Chip ic version:0x%" PRIx32 ", checksum:0x%" PRIx32,
+                    fwVersion, checksum);
 
     if (fwVersion == 0xA5A5A5A5) {
-        log_e("Chip ic don't have firmware.");
+        SENSORLIB_LOG_E("Chip ic don't have firmware.");
         return false;
     }
     if ((checkcode & 0xffff0000) != 0xCACA0000) {
-        log_e("Firmware info read error.");
+        SENSORLIB_LOG_E("Firmware info read error.");
         return false;
     }
 
     if ((chipType != CST9220_CHIP_ID) && (chipType != CST9217_CHIP_ID)) {
-        log_e("Chip type error 0x%x", chipType);
+        SENSORLIB_LOG_E("Chip type error 0x%x", chipType);
         return false;
     }
 
@@ -419,31 +418,31 @@ bool TouchDrvCST92xx::setMode(uint8_t mode)
 
     switch (mode) {
     case MODE_NORMAL: {
-        log_d("set_work_mode: ENUM_MODE_NORMAL");
+        SENSORLIB_LOG_D("set_work_mode: ENUM_MODE_NORMAL");
         write_buffer[0] = highByte(REG_NORMAL_MODE);
         write_buffer[1] = lowByte(REG_NORMAL_MODE);
         break;
     }
     case MODE_DEBUG_DIFF: {
-        log_d("set_work_mode: ENUM_MODE_DEBUG_DIFF");
+        SENSORLIB_LOG_D("set_work_mode: ENUM_MODE_DEBUG_DIFF");
         write_buffer[0] = highByte(REG_DIFF_MODE);
         write_buffer[1] = lowByte(REG_DIFF_MODE);
         break;
     }
     case MODE_DEBUG_RAWDATA: {
-        log_d("set_work_mode: ENUM_MODE_DEBUG_RAWDATA");
+        SENSORLIB_LOG_D("set_work_mode: ENUM_MODE_DEBUG_RAWDATA");
         write_buffer[0] = highByte(REG_RAW_MODE);
         write_buffer[1] = lowByte(REG_RAW_MODE);
         break;
     }
     case MODE_DEBUG_INFO: {
-        log_d("set_work_mode: ENUM_MODE_DEBUG_INFO");
+        SENSORLIB_LOG_D("set_work_mode: ENUM_MODE_DEBUG_INFO");
         write_buffer[0] = highByte(REG_DEBUG_MODE);
         write_buffer[1] = lowByte(REG_DEBUG_MODE);
         break;
     }
     case MODE_FACTORY: {
-        log_d("set_work_mode: ENUM_MODE_FACTORY");
+        SENSORLIB_LOG_D("set_work_mode: ENUM_MODE_FACTORY");
         for (i = 0; i < 10; i++) {
             write_buffer[0] = highByte(REG_FACTORY_MODE);
             write_buffer[1] = lowByte(REG_FACTORY_MODE);
@@ -467,54 +466,54 @@ bool TouchDrvCST92xx::setMode(uint8_t mode)
         write_buffer[1] = 0x19;
         res = writeBuff(write_buffer, 2);
         if (res != 0) {
-            log_e("set_work_mode 0xD119 error");
+            SENSORLIB_LOG_E("set_work_mode 0xD119 error");
             return false;
         }
         break;
     }
     case MODE_FACTORY_LOW_DRV: {
-        log_d("set_work_mode: ENUM_MODE_FACTORY_LOWDRV");
+        SENSORLIB_LOG_D("set_work_mode: ENUM_MODE_FACTORY_LOWDRV");
         write_buffer[0] = 0xD1;
         write_buffer[1] = 0x11;
         break;
     }
     case MODE_FACTORY_HIGH_DRV: {
-        log_d("set_work_mode: ENUM_MODE_FACTORY_HIGHDRV");
+        SENSORLIB_LOG_D("set_work_mode: ENUM_MODE_FACTORY_HIGHDRV");
         write_buffer[0] = 0xD1;
         write_buffer[1] = 0x10;
         break;
     }
     case MODE_FACTORY_SHORT: {
-        log_d("set_work_mode: ENUM_MODE_FACTORY_SHORT");
+        SENSORLIB_LOG_D("set_work_mode: ENUM_MODE_FACTORY_SHORT");
         write_buffer[0] = 0xD1;
         write_buffer[1] = 0x12;
         break;
     }
     case 0XFE: {
-        log_d("set_work_mode: 0xFE");
+        SENSORLIB_LOG_D("set_work_mode: 0xFE");
         write_buffer[0] = 0xD1;
         write_buffer[1] = 0x1F;
         break;
     }
     default: {
-        log_d("set_work_mode: NA return");
+        SENSORLIB_LOG_D("set_work_mode: NA return");
         return 0;
     }
     }
     mode_cmd = write_buffer[1];
     res = writeBuff(write_buffer, 2);
     if (res != 0) {
-        log_e("set_work_mode 0x%x  0x%x error", write_buffer[0], write_buffer[1]);
+        SENSORLIB_LOG_E("set_work_mode 0x%x  0x%x error", write_buffer[0], write_buffer[1]);
         return false;
     }
     write_buffer[0] = 0x00;
     write_buffer[1] = 0x02;
     res = writeThenRead(write_buffer, 2, read_buffer, 2);
     if (res != 0) {
-        log_e("set_work_mode read 0x0002 failed : 0x%X 0x%X", read_buffer[0], read_buffer[1]);
+        SENSORLIB_LOG_E("set_work_mode read 0x0002 failed : 0x%X 0x%X", read_buffer[0], read_buffer[1]);
     }
     if (mode_cmd != read_buffer[1]) {
-        log_e("set work mode read 0x0002=0x%x failed", read_buffer[1]);
+        SENSORLIB_LOG_E("set work mode read 0x0002=0x%x failed", read_buffer[1]);
         return false;
     }
     hal->delay(10);
@@ -529,7 +528,7 @@ bool TouchDrvCST92xx::initImpl(uint8_t)
 
     _chipID = chipType;
 
-    log_d("Touch type:%s", getModelName());
+    SENSORLIB_LOG_D("Touch type:%s", getModelName());
 
     _maxTouchPoints = MAX_FINGER_NUM;
 

@@ -42,7 +42,7 @@ bool AXP517Irq::enable(uint64_t mask)
     uint8_t buffer[4];
 
     if (_core.readRegBuff(axp517_regs::irq::ENABLE0, buffer, sizeof(buffer)) < 0) {
-        log_e("Failed to read IRQ enable registers");
+        SENSORLIB_LOG_E("Failed to read IRQ enable registers");
         return false;
     }
     uint64_t current = (static_cast<uint64_t>(buffer[0]) << 24) |
@@ -67,7 +67,7 @@ bool AXP517Irq::disable(uint64_t mask)
 
     uint8_t buffer[4];
     if (_core.readRegBuff(axp517_regs::irq::ENABLE0, buffer, sizeof(buffer)) < 0) {
-        log_e("Failed to read IRQ enable registers");
+        SENSORLIB_LOG_E("Failed to read IRQ enable registers");
         return false;
     }
     uint64_t current = (static_cast<uint64_t>(buffer[0]) << 24) |
@@ -91,7 +91,7 @@ uint64_t AXP517Irq::readStatus(bool clear)
 {
     uint8_t buffer[4];
     if (_core.readRegBuff(axp517_regs::irq::STATUS0, buffer, sizeof(buffer)) < 0) {
-        log_e("Failed to read IRQ status registers");
+        SENSORLIB_LOG_E("Failed to read IRQ status registers");
         return 0;
     }
     uint64_t mask = (static_cast<uint64_t>(buffer[0]) << 24) |
@@ -109,7 +109,7 @@ bool AXP517Irq::clearStatus()
 {
     uint8_t buffer[4] = {0xFF, 0xFF, 0xFF, 0xFF};
     if (_core.writeRegBuff(axp517_regs::irq::STATUS0, buffer, sizeof(buffer)) < 0) {
-        log_e("Failed to clear IRQ status registers");
+        SENSORLIB_LOG_E("Failed to clear IRQ status registers");
         return false;
     }
     return true;

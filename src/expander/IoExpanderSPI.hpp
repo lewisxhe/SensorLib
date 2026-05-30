@@ -78,7 +78,7 @@ public:
         _cs = cs;
 
         if (_mosi == -1 || sck == -1) {
-            log_e("MOSI and SCK pins must be specified");
+            SENSORLIB_LOG_E("MOSI and SCK pins must be specified");
             return false;
         }
 
@@ -146,7 +146,7 @@ public:
     uint32_t transferDataBits(uint32_t val, uint32_t bits)
     {
         if (!_base) {
-            log_e("SPI not initialized (call beginSPI first)");
+            SENSORLIB_LOG_E("SPI not initialized (call beginSPI first)");
             return 0;
         }
         uint32_t out = 0;
