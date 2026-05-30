@@ -202,7 +202,7 @@ private:
 
     bool init_legacy()
     {
-        if (sda != -1 || scl != -1) {
+        if (sda == -1 || scl == -1) {
             return true;
         }
         i2c_config_t i2c_conf;
