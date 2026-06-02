@@ -179,7 +179,7 @@ public:
             .chargeCurrentMin  = 0,
             .chargeCurrentMax  = 1000,
             .chargeCurrentStep = 0,
-            .chargeCurrentSteps = 17,
+            .chargeCurrentSteps = 14,
         };
         return config;
     }
