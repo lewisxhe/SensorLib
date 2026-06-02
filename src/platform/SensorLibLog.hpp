@@ -143,6 +143,7 @@ static inline void _dump_buffer(const uint8_t *buf, size_t size)
             }
         }
         ascii[pos_a] = '\0';
+        (void)ascii;
         log_d("%08x  %s %s", (unsigned int)i, hex, ascii);
     }
 }
@@ -191,6 +192,7 @@ static inline void _dump_buffer(const uint8_t *buf, size_t size)
             }
         }
         ascii[pos_a] = '\0';
+        (void)ascii;
         ESP_LOG_LEVEL_LOCAL(ESP_LOG_DEBUG, SENSORLIB_LOG_TAG,
                             "%08x  %s %s", (unsigned int)i, hex, ascii);
     }
