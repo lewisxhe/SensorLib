@@ -315,15 +315,15 @@ void HapticDriver_AW86224::setSramSize(SramSize size)
 {
     switch (size) {
     case SramSize::SRAM_1K:
-        updateBits(REG_RTPCFG1, _BV(5), 0);
-        updateBits(REG_RTPCFG1, _BV(4), _BV(4));
+        updateBits(REG_RTPCFG1, sensorlib::_bv(5), 0);
+        updateBits(REG_RTPCFG1, sensorlib::_bv(4), sensorlib::_bv(4));
         break;
     case SramSize::SRAM_2K:
-        updateBits(REG_RTPCFG1, _BV(5), _BV(5));
-        updateBits(REG_RTPCFG1, _BV(4), 0);
+        updateBits(REG_RTPCFG1, sensorlib::_bv(5), sensorlib::_bv(5));
+        updateBits(REG_RTPCFG1, sensorlib::_bv(4), 0);
         break;
     case SramSize::SRAM_3K:
-        updateBits(REG_RTPCFG1, _BV(4) | _BV(5), _BV(4) | _BV(5));
+        updateBits(REG_RTPCFG1, sensorlib::_bv(4) | sensorlib::_bv(5), sensorlib::_bv(4) | sensorlib::_bv(5));
         break;
     }
 }
@@ -715,7 +715,7 @@ void HapticDriver_AW86224::contConfig()
 void HapticDriver_AW86224::interruptSetup()
 {
     updateBits(REG_SYSCTRL7, INT_MODE_EDGE, INT_MODE_EDGE);
-    updateBits(REG_SYSCTRL7, _BV(5), INT_EDGE_MODE_POS);
+    updateBits(REG_SYSCTRL7, sensorlib::_bv(5), INT_EDGE_MODE_POS);
     updateBits(REG_SYSINTM, MASK_UVLM | MASK_FF_AEM | MASK_FF_AFM | MASK_OCDM | MASK_OTM | MASK_DONEM, MASK_UVLM);
 }
 
