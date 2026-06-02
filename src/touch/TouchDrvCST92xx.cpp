@@ -57,7 +57,7 @@ const TouchPoints &TouchDrvCST92xx::getTouchPoints()
             return _touchPoints;
         }
 
-        if (buffer[0] == CST92XX_ACK || buffer[6] != CST92XX_ACK) {
+        if (buffer[0] == CST92XX_ACK || buffer[6] != CST92XX_ACK || buffer[0] == 0x00) {
             return _touchPoints;
         }
 
