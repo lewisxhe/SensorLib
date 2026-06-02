@@ -663,7 +663,7 @@ void BoschSensorBase::parseData(const struct bhy2_fifo_parse_data_info *fifo, vo
     }
 #ifdef BOSCH_PARSE_DATA_DUMP
     SENSORLIB_LOG_I("ID:[%d]:%s: DATA LEN:%" PRIu32, fifo->sensor_id, BoschSensorUtils::get_sensor_name(fifo->sensor_id), fifo->data_size);
-    DUMP_BUFFER(fifo->data_ptr, fifo->data_size);
+    SENSORLIB_DUMP_BUFFER(fifo->data_ptr, fifo->data_size);
 #endif
     if (_callback_manager.contains(fifo->sensor_id)) {
         _callback_manager.call(fifo->sensor_id, fifo->data_ptr, fifo->data_size, fifo->time_stamp);

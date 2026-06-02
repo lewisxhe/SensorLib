@@ -49,7 +49,7 @@
 #define SENSORLIB_LOG_D(fmt, ...)  LOG_PORT.printf("[D][%s:%d] " fmt "\n", SENSORLIB_LOG_FILE_LINE, ##__VA_ARGS__)
 #define SENSORLIB_LOG_W(fmt, ...)  LOG_PORT.printf("[W][%s:%d] " fmt "\n", SENSORLIB_LOG_FILE_LINE, ##__VA_ARGS__)
 
-static inline void sensorlib_dump_buffer(const uint8_t *buf, size_t size)
+static inline void _dump_buffer(const uint8_t *buf, size_t size)
 {
     const size_t bytesPerLine = 16;
     for (size_t i = 0; i < size; i += bytesPerLine) {
@@ -73,7 +73,7 @@ static inline void sensorlib_dump_buffer(const uint8_t *buf, size_t size)
     }
 }
 
-#define DUMP_BUFFER(buf, size)  sensorlib_dump_buffer((const uint8_t *)(buf), (size_t)(size))
+#define SENSORLIB_DUMP_BUFFER(buf, size)  _dump_buffer((const uint8_t *)(buf), (size_t)(size))
 
 // ─── Mbed / Zephyr ─────────────────────────────────────────────────────────
 #elif defined(ARDUINO_ARCH_MBED) || defined(ARDUINO_ARCH_ZEPHYR)
@@ -85,7 +85,7 @@ static inline void sensorlib_dump_buffer(const uint8_t *buf, size_t size)
 #define SENSORLIB_LOG_D(fmt, ...)  printf("[D][%s:%d] " fmt "\n", SENSORLIB_LOG_FILE_LINE, ##__VA_ARGS__)
 #define SENSORLIB_LOG_W(fmt, ...)  printf("[W][%s:%d] " fmt "\n", SENSORLIB_LOG_FILE_LINE, ##__VA_ARGS__)
 
-static inline void sensorlib_dump_buffer(const uint8_t *buf, size_t size)
+static inline void _dump_buffer(const uint8_t *buf, size_t size)
 {
     const size_t bytesPerLine = 16;
     for (size_t i = 0; i < size; i += bytesPerLine) {
@@ -109,7 +109,7 @@ static inline void sensorlib_dump_buffer(const uint8_t *buf, size_t size)
     }
 }
 
-#define DUMP_BUFFER(buf, size)  sensorlib_dump_buffer((const uint8_t *)(buf), (size_t)(size))
+#define SENSORLIB_DUMP_BUFFER(buf, size)  _dump_buffer((const uint8_t *)(buf), (size_t)(size))
 
 
 
@@ -122,7 +122,7 @@ static inline void sensorlib_dump_buffer(const uint8_t *buf, size_t size)
 #define SENSORLIB_LOG_V(format, ...)  log_v(format, ##__VA_ARGS__)
 
 
-static inline void sensorlib_dump_buffer(const uint8_t *buf, size_t size)
+static inline void _dump_buffer(const uint8_t *buf, size_t size)
 {
     const size_t bytesPerLine = 16;
     for (size_t i = 0; i < size; i += bytesPerLine) {
@@ -147,7 +147,7 @@ static inline void sensorlib_dump_buffer(const uint8_t *buf, size_t size)
     }
 }
 
-#define DUMP_BUFFER(buf, size)  sensorlib_dump_buffer((const uint8_t *)(buf), (size_t)(size))
+#define SENSORLIB_DUMP_BUFFER(buf, size)  _dump_buffer((const uint8_t *)(buf), (size_t)(size))
 
 // ─── ESP-IDF (native, not Arduino) ─────────────────────────────────────────
 #elif defined(ESP_PLATFORM) && !defined(ARDUINO)
@@ -170,7 +170,7 @@ static inline void sensorlib_dump_buffer(const uint8_t *buf, size_t size)
 #define SENSORLIB_LOG_V(format, ...)  ESP_LOG_LEVEL_LOCAL(ESP_LOG_VERBOSE, SENSORLIB_LOG_TAG, format, ##__VA_ARGS__)
 #endif
 
-static inline void sensorlib_dump_buffer(const uint8_t *buf, size_t size)
+static inline void _dump_buffer(const uint8_t *buf, size_t size)
 {
     const size_t bytesPerLine = 16;
     for (size_t i = 0; i < size; i += bytesPerLine) {
@@ -196,7 +196,7 @@ static inline void sensorlib_dump_buffer(const uint8_t *buf, size_t size)
     }
 }
 
-#define DUMP_BUFFER(buf, size)  sensorlib_dump_buffer((const uint8_t *)(buf), (size_t)(size))
+#define SENSORLIB_DUMP_BUFFER(buf, size)  _dump_buffer((const uint8_t *)(buf), (size_t)(size))
 
 // ─── Fallback (no-op) ──────────────────────────────────────────────────────
 #else
@@ -206,6 +206,6 @@ static inline void sensorlib_dump_buffer(const uint8_t *buf, size_t size)
 #define SENSORLIB_LOG_D(...)
 #define SENSORLIB_LOG_W(...)
 
-#define DUMP_BUFFER(buf, size)
+#define SENSORLIB_DUMP_BUFFER(buf, size)
 
 #endif
