@@ -338,7 +338,7 @@ protected:
             for (uint8_t address = XL9555_SLAVE_ADDRESS0; address <= XL9555_SLAVE_ADDRESS7; ++address) {
                 setAddress(address);
                 SENSORLIB_LOG_D("Try to use 0x%" PRIx8 " address.", address);
-                if (readReg(XL9555_CTRL_INP0) != -1) {
+                if (readReg(XL9555_CTRL_INP0) >= 0) {
                     SENSORLIB_LOG_D("Found the xl9555 chip address is 0x%" PRIx8, address);
                     return true;
                 }
