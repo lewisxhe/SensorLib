@@ -42,15 +42,15 @@ const TouchPoints &TouchDrvCST92xx::getTouchPoints()
     _touchPoints.clear();
 
     // Write read command
-    write_buffer[0] = highByte(REG_READ);
-    write_buffer[1] = lowByte(REG_READ);
+    write_buffer[0] = sensorlib::_highByte(REG_READ);
+    write_buffer[1] = sensorlib::_lowByte(REG_READ);
     addrToBeBuf(REG_READ, buffer);
 
     if (writeThenRead(buffer, 2, buffer, sizeof(buffer)) == 0) {
 
         // Write read ACK
-        write_buffer[0] = highByte(REG_READ);
-        write_buffer[1] = lowByte(REG_READ);
+        write_buffer[0] = sensorlib::_highByte(REG_READ);
+        write_buffer[1] = sensorlib::_lowByte(REG_READ);
         write_buffer[2] = CST92XX_ACK;
 
         if (writeBuff(write_buffer, 3) != 0) {
@@ -419,33 +419,33 @@ bool TouchDrvCST92xx::setMode(uint8_t mode)
     switch (mode) {
     case MODE_NORMAL: {
         SENSORLIB_LOG_D("set_work_mode: ENUM_MODE_NORMAL");
-        write_buffer[0] = highByte(REG_NORMAL_MODE);
-        write_buffer[1] = lowByte(REG_NORMAL_MODE);
+        write_buffer[0] = sensorlib::_highByte(REG_NORMAL_MODE);
+        write_buffer[1] = sensorlib::_lowByte(REG_NORMAL_MODE);
         break;
     }
     case MODE_DEBUG_DIFF: {
         SENSORLIB_LOG_D("set_work_mode: ENUM_MODE_DEBUG_DIFF");
-        write_buffer[0] = highByte(REG_DIFF_MODE);
-        write_buffer[1] = lowByte(REG_DIFF_MODE);
+        write_buffer[0] = sensorlib::_highByte(REG_DIFF_MODE);
+        write_buffer[1] = sensorlib::_lowByte(REG_DIFF_MODE);
         break;
     }
     case MODE_DEBUG_RAWDATA: {
         SENSORLIB_LOG_D("set_work_mode: ENUM_MODE_DEBUG_RAWDATA");
-        write_buffer[0] = highByte(REG_RAW_MODE);
-        write_buffer[1] = lowByte(REG_RAW_MODE);
+        write_buffer[0] = sensorlib::_highByte(REG_RAW_MODE);
+        write_buffer[1] = sensorlib::_lowByte(REG_RAW_MODE);
         break;
     }
     case MODE_DEBUG_INFO: {
         SENSORLIB_LOG_D("set_work_mode: ENUM_MODE_DEBUG_INFO");
-        write_buffer[0] = highByte(REG_DEBUG_MODE);
-        write_buffer[1] = lowByte(REG_DEBUG_MODE);
+        write_buffer[0] = sensorlib::_highByte(REG_DEBUG_MODE);
+        write_buffer[1] = sensorlib::_lowByte(REG_DEBUG_MODE);
         break;
     }
     case MODE_FACTORY: {
         SENSORLIB_LOG_D("set_work_mode: ENUM_MODE_FACTORY");
         for (i = 0; i < 10; i++) {
-            write_buffer[0] = highByte(REG_FACTORY_MODE);
-            write_buffer[1] = lowByte(REG_FACTORY_MODE);
+            write_buffer[0] = sensorlib::_highByte(REG_FACTORY_MODE);
+            write_buffer[1] = sensorlib::_lowByte(REG_FACTORY_MODE);
             res = writeBuff(write_buffer, 2);
             if (res != 0) {
                 hal->delay(1);

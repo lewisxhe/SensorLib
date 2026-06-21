@@ -228,7 +228,7 @@ bool TouchDrvGT911::writeConfig(const uint8_t *config_buffer, size_t buffer_size
         return false;
     }
     SENSORLIB_LOG_D("Update touch config , write %zu Bytes check sum:0x%X", buffer_size, check_sum);
-    uint8_t cmd[] = {lowByte(GT911_CONFIG_VERSION), highByte(GT911_CONFIG_VERSION)};
+    uint8_t cmd[] = {sensorlib::_lowByte(GT911_CONFIG_VERSION), sensorlib::_highByte(GT911_CONFIG_VERSION)};
     int err =  writeBuff(GT911_CONFIG_VERSION, (uint8_t *)config_buffer, buffer_size);
     return err == 0;
 }
@@ -264,8 +264,8 @@ uint8_t *TouchDrvGT911::loadConfig(size_t *output_size, bool print_out)
 bool TouchDrvGT911::reloadConfig()
 {
     uint8_t buffer[GT911_REG_LENGTH] = {};
-    buffer[0] = highByte(GT911_CONFIG_VERSION);
-    buffer[1] = lowByte(GT911_CONFIG_VERSION);
+    buffer[0] = sensorlib::_highByte(GT911_CONFIG_VERSION);
+    buffer[1] = sensorlib::_lowByte(GT911_CONFIG_VERSION);
     if (writeThenRead(buffer, 2, buffer, GT911_REG_LENGTH - 2) == -1) {
         return false;
     }
@@ -292,7 +292,7 @@ void TouchDrvGT911::setMaxTouchPoint(uint8_t num)
 uint8_t TouchDrvGT911::readGT911(uint16_t cmd)
 {
     uint8_t value = 0x00;
-    uint8_t write_buffer[2] = {highByte(cmd), lowByte(cmd)};
+    uint8_t write_buffer[2] = {sensorlib::_highByte(cmd), sensorlib::_lowByte(cmd)};
     writeThenRead(write_buffer, arraySize(write_buffer),
                   &value, 1);
     return value;
@@ -300,7 +300,7 @@ uint8_t TouchDrvGT911::readGT911(uint16_t cmd)
 
 int TouchDrvGT911::writeGT911(uint16_t cmd, uint8_t value)
 {
-    uint8_t write_buffer[3] = {highByte(cmd), lowByte(cmd), value};
+    uint8_t write_buffer[3] = {sensorlib::_highByte(cmd), sensorlib::_lowByte(cmd), value};
     return writeBuff(write_buffer, arraySize(write_buffer));
 }
 

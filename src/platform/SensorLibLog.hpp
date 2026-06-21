@@ -33,6 +33,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <ctype.h>
+#include <cstdio>
 
 #if !defined(ARDUINO_ARCH_MBED) && !defined(ARDUINO_ARCH_ZEPHYR)
 #define PLATFORM_HAS_PRINTF
