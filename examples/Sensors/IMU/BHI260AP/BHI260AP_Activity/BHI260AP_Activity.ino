@@ -30,8 +30,7 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
-#include <sensor/imu/bhi260/SensorBHI260AP.hpp>
-#include <bosch/BoschSensorDataHelper.hpp>
+#include <ImuDrv.hpp>
 
 // #define USE_I2C_INTERFACE        true
 // #define USE_SPI_INTERFACE        true

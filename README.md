@@ -129,38 +129,44 @@ dependencies:
 **2. Use in your code**:
 
 ```c
-#include "touch/TouchDrvGT911.hpp"
+#include "TouchDrvGoodix.hpp"
 
 // or for PMIC:
-// #include "pmic/xpowers/axp2101/PmicAXP2101.hpp"
+// #include "PmicXPowers.hpp"
 ```
 
 ## Quick Start
 
 ### Including Headers
 
-SensorLib provides two ways to include drivers in your sketch:
+SensorLib provides three ways to include drivers in your sketch:
 
-#### Option A: Per-driver Include (Recommended)
+#### Option A: Vendor-specific Include (Recommended)
 
-Include only the specific driver(s) you need. This minimizes compile-time
-namespace pollution and avoids pulling in unnecessary macros.
+Include only the vendor group you need. Best balance of granularity and convenience.
 
 ```cpp
-// Touch — pick the exact chip you use
-#include "touch/TouchDrvGT911.hpp"
+// Touch — by vendor
+#include "TouchDrvGoodix.hpp"      // GT911, GT9895
+#include "TouchDrvCST.hpp"         // CST226, CST816, CST9217, CST3530, CST3240
+#include "TouchDrvFocalTech.hpp"   // FT6X36
+#include "TouchDrvJadard.hpp"      // HI8561
+#include "TouchDrvChipshine.hpp"   // CHSC5816
 
-// PMIC — pick the exact chip you use
-#include "pmic/xpowers/axp2101/PmicAXP2101.hpp"
+// PMIC — by vendor
+#include "PmicXPowers.hpp"         // AXP192, AXP202, AXP2101, AXP517
+#include "PmicSilergy.hpp"         // SY6970
+#include "PmicTI.hpp"              // BQ25896
 
-// Magnetometer
-#include "sensor/magnetometer/qmc/SensorQMC5883L.hpp"
-
-// IMU
-#include "sensor/imu/qmi8658/SensorQMI8658.hpp"
-
-// RTC
-#include "time/pcf8563/SensorPCF8563.hpp"
+// Other categories — by device type
+#include "MagnetometerDrv.hpp"     // All magnetometers
+#include "ImuDrv.hpp"              // All IMUs
+#include "RtcDrv.hpp"              // All RTCs
+#include "GaugeDrv.hpp"            // All gauges
+#include "IoExpanderDrv.hpp"       // All I/O expanders
+#include "HapticDrivers.hpp"       // All haptic drivers
+#include "LightSensorDrv.hpp"      // All light sensors
+#include "AccelerometerDrv.hpp"    // All accelerometers
 ```
 
 #### Option B: Aggregate Include (Quick Prototyping)
@@ -169,29 +175,12 @@ One header pulls in **all** drivers for a category. Convenient for prototyping,
 but brings in extra macros and classes you may not need.
 
 ```cpp
-#include <TouchDrv.hpp>        // All touch drivers
-#include <PmicDrv.hpp>         // All PMIC drivers
-#include <MagnetometerDrv.hpp> // All magnetometer drivers
-#include <ImuDrv.hpp>          // All IMU drivers
-#include <RtcDrv.hpp>          // All RTC drivers
-#include <GaugeDrv.hpp>        // All gauge drivers
-#include <IoExpanderDrv.hpp>   // All I/O expanders
-#include <HapticDrivers.hpp>   // All haptic drivers
-#include <LightSensorDrv.hpp>  // All light sensors
-#include <AccelerometerDrv.hpp> // All accelerometers
+#include "TouchDrv.hpp"            // All touch drivers (all vendors)
+#include "PmicDrv.hpp"             // All PMIC drivers (all vendors)
 ```
 
-#### Which should I use?
-
-| | Per-driver (Option A) | Aggregate (Option B) |
-|---|---|---|
-| **Best for** | Production, libraries, multi-library projects | Prototyping, learning |
-| **Compile hygiene** | Minimal footprint | Pulls in all drivers & macros |
-| **Namespace** | Only your chip's classes visible | All chip classes in scope |
-| **Include path** | `"category/subcategory/ChipName.hpp"` | `<CategoryDrv.hpp>` |
-
-> **Recommendation**: Use **Option A** (per-driver) for anything beyond quick experiments.
-> It keeps your build clean and avoids macro conflicts with other libraries.
+> **Note**: All include paths are flat filenames in `src/`. This works on
+> **Arduino IDE**, **PlatformIO**, and **ESP-IDF** without subdirectory paths.
 
 ### Minimal Example: Touch
 
@@ -199,7 +188,7 @@ but brings in extra macros and classes you may not need.
 
 ```cpp
 #include <Wire.h>
-#include "touch/TouchDrvGT911.hpp"
+#include "TouchDrvGoodix.hpp"
 
 TouchDrvGT911 touch;
 
@@ -238,7 +227,7 @@ void loop() {
 
 ```cpp
 #include <Wire.h>
-#include "pmic/xpowers/axp2101/PmicAXP2101.hpp"
+#include "PmicXPowers.hpp"
 
 PmicAXP2101 pmic;
 
@@ -336,61 +325,61 @@ src_dir = examples/Sensors/IMU/QMI8658/BasicRead
 | Device | Description | I2C | SPI | Header |
 |--------|-------------|:---:|:---:|--------|
 | **RTC** |||||
-| PCF8563 / HYM8563 | Real-time clock | ✔️ | ❌ | `time/pcf8563/SensorPCF8563.hpp` |
-| PCF85063 | Real-time clock | ✔️ | ❌ | `time/pcf85063/SensorPCF85063.hpp` |
+| PCF8563 / HYM8563 | Real-time clock | ✔️ | ❌ | `SensorPCF8563.hpp` |
+| PCF85063 | Real-time clock | ✔️ | ❌ | `SensorPCF85063.hpp` |
 | **IMU** |||||
-| QMI8658 | 6-axis IMU | ✔️ | ✔️ | `sensor/imu/qmi8658/SensorQMI8658.hpp` |
-| BHI260AP | Smart IMU (Bosch) | ✔️ | ✔️ | `sensor/imu/bhi260/SensorBHI260AP.hpp` |
-| BHI360 | Smart IMU (Bosch) | ✔️ | ✔️ | `sensor/imu/bhi360/SensorBHI360.hpp` |
+| QMI8658 | 6-axis IMU | ✔️ | ✔️ | `ImuDrv.hpp` |
+| BHI260AP | Smart IMU (Bosch) | ✔️ | ✔️ | `SensorBHI260AP.hpp` |
+| BHI360 | Smart IMU (Bosch) | ✔️ | ✔️ | `SensorBHI360.hpp` |
 | **Magnetometer** |||||
-| QMC6309 | Magnetic Sensor | ✔️ | ❌ | `sensor/magnetometer/qmc/SensorQMC6309.hpp` |
-| QMC6310U/N | Magnetic Sensor | ✔️ | ❌ | `sensor/magnetometer/qmc/SensorQMC6310.hpp` |
-| QMC5883P | Magnetic Sensor | ✔️ | ❌ | `sensor/magnetometer/qmc/SensorQMC5883P.hpp` |
-| QMC5883L | Magnetic Sensor | ✔️ | ❌ | `sensor/magnetometer/qmc/SensorQMC5883L.hpp` |
-| BMM150 | Magnetic Sensor | ✔️ | ❌ | `sensor/magnetometer/bmm150/SensorBMM150.hpp` |
+| QMC6309 | Magnetic Sensor | ✔️ | ❌ | `SensorQMC6309.hpp` |
+| QMC6310U/N | Magnetic Sensor | ✔️ | ❌ | `SensorQMC6310.hpp` |
+| QMC5883P | Magnetic Sensor | ✔️ | ❌ | `SensorQMC5883P.hpp` |
+| QMC5883L | Magnetic Sensor | ✔️ | ❌ | `SensorQMC5883L.hpp` |
+| BMM150 | Magnetic Sensor | ✔️ | ❌ | `MagnetometerDrv.hpp` |
 | **Accelerometer** |||||
-| BMA422 | Accelerometer | ✔️ | ❌ | `sensor/accelerometer/bma/SensorBMA422.hpp` |
-| BMA423 | Accelerometer | ✔️ | ❌ | `sensor/accelerometer/bma/SensorBMA423.hpp` |
-| BMA456H | Accelerometer | ✔️ | ❌ | `sensor/accelerometer/bma/SensorBMA456H.hpp` |
+| BMA422 | Accelerometer | ✔️ | ❌ | `SensorBMA422.hpp` |
+| BMA423 | Accelerometer | ✔️ | ❌ | `SensorBMA423.hpp` |
+| BMA456H | Accelerometer | ✔️ | ❌ | `SensorBMA456H.hpp` |
 | **I/O Expander** |||||
-| XL9555 | 16-bit I/O Expander | ✔️ | ❌ | `expander/IoExpanderXL9555.hpp` |
-| PCA9570 | 4-bit I/O Expander | ✔️ | ❌ | `expander/IoExpanderPCA9570.hpp` |
+| XL9555 | 16-bit I/O Expander | ✔️ | ❌ | `IoExpanderDrv.hpp` |
+| PCA9570 | 4-bit I/O Expander | ✔️ | ❌ | `IoExpanderDrv.hpp` |
 | **Haptic** |||||
-| DRV2605 | Haptic Driver (TI) | ✔️ | ❌ | `haptic_drivers/HapticDriver_DRV2605.hpp` |
-| AW86224 | Haptic Driver (Awinic) | ✔️ | ❌ | `haptic_drivers/HapticDriver_AW86224.hpp` |
+| DRV2605 | Haptic Driver (TI) | ✔️ | ❌ | `HapticDrivers.hpp` |
+| AW86224 | Haptic Driver (Awinic) | ✔️ | ❌ | `HapticDrivers.hpp` |
 | **Light Sensor** |||||
-| CM32181 | Ambient Light Sensor | ✔️ | ❌ | `sensor/light_sensor/SensorCM32181.hpp` |
-| LTR553 | Light & Proximity | ✔️ | ❌ | `sensor/light_sensor/SensorLTR553.hpp` |
+| CM32181 | Ambient Light Sensor | ✔️ | ❌ | `LightSensorDrv.hpp` |
+| LTR553 | Light & Proximity | ✔️ | ❌ | `LightSensorDrv.hpp` |
 | **Touch** |||||
-| GT911 | Capacitive Touch | ✔️ | ❌ | `touch/TouchDrvGT911.hpp` |
-| GT9895 | Capacitive Touch | ✔️ | ❌ | `touch/TouchDrvGT9895.hpp` |
-| FT3267 | Capacitive Touch | ✔️ | ❌ | `touch/TouchDrvFT6X36.hpp` |
-| FT5206 | Capacitive Touch | ✔️ | ❌ | `touch/TouchDrvFT6X36.hpp` |
-| FT6206 | Capacitive Touch | ✔️ | ❌ | `touch/TouchDrvFT6X36.hpp` |
-| FT6236 | Capacitive Touch | ✔️ | ❌ | `touch/TouchDrvFT6X36.hpp` |
-| CST226SE | Capacitive Touch | ✔️ | ❌ | `touch/TouchDrvCST226.hpp` |
-| CST820 | Capacitive Touch | ✔️ | ❌ | `touch/TouchDrvCST816.hpp` |
-| CST816S/T/D | Capacitive Touch | ✔️ | ❌ | `touch/TouchDrvCST816.hpp` |
-| CST9217 | Capacitive Touch | ✔️ | ❌ | `touch/TouchDrvCST92xx.hpp` |
-| CST9220 | Capacitive Touch | ✔️ | ❌ | `touch/TouchDrvCST92xx.hpp` |
-| CST3240 | Capacitive Touch | ✔️ | ❌ | `touch/TouchDrvCST92xx.hpp` |
-| CST3530 | Capacitive Touch | ✔️ | ❌ | `touch/TouchDrvCST3530.hpp` |
-| CHSC5816 | Capacitive Touch | ✔️ | ❌ | `touch/TouchDrvCHSC5816.hpp` |
-| HI8561 | Capacitive Touch | ✔️ | ❌ | `touch/TouchDrvHI8561.hpp` |
+| GT911 | Capacitive Touch | ✔️ | ❌ | `TouchDrvGoodix.hpp` |
+| GT9895 | Capacitive Touch | ✔️ | ❌ | `TouchDrvGoodix.hpp` |
+| FT3267 | Capacitive Touch | ✔️ | ❌ | `TouchDrvFocalTech.hpp` |
+| FT5206 | Capacitive Touch | ✔️ | ❌ | `TouchDrvFocalTech.hpp` |
+| FT6206 | Capacitive Touch | ✔️ | ❌ | `TouchDrvFocalTech.hpp` |
+| FT6236 | Capacitive Touch | ✔️ | ❌ | `TouchDrvFocalTech.hpp` |
+| CST226SE | Capacitive Touch | ✔️ | ❌ | `TouchDrvCST.hpp` |
+| CST820 | Capacitive Touch | ✔️ | ❌ | `TouchDrvCST.hpp` |
+| CST816S/T/D | Capacitive Touch | ✔️ | ❌ | `TouchDrvCST.hpp` |
+| CST9217 | Capacitive Touch | ✔️ | ❌ | `TouchDrvCST.hpp` |
+| CST9220 | Capacitive Touch | ✔️ | ❌ | `TouchDrvCST.hpp` |
+| CST3240 | Capacitive Touch | ✔️ | ❌ | `TouchDrvCST.hpp` |
+| CST3530 | Capacitive Touch | ✔️ | ❌ | `TouchDrvCST.hpp` |
+| CHSC5816 | Capacitive Touch | ✔️ | ❌ | `TouchDrvChipshine.hpp` |
+| HI8561 | Capacitive Touch | ✔️ | ❌ | `TouchDrvJadard.hpp` |
 | **LED** |||||
-| AW9364 | LED Driver (GPIO) | ❌ | ❌ | `actuator/AW9364LedDriver.hpp` |
+| AW9364 | LED Driver (GPIO) | ❌ | ❌ | `AW9364LedDriver.hpp` |
 | **PMIC** |||||
-| AXP192 | PMIC (XPowers) | ✔️ | ❌ | `pmic/xpowers/axp192/PmicAXP192.hpp` |
-| AXP202 | PMIC (XPowers) | ✔️ | ❌ | `pmic/xpowers/axp202/PmicAXP202.hpp` |
-| AXP2101 | PMIC (XPowers) | ✔️ | ❌ | `pmic/xpowers/axp2101/PmicAXP2101.hpp` |
-| AXP517 | PMIC (XPowers) | ✔️ | ❌ | `pmic/xpowers/axp517/PmicAXP517.hpp` |
-| BQ25896 | Charger (TI) | ✔️ | ❌ | `pmic/ti/bq25896/PmicBQ25896.hpp` |
-| SY6970 | Charger (Silergy) | ✔️ | ❌ | `pmic/silergy/sy6970/PmicSY6970.hpp` |
+| AXP192 | PMIC (XPowers) | ✔️ | ❌ | `PmicXPowers.hpp` |
+| AXP202 | PMIC (XPowers) | ✔️ | ❌ | `PmicXPowers.hpp` |
+| AXP2101 | PMIC (XPowers) | ✔️ | ❌ | `PmicXPowers.hpp` |
+| AXP517 | PMIC (XPowers) | ✔️ | ❌ | `PmicXPowers.hpp` |
+| BQ25896 | Charger (TI) | ✔️ | ❌ | `PmicTI.hpp` |
+| SY6970 | Charger (Silergy) | ✔️ | ❌ | `PmicSilergy.hpp` |
 | **Gauge** |||||
-| BQ27220 | Battery Gauge (TI) | ✔️ | ❌ | `gauge/ti/GaugeBQ27220.hpp` |
-| AXP2602 | Battery Gauge (XPowers) | ✔️ | ❌ | `gauge/xpowers/GaugeAXP2602.hpp` |
+| BQ27220 | Battery Gauge (TI) | ✔️ | ❌ | `GaugeDrv.hpp` |
+| AXP2602 | Battery Gauge (XPowers) | ✔️ | ❌ | `GaugeDrv.hpp` |
 | **Other** |||||
-| PAW-A350 | Finger Navigation (PixArt) | ✔️ | ❌ | `sensor/pixart/pawA350/SensorPawA350.hpp` |
+| PAW-A350 | Finger Navigation (PixArt) | ✔️ | ❌ | `FingerNavigationDrv.hpp` |
 
 </details>
 

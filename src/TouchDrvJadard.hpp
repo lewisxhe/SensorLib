@@ -22,15 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * @file      MagnetometerDrv.hpp
+ * @file      TouchDrvJadard.hpp
  * @author    Lewis He (lewishe@outlook.com)
- * @date      2026-04-15
+ * @date      2026-06-17
+ * @brief     Aggregated header for Himax touch drivers
  */
 #pragma once
 
-#include "sensor/magnetometer/bmm150/SensorBMM150.hpp"
-#include "sensor/magnetometer/qmc/SensorQMC5883L.hpp"
-#include "sensor/magnetometer/qmc/SensorQMC5883P.hpp"
-#include "sensor/magnetometer/qmc/SensorQMC6309.hpp"
-#include "sensor/magnetometer/qmc/SensorQMC6310.hpp"
-#include "sensor/magnetometer/qmc/SensorQSTMagnetic.hpp"
+#include "touch/TouchDrvHI8561.hpp"

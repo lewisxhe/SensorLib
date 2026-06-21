@@ -30,7 +30,7 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
-#include "SensorLTR553.hpp"
+#include <LightSensorDrv.hpp>
 
 #ifndef SENSOR_SDA
 #define SENSOR_SDA  5

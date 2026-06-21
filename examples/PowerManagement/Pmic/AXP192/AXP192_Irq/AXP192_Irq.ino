@@ -28,7 +28,7 @@
  *
  */
 
-#include <pmic/xpowers/axp192/PmicAXP192.hpp>
+#include <PmicXPowers.hpp>
 
 #ifndef PMIC_SDA
 #define PMIC_SDA  3

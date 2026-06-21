@@ -1,6 +1,6 @@
 #pragma once
 
-#pragma message("WARNING: SensorDRV2605.hpp is deprecated. Include haptic/HapticDriver_DRV2605.hpp instead.")
+#pragma message("WARNING: SensorDRV2605.hpp is deprecated. Include HapticDrivers.hpp instead.")
 
 #include "haptic/HapticDriver_DRV2605.hpp"
 

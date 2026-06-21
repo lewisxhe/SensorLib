@@ -27,7 +27,7 @@
  * @date      2026-05-08
  *
  */
-#include <pmic/xpowers/axp2101/PmicAXP2101.hpp>
+#include <PmicXPowers.hpp>
 
 #ifndef PMIC_SDA
 #define PMIC_SDA  3

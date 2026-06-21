@@ -30,7 +30,7 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
-#include "sensor/imu/bhi260/SensorBHI260AP.hpp"
+#include <ImuDrv.hpp>
 
 #include <Commander.h>  //Deplib https://github.com/CreativeRobotics/Commander
 Commander cmd;

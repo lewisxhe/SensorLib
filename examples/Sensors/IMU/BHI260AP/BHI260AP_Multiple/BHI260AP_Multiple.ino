@@ -30,8 +30,8 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Arduino.h>
-#include <sensor/imu/bhi260/SensorBHI260AP.hpp>
-#include <bosch/BoschSensorDataHelper.hpp>
+#include <ImuDrv.hpp>
+
 
 #ifdef ARDUINO_ARCH_ESP32
 

@@ -28,8 +28,8 @@
  *
  */
 #include <Wire.h>   // Adafruit NRF52 CI failure was avoided.
-#include <touch/TouchDrvGT9895.hpp>
-#include <expander/IoExpanderXL9555.hpp>
+#include <TouchDrvGoodix.hpp>
+#include <IoExpanderDrv.hpp>
 
 // Pin definitions for the LilyGo-P4
 #define P4_TOUCH_SDA  7

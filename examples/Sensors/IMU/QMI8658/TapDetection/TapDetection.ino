@@ -45,7 +45,7 @@
  *            user interface control through tap gestures.
  */
 #include <stdarg.h>
-#include "ImuDrv.hpp"
+#include <ImuDrv.hpp>
 #include "DevicesPins.h"
 
 
