@@ -29,7 +29,7 @@
  */
 #include "AXP517Irq.hpp"
 #include "AXP517Regs.hpp"
-
+#include "AXP517TcpcRegs.hpp"
 
 AXP517Irq::AXP517Irq(AXP517Core &core) : _core(core)
 {
@@ -90,11 +90,16 @@ bool AXP517Irq::disable(uint64_t mask)
 uint64_t AXP517Irq::readStatus(bool clear)
 {
     uint8_t buffer[4];
+    uint8_t pd_buffer[1];
+    _core.readRegBuff(axp517::tcpc::PD_ALERTH, pd_buffer, sizeof(pd_buffer));
+
     if (_core.readRegBuff(axp517_regs::irq::STATUS0, buffer, sizeof(buffer)) < 0) {
         SENSORLIB_LOG_E("Failed to read IRQ status registers");
         return 0;
     }
-    uint64_t mask = (static_cast<uint64_t>(buffer[0]) << 24) |
+
+    uint64_t mask = (static_cast<uint64_t>(pd_buffer[0]) << 32) |
+                    (static_cast<uint64_t>(buffer[0]) << 24) |
                     (static_cast<uint64_t>(buffer[1]) << 16) |
                     (static_cast<uint64_t>(buffer[2]) << 8) |
                     (static_cast<uint64_t>(buffer[3]));
@@ -108,6 +113,7 @@ uint64_t AXP517Irq::readStatus(bool clear)
 bool AXP517Irq::clearStatus()
 {
     uint8_t buffer[4] = {0xFF, 0xFF, 0xFF, 0xFF};
+    _core.writeReg(axp517::tcpc::PD_ALERTL, 0xFF);
     if (_core.writeRegBuff(axp517_regs::irq::STATUS0, buffer, sizeof(buffer)) < 0) {
         SENSORLIB_LOG_E("Failed to clear IRQ status registers");
         return false;
