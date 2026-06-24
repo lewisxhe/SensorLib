@@ -88,22 +88,11 @@ bool AXP517Core::isModuleEnabled(Module module)
 
 bool AXP517Core::initImpl(uint8_t param)
 {
-    // todo: fix
-#if 0
     uint8_t buffer[2] = {0};
     uint16_t vendorId = 0;
 
-    if (readRegBuff(axp517::tcpc::TCPC_VENDOR_ID, buffer, sizeof(buffer)) < 0) {
-        return false;
-    }
-    vendorId = (buffer[1] << 8) | buffer[0];
-    if (vendorId != axp517::tcpc::VENDOR_ID) {
-        SENSORLIB_LOG_E("AXP517 not found, vendor ID: 0x%" PRIx32, vendorId);
-        return false;
-    }
-#endif
     // Enable CC module clock (REG 0BH bit3 = Type-C CC detect enable)
-    SENSORLIB_LOG_D("AXP517: Enabling CC module clock...");
+    // SENSORLIB_LOG_D("AXP517: Enabling CC module clock...");
     if (!enableModule(Module::TYPEC, true)) {
         SENSORLIB_LOG_E("Failed to enable CC clock");
         // Continue anyway - may not be fatal
@@ -111,9 +100,45 @@ bool AXP517Core::initImpl(uint8_t param)
     // Wait for CC module ready
     hal->delay(20);
 
+    writeReg(axp517::tcpc::CC_GENERAL_CONTROL, axp517::tcpc::SW_RESET);
+    hal->delay(20);
+    writeReg(axp517::tcpc::CC_GENERAL_CONTROL, 0x00);
+    hal->delay(20);
+
+    int retry_count = 0;
+    bool tcpc_initial = false;
+    do {
+        int val = readReg(axp517::tcpc::POWER_STATUS);
+        if (val < 0) {
+            SENSORLIB_LOG_E("Failed to read TCPC power status");
+            return false;
+        }
+        tcpc_initial = !(val & 0x40);
+        if (tcpc_initial) {
+            break;
+        }
+        retry_count++;
+        hal->delay(8);
+    } while (retry_count < 10);
+
+    if (!tcpc_initial) {
+        SENSORLIB_LOG_E("TCPC initialization failed");
+        return false;
+    }
+
+    if (readRegBuff(axp517::tcpc::TCPC_VENDOR_ID, buffer, sizeof(buffer)) < 0) {
+        SENSORLIB_LOG_E("Failed to read TCPC vendor ID");
+        return false;
+    }
+    vendorId = (buffer[1] << 8) | buffer[0];
+    if (vendorId != axp517::tcpc::VENDOR_ID) {
+        SENSORLIB_LOG_E("AXP517 not found, vendor ID: 0x%" PRIx32, vendorId);
+        return false;
+    }
+
     SENSORLIB_LOG_D("AXP517: Init complete, initializing...");
 
-
+#if 0
     int cur = readReg(axp517_regs::ctrl::INPUT_VOLT_LIMIT);
     if (cur < 0) return false;
     cur &= 0x80;
@@ -127,4 +152,6 @@ bool AXP517Core::initImpl(uint8_t param)
     if (cur < 0) return false;
     cur &= 0x7F;
     return cur == 12;
+#endif
+    return true;
 }

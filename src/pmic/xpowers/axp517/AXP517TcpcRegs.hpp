@@ -112,6 +112,7 @@ static constexpr uint8_t AWAKE_EN             = 0xE0;
 
 // CC_GENERAL_CONTROL
 static constexpr uint8_t CC_GENERAL_CONTROL  = 0xE8;
+static constexpr uint8_t SW_RESET = 0x20;
 
 // CLK_EN for CC module
 static constexpr uint8_t CLK_EN                = 0x0B;
