@@ -31,8 +31,8 @@
 ### Highlights
 
 - **44+ devices** across 11 categories — Touch, PMIC, IMU, Magnetometer, Accelerometer, RTC, Gauge, Haptic, Light Sensor, I/O Expander, LED
-- **158 ready-to-run examples** covering every supported device
-- **Full PMIC subsystem** — charger, ADC, GPIO, IRQ, LED, power channels, coulomb counter
+- **Ready-to-run examples** covering supported devices and common workflows
+- **Full PMIC subsystem** — charger, ADC, GPIO, IRQ, LED, power channels, coulomb counter, BC1.2, Type-C/USB-PD where supported
 - One library for **Arduino / PlatformIO / ESP-IDF**
 - Supports both **I2C** and **SPI** buses
 
@@ -51,6 +51,7 @@
     - [Which should I use?](#which-should-i-use)
   - [Minimal Example: Touch](#minimal-example-touch)
   - [Minimal Example: PMIC](#minimal-example-pmic)
+  - [AXP517 USB-C PD](#axp517-usb-c-pd)
 - [Examples](#examples)
   - [Using Examples](#using-examples)
 - [Supported Devices](#supported-devices)
@@ -243,37 +244,87 @@ void setup() {
     Serial.println(pmic.getChipID(), HEX);
 
     // Set DCDC1 to 3.3V
-    pmic->getChannel()->setVoltage(AXP2101Channel::CH_DCDC1, 3300);
-    pmic->getChannel()->enable(AXP2101Channel::CH_DCDC1, true);
+    pmic.getChannel()->setVoltage(AXP2101Channel::CH_DCDC1, 3300);
+    pmic.getChannel()->enable(AXP2101Channel::CH_DCDC1, true);
 
     // Read battery voltage
     pmic.enableModule(PmicAXP2101::Module::GENERAL_ADC, true);
+    float vbusMv = 0;
     Serial.print("VBUS: ");
-    Serial.print(pmic->getAdc()->getVBUSVoltage());
+    if (pmic.getAdc().read(PmicAdcBase::Channel::VBUS_VOLTAGE, vbusMv)) {
+        Serial.print(vbusMv);
+    } else {
+        Serial.print("read failed");
+    }
     Serial.println(" mV");
 }
 
 void loop() {
+    float batteryMv = 0;
     Serial.print("Battery: ");
-    Serial.print(pmic->getAdc()->getBattVoltage());
+    if (pmic.getAdc().read(PmicAdcBase::Channel::BAT_VOLTAGE, batteryMv)) {
+        Serial.print(batteryMv);
+    } else {
+        Serial.print("read failed");
+    }
     Serial.println(" mV");
     delay(2000);
 }
 ```
 
+### AXP517 USB-C PD
+
+AXP517 includes Type-C/TCPC support and a simple USB-PD sink negotiator for requesting fixed PDO voltages.
+
+PD negotiation is interrupt-driven. Hardware must connect `PMIC_IRQ` to an MCU GPIO, and the application must pass that pin to `begin(..., irqPin)` or `initPdSink(irqPin)` before calling `requestPd()`. Without a valid IRQ pin, the TCPC RX FIFO cannot be serviced reliably and PD voltage requests cannot complete.
+
+```cpp
+#include <Wire.h>
+#include "PmicXPowers.hpp"
+
+PmicAXP517 pmic;
+AXP517PdNegotiator::SourceCaps caps;
+
+static constexpr int PMIC_SDA = 3;   // Adjust for your board.
+static constexpr int PMIC_SCL = 2;   // Adjust for your board.
+static constexpr int PMIC_IRQ = 44;  // Must be connected to PMIC_IRQ.
+
+void setup() {
+    Serial.begin(115200);
+
+    if (!pmic.begin(Wire, AXP517_SLAVE_ADDRESS, PMIC_SDA, PMIC_SCL, PMIC_IRQ)) {
+        Serial.println("AXP517 or PMIC_IRQ init failed");
+        while (1) delay(1000);
+    }
+
+    if (pmic.requestPd(9000, 6000, &caps)) {
+        Serial.println("9V PD contract ready");
+    }
+}
+
+void loop() {
+}
+```
+
+Relevant examples:
+
+- `examples/PowerManagement/Pmic/AXP517/AXP517_PdVoltage/`
+- `examples/PowerManagement/Pmic/AXP517/AXP517_PdAutoRequest/`
+- `examples/PowerManagement/Pmic/AXP517/AXP517_Interrupt/`
+
 ---
 
 ## Examples
 
-158 examples are organized by category in the `examples/` directory:
+Examples are organized by category in the `examples/` directory:
 
 ```
 examples/
 ├── Actuators/
-│   ├── Haptic/               # DRV2605, AW86224 haptic motors (3 examples)
+│   ├── Haptic/               # DRV2605, AW86224 haptic motors
 │   └── LED/                  # AW9364 LED driver
 ├── IO/
-│   └── Expander/             # XL9555 (5 examples), PCA9570
+│   └── Expander/             # XL9555, PCA9570
 ├── Platform/
 │   └── idf-examples/         # ESP-IDF framework examples
 ├── PowerManagement/
@@ -282,23 +333,23 @@ examples/
 │       ├── AXP192/           # TODO
 │       ├── AXP202/           # TODO
 │       ├── AXP2101/          # TODO
-│       ├── AXP517/           # Basic, BC1.2, Charger, GPIO, Gauge, LED, Power
+│       ├── AXP517/           # Basic, BC1.2, Charger, WebMonitor, Interrupt, LED, PD, Power
 │       ├── BQ25896_Charger/  # TI charger
 │       ├── SY6970_Charger/   # Silergy charger
 │       └── ...               # PMIC Probe, xxxx WebPanel, etc.
 ├── Sensors/
-│   ├── Accelerometer/        # BMA422 (3), BMA423 (8), BMA456H (7), Universal
+│   ├── Accelerometer/        # BMA422, BMA423, BMA456H, Universal
 │   ├── FingerNavigation/     # PAW-A350
 │   ├── IMU/
-│   │   ├── BHI260AP/         # 6DoF, Euler, StepCounter, Klio, GPIO... (18 examples)
-│   │   ├── BHI360/           # 6DoF, Euler, MultiTap, aux BMM350... (10 examples)
-│   │   ├── QMI8658/          # BasicRead, FIFO, Pedometer, Tap, SyncMode... (10 examples)
+│   │   ├── BHI260AP/         # 6DoF, Euler, StepCounter, Klio, GPIO...
+│   │   ├── BHI360/           # 6DoF, Euler, MultiTap, aux BMM350...
+│   │   ├── QMI8658/          # BasicRead, FIFO, Pedometer, Tap, SyncMode...
 │   │   └── QMI8658_Deprecated/  # Legacy API examples
 │   ├── LightSensor/          # CM32181, LTR553
 │   ├── Magnetometer/         # BMM150, QMC5883L/P, QMC6309, QMC6310
-│   └── Touch/                # GT911, GT9895, FT6232, CST series, CHSC5816, HI8561 (10 examples)
+│   └── Touch/                # GT911, GT9895, FT6232, CST series, CHSC5816, HI8561
 ├── Time/
-│   └── RTC/                  # PCF85063, PCF8563 (10 examples)
+│   └── RTC/                  # PCF85063, PCF8563
 └── Utilities/
     ├── CustomCallback/       # Custom callback patterns
     └── SensorWireHelper/     # I2C scanning & debugging
@@ -372,7 +423,7 @@ src_dir = examples/Sensors/IMU/QMI8658/BasicRead
 | AXP192 | PMIC (XPowers) | ✔️ | ❌ | `PmicXPowers.hpp` |
 | AXP202 | PMIC (XPowers) | ✔️ | ❌ | `PmicXPowers.hpp` |
 | AXP2101 | PMIC (XPowers) | ✔️ | ❌ | `PmicXPowers.hpp` |
-| AXP517 | PMIC (XPowers) | ✔️ | ❌ | `PmicXPowers.hpp` |
+| AXP517 | PMIC (XPowers, Type-C/USB-PD sink) | ✔️ | ❌ | `PmicXPowers.hpp` |
 | BQ25896 | Charger (TI) | ✔️ | ❌ | `PmicTI.hpp` |
 | SY6970 | Charger (Silergy) | ✔️ | ❌ | `PmicSilergy.hpp` |
 | **Gauge** |||||
@@ -402,6 +453,7 @@ src_dir = examples/Sensors/IMU/QMI8658/BasicRead
 - **I2C speed**: Default is 100kHz. For faster transfers, use `Wire.setClock(400000)` before `begin()`.
 - **SPI devices**: QMI8658, BHI260AP, BHI360 support SPI. Touch and PMIC devices are I2C only.
 - **I2C addresses**: Some devices have configurable addresses (e.g., GT911 has `GT911_SLAVE_ADDRESS_L` / `GT911_SLAVE_ADDRESS_H`). Check the header file for available constants.
+- **AXP517 USB-PD**: PD voltage negotiation requires `PMIC_IRQ` wiring. Pass the IRQ pin during initialization and use `pmic.irq().readStatus(true)` in interrupt-driven code so normal PMIC IRQs and TCPC PD alerts are both drained.
 - **Troubleshooting**: If a device is not detected, verify wiring, address selection, and I2C speed. Use `examples/Utilities/SensorWireHelper/` to scan the I2C bus.
 
 ## License
