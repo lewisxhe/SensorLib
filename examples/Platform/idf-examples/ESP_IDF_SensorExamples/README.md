@@ -16,6 +16,18 @@ In the `SensorLib Example Configuration` menu:
 * If you choose a sensor with I2C communication, there will be three methods to choose from:
 * Configuring the sensor pins
 
+To avoid compiling unused SensorLib drivers, also open:
+
+```text
+Component config -> SensorLib Configuration -> Driver exclusion
+```
+
+Enable the unused driver families or individual drivers. For example, when this
+example is configured for `PCF8563`, you can exclude IMU, accelerometer,
+magnetometer, light sensor, touch, haptic, PMIC, gauge, I/O expander, actuator,
+finger navigation, `SensorWireHelper`, and `PCF85063`. Leave `RTC` and
+`PCF8563` enabled.
+
 ## How to Use Example
 
 Before project configuration and build, be sure to set the correct chip target using `idf.py set-target <chip_name>`. default use **esp32**

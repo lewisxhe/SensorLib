@@ -44,6 +44,9 @@
   - [Arduino IDE](#arduino-ide)
   - [PlatformIO](#platformio)
   - [ESP-IDF](#esp-idf)
+- [Build Options](#build-options)
+  - [Driver Exclusion](#driver-exclusion)
+  - [Bosch Firmware Files](#bosch-firmware-files)
 - [Quick Start](#quick-start)
   - [Including Headers](#including-headers)
     - [Option A: Per-driver Include (Recommended)](#option-a-per-driver-include-recommended)
@@ -136,11 +139,80 @@ dependencies:
 // #include "PmicXPowers.hpp"
 ```
 
+## Build Options
+
+### Driver Exclusion
+
+SensorLib can exclude unused driver families or individual drivers at build time.
+This is useful when a project only uses one sensor and should not compile the
+rest of the library.
+
+For ESP-IDF, configure exclusions from `menuconfig`:
+
+```bash
+idf.py menuconfig
+```
+
+Then open:
+
+```text
+Component config -> SensorLib Configuration -> Driver exclusion
+```
+
+Select family-level options such as `SENSORLIB_EXCLUDE_IMU`,
+`SENSORLIB_EXCLUDE_TOUCH`, `SENSORLIB_EXCLUDE_PMIC`, or select individual
+drivers such as `SENSORLIB_EXCLUDE_BHI260`, `SENSORLIB_EXCLUDE_TOUCH_GT911`,
+`SENSORLIB_EXCLUDE_PCF85063`.
+
+Example: build an ESP-IDF project that only uses `SensorPCF8563`:
+
+```text
+CONFIG_SENSORLIB_EXCLUDE_IMU=y
+CONFIG_SENSORLIB_EXCLUDE_ACCELEROMETER=y
+CONFIG_SENSORLIB_EXCLUDE_MAGNETOMETER=y
+CONFIG_SENSORLIB_EXCLUDE_LIGHT_SENSOR=y
+CONFIG_SENSORLIB_EXCLUDE_TOUCH=y
+CONFIG_SENSORLIB_EXCLUDE_HAPTIC=y
+CONFIG_SENSORLIB_EXCLUDE_PMIC=y
+CONFIG_SENSORLIB_EXCLUDE_GAUGE=y
+CONFIG_SENSORLIB_EXCLUDE_IO_EXPANDER=y
+CONFIG_SENSORLIB_EXCLUDE_ACTUATOR=y
+CONFIG_SENSORLIB_EXCLUDE_FINGER_NAVIGATION=y
+CONFIG_SENSORLIB_EXCLUDE_WIRE_HELPER=y
+CONFIG_SENSORLIB_EXCLUDE_PCF85063=y
+```
+
+Leave `CONFIG_SENSORLIB_EXCLUDE_RTC` and
+`CONFIG_SENSORLIB_EXCLUDE_PCF8563` disabled so the PCF8563 driver remains
+available.
+
+For Arduino or PlatformIO source builds, define the same macros in
+`src/SensorBuildOptUser.h` before including SensorLib headers:
+
+```cpp
+#define SENSORLIB_EXCLUDE_IMU 1
+#define SENSORLIB_EXCLUDE_TOUCH 1
+#define SENSORLIB_EXCLUDE_PMIC 1
+#define SENSORLIB_EXCLUDE_PCF85063 1
+```
+
+`SENSORLIB_EXCLUDE_ALL` can be used to disable every optional driver controlled
+by SensorLib build options. Prefer the family or per-driver options when you
+want to keep one driver from the same category enabled.
+
+### Bosch Firmware Files
+
+Raw Bosch `*.fw` files are not required by the build and are not included.
+BHI260/BHI360 examples use generated firmware headers under
+`src/bosch/firmware/`. If you use a custom Bosch firmware image, convert it to a
+C/C++ header or provide your own firmware byte array, then pass it with
+`setFirmware()`.
+
 ## Quick Start
 
 ### Including Headers
 
-SensorLib provides three ways to include drivers in your sketch:
+SensorLib provides two ways to include drivers in your sketch:
 
 #### Option A: Vendor-specific Include (Recommended)
 
