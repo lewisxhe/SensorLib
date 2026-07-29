@@ -27,6 +27,9 @@
  * @date      2026-04-29
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP192
+
 #include "AXP192Channel.hpp"
 #include "AXP192Regs.hpp"
 
@@ -198,3 +201,5 @@ PmicChannelBase::Info AXP192Channel::getInfo(uint8_t channel) const
     }
     return channelInfo[channel];
 }
+
+#endif

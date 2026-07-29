@@ -39,6 +39,9 @@
 /*********************************************************************/
 /* system header files */
 /*********************************************************************/
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI_COMMON
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -351,3 +354,5 @@ int8_t bhy2_head_tracker_get_eul_initial_head_correction(const void *buffer, str
 
     return rslt;
 }
+
+#endif

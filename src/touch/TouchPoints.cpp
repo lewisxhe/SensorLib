@@ -26,6 +26,9 @@
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2026-03-05
  */
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_COMMON
+
 #include "TouchPoints.hpp"
 
 TouchPoint TouchPoints::emptyPoint = {};  /**< Empty touch point. */
@@ -91,3 +94,5 @@ Gesture TouchPoints::getGesture() const
 {
     return gesture;
 }
+
+#endif

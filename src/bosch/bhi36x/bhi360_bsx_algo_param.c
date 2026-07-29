@@ -36,6 +36,9 @@
 *
 */
 
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI360
+
 #include "bhi360_bsx_algo_param.h"
 #include "bhi360_hif.h"
 #include "../bhi260x/bhy2_hif.h"
@@ -197,3 +200,5 @@ int8_t bhi360_bsx_algo_param_get_bsx_version(struct bhi360_bsx_algo_param_versio
 
     return rslt;
 }
+
+#endif

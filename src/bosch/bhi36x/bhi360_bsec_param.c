@@ -36,6 +36,9 @@
 *
 */
 
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI360
+
 #include "bhi360_bsec_param.h"
 // #include "bhi360.h"
 
@@ -207,3 +210,5 @@ int8_t bhi360_bsec_param_get_sample_rate(bhi360_bsec_param_sample_rate *sample_r
 
     return rslt;
 }
+
+#endif

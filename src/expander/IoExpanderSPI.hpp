@@ -28,6 +28,9 @@
  */
 #pragma once
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_IO_EXPANDER_SPI
+
 #include "IoExpanderBase.hpp"
 
 /**
@@ -175,3 +178,5 @@ private:
     int _cs;            ///< Chip select pin number (-1 if unused)
     IoExpanderBase *_base;  ///< Pointer to the expander used for pin I/O
 };
+
+#endif

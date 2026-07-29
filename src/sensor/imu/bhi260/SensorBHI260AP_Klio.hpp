@@ -29,6 +29,9 @@
  *            Simplification for Arduino
  */
 #pragma once
+
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI260_KLIO
 #include "SensorBHI260AP.hpp"
 #include "../../../bosch/bhi260x/bhy2_klio_defs.h"
 #include "../../../bosch/bhi260x/bhy2_klio.h"
@@ -354,3 +357,5 @@ private:
     KlioState k_state;
     static const char *errorMessages[9];
 };
+
+#endif

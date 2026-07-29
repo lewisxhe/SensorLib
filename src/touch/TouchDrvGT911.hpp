@@ -29,6 +29,9 @@
  */
 #pragma once
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_GT911
+
 #include "TouchDrvInterface.hpp"
 
 //! Dangerous operation! If power is lost during the writing process, all parameters will be lost due to the absence of the original parameters, resulting in touch screen errors.
@@ -374,3 +377,5 @@ protected:
     static constexpr uint8_t   GT911_BASE_REF_RATE             =  (5);
     static constexpr uint8_t   GT911_REG_LENGTH                =  (186);
 };
+
+#endif

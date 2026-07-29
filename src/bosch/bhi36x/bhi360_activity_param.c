@@ -36,6 +36,9 @@
 *
 */
 
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI360
+
 #include "bhi360_activity_param.h"
 // #include "bhi360.h"
 
@@ -161,3 +164,5 @@ int8_t bhi360_activity_param_get_wearable_config(bhi360_activity_param_wearable 
 
     return rslt;
 }
+
+#endif

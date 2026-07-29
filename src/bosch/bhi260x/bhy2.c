@@ -36,6 +36,9 @@
 *
 */
 
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI_COMMON
+
 #include "bhy2.h"
 #include "bhy2_hif.h"
 #include "bhy2_defs.h"
@@ -1785,3 +1788,5 @@ int8_t bhy2_read_status(uint16_t *status_code,
 
     return rslt;
 }
+
+#endif

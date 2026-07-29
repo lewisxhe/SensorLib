@@ -29,6 +29,9 @@
  */
 #pragma once
 
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_QMI8658
+
 #include <functional>
 #include "../../ImuBase.hpp"
 #include "../../../platform/comm/ComplexDeviceWithHal.hpp"
@@ -1041,3 +1044,5 @@ protected:
     float _hw_st_accel_result[3];
     float _hw_st_gyro_result[3];
 };
+
+#endif

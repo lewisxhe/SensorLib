@@ -85,6 +85,9 @@
 /*! \file bma423.c
     \brief Sensor Driver for BMA423 sensor */
 
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BMA423
+
 #include "bma423.h"
 
 /**\name Feature configuration file */
@@ -1693,3 +1696,5 @@ static void extract_stepcounter_parameter(struct bma423_stepcounter_settings *se
 	setting->param24 = *(data_p++);
 	setting->param25 = *data_p;
 }
+
+#endif

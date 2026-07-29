@@ -39,6 +39,9 @@
 /*********************************************************************/
 /* system header files */
 /*********************************************************************/
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI360
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -524,3 +527,5 @@ int8_t bhi360_head_orientation_param_get_eul_init_head_corr(uint8_t *config, str
 
     return rslt;
 }
+
+#endif

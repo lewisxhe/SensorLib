@@ -29,6 +29,9 @@
  */
 #pragma once
 
+#include "SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_QMI8658
+
 #pragma message("Warning: Please replace with a new driver. Please refer to the examples/QMI8658 example. SensorQMI8658.hpp will be removed in the next version.")
 
 #include "platform/comm/ComplexStaticDeviceWithHal.hpp"
@@ -2397,3 +2400,5 @@ protected:
 
     static constexpr uint8_t QMI8658_FIFO_MAP_INT1 = 0x04;
 };
+
+#endif

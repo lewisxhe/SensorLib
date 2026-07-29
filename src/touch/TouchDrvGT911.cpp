@@ -27,6 +27,9 @@
  * @date      2026-03-05
  *
  */
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_GT911
+
 #include "TouchDrvGT911.hpp"
 
 void TouchDrvGT911::sleep()
@@ -463,3 +466,5 @@ bool TouchDrvGT911::autoProbe()
 
     return true;
 }
+
+#endif

@@ -30,6 +30,9 @@
  */
 #pragma once
 
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BMA423
+
 #include "SensorBMA4XX.hpp"
 #include "../../../bosch/bma4xx/bma423.h"
 
@@ -830,3 +833,5 @@ protected:
     MotionCfg _mon_cfg;
     BMA423_TapType _tapType;
 };
+
+#endif

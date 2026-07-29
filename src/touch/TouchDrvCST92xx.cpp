@@ -26,6 +26,9 @@
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2024-07-07
  */
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_CST92XX
+
 #include "TouchDrvCST92xx.hpp"
 
 TouchDrvCST92xx::TouchDrvCST92xx(): _slave_addr(-1)
@@ -534,3 +537,5 @@ bool TouchDrvCST92xx::initImpl(uint8_t)
 
     return true;
 }
+
+#endif

@@ -29,4 +29,8 @@
  */
 #pragma once
 
+#include "SensorBuildOpt.h"
+
+#if !SENSORLIB_EXCLUDE_TOUCH_HI8561
 #include "touch/TouchDrvHI8561.hpp"
+#endif

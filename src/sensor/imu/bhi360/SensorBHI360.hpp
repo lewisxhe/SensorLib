@@ -29,6 +29,9 @@
  *            Simplification for Arduino
  */
 #pragma once
+
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI360
 #include "../../../bosch/BoschSensorBase.hpp"
 #include "../../../bosch/bhi36x/bhi360_event_data.h"
 #include "../../../bosch/bhi36x/bhi360_multi_tap_param.h"
@@ -105,3 +108,5 @@ protected:
      */
     uint16_t getConfirmationIDImpl() override;
 };
+
+#endif

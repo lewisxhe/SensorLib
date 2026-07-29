@@ -87,6 +87,9 @@
 
 #pragma once
 
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PAWA350
+
 #include "platform/comm/I2CDeviceWithHal.hpp"
 
 /**
@@ -583,3 +586,5 @@ protected:
     bool initImpl(uint8_t param) override;
     uint8_t cached_rest1_period = 1;
 };
+
+#endif

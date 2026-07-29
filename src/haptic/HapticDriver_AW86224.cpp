@@ -28,6 +28,9 @@
  *
  */
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_HAPTIC_AW86224
+
 #include "HapticDriver_AW86224.hpp"
 #include "HapticDriver_AW86224_Reg.hpp"
 #include "AW86224_RamData.hpp"
@@ -1033,3 +1036,5 @@ void HapticDriver_AW86224::printRegs()
     Serial.println("======================");
 #endif
 }
+
+#endif

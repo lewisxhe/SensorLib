@@ -28,6 +28,9 @@
  *
  */
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI_COMMON
+
 #include "BoschSensorInfo.hpp"
 #include <cstring>
 #include <algorithm>
@@ -155,3 +158,5 @@ bool BoschSensorInfo::updateFromDevice() {
 const char* BoschSensorInfo::getErrorText(uint8_t error) {
     return BoschSensorUtils::get_sensor_error_text(error);
 }
+
+#endif

@@ -28,5 +28,12 @@
  */
 #pragma once
 
+#include "SensorBuildOpt.h"
+
+#if !SENSORLIB_EXCLUDE_GAUGE_AXP2602
 #include "gauge/xpowers/GaugeAXP2602.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_GAUGE_BQ27220
 #include "gauge/ti/GaugeBQ27220.hpp"
+#endif

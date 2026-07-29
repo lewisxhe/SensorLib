@@ -12,5 +12,278 @@ menu "SensorLib Configuration"
             bool "Use esp-idf lower version ( < 5.0) API , Compatible with lower versions of esp-idf"
     endchoice
 
+    menu "Driver exclusion"
+
+        config SENSORLIB_EXCLUDE_ALL
+            bool "Exclude all optional drivers"
+            default n
+            help
+                Exclude every optional SensorLib driver controlled by this menu.
+
+        menu "Driver families"
+
+            config SENSORLIB_EXCLUDE_IMU
+                bool "Exclude all IMU drivers"
+                default n
+
+            config SENSORLIB_EXCLUDE_ACCELEROMETER
+                bool "Exclude all accelerometer drivers"
+                default n
+
+            config SENSORLIB_EXCLUDE_MAGNETOMETER
+                bool "Exclude all magnetometer drivers"
+                default n
+
+            config SENSORLIB_EXCLUDE_LIGHT_SENSOR
+                bool "Exclude all light sensor drivers"
+                default n
+
+            config SENSORLIB_EXCLUDE_RTC
+                bool "Exclude RTC helper and POSIX RTC drivers"
+                default n
+
+            config SENSORLIB_EXCLUDE_TOUCH
+                bool "Exclude all touch drivers"
+                default n
+
+            config SENSORLIB_EXCLUDE_HAPTIC
+                bool "Exclude all haptic drivers"
+                default n
+
+            config SENSORLIB_EXCLUDE_PMIC
+                bool "Exclude all PMIC drivers"
+                default n
+
+            config SENSORLIB_EXCLUDE_GAUGE
+                bool "Exclude all fuel gauge drivers"
+                default n
+
+            config SENSORLIB_EXCLUDE_IO_EXPANDER
+                bool "Exclude all IO expander drivers"
+                default n
+
+            config SENSORLIB_EXCLUDE_ACTUATOR
+                bool "Exclude all actuator drivers"
+                default n
+
+            config SENSORLIB_EXCLUDE_FINGER_NAVIGATION
+                bool "Exclude all finger navigation drivers"
+                default n
+
+            config SENSORLIB_EXCLUDE_WIRE_HELPER
+                bool "Exclude SensorWireHelper"
+                default n
+
+        endmenu
+
+        menu "IMU"
+
+            config SENSORLIB_EXCLUDE_QMI8658
+                bool "Exclude QMI8658"
+                default n
+
+            config SENSORLIB_EXCLUDE_BHI
+                bool "Exclude all Bosch BHI drivers"
+                default n
+
+            config SENSORLIB_EXCLUDE_BHI260
+                bool "Exclude BHI260AP"
+                default n
+
+            config SENSORLIB_EXCLUDE_BHI260_KLIO
+                bool "Exclude BHI260AP Klio helper"
+                default n
+
+            config SENSORLIB_EXCLUDE_BHI360
+                bool "Exclude BHI360"
+                default n
+
+        endmenu
+
+        menu "Accelerometer"
+
+            config SENSORLIB_EXCLUDE_BMA4XX
+                bool "Exclude all Bosch BMA4XX drivers"
+                default n
+
+            config SENSORLIB_EXCLUDE_BMA422
+                bool "Exclude BMA422"
+                default n
+
+            config SENSORLIB_EXCLUDE_BMA423
+                bool "Exclude BMA423"
+                default n
+
+            config SENSORLIB_EXCLUDE_BMA456H
+                bool "Exclude BMA456H"
+                default n
+
+            config SENSORLIB_EXCLUDE_BMA4XX_EXTRA
+                bool "Exclude unused BMA4XX vendor variants"
+                default n
+                help
+                    Exclude vendor sources for BMA456_AN, BMA456MM, BMA456 tablet
+                    and BMA456W. Public SensorLib wrappers currently cover BMA422,
+                    BMA423 and BMA456H.
+
+        endmenu
+
+        menu "Magnetometer and light"
+
+            config SENSORLIB_EXCLUDE_BMM150
+                bool "Exclude BMM150"
+                default n
+
+            config SENSORLIB_EXCLUDE_QMC5883L
+                bool "Exclude QMC5883L"
+                default n
+
+            config SENSORLIB_EXCLUDE_QMC5883P
+                bool "Exclude QMC5883P"
+                default n
+
+            config SENSORLIB_EXCLUDE_QMC6309
+                bool "Exclude QMC6309"
+                default n
+
+            config SENSORLIB_EXCLUDE_QMC6310
+                bool "Exclude QMC6310"
+                default n
+
+            config SENSORLIB_EXCLUDE_CM32181
+                bool "Exclude CM32181"
+                default n
+
+            config SENSORLIB_EXCLUDE_LTR553
+                bool "Exclude LTR553"
+                default n
+
+        endmenu
+
+        menu "RTC"
+
+            config SENSORLIB_EXCLUDE_PCF8563
+                bool "Exclude PCF8563"
+                default n
+
+            config SENSORLIB_EXCLUDE_PCF85063
+                bool "Exclude PCF85063"
+                default n
+
+        endmenu
+
+        menu "Touch"
+
+            config SENSORLIB_EXCLUDE_TOUCH_CST226
+                bool "Exclude CST226"
+                default n
+
+            config SENSORLIB_EXCLUDE_TOUCH_CST816
+                bool "Exclude CST816/CST820"
+                default n
+
+            config SENSORLIB_EXCLUDE_TOUCH_CST92XX
+                bool "Exclude CST92xx"
+                default n
+
+            config SENSORLIB_EXCLUDE_TOUCH_CST3530
+                bool "Exclude CST3530"
+                default n
+
+            config SENSORLIB_EXCLUDE_TOUCH_CSTXXX
+                bool "Exclude CSTXXX generic driver"
+                default n
+
+            config SENSORLIB_EXCLUDE_TOUCH_CHSC5816
+                bool "Exclude CHSC5816"
+                default n
+
+            config SENSORLIB_EXCLUDE_TOUCH_FT6X36
+                bool "Exclude FT6X36"
+                default n
+
+            config SENSORLIB_EXCLUDE_TOUCH_GT911
+                bool "Exclude GT911"
+                default n
+
+            config SENSORLIB_EXCLUDE_TOUCH_GT9895
+                bool "Exclude GT9895"
+                default n
+
+            config SENSORLIB_EXCLUDE_TOUCH_HI8561
+                bool "Exclude HI8561"
+                default n
+
+        endmenu
+
+        menu "Power and haptic"
+
+            config SENSORLIB_EXCLUDE_HAPTIC_DRV2605
+                bool "Exclude DRV2605 haptic driver"
+                default n
+
+            config SENSORLIB_EXCLUDE_HAPTIC_AW86224
+                bool "Exclude AW86224 haptic driver"
+                default n
+
+            config SENSORLIB_EXCLUDE_PMIC_SY6970
+                bool "Exclude SY6970 PMIC"
+                default n
+
+            config SENSORLIB_EXCLUDE_PMIC_BQ25896
+                bool "Exclude BQ25896 PMIC"
+                default n
+
+            config SENSORLIB_EXCLUDE_PMIC_AXP192
+                bool "Exclude AXP192 PMIC"
+                default n
+
+            config SENSORLIB_EXCLUDE_PMIC_AXP202
+                bool "Exclude AXP202 PMIC"
+                default n
+
+            config SENSORLIB_EXCLUDE_PMIC_AXP2101
+                bool "Exclude AXP2101 PMIC"
+                default n
+
+            config SENSORLIB_EXCLUDE_PMIC_AXP517
+                bool "Exclude AXP517 PMIC"
+                default n
+
+            config SENSORLIB_EXCLUDE_GAUGE_AXP2602
+                bool "Exclude AXP2602 gauge"
+                default n
+
+            config SENSORLIB_EXCLUDE_GAUGE_BQ27220
+                bool "Exclude BQ27220 gauge"
+                default n
+
+        endmenu
+
+        menu "IO, actuator and navigation"
+
+            config SENSORLIB_EXCLUDE_IO_EXPANDER_XL9555
+                bool "Exclude XL9555 IO expander"
+                default n
+
+            config SENSORLIB_EXCLUDE_IO_EXPANDER_PCA9570
+                bool "Exclude PCA9570 IO expander"
+                default n
+
+            config SENSORLIB_EXCLUDE_IO_EXPANDER_SPI
+                bool "Exclude SPI IO expander helper"
+                default n
+
+            config SENSORLIB_EXCLUDE_AW9364
+                bool "Exclude AW9364 LED driver"
+                default n
+
+            config SENSORLIB_EXCLUDE_PAWA350
+                bool "Exclude PAW-A350 finger navigation sensor"
+                default n
+
+        endmenu
+
+    endmenu
 
 endmenu

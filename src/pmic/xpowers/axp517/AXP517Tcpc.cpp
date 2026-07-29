@@ -27,6 +27,9 @@
  * @date      2026-07-29
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP517
+
 #include "AXP517Tcpc.hpp"
 #include "AXP517Regs.hpp"
 #include "AXP517TcpcRegs.hpp"
@@ -316,3 +319,5 @@ bool AXP517Tcpc::txSend(TransmitType type, RetryCount retry, uint16_t headerLE,
                                       (static_cast<uint8_t>(type) & 0x07));
     return w8(TX_BUF_TRANSMIT, tx);
 }
+
+#endif

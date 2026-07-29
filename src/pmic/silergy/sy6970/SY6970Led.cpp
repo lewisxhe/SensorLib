@@ -27,6 +27,9 @@
  * @date      2026-04-11
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_SY6970
+
 #include "SY6970Led.hpp"
 #include "SY6970Regs.hpp"
 
@@ -67,3 +70,5 @@ PmicLedBase::ManualState SY6970Led::getManualState()
 {
     return ManualState::UNDEFINED;
 }
+
+#endif

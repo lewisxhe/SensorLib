@@ -39,6 +39,9 @@
 /*********************************************************************/
 /* system header files */
 /*********************************************************************/
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI_COMMON
+
 #include <string.h>
 #include <stdio.h>
 
@@ -209,3 +212,5 @@ int8_t bhi3_multi_tap_parse_data(const uint8_t *data, uint8_t* output)
 
     return rslt;
 }
+
+#endif

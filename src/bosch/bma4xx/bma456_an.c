@@ -40,6 +40,9 @@
  * \brief Sensor Driver for BMA456_AN sensor
  */
 
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BMA4XX_EXTRA
+
 #include "bma456_an.h"
 
 /**\name Feature configuration file */
@@ -617,3 +620,5 @@ int8_t bma456_an_get_no_mot_config(struct bma456_an_any_no_mot_config *no_motion
 }
 
 /*! @endcond */
+
+#endif

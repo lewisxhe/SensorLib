@@ -28,6 +28,9 @@
  */
 #pragma once
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_CST226
+
 #include "TouchDrvInterface.hpp"
 
 static constexpr uint8_t  CST226SE_SLAVE_ADDRESS =  (0x5A);
@@ -87,3 +90,5 @@ private:
 
     bool initImpl(uint8_t) override;
 };
+
+#endif

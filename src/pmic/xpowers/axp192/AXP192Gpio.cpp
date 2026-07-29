@@ -1,3 +1,6 @@
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP192
+
 #include "AXP192Gpio.hpp"
 #include "AXP192Regs.hpp"
 
@@ -299,3 +302,5 @@ bool AXP192Gpio::setPwm(uint8_t pin, uint8_t x, uint8_t y1, uint8_t y2)
     // Configure duty cycle
     return setPwmDutyCycle(pin, y1, y2);
 }
+
+#endif

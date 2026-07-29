@@ -27,6 +27,9 @@
  * @date      2026-03-12
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP517
+
 #include "AXP517Core.hpp"
 #include "AXP517Regs.hpp"
 #include "AXP517TcpcRegs.hpp"
@@ -154,3 +157,5 @@ bool AXP517Core::initImpl(uint8_t param)
 
     return true;
 }
+
+#endif

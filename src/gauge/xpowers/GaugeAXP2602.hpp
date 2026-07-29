@@ -29,6 +29,9 @@
 
 #pragma once
 
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_GAUGE_AXP2602
+
 #include "platform/comm/I2CDeviceWithHal.hpp"
 #include "../GaugeBase.hpp"
 
@@ -867,3 +870,5 @@ protected:
 
     static constexpr uint8_t AXP2602_CHIP_ID = 0x1C;
 };
+
+#endif

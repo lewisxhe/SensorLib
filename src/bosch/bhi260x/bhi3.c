@@ -38,6 +38,9 @@
 
 /*********************************************************************/
 /* system header files */
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI_COMMON
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -728,3 +731,5 @@ int8_t bhi3_get_wrist_gesture_detect_config(uint8_t *wgd_cnfg, struct bhy2_dev *
 
     return rslt;
 }
+
+#endif

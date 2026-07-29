@@ -26,6 +26,9 @@
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2026-01-21
  */
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_CST3530
+
 #include "TouchDrvCST3530.hpp"
 
 uint16_t TouchDrvCST3530::check_sum_16(int val, uint8_t *buf, uint16_t len)
@@ -142,3 +145,5 @@ bool TouchDrvCST3530::initImpl(uint8_t)
     return false;
 }
 
+
+#endif

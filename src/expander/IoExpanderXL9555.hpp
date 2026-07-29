@@ -28,6 +28,9 @@
  */
 #pragma once
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_IO_EXPANDER_XL9555
+
 #include "platform/comm/I2CDeviceNoHal.hpp"
 #include "IoExpanderBase.hpp"
 
@@ -364,3 +367,5 @@ private:
     static constexpr uint8_t XL9555_CTRL_CFG1   = (0x07);  ///< Configuration Port 1 /RW
     static constexpr uint8_t XL9555_PINS_COUNT  = 16;      ///< Number of GPIO pins on the chip
 };
+
+#endif

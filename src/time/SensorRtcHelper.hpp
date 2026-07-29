@@ -30,6 +30,11 @@
  *            between the two. This class is added to facilitate switching between different chips without
  *            having to worry about the specific model used.
  */
+#pragma once
+
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_RTC
+
 #include "pcf8563/SensorPCF8563.hpp"
 #include "pcf85063/SensorPCF85063.hpp"
 
@@ -172,7 +177,7 @@ private:
      *
      * This constant defines the maximum number of driver creator functions that can be stored in the driverCreators array.
      */
-    static constexpr uint8_t driverCreatorMaxNum = 2;
+    static constexpr uint8_t driverCreatorMaxNum = RtcDrv_PCF8563 + 1;
 
     /**
      * @brief An array of driver creator functions.
@@ -198,3 +203,5 @@ private:
      */
     std::unique_ptr<SensorRTC>  _drv;
 };
+
+#endif

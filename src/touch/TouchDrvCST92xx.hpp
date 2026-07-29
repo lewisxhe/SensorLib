@@ -28,6 +28,9 @@
  */
 #pragma once
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_CST92XX
+
 #include "TouchDrvInterface.hpp"
     
 static constexpr uint8_t   CST92XX_SLAVE_ADDRESS = (0x5A);
@@ -129,3 +132,5 @@ protected:
     static constexpr uint8_t   MAX_FINGER_NUM              = (2);
     static constexpr uint8_t   PROGRAM_PAGE_SIZE           = (128);
 };
+
+#endif

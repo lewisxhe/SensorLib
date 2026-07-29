@@ -29,6 +29,9 @@
  */
 #pragma once
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_COMMON
+
 #include "platform/comm/I2CDeviceWithHal.hpp"
 #include "TouchPoints.hpp"
 
@@ -641,3 +644,5 @@ private:
         reset();
     }
 };
+
+#endif

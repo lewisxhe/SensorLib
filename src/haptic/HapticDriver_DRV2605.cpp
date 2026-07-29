@@ -26,6 +26,9 @@
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2024-04-03
  */
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_HAPTIC_DRV2605
+
 #include "HapticDriver_DRV2605.hpp"
 #include "HapticDriver_DRV2605_Reg.hpp"
 
@@ -457,3 +460,5 @@ bool HapticDriver_DRV2605::initImpl(uint8_t param)
 
     return true;
 }
+
+#endif

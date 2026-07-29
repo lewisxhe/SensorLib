@@ -39,6 +39,9 @@
  */
 #pragma once
 
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_SY6970
+
 #include "../../PmicBase.hpp"
 #include "../../PmicPowerBase.hpp"
 #include "../../PmicAdcBase.hpp"
@@ -302,3 +305,5 @@ private:
     SY6970Adc _adc;
     SY6970Led _led;
 };
+
+#endif

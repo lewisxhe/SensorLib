@@ -36,6 +36,9 @@
 *
 */
 
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI360
+
 #include "bhi360_phy_sensor_ctrl_param.h"
 #include "bhi360_hif.h"
 #include "../bhi260x/bhy2_hif.h"
@@ -1578,3 +1581,5 @@ int8_t bhi360_phy_sensor_ctrl_param_get_step_counter_config(bhi360_phy_sensor_ct
 
     return rslt;
 }
+
+#endif

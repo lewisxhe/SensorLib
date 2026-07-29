@@ -29,6 +29,9 @@
  */
 #pragma once
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_RTC_COMMON
+
 #include <sys/time.h>
 #include "SensorPlatform.hpp"
 
@@ -703,3 +706,5 @@ private:
                         t->getWeek() > 6 ? weekString[0] : weekString[t->getWeek()]);
     }
 };
+
+#endif

@@ -30,6 +30,9 @@
  */
 #pragma once
 
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BMA4XX_COMMON
+
 #include "../../../platform/comm/ComplexStaticDeviceWithHal.hpp"
 #include "../../../sensor/AccelerometerBase.hpp"
 #include "../../../bosch/bma4xx/bma4.h"
@@ -1044,3 +1047,5 @@ protected:
     uint8_t  _remap_reg_offset;
     float    _half_scale;
 };
+
+#endif

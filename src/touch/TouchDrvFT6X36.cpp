@@ -27,6 +27,9 @@
  * @date      2026-03-05
  *
  */
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_FT6X36
+
 #include "TouchDrvFT6X36.hpp"
 
 void TouchDrvFT6X36::sleep()
@@ -204,3 +207,5 @@ bool TouchDrvFT6X36::initImpl(uint8_t)
     return true;
 }
 
+
+#endif

@@ -30,6 +30,9 @@
  */
 #pragma once
 
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PCF8563
+
 #include "../../platform/comm/I2CDeviceNoHal.hpp"
 #include "../SensorRTC.h"
 
@@ -505,3 +508,5 @@ protected:
     static constexpr uint8_t ALARM_ENABLE = 0x80;
     static constexpr uint8_t CLK_ENABLE = 0x80;
 };
+
+#endif

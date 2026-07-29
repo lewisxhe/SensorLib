@@ -29,6 +29,9 @@
  */
 
 #pragma once
+
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BMM150
 #include "../../../bosch/BMM150/bmm150.h"
 #include "../../../platform/comm/ComplexStaticDeviceWithHal.hpp"
 #include "../../MagnetometerBase.hpp"
@@ -141,3 +144,5 @@ private:
     int8_t _error_code;
     struct bmm150_settings _settings;
 };
+
+#endif

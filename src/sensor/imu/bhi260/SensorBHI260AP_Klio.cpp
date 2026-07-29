@@ -28,6 +28,9 @@
  * @note      Most source code references come from the https://github.com/boschsensortec/BHY2-Sensor-API
  *            Simplification for Arduino
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI260_KLIO
+
 #include "SensorBHI260AP_Klio.hpp"
 
 const char *SensorBHI260AP_Klio::errorMessages[9] = {
@@ -389,3 +392,5 @@ bool SensorBHI260AP_Klio::KlioTemplate(Func func, Args &&... args)
     return true;
 }
 
+
+#endif

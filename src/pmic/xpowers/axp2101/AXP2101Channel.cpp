@@ -28,6 +28,9 @@
  * @brief     AXP2101 Power Output Channel Control
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP2101
+
 #include "AXP2101Channel.hpp"
 #include "AXP2101Regs.hpp"
 
@@ -237,3 +240,5 @@ PmicChannelBase::Info AXP2101Channel::getInfo(uint8_t channel) const
     }
     return channelInfo[channel];
 }
+
+#endif

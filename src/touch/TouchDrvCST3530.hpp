@@ -28,6 +28,9 @@
  */
 #pragma once
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_CST3530
+
 #include "TouchDrvInterface.hpp"
 
 // The device address is not fixed and is determined by the manufacturer.
@@ -114,3 +117,5 @@ protected:
     static constexpr uint8_t   MAX_FINGER_NUM              = (5);
     static constexpr uint8_t   MAX_READ_BYTES              = (32);
 };
+
+#endif

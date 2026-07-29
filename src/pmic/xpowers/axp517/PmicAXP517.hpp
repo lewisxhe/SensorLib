@@ -30,6 +30,9 @@
  */
 #pragma once
 
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP517
+
 #include "../../PmicBase.hpp"
 #include "../../PmicAdcBase.hpp"
 #include "../../PmicIrqBase.hpp"
@@ -452,3 +455,5 @@ private:
     AXP517Pd _pd;                        ///< USB-PD message helper.
     AXP517PdNegotiator _pdNegotiator;    ///< USB-PD sink negotiation helper.
 };
+
+#endif

@@ -29,4 +29,8 @@
 
 #pragma once
 
+#include "SensorBuildOpt.h"
+
+#if !SENSORLIB_EXCLUDE_PAWA350
 #include "sensor/pixart/pawA350/SensorPawA350.hpp"
+#endif

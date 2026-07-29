@@ -28,6 +28,12 @@
  */
 #pragma once
 
+#include "SensorBuildOpt.h"
 
+#if !SENSORLIB_EXCLUDE_CM32181
 #include "sensor/light_sensor/SensorCM32181.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_LTR553
 #include "sensor/light_sensor/SensorLTR553.hpp"
+#endif

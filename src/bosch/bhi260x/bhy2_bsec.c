@@ -39,6 +39,9 @@
 /*********************************************************************/
 /* system header files */
 /*********************************************************************/
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI_COMMON
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -76,3 +79,5 @@ void bhy2_bsec_parse_air_quality(const uint8_t *payload, struct bhy2_bsec_air_qu
     }
 }
 
+
+#endif

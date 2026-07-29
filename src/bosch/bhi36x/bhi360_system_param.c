@@ -36,6 +36,9 @@
 *
 */
 
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI360
+
 #include "bhi360_system_param.h"
 // #include "bhi360_hif.h"
 #include "../bhi260x/bhy2_hif.h"
@@ -502,3 +505,5 @@ int8_t bhi360_system_param_set_physical_sensor_info(uint8_t sensor_id,
 
     return rslt;
 }
+
+#endif

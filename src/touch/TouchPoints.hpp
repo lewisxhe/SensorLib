@@ -28,6 +28,9 @@
  */
 #pragma once
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_COMMON
+
 #include "SensorPlatform.hpp"
 
 /**
@@ -158,3 +161,5 @@ private:
     Gesture gesture;               /**< Stored gesture. */
     static TouchPoint emptyPoint;  /**< Empty touch point. */
 };
+
+#endif

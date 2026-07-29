@@ -60,6 +60,9 @@
  */
 #pragma once
 
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_BQ25896
+
 #include "../../PmicBase.hpp"
 #include "../../PmicPowerBase.hpp"
 #include "../../PmicAdcBase.hpp"
@@ -338,3 +341,5 @@ private:
     BQ25896Adc _adc;
     BQ25896Led _led;
 };
+
+#endif

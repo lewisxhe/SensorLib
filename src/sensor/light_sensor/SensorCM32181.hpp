@@ -29,6 +29,9 @@
  */
 #pragma once
 
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_CM32181
+
 #include "../../platform/comm/I2CDeviceNoHal.hpp"
 
 /**
@@ -370,3 +373,5 @@ protected:
      */
     const float calibration_factor = 0.286f;
 };
+
+#endif

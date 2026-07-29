@@ -35,6 +35,9 @@
  * @note    Adapting Arduino based on BHY2-Sensor-API by lewis
  */
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI_COMMON
+
 #include "bosch/bhi260x/bhy2.h"
 #include "bosch/bhi260x/bhi3.h"
 #include "bosch/bhi260x/bhi3_multi_tap.h"
@@ -982,3 +985,5 @@ namespace BoschSensorUtils {
     }
 }
 // *INDENT-ON*
+
+#endif

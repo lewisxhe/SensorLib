@@ -29,6 +29,9 @@
  */
 #pragma once
 
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PCF85063
+
 #include "../../platform/comm/I2CDeviceNoHal.hpp"
 #include "../SensorRTC.h"
 
@@ -579,3 +582,5 @@ protected:
     static constexpr uint8_t PCF85063_NO_ALARM = 0xFF;
     static constexpr uint8_t PCF85063_ALARM_ENABLE = 0x80;
 };
+
+#endif

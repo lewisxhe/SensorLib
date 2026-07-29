@@ -29,6 +29,9 @@
  */
 #pragma once
 
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_QMC6309
+
 #include "platform/comm/I2CDeviceWithHal.hpp"
 #include "sensor/MagnetometerBase.hpp"
 
@@ -703,3 +706,5 @@ private:
         return true;
     }
 };
+
+#endif

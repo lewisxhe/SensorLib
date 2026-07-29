@@ -27,6 +27,9 @@
  * @date      2026-02-06
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI360
+
 #include "SensorBHI360.hpp"
 
 uint16_t SensorBHI360::getConfirmationIDImpl()
@@ -94,3 +97,5 @@ bool SensorBHI360::setMultiTapParamConfig(const MultiTapDataType &config)
     return true;
 }
 
+
+#endif

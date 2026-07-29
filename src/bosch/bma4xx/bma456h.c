@@ -40,6 +40,9 @@
  * \brief Sensor Driver for BMA456H sensor
  */
 
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BMA456H
+
 #include "bma456h.h"
 
 /**\name Feature configuration file */
@@ -1647,3 +1650,5 @@ int8_t bma456h_get_version_config(uint16_t *config_major, uint16_t *config_minor
 }
 
 /*! @endcond */
+
+#endif

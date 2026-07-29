@@ -27,6 +27,9 @@
  * @date      2026-03-12
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP517
+
 #include "AXP517Bc12.hpp"
 #include "AXP517Regs.hpp"
 
@@ -88,3 +91,5 @@ PmicBc12Base::PortType AXP517Bc12::mapResult(uint8_t code)
     default:    return PortType::Unknown;
     }
 }
+
+#endif

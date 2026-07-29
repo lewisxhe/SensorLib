@@ -28,6 +28,9 @@
  */
 #pragma once
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_CST816
+
 #include "TouchDrvInterface.hpp"
 
 static constexpr uint8_t  CST816_SLAVE_ADDRESS  = (0x15);
@@ -112,3 +115,5 @@ protected:
     static constexpr uint8_t  CST816D_CHIP_ID           = (0xB6);
     static constexpr uint8_t  MAX_FINGER_NUM            = (1);
 };
+
+#endif

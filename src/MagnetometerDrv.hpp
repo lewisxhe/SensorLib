@@ -28,9 +28,28 @@
  */
 #pragma once
 
+#include "SensorBuildOpt.h"
+
+#if !SENSORLIB_EXCLUDE_BMM150
 #include "sensor/magnetometer/bmm150/SensorBMM150.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_QMC5883L
 #include "sensor/magnetometer/qmc/SensorQMC5883L.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_QMC5883P
 #include "sensor/magnetometer/qmc/SensorQMC5883P.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_QMC6309
 #include "sensor/magnetometer/qmc/SensorQMC6309.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_QMC6310
 #include "sensor/magnetometer/qmc/SensorQMC6310.hpp"
+#endif
+
+#if !(SENSORLIB_EXCLUDE_QMC5883L && SENSORLIB_EXCLUDE_QMC5883P && SENSORLIB_EXCLUDE_QMC6309 && SENSORLIB_EXCLUDE_QMC6310)
 #include "sensor/magnetometer/qmc/SensorQSTMagnetic.hpp"
+#endif

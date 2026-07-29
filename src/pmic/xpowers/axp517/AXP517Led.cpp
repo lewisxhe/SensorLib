@@ -27,6 +27,9 @@
  * @date      2026-03-12
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP517
+
 #include "AXP517Led.hpp"
 #include "AXP517Regs.hpp"
 
@@ -117,3 +120,5 @@ AXP517Led::ManualState AXP517Led::getManualState()
     default:   return ManualState::UNDEFINED;
     }
 }
+
+#endif

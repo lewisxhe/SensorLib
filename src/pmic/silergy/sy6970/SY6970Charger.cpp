@@ -27,6 +27,9 @@
  * @date      2026-04-09
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_SY6970
+
 #include "SY6970Charger.hpp"
 #include "SY6970Regs.hpp"
 
@@ -171,3 +174,5 @@ PmicChargerBase::Status SY6970Charger::getStatus()
 
     return status;
 }
+
+#endif

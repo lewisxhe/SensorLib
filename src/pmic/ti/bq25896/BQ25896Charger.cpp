@@ -27,6 +27,9 @@
  * @date      2026-04-09
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_BQ25896
+
 #include "BQ25896Charger.hpp"
 #include "BQ25896Regs.hpp"
 
@@ -171,3 +174,5 @@ PmicChargerBase::Status BQ25896Charger::getStatus()
 
     return status;
 }
+
+#endif

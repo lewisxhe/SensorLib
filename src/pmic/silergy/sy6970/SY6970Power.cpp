@@ -27,6 +27,9 @@
  * @date      2026-04-09
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_SY6970
+
 #include "SY6970Power.hpp"
 #include "SY6970Regs.hpp"
 
@@ -192,3 +195,5 @@ bool SY6970Power::resetWatchdog()
 {
     return _core.updateBits(REG_CHG_CTRL, MASK_WD_RST, MASK_WD_RST) >= 0;
 }
+
+#endif

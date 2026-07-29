@@ -28,7 +28,16 @@
  */
 #pragma once
 
-#include "expander/IoExpanderXL9555.hpp"
-#include "expander/IoExpanderPCA9570.hpp"
-#include "expander/IoExpanderSPI.hpp"
+#include "SensorBuildOpt.h"
 
+#if !SENSORLIB_EXCLUDE_IO_EXPANDER_XL9555
+#include "expander/IoExpanderXL9555.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_IO_EXPANDER_PCA9570
+#include "expander/IoExpanderPCA9570.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_IO_EXPANDER_SPI
+#include "expander/IoExpanderSPI.hpp"
+#endif

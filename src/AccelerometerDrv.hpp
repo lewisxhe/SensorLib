@@ -28,9 +28,20 @@
  */
 #pragma once
 
+#include "SensorBuildOpt.h"
 
+#if !SENSORLIB_EXCLUDE_BMA422
 #include "sensor/accelerometer/bma/SensorBMA422.hpp"
-#include "sensor/accelerometer/bma/SensorBMA423.hpp"
-#include "sensor/accelerometer/bma/SensorBMA456H.hpp"
-#include "sensor/accelerometer/bma/SensorBMA4XX.hpp"
+#endif
 
+#if !SENSORLIB_EXCLUDE_BMA423
+#include "sensor/accelerometer/bma/SensorBMA423.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_BMA456H
+#include "sensor/accelerometer/bma/SensorBMA456H.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_BMA4XX_COMMON
+#include "sensor/accelerometer/bma/SensorBMA4XX.hpp"
+#endif

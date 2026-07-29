@@ -28,6 +28,9 @@
  *
  */
 #pragma once
+
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_QMC5883L
 #include "platform/comm/I2CDeviceWithHal.hpp"
 #include "sensor/MagnetometerBase.hpp"
 
@@ -452,3 +455,5 @@ private:
     }
 
 };
+
+#endif

@@ -49,6 +49,9 @@
 
 /**\name        Header files
  ****************************************************************************/
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BMA4XX_COMMON
+
 #include "bma4.h"
 
 /***************************************************************************/
@@ -5857,3 +5860,5 @@ static int8_t selftest_config(uint8_t sign, struct bma4_dev *dev)
 
     return rslt;
 }
+
+#endif

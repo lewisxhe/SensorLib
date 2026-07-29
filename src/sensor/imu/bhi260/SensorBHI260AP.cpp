@@ -27,6 +27,9 @@
  * @date      2024-05-27
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI260
+
 #include "SensorBHI260AP.hpp"
 
 void SensorBHI260AP::setBootFromFlash(bool boot_from_flash)
@@ -70,3 +73,5 @@ uint16_t SensorBHI260AP::getConfirmationIDImpl()
 {
     return BHI260_CHIP_ID;
 }
+
+#endif

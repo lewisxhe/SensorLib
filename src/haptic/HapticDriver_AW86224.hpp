@@ -30,6 +30,9 @@
 
 #pragma once
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_HAPTIC_AW86224
+
 #include "platform/comm/I2CDeviceWithHal.hpp"
 #include "HapticBase.hpp"
 
@@ -782,3 +785,5 @@ private:
     uint32_t _vibrationStartTime;
     bool _isCalibrated;
 };
+
+#endif

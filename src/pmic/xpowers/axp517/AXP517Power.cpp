@@ -27,6 +27,9 @@
  * @date      2026-03-12
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP517
+
 #include "AXP517Power.hpp"
 #include "AXP517Regs.hpp"
 
@@ -137,3 +140,5 @@ bool AXP517Power::isRBFETEnabled() const
     return _core.getRegBit(axp517_regs::ctrl::RBFET_CTRL, 0);
 }
 
+
+#endif

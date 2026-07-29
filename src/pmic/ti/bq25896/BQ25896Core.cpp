@@ -27,6 +27,9 @@
  * @date      2026-04-09
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_BQ25896
+
 #include "BQ25896Core.hpp"
 #include "BQ25896Regs.hpp"
 
@@ -148,3 +151,5 @@ bool BQ25896Core::initImpl(uint8_t param)
     // Disable watchdog timer by default for safety (can be enabled via API)
     return updateBits(REG_CHG_TIMER, MASK_WATCHDOG, 0) >= 0;
 }
+
+#endif

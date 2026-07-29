@@ -27,6 +27,9 @@
  * @date      2023-10-05
  *
  */
+#include "SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_WIRE_HELPER
+
 #include "SensorWireHelper.h"
 
 #if defined(ARDUINO)
@@ -128,3 +131,5 @@ void SensorWireHelper::hexdump(uint8_t *data, size_t len, Stream &serial)
 
 
 #endif //ARDUINO
+
+#endif

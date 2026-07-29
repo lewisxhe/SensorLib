@@ -28,6 +28,9 @@
  *
  */
 
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BMM150
+
 #include "SensorBMM150.hpp"
 #include <cstring>
 
@@ -329,3 +332,5 @@ bool SensorBMM150::updateInterruptStatus()
     }
     return bmm150_get_interrupt_status(_dev.get()) == BMM150_OK;
 }
+
+#endif

@@ -29,6 +29,9 @@
  */
 #pragma once
 
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_LTR553
+
 #include "../../platform/comm/I2CDeviceNoHal.hpp"
 
 // Unique I2C device address
@@ -592,3 +595,5 @@ protected:
     /// Default manufacturer ID.
     static constexpr uint8_t LTR553_DEFAULT_MAN_ID = 0x05;
 };
+
+#endif

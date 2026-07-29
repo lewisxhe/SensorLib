@@ -29,4 +29,8 @@
  */
 #pragma once
 
+#include "SensorBuildOpt.h"
+
+#if !SENSORLIB_EXCLUDE_PMIC_SY6970
 #include "pmic/silergy/sy6970/PmicSY6970.hpp"
+#endif

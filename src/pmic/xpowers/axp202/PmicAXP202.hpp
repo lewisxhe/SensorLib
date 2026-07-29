@@ -50,6 +50,9 @@
  */
 #pragma once
 
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP202
+
 #include "../../PmicBase.hpp"
 #include "../../PmicAdcBase.hpp"
 #include "../../PmicIrqBase.hpp"
@@ -473,3 +476,5 @@ using AXP202Irq = AXP1xxIrq<axp202_regs>;
 
 /** @brief Convenience alias: AXP202Timer::setTimer() etc. */
 using AXP202Timer = AXP1xxTimer<axp202_regs>;
+
+#endif

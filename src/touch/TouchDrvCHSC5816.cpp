@@ -27,6 +27,9 @@
  * @date      2026-03-05
  *
  */
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_CHSC5816
+
 #include "TouchDrvCHSC5816.hpp"
 
 void TouchDrvCHSC5816::sleep()
@@ -114,3 +117,5 @@ bool TouchDrvCHSC5816::initImpl(uint8_t)
 
     return false;
 }
+
+#endif

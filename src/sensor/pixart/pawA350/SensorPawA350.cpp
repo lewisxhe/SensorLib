@@ -28,6 +28,9 @@
  * @brief     PAW-A350 Optical Finger Navigation Sensor Implementation
  */
 
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PAWA350
+
 #include "SensorPawA350.hpp"
 #include "SensorPawA350_Reg.hpp"
 
@@ -269,3 +272,5 @@ bool SensorPawA350::initImpl(uint8_t param)
     cached_rest1_period = 1;
     return true;
 }
+
+#endif

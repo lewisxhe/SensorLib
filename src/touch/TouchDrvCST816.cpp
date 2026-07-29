@@ -26,6 +26,9 @@
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2023-10-06
  */
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_CST816
+
 #include "TouchDrvCST816.hpp"
 
 const TouchPoints &TouchDrvCST816::getTouchPoints()
@@ -157,3 +160,5 @@ bool TouchDrvCST816::initImpl(uint8_t)
 
     return true;
 }
+
+#endif

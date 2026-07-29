@@ -26,6 +26,9 @@
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2023-10-06
  */
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_CST226
+
 #include "TouchDrvCST226.hpp"
 
 void TouchDrvCST226::reset()
@@ -202,3 +205,5 @@ bool TouchDrvCST226::initImpl(uint8_t)
 
     return true;
 }
+
+#endif

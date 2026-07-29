@@ -29,6 +29,9 @@
  */
 #pragma once
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_GT9895
+
 #include "TouchDrvInterface.hpp"
 
 static constexpr uint8_t  GT9895_SLAVE_ADDRESS_H = (0x14);
@@ -134,3 +137,5 @@ protected:
     
     static constexpr uint32_t CHIP_PID       = (0x9895);
 };
+
+#endif

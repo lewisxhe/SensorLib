@@ -27,6 +27,9 @@
  * @date      2026-04-09
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_SY6970
+
 #include "SY6970Core.hpp"
 #include "SY6970Regs.hpp"
 
@@ -117,3 +120,5 @@ bool SY6970Core::initImpl(uint8_t param)
     // Disable watchdog timer by default for safety (can be enabled via API)
     return updateBits(REG_CHG_TIMER, MASK_WATCHDOG, 0x00) >= 0;
 }
+
+#endif

@@ -29,7 +29,17 @@
 
 #pragma once
 
+#include "SensorBuildOpt.h"
+
+#if !SENSORLIB_EXCLUDE_PCF8563
 #include "time/pcf8563/SensorPCF8563.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_PCF85063
 #include "time/pcf85063/SensorPCF85063.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_RTC
 #include "time/SensorRtcHelper.hpp"
 #include "time/SensorRTC_POSIX.hpp"
+#endif

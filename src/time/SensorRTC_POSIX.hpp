@@ -29,6 +29,9 @@
  */
 #pragma once
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_RTC
+
 #include "SensorRTC.h"
 #include "SensorPlatform.hpp"
 
@@ -171,3 +174,5 @@ public:
 
 #endif
 
+
+#endif

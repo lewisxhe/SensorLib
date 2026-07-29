@@ -28,6 +28,9 @@
  * @brief     AXP2101 Charger Control
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP2101
+
 #include "AXP2101Charger.hpp"
 #include "AXP2101Regs.hpp"
 
@@ -464,3 +467,5 @@ uint8_t AXP2101Charger::getJeitaWarmThreshold()
     if (val < 0) return 0;
     return (val >> 4) & 0x0F;
 }
+
+#endif

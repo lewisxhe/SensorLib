@@ -28,6 +28,9 @@
  */
 #pragma once
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_HAPTIC_DRV2605
+
 #include "platform/comm/I2CDeviceWithHal.hpp"
 #include "HapticBase.hpp"
 
@@ -519,3 +522,5 @@ private:
     bool _isERM;
     bool _isStandby;
 };
+
+#endif

@@ -29,9 +29,14 @@
  */
 #pragma once
 
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_QMC6310
+
 #include "SensorQSTMagnetic.hpp"
 
 /**
  * @brief Typedef to create an alias for SensorQSTMagnetic specifically for QMC6310 compatibility.
  */
 typedef  SensorQSTMagnetic SensorQMC6310;
+
+#endif

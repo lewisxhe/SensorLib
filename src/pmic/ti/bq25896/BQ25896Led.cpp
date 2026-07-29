@@ -27,6 +27,9 @@
  * @date      2026-04-11
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_BQ25896
+
 #include "BQ25896Led.hpp"
 #include "BQ25896Regs.hpp"
 
@@ -67,3 +70,5 @@ PmicLedBase::ManualState BQ25896Led::getManualState()
 {
     return ManualState::UNDEFINED;
 }
+
+#endif

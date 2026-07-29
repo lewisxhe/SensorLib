@@ -29,4 +29,8 @@
  */
 #pragma once
 
+#include "SensorBuildOpt.h"
+
+#if !SENSORLIB_EXCLUDE_TOUCH_CHSC5816
 #include "touch/TouchDrvCHSC5816.hpp"
+#endif

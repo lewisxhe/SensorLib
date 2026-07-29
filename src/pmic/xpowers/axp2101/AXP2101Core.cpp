@@ -28,6 +28,9 @@
  * @brief     AXP2101 Core I2C Communication and Module Control
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP2101
+
 #include "AXP2101Core.hpp"
 #include "AXP2101Regs.hpp"
 
@@ -111,3 +114,5 @@ bool AXP2101Core::initImpl(uint8_t param)
     }
     return true;
 }
+
+#endif

@@ -29,11 +29,29 @@
  */
 #pragma once
 
+#include "SensorBuildOpt.h"
+
+#if !SENSORLIB_EXCLUDE_TOUCH_COMMON
 #include "touch/TouchDrvInterface.hpp"
 #include "touch/TouchPoints.hpp"
+#endif
 
+#if !(SENSORLIB_EXCLUDE_TOUCH_CST226 && SENSORLIB_EXCLUDE_TOUCH_CST816 && SENSORLIB_EXCLUDE_TOUCH_CST92XX && SENSORLIB_EXCLUDE_TOUCH_CST3530 && SENSORLIB_EXCLUDE_TOUCH_CSTXXX)
 #include "TouchDrvCST.hpp"
+#endif
+
+#if !(SENSORLIB_EXCLUDE_TOUCH_GT911 && SENSORLIB_EXCLUDE_TOUCH_GT9895)
 #include "TouchDrvGoodix.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_TOUCH_FT6X36
 #include "TouchDrvFocalTech.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_TOUCH_HI8561
 #include "TouchDrvJadard.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_TOUCH_CHSC5816
 #include "TouchDrvChipshine.hpp"
+#endif

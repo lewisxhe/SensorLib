@@ -35,6 +35,9 @@
  * @note The core ADC reading methods (enableChannels, disableChannels, read)
  *       are handled by the AXP1xxAdc template via AXP202AdcTraits.
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP202
+
 #include "AXP202Adc.hpp"
 #include "AXP202Regs.hpp"
 
@@ -135,3 +138,5 @@ uint16_t AXP202Adc::readRegisterH8L4(uint8_t regH, uint8_t regL)
     }
     return (static_cast<uint16_t>(h) << 4) | (static_cast<uint16_t>(l) & 0x0F);
 }
+
+#endif

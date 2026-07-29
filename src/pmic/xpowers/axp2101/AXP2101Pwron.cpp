@@ -28,6 +28,9 @@
  * @brief     AXP2101 Power On Control
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP2101
+
 #include "AXP2101Pwron.hpp"
 #include "AXP2101Regs.hpp"
 
@@ -96,3 +99,5 @@ bool AXP2101Pwron::getIrqDurationMs(uint16_t &ms) const
     ms = kIrqLevelMs[(static_cast<uint8_t>(v) >> 4) & 0x03];
     return true;
 }
+
+#endif

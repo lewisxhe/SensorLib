@@ -38,6 +38,9 @@
 
 /*! @file bmm150.c
  * @brief Sensor driver for BMM150 sensor */
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BMM150
+
 #include "bmm150.h"
 
 /************************** Internal macros *******************************/
@@ -2185,3 +2188,5 @@ static int8_t set_adv_self_test_current(uint8_t self_test_current, struct bmm150
 
     return rslt;
 }
+
+#endif

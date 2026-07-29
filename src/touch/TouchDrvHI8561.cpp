@@ -27,6 +27,9 @@
  * @date      2026-03-06
  *
  */
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_HI8561
+
 #include "TouchDrvHI8561.hpp"
 
 void TouchDrvHI8561::sleep()
@@ -104,3 +107,5 @@ bool TouchDrvHI8561::initImpl(uint8_t)
 
     return true;
 }
+
+#endif

@@ -39,6 +39,9 @@
 /*********************************************************************/
 /* system header files */
 /*********************************************************************/
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI360
+
 #include <string.h>
 #include <stdio.h>
 
@@ -229,3 +232,5 @@ int8_t bhi360_multi_tap_param_detector_get_config(bhi360_multi_tap_param_detecto
 
     return rslt;
 }
+
+#endif

@@ -28,8 +28,24 @@
  */
 #pragma once
 
+#include "SensorBuildOpt.h"
+
+#if !SENSORLIB_EXCLUDE_QMI8658
 #include "sensor/imu/qmi8658/SensorQMI8658.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_BHI260_KLIO
 #include "sensor/imu/bhi260/SensorBHI260AP_Klio.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_BHI260
 #include "sensor/imu/bhi260/SensorBHI260AP.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_BHI360
 #include "sensor/imu/bhi360/SensorBHI360.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_BHI_COMMON
 #include "bosch/BoschSensorDataHelper.hpp"
+#endif

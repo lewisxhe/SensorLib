@@ -27,6 +27,9 @@
  * @date      2026-03-12
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP517
+
 #include "AXP517Pwron.hpp"
 #include "AXP517Regs.hpp"
 
@@ -101,3 +104,5 @@ bool AXP517Pwron::getIrqDurationMs(uint16_t &ms) const
     ms = kIrqLevelMs[(((uint8_t)v) >> 4) & 0x03];
     return true;
 }
+
+#endif

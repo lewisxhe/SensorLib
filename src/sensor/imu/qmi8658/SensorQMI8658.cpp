@@ -27,6 +27,9 @@
  * @date      2026-04-15
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_QMI8658
+
 #include "SensorQMI8658.hpp"
 #include "../../AccelerometerUtils.hpp"
 #include <string.h>
@@ -2469,3 +2472,5 @@ bool SensorQMI8658::initImpl(uint8_t param)
 
     return true;
 }
+
+#endif

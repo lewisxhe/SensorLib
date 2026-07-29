@@ -40,6 +40,9 @@
  * \brief Sensor Driver for BMA456W sensor
  */
 
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BMA4XX_EXTRA
+
 #include "bma456w.h"
 
 /**\name Feature configuration file */
@@ -1543,3 +1546,5 @@ int8_t bma456w_get_version_config(uint16_t *config_major, uint16_t *config_minor
 }
 
 /*! @endcond */
+
+#endif

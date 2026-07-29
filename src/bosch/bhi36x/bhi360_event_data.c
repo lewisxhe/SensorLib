@@ -36,6 +36,9 @@
 *
 */
 
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI360
+
 #include "bhi360_event_data.h"
 // #include "bhi360_hif.h"
 #include "../bhi260x/bhy2_hif.h"
@@ -209,3 +212,5 @@ void bhi360_event_data_parse_air_quality(const uint8_t *payload, bhi360_event_da
         air_quality_data->raw_gas = BHY2_LE2U32(payload + i);
     }
 }
+
+#endif

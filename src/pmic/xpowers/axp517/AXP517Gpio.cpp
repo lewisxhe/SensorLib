@@ -1,3 +1,6 @@
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP517
+
 #include "AXP517Gpio.hpp"
 #include "AXP517Regs.hpp"
 
@@ -108,3 +111,5 @@ PmicGpioBase::Status AXP517Gpio::write(uint8_t pin, Level level)
     // bits[1:0]
     return _core.updateBits(axp517_regs::ctrl::GPIO_CFG, 0x03, code) >= 0 ? Status::Ok : Status::Failed;
 }
+
+#endif

@@ -29,6 +29,9 @@
 
 #pragma once
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_AW9364
+
 #include "../expander/IoExpanderBase.hpp"
 
 /** @brief Maximum brightness steps (0‑16). */
@@ -191,3 +194,5 @@ private:
     uint8_t _driver_pin;             ///< Pin number used for LED control
     uint8_t _brightness = 0;         ///< Current brightness level (0‑16)
 };
+
+#endif

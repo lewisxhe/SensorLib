@@ -28,6 +28,9 @@
  * @brief     AXP2101 Power Control
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP2101
+
 #include "AXP2101Power.hpp"
 #include "AXP2101Regs.hpp"
 #include <string.h>
@@ -552,3 +555,5 @@ uint8_t AXP2101Power::getFastPowerOnSequence(uint8_t channel)
     if (val < 0) return 3;
     return (val >> bits[channel]) & 0x03;
 }
+
+#endif

@@ -29,6 +29,9 @@
  */
 #pragma once
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_CHSC5816
+
 #include "TouchDrvInterface.hpp"
 
 static constexpr uint8_t  CHSC5816_SLAVE_ADDRESS = (0x2E);
@@ -85,3 +88,5 @@ protected:
     static constexpr uint8_t  POINT_BUFFER_SIZE = (MAX_FINGER_NUM * BYTES_PER_POINT + 3);
     static constexpr uint8_t  COMMAND_SIZE = (4);
 };
+
+#endif

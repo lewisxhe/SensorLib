@@ -28,6 +28,9 @@
  * @brief     AXP2101 Watchdog Timer
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP2101
+
 #include "AXP2101Watchdog.hpp"
 #include "AXP2101Regs.hpp"
 
@@ -77,3 +80,5 @@ bool AXP2101Watchdog::resetWatchdog()
 {
     return _core.setRegBit(axp2101_regs::ctrl::WDT_CTRL, 3);
 }
+
+#endif

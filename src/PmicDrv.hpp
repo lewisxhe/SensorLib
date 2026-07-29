@@ -29,7 +29,16 @@
 
 #pragma once
 
-#include "PmicXPowers.hpp"
-#include "PmicSilergy.hpp"
-#include "PmicTI.hpp"
+#include "SensorBuildOpt.h"
 
+#if !(SENSORLIB_EXCLUDE_PMIC_AXP192 && SENSORLIB_EXCLUDE_PMIC_AXP202 && SENSORLIB_EXCLUDE_PMIC_AXP2101 && SENSORLIB_EXCLUDE_PMIC_AXP517)
+#include "PmicXPowers.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_PMIC_SY6970
+#include "PmicSilergy.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_PMIC_BQ25896
+#include "PmicTI.hpp"
+#endif

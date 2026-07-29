@@ -27,6 +27,9 @@
  * @date      2026-04-09
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_BQ25896
+
 #include "BQ25896Adc.hpp"
 #include "BQ25896Regs.hpp"
 
@@ -132,3 +135,5 @@ bool BQ25896Adc::setContinuousMode(bool enable)
     }
     return _core.updateBits(REG_PWR_ONOFF, MASK_CONV_START | MASK_CONV_RATE, val) >= 0;
 }
+
+#endif

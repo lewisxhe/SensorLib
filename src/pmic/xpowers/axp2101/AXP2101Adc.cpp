@@ -28,6 +28,9 @@
  * @brief     AXP2101 ADC Control
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP2101
+
 #include "AXP2101Adc.hpp"
 #include "AXP2101Regs.hpp"
 #include <math.h>
@@ -185,3 +188,5 @@ float AXP2101Adc::getTsTemperature(float SteinhartA, float SteinhartB, float Ste
     float t_inv = SteinhartA + SteinhartB * ln_r + SteinhartC * powf(ln_r, 3.0f);
     return (1.0f / t_inv) - 273.15f;
 }
+
+#endif

@@ -36,6 +36,9 @@
  *
  */
 
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI_COMMON
+
 #include "bhy2.h"
 #include "bhy2_parse.h"
 #include <math.h>
@@ -113,3 +116,5 @@ void bhy2_quaternion_to_euler(const uint8_t *data, float *roll, float *pitch, fl
     *pitch = *pitch * (180.0 / M_PI);
     *yaw = *yaw * (180.0 / M_PI);
 }
+
+#endif

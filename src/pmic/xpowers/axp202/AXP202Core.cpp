@@ -27,6 +27,9 @@
  * @date      2026-04-29
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP202
+
 #include "AXP202Core.hpp"
 #include "AXP202Regs.hpp"
 
@@ -39,3 +42,5 @@ bool AXP202Core::initImpl(uint8_t param)
     }
     return true;
 }
+
+#endif

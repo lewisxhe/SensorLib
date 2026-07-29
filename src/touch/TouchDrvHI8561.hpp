@@ -29,6 +29,9 @@
  */
 #pragma once
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_HI8561
+
 #include "TouchDrvInterface.hpp"
 
 static constexpr uint8_t HI8561_SLAVE_ADDRESS = (0x68);
@@ -109,3 +112,5 @@ protected:
     static constexpr uint8_t MAX_FINGER_NUM = (10);
     static constexpr uint8_t BYTES_PER_POINT = (5);
 };
+
+#endif

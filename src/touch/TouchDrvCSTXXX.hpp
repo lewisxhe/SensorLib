@@ -30,6 +30,9 @@
  */
 #pragma once
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_CSTXXX
+
 #include "touch/TouchDrvCST226.hpp"
 #include "touch/TouchDrvCST816.hpp"
 #include "touch/TouchDrvCST92xx.hpp"
@@ -307,3 +310,5 @@ private:
     TouchDrvType                        _touchType;
     std::unique_ptr<TouchDrvInterface>  _drv;
 };
+
+#endif

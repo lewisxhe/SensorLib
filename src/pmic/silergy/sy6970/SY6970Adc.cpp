@@ -27,6 +27,9 @@
  * @date      2026-04-09
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_SY6970
+
 #include "SY6970Adc.hpp"
 #include "SY6970Regs.hpp"
 
@@ -132,3 +135,5 @@ bool SY6970Adc::setContinuousMode(bool enable)
     }
     return _core.updateBits(REG_PWR_ONOFF, MASK_CONV_START | MASK_CONV_RATE, val) >= 0;
 }
+
+#endif

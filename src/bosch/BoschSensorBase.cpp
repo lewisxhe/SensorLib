@@ -28,6 +28,9 @@
  * @note      Most source code references come from the https://github.com/boschsensortec/BHY2-Sensor-API
  *            Simplification for Arduino
  */
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI_COMMON
+
 #include "BoschSensorBase.hpp"
 
 #ifndef BOSCH_SMART_SENSOR_FIFO_PARSE_BUFFER_SIZE
@@ -1066,3 +1069,5 @@ bool BoschSensorBase::initImpl(CommInterface interface)
     }
     return _error_code == BHY2_OK;
 }
+
+#endif

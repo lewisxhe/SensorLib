@@ -29,8 +29,24 @@
  */
 #pragma once
 
+#include "SensorBuildOpt.h"
+
+#if !SENSORLIB_EXCLUDE_TOUCH_CST226
 #include "touch/TouchDrvCST226.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_TOUCH_CST816
 #include "touch/TouchDrvCST816.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_TOUCH_CST92XX
 #include "touch/TouchDrvCST92xx.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_TOUCH_CST3530
 #include "touch/TouchDrvCST3530.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_TOUCH_CSTXXX
 #include "touch/TouchDrvCSTXXX.hpp"
+#endif

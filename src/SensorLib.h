@@ -39,6 +39,7 @@
 #include <string.h>
 #endif
 
+#include "SensorBuildOpt.h"
 #include "SensorLib_Version.h"
 
 #if defined(INCLUDE_DEVICES_PINS)

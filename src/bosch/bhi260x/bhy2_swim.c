@@ -39,6 +39,9 @@
 /*********************************************************************/
 /* system header files */
 /*********************************************************************/
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI_COMMON
+
 #include <string.h>
 #include <stdio.h>
 
@@ -201,3 +204,5 @@ int8_t bhy2_swim_parse_data(const uint8_t *data, struct bhy2_swim_algo_output* o
 
     return rslt;
 }
+
+#endif

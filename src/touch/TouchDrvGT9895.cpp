@@ -27,6 +27,9 @@
  * @date      2024-09-21
  *
  */
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_GT9895
+
 #include "TouchDrvGT9895.hpp"
 
 void TouchDrvGT9895::sleep()
@@ -221,3 +224,5 @@ bool TouchDrvGT9895::initImpl(uint8_t)
 [   589][D][TouchDrvGT9895.cpp:239] getChipPID(): VID:0x4ff3d676
 [   595][D][TouchDrvGT9895.cpp:240] getChipPID(): Sensor ID:255
 */
+
+#endif

@@ -30,6 +30,9 @@
  */
 #pragma once
 
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BMA456H
+
 #include "SensorBMA4XX.hpp"
 #include "../../../bosch/bma4xx/bma456h.h"
 
@@ -784,3 +787,5 @@ protected:
     EventCallbacks callbacks;
     uint16_t _status;
 };
+
+#endif

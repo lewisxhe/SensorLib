@@ -38,6 +38,9 @@
 
 /*********************************************************************/
 /* system header files */
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI260_KLIO
+
 #include <string.h>
 #include <stdio.h>
 
@@ -371,3 +374,5 @@ int8_t bhy2_klio_get_parameter(const bhy2_klio_parameter_t id,
 
     return BHY2_OK;
 }
+
+#endif

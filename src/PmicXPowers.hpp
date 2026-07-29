@@ -29,7 +29,20 @@
  */
 #pragma once
 
+#include "SensorBuildOpt.h"
+
+#if !SENSORLIB_EXCLUDE_PMIC_AXP517
 #include "pmic/xpowers/axp517/PmicAXP517.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_PMIC_AXP2101
 #include "pmic/xpowers/axp2101/PmicAXP2101.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_PMIC_AXP192
 #include "pmic/xpowers/axp192/PmicAXP192.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_PMIC_AXP202
 #include "pmic/xpowers/axp202/PmicAXP202.hpp"
+#endif

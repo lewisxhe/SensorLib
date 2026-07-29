@@ -1,3 +1,6 @@
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP202
+
 #include "AXP202Gpio.hpp"
 #include "AXP202Regs.hpp"
 
@@ -157,3 +160,5 @@ uint8_t AXP202Gpio::getFunction(uint8_t pin)
     // GPIO3: return bit2 (0=NMOS open-drain, 1=input) as function value
     return (v & 0x04) ? 0x01 : 0x00;
 }
+
+#endif

@@ -40,6 +40,9 @@
  * \brief Sensor Driver for BMA456_TABLET sensor
  */
 
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BMA4XX_EXTRA
+
 #include "bma456_tablet.h"
 
 /**\name Feature configuration file */
@@ -1512,3 +1515,5 @@ static int8_t feature_disable(uint8_t feature, uint8_t len, uint8_t *feature_con
 }
 
 /*! @endcond */
+
+#endif

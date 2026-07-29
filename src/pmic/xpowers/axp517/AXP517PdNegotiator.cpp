@@ -27,6 +27,9 @@
  * @date      2026-07-29
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP517
+
 #include "AXP517PdNegotiator.hpp"
 #include "UsbPdDefs.hpp"
 #include "../../../platform/SensorLibLog.hpp"
@@ -405,3 +408,5 @@ bool AXP517PdNegotiator::sendRequest(const FixedOffer &offer, const RequestParam
 
     return _pd.sendRaw(MSG_REQUEST, payload, sizeof(payload));
 }
+
+#endif

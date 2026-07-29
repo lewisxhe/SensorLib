@@ -36,6 +36,9 @@
 *
 */
 
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI360
+
 #include "bhi360_hif.h"
 
 /*! Mask definitions for SPI read/write address */
@@ -290,3 +293,5 @@ int8_t bhi360_hif_inject_data(const uint8_t *payload, uint32_t payload_len, stru
 {
     return bhi360_hif_exec_cmd(BHI360_CMD_INJECT_DATA, payload, payload_len, hif);
 }
+
+#endif

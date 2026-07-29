@@ -28,6 +28,9 @@
  * @brief     AXP2101 Interrupt Controller
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP2101
+
 #include "AXP2101Irq.hpp"
 #include "AXP2101Regs.hpp"
 
@@ -90,3 +93,5 @@ bool AXP2101Irq::clearStatus()
     uint8_t buffer[3] = {0xFF, 0xFF, 0xFF};
     return _core.writeRegBuff(axp2101_regs::irq::STATUS1, buffer, sizeof(buffer)) >= 0;
 }
+
+#endif

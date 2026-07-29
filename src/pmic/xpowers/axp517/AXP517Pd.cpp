@@ -28,6 +28,9 @@
  *
  * @brief     Minimal USB Power Delivery protocol helper for the AXP517 TCPC.
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP517
+
 #include "AXP517Pd.hpp"
 
 bool AXP517Pd::configureHeaderInfo(const HeaderInfoCfg &cfg)
@@ -121,3 +124,5 @@ bool AXP517Pd::handleFaultOnce(uint8_t &faultStatus)
     (void)_tcpc.clearAlert(1u << 9);
     return true;
 }
+
+#endif

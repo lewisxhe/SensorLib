@@ -28,6 +28,12 @@
  */
 #pragma once
 
-#include "haptic/HapticDriver_DRV2605.hpp"
-#include "haptic/HapticDriver_AW86224.hpp"
+#include "SensorBuildOpt.h"
 
+#if !SENSORLIB_EXCLUDE_HAPTIC_DRV2605
+#include "haptic/HapticDriver_DRV2605.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_HAPTIC_AW86224
+#include "haptic/HapticDriver_AW86224.hpp"
+#endif

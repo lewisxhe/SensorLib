@@ -29,5 +29,12 @@
  */
 #pragma once
 
+#include "SensorBuildOpt.h"
+
+#if !SENSORLIB_EXCLUDE_TOUCH_GT911
 #include "touch/TouchDrvGT911.hpp"
+#endif
+
+#if !SENSORLIB_EXCLUDE_TOUCH_GT9895
 #include "touch/TouchDrvGT9895.hpp"
+#endif

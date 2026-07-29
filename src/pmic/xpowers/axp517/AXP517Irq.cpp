@@ -27,6 +27,9 @@
  * @date      2026-03-12
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP517
+
 #include "AXP517Irq.hpp"
 #include "AXP517Regs.hpp"
 #include "AXP517TcpcRegs.hpp"
@@ -140,3 +143,5 @@ bool AXP517Irq::clearStatus()
     }
     return true;
 }
+
+#endif

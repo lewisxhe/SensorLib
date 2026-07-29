@@ -29,4 +29,8 @@
  */
 #pragma once
 
+#include "SensorBuildOpt.h"
+
+#if !SENSORLIB_EXCLUDE_PMIC_BQ25896
 #include "pmic/ti/bq25896/PmicBQ25896.hpp"
+#endif

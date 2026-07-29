@@ -28,6 +28,9 @@
  */
 #pragma once
 
+#include "../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_GAUGE_BQ27220
+
 #include "platform/comm/I2CDeviceWithHal.hpp"
 #include "../GaugeBase.hpp"
 
@@ -1383,3 +1386,5 @@ protected:
     static constexpr uint16_t BQ27220_ROM_OPERATION_CONFIG_B             = (0x9208);
 };
 
+
+#endif

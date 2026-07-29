@@ -27,6 +27,9 @@
  * @date      2023-04-24
  *
  */
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_CSTXXX
+
 #include "TouchDrvCSTXXX.hpp"
 
 TouchDrvCSTXXX::DriverCreator TouchDrvCSTXXX::driverCreators[TouchDrvCSTXXX::driverCreatorMaxNum] = {
@@ -193,3 +196,5 @@ void TouchDrvCSTXXX::setMaxCoordinates(uint16_t x, uint16_t y)
     if (!_drv)return ;
     _drv->setMaxCoordinates(x, y);
 }
+
+#endif

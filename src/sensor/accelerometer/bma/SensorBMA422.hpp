@@ -30,6 +30,9 @@
  */
 #pragma once
 
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BMA422
+
 #include "SensorBMA4XX.hpp"
 #include "../../../bosch/bma4xx/bma422_an.h"
 
@@ -557,3 +560,5 @@ protected:
     EventCallbacks callbacks;
     uint16_t _status;
 };
+
+#endif

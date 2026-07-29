@@ -29,6 +29,9 @@
  *            Simplification for Arduino
  */
 #pragma once
+
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI260
 #include "../../../bosch/BoschSensorBase.hpp"
 
 // The BHI260 I2C address can be either 0x28 or 0x29, depending on the state of the HSDO pin.
@@ -117,3 +120,5 @@ protected:
      */
     uint16_t getConfirmationIDImpl() override;
 };
+
+#endif

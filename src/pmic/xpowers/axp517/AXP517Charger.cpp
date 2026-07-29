@@ -27,6 +27,9 @@
  * @date      2026-03-12
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP517
+
 #include "AXP517Charger.hpp"
 #include "AXP517Regs.hpp"
 
@@ -177,3 +180,5 @@ uint16_t AXP517Charger::getCurrentWithStep(uint8_t reg, uint16_t step, uint8_t m
     }
     return (regValue & mask) * step;
 }
+
+#endif

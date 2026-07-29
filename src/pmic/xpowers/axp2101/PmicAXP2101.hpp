@@ -30,6 +30,9 @@
  */
 #pragma once
 
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP2101
+
 #include "../../PmicBase.hpp"
 #include "../../PmicAdcBase.hpp"
 #include "../../PmicIrqBase.hpp"
@@ -436,3 +439,5 @@ private:
     AXP2101Watchdog _watchdog;
     AXP2101Channel _channel;
 };
+
+#endif

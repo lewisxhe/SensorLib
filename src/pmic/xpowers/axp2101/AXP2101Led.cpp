@@ -28,6 +28,9 @@
  * @brief     AXP2101 Charging LED Control
  *
  */
+#include "../../../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_PMIC_AXP2101
+
 #include "AXP2101Led.hpp"
 #include "AXP2101Regs.hpp"
 
@@ -106,3 +109,5 @@ AXP2101Led::ManualState AXP2101Led::getManualState()
     default:   return ManualState::UNDEFINED;
     }
 }
+
+#endif

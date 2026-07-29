@@ -27,6 +27,9 @@
  * @date      2025-01-30
  *
  */
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_BHI_COMMON
+
 #include "BoschParseStatic.hpp"
 
 void BoschParseStatic::parseData(const struct bhy2_fifo_parse_data_info *fifo, void *user_data)
@@ -52,3 +55,5 @@ void BoschParseStatic::parseDebugMessage(const struct bhy2_fifo_parse_data_info 
         sensor->parseDebugMessage(callback_info, user_data);
     }
 }
+
+#endif

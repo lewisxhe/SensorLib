@@ -29,6 +29,9 @@
 
 #pragma once
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_IO_EXPANDER_PCA9570
+
 #include "platform/comm/I2CDeviceNoHal.hpp"
 #include "IoExpanderBase.hpp"
 
@@ -248,3 +251,5 @@ private:
     static constexpr uint8_t PCA9570_SOFT_RESET_CMD    = 0x06;   ///< Software reset command (see datasheet §7.2.1)
     static constexpr uint8_t PCA9570_PINS_COUNT        = 4;      ///< Number of GPIO pins on the chip
 };
+
+#endif

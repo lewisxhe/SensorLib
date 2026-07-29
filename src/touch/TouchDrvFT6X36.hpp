@@ -29,6 +29,9 @@
  */
 #pragma once
 
+#include "../SensorBuildOpt.h"
+#if !SENSORLIB_EXCLUDE_TOUCH_FT6X36
+
 #include "TouchDrvInterface.hpp"
 
 static constexpr uint8_t FT3267_SLAVE_ADDRESS = (0x38);
@@ -236,3 +239,5 @@ private:
     static constexpr uint8_t FT6X36_REG_VENDOR1_ID       = (0xA8);
     static constexpr uint8_t FT6X36_REG_ERROR_STATUS     = (0xA9);
 };
+
+#endif

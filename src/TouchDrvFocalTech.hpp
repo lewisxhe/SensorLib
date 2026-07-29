@@ -29,4 +29,8 @@
  */
 #pragma once
 
+#include "SensorBuildOpt.h"
+
+#if !SENSORLIB_EXCLUDE_TOUCH_FT6X36
 #include "touch/TouchDrvFT6X36.hpp"
+#endif
