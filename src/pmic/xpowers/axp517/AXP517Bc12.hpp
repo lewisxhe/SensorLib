@@ -26,6 +26,7 @@
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2026-03-12
  *
+ * @brief     BC1.2 charger-type detection interface for AXP517.
  */
 #pragma once
 
@@ -42,35 +43,47 @@
 class AXP517Bc12 : public PmicBc12Base
 {
 public:
+    /**
+     * @brief Construct an AXP517 BC1.2 driver.
+     * @param core Shared AXP517 register transport.
+     */
     explicit AXP517Bc12(AXP517Core &core);
     /**
      * @brief  Enable or disable automatic BC1.2 detection.
      * @note   This function controls the automatic detection feature of the BC1.2 module.
      * @param  enable: true to enable, false to disable.
-     * @retval true if the operation is successful, false otherwise.
+     * @retval true on success, false on register access failure.
      */
     bool enableAutoDetect(bool enable) override;
+
     /**
      * @brief  Trigger a BC1.2 detection cycle.
      * @note   This function forces the PMIC to perform a BC1.2 detection cycle immediately.
-     * @retval true if the operation is successful, false otherwise.
+     * @retval true on success, false on register access failure.
      */
     bool triggerDetect() override;
+
     /**
      * @brief  Check if BC1.2 detection is currently in progress.
      * @note   This function checks the PMIC status to determine if a BC1.2 detection cycle is currently active.
      * @retval true if detection is in progress, false otherwise.
      */
     bool isDetecting() override;
+
     /**
      * @brief  Read the current BC1.2 detection result.
      * @note   This function retrieves the result of the most recent BC1.2 detection cycle, including the detected port type and raw code.
-     * @retval A Result struct containing the detection status, port type, and raw code.
+     * @return Result containing detection status, port type, and raw code.
      */
     Result readResult() override;
 
 private:
-    // Helper function to map raw PMIC code to common PortType enum
+    /**
+     * @brief Convert a raw AXP517 BC1.2 result code to the common port type.
+     * @param code Raw PMIC BC1.2 result code.
+     * @return Common BC1.2 port type.
+     */
     static PortType mapResult(uint8_t code);
-    AXP517Core &_core;
+
+    AXP517Core &_core; ///< Shared AXP517 register transport.
 };

@@ -26,81 +26,89 @@
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2026-03-12
  *
+ * @brief     Power-path, boost, and ship-mode control interface for AXP517.
  */
 #pragma once
 
 #include "AXP517Core.hpp"
 #include "../../PmicPowerBase.hpp"
 
+/**
+ * @brief AXP517 power-path driver.
+ *
+ * Provides input current/voltage limits, minimum system voltage, boost output,
+ * ship mode, and reverse-blocking FET controls.
+ */
 class AXP517Power : public PmicPowerBase
 {
 public:
+    /**
+     * @brief Construct an AXP517 power-path driver.
+     * @param core Shared AXP517 register transport.
+     */
     AXP517Power(AXP517Core &core);
 
     ~AXP517Power() = default;
 
     /**
-    * @brief  Set the minimum system voltage.
-    * @note   This function sets the minimum voltage required for the system to operate.
-    * @param  mv: Minimum voltage in millivolts.
-    *         Range: 1000mV ~ 3800mV, steps: 100mV
-    * @retval True if the operation was successful, false otherwise.
-    */
+     * @brief  Set the minimum system voltage.
+     * @note   This function sets the minimum voltage required for the system to operate.
+     * @param  mv Minimum voltage in millivolts, range 1000-3800mV, steps 100mV.
+     * @retval true on success, false on register access failure.
+     */
     bool setMinimumSystemVoltage(uint32_t mv) override;
 
     /**
-    * @brief  Get the minimum system voltage.
-    * @note   This function retrieves the minimum voltage required for the system to operate.
-    * @retval Minimum voltage in millivolts.
-    */
+     * @brief  Get the minimum system voltage.
+     * @note   This function retrieves the minimum voltage required for the system to operate.
+     * @return Minimum system voltage in millivolts.
+     */
     uint32_t getMinimumSystemVoltage() const override;
 
     /**
-    * @brief Set the input voltage limit.
-    * @param mv Voltage limit in millivolts.
-    *        Range: 3600mV ~ 16200mV, steps:100mV
-    * @return True on success, false on failure.
-    */
+     * @brief Set the input voltage limit.
+     * @param mv Voltage limit in millivolts, range 3600-16200mV, steps 100mV.
+     * @retval true on success, false on register access failure.
+     */
     bool setInputVoltageLimit(uint32_t mv) override;
 
     /**
-    * @brief Get the input voltage limit.
-    * @return Input voltage limit in millivolts.
-    */
+     * @brief Get the input voltage limit.
+     * @return Input voltage limit in millivolts.
+     */
     uint32_t getInputVoltageLimit() const override;
 
     /**
-    * @brief Set the input current limit.
-    * @param mA Current limit in milliamperes.
-    *        Range: 100mA ~ 3250mA, steps:50mA
-    * @return True on success, false on failure.
-    */
+     * @brief Set the input current limit.
+     * @param mA Current limit in milliamps, range 100-3250mA, steps 50mA.
+     * @retval true on success, false on register access failure.
+     */
     bool setInputCurrentLimit(uint32_t mA) override;
 
     /**
-    * @brief Get the input current limit.
-    * @return Input current limit in milliamperes.
-    */
+     * @brief Get the input current limit.
+     * @return Input current limit in milliamps.
+     */
     uint32_t getInputCurrentLimit() const override;
 
     /**
-    * @brief Enable boost functionality.
-    * @param enable True to enable, false to disable.
-    * @return True on success, false on failure.
-    */
+     * @brief Enable boost functionality.
+     * @param enable true to enable, false to disable.
+     * @retval true on success, false on register access failure.
+     */
     bool enableBoost(bool enable) override;
 
     /**
      * @brief Check if boost functionality is enabled.
-     * @return True if boost is enabled, false otherwise.
+     * @retval true if boost is enabled, false otherwise.
      */
     bool isBoostEnabled() const override;
 
     /**
-    * @brief Set the boost voltage.
-    * @param mv Boost voltage in millivolts.
-    * @return True on success, false on failure.
-    */
+     * @brief Set the boost voltage.
+     * @param mv Boost voltage in millivolts.
+     * @retval true on success, false on register access failure.
+     */
     bool setBoostVoltage(uint16_t mv) override;
 
     /**
@@ -111,30 +119,30 @@ public:
 
     /**
      * @brief Enter ship mode.
-     * @param enable: True to enter ship mode, false to exit.
-     * @retval True on success, false on failure.
+     * @param enable true to enter ship mode, false to exit.
+     * @retval true on success, false on register access failure.
      */
     bool enableShipMode(bool enable) override;
 
     /**
      * @brief Check if ship mode is enabled.
-     * @retval True if ship mode is enabled, false otherwise.
+     * @retval true if ship mode is enabled, false otherwise.
      */
     bool isShipModeEnabled() const override;
 
     /**
      * @brief Enable or disable the RBFET.
-     * @param enable: True to enable, false to disable.
-     * @retval True on success, false on failure.
+     * @param enable true to enable, false to disable.
+     * @retval true on success, false on register access failure.
      */
     bool enableRBFET(bool enable) const;
 
     /**
      * @brief Check if RBFET is enabled.
-     * @retval True if RBFET is enabled, false otherwise.
+     * @retval true if RBFET is enabled, false otherwise.
      */
     bool isRBFETEnabled() const;
 
 private:
-    AXP517Core &_core;
+    AXP517Core &_core; ///< Shared AXP517 register transport.
 };

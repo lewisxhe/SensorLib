@@ -26,6 +26,7 @@
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2026-03-12
  *
+ * @brief     Register map definitions for AXP517 PMIC functions.
  */
 #pragma once
 #include <stdint.h>
@@ -35,14 +36,14 @@
  *
  * Rules:
  *  - Only put PMIC/charger/ADC/IRQ/LED/BC1.2/JEITA/TS registers here.
- *  - Do NOT put TCPC / Type-C / PD (0xA6+) regs here to avoid conflicts.
+ *  - Do not put TCPC / Type-C / PD (0xA6+) registers here to avoid conflicts.
  *  - Keep addresses grouped by feature.
  *
- * TCPC/PD regs are in AXP517TcpcRegs.hpp.
+ * TCPC/PD registers are defined in AXP517TcpcRegs.hpp.
  */
 struct axp517_regs {
 
-// -------------------- BMU / Status / Fault --------------------
+/** @brief BMU status, data buffer, fault, and module-enable registers. */
 struct bmu
 {
 static constexpr uint8_t STATUS0        = 0x00; ///< BMU status0
@@ -56,7 +57,7 @@ static constexpr uint8_t DATA_BUFFER1   = 0x0C; ///< Data Buffer1
 static constexpr uint8_t DATA_BUFFER2   = 0x0D; ///< Data Buffer2
 };
 
-// -------------------- Common / Control / Power Path --------------------
+/** @brief Common control and power-path configuration registers. */
 struct ctrl
 {
 static constexpr uint8_t COMMON_CFG         = 0x10; ///< Common configure
@@ -77,7 +78,7 @@ static constexpr uint8_t BOOST_CFG          = 0x1E; ///< Boost configure
 static constexpr uint8_t MPPT_CFG           = 0x22; ///< MPPT configure
 };
 
-// -------------------- BC1.2 --------------------
+/** @brief BC1.2 charger-detection registers. */
 struct bc12
 {
 static constexpr uint8_t CTRL0 = 0x28; ///< BC1.2 control0
@@ -86,7 +87,7 @@ static constexpr uint8_t CTRL2 = 0x2A; ///< BC1.2 control2
 static constexpr uint8_t CTRL3 = 0x2B; ///< BC1.2 control3
 };
 
-// -------------------- LED / Breath --------------------
+/** @brief Charge LED and breathing LED control registers. */
 struct led
 {
 static constexpr uint8_t CHGLED_CFG   = 0x30; ///< CHGLED configure
@@ -98,7 +99,7 @@ static constexpr uint8_t BREATH_NMIN  = 0x37; ///< Breath LED control4 (NMIN)
 static constexpr uint8_t BREATH_M     = 0x38; ///< Breath LED control5 (M)
 };
 
-// -------------------- IRQ --------------------
+/** @brief PMIC interrupt enable and status registers. */
 struct irq
 {
 static constexpr uint8_t ENABLE0 = 0x40; ///< IRQ Enable 0
@@ -111,7 +112,7 @@ static constexpr uint8_t STATUS2 = 0x4A; ///< IRQ Status 2
 static constexpr uint8_t STATUS3 = 0x4B; ///< IRQ Status 3
 };
 
-// -------------------- TS / JEITA --------------------
+/** @brief TS pin and temperature-sense registers. */
 struct ts
 {
 static constexpr uint8_t PIN_CFG     = 0x50; ///< TS pin configure
@@ -122,6 +123,7 @@ static constexpr uint8_t DATA_CFG1   = 0x5D; ///< TS data configure 1
 static constexpr uint8_t SOURCE_SEL  = 0x82; ///< TS source select
 };
 
+/** @brief JEITA temperature-threshold and standard charge-profile registers. */
 struct jeita
 {
 static constexpr uint8_t VLTF_CHG        = 0x54; ///< VLTF_CHG setting
@@ -134,7 +136,7 @@ static constexpr uint8_t STD_SETTING1    = 0x5A; ///< JEITA standard setting 1
 static constexpr uint8_t STD_SETTING2    = 0x5B; ///< JEITA standard setting 2
 };
 
-// -------------------- Charger parameters --------------------
+/** @brief Battery charger parameter registers. */
 struct chg
 {
 static constexpr uint8_t IPRECHG_ITRICHG    = 0x61; ///< Iprechg/Itrichg setting
@@ -146,7 +148,7 @@ static constexpr uint8_t CHG_TIMER_CFG      = 0x67; ///< Charger timer configure
 static constexpr uint8_t BAT_DETECT_CTRL    = 0x68; ///< Battery detection control
 };
 
-// -------------------- Battery/Gauge basic --------------------
+/** @brief Basic battery gauge status registers. */
 struct gauge
 {
 static constexpr uint8_t BAT_PARAM       = 0x70; ///< Battery parameter
@@ -156,7 +158,7 @@ static constexpr uint8_t BAT_SOH         = 0x73; ///< Battery SOH (RO)
 static constexpr uint8_t BAT_PERCENT     = 0x74; ///< Battery percentage (RO)
 };
 
-// -------------------- ADC measurement results --------------------
+/** @brief ADC channel control and measurement result registers. */
 struct adc
 {
 static constexpr uint8_t ENABLE          = 0x90; ///< ADC channel enable control
@@ -175,6 +177,7 @@ static constexpr uint8_t DATA_H          = 0x9C; ///< ADC data high
 static constexpr uint8_t DATA_L          = 0x9D; ///< ADC data low
 };
 
+/** @brief Factory conversion scales for raw ADC measurements. */
 struct factory
 {
 static constexpr float FACTORY_TS = 0.5f;                  ///< 14-Bit(including sign bit)

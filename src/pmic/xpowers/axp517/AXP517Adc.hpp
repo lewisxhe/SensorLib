@@ -26,56 +26,81 @@
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2026-03-12
  *
+ * @brief     ADC channel control and measurement interface for AXP517.
  */
 #pragma once
 
 #include "../../PmicAdcBase.hpp"
 #include "AXP517Core.hpp"
 
+/**
+ * @brief AXP517 ADC driver.
+ *
+ * Provides PMIC ADC channel enable/disable control and converts raw AXP517 ADC
+ * readings into millivolts, milliamps, or degrees Celsius according to the
+ * selected PmicAdcBase::Channel.
+ */
 class AXP517Adc : public PmicAdcBase
 {
 public:
-    // Hardware bitmask constants (for direct register control)
+    /** @brief Hardware ADC enable bit for VBUS current. */
     static constexpr uint8_t ADC_VBUS_CURRENT_HW   = 0x80;
+
+    /** @brief Hardware ADC enable bit for battery discharge current. */
     static constexpr uint8_t ADC_BAT_DISCHARGE_HW  = 0x40;
+
+    /** @brief Hardware ADC enable bit for battery charge current. */
     static constexpr uint8_t ADC_BAT_CHARGE_HW     = 0x20;
+
+    /** @brief Hardware ADC enable bit for die temperature. */
     static constexpr uint8_t ADC_DIE_TEMP_HW       = 0x10;
+
+    /** @brief Hardware ADC enable bit for system voltage. */
     static constexpr uint8_t ADC_SYSTEM_VOLTAGE_HW = 0x08;
+
+    /** @brief Hardware ADC enable bit for VBUS voltage. */
     static constexpr uint8_t ADC_VBUS_VOLTAGE_HW   = 0x04;
+
+    /** @brief Hardware ADC enable bit for TS pin voltage. */
     static constexpr uint8_t ADC_TS_PIN_HW         = 0x02;
+
+    /** @brief Hardware ADC enable bit for battery voltage. */
     static constexpr uint8_t ADC_BAT_VOLTAGE_HW    = 0x01;
 
+    /**
+     * @brief Construct an AXP517 ADC driver.
+     * @param core Shared AXP517 register transport.
+     */
     explicit AXP517Adc(AXP517Core &core);
 
     ~AXP517Adc() = default;
 
-    /**
-     * @brief  Enable one or more ADC channels
-     * @param  mask: Bitwise OR of Channel values to enable.
-     * @retval True if successful, false otherwise.
-     */
-
     using PmicAdcBase::enableChannels;
     using PmicAdcBase::disableChannels;
 
+    /**
+     * @brief  Enable one or more ADC channels.
+     * @param  mask: Bitwise OR of Channel values to enable.
+     * @retval true on success, false on register access failure.
+     */
     bool enableChannels(uint32_t mask) override;
 
     /**
-     * @brief  Disable one or more ADC channels
+     * @brief  Disable one or more ADC channels.
      * @param  mask: Bitwise OR of Channel values to disable.
-     * @retval True if successful, false otherwise.
+     * @retval true on success, false on register access failure.
      */
     bool disableChannels(uint32_t mask) override;
 
     /**
-     * @brief  Read ADC channel
+     * @brief  Read an ADC channel.
      * @note   This function reads the specified ADC channel.
      * @param  ch: The ADC channel to read.
-     * @param  &out: The output value read from the ADC channel.
-     * @retval True if successful, false otherwise.
+     * @param  out: Receives the converted ADC value.
+     * @retval true on success, false on invalid channel or register access failure.
      */
     bool read(Channel ch, float &out) override;
 
 private:
-    AXP517Core &_core;
+    AXP517Core &_core; ///< Shared AXP517 register transport.
 };

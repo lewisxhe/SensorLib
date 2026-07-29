@@ -90,15 +90,21 @@ bool AXP517Irq::disable(uint64_t mask)
 uint64_t AXP517Irq::readStatus(bool clear)
 {
     uint8_t buffer[4];
-    uint8_t pd_buffer[1];
-    _core.readRegBuff(axp517::tcpc::PD_ALERTH, pd_buffer, sizeof(pd_buffer));
+    int pdAlertL = _core.readReg(axp517::tcpc::PD_ALERTL);
+    int pdAlertH = _core.readReg(axp517::tcpc::PD_ALERTH);
+    if (pdAlertL < 0 || pdAlertH < 0) {
+        SENSORLIB_LOG_E("Failed to read PD alert registers");
+        return 0;
+    }
 
     if (_core.readRegBuff(axp517_regs::irq::STATUS0, buffer, sizeof(buffer)) < 0) {
         SENSORLIB_LOG_E("Failed to read IRQ status registers");
         return 0;
     }
 
-    uint64_t mask = (static_cast<uint64_t>(pd_buffer[0]) << 32) |
+    uint16_t pdAlert = static_cast<uint16_t>(pdAlertL) |
+                       (static_cast<uint16_t>(pdAlertH) << 8);
+    uint64_t mask = (static_cast<uint64_t>(pdAlert) << 32) |
                     (static_cast<uint64_t>(buffer[0]) << 24) |
                     (static_cast<uint64_t>(buffer[1]) << 16) |
                     (static_cast<uint64_t>(buffer[2]) << 8) |
@@ -113,7 +119,21 @@ uint64_t AXP517Irq::readStatus(bool clear)
 bool AXP517Irq::clearStatus()
 {
     uint8_t buffer[4] = {0xFF, 0xFF, 0xFF, 0xFF};
-    _core.writeReg(axp517::tcpc::PD_ALERTL, 0xFF);
+    int fault = _core.readReg(axp517::tcpc::FAULT_STATUS);
+    if (fault < 0) {
+        SENSORLIB_LOG_E("Failed to read PD fault status register");
+        return false;
+    }
+    uint8_t faultStatus = static_cast<uint8_t>(fault);
+    if (faultStatus && _core.writeReg(axp517::tcpc::FAULT_STATUS, faultStatus) < 0) {
+        SENSORLIB_LOG_E("Failed to clear PD fault status register");
+        return false;
+    }
+    if (_core.writeReg(axp517::tcpc::PD_ALERTL, 0xFF) < 0 ||
+            _core.writeReg(axp517::tcpc::PD_ALERTH, 0xFF) < 0) {
+        SENSORLIB_LOG_E("Failed to clear PD alert registers");
+        return false;
+    }
     if (_core.writeRegBuff(axp517_regs::irq::STATUS0, buffer, sizeof(buffer)) < 0) {
         SENSORLIB_LOG_E("Failed to clear IRQ status registers");
         return false;

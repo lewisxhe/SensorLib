@@ -26,36 +26,48 @@
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2026-03-12
  *
+ * @brief     Core register transport and module control for AXP517.
  */
 #pragma once
 
 #include "../../../platform/comm/I2CDeviceWithHal.hpp"
 
+/**
+ * @brief AXP517 low-level core driver.
+ *
+ * This class owns the shared I2C/HAL transport, performs chip and TCPC vendor
+ * identification during initialization, and exposes common module enable
+ * controls used by the feature-specific AXP517 drivers.
+ */
 class AXP517Core : public I2CDeviceWithHal
 {
 public:
+    /**
+     * @brief Construct an uninitialized AXP517 core object.
+     */
     AXP517Core() = default;
 
     ~AXP517Core() = default;
 
+    /**
+     * @brief Functional module switches exposed by AXP517.
+     */
     enum class Module : uint8_t {
 
-        // Module enable control0
+        /** Module enable control 0 (REG 0BH). */
         BC12,                 ///< REG 0BH bit 4 BC1.2
         TYPEC,                ///< REG 0BH bit 3 Type-C
         GAUGE,                ///< REG 0BH bit 2 Fuel gauge
-        // RESERVED,          ///< REG 0BH bit 1 Reserved
         WATCHDOG,             ///< REG 0BH bit 0 Watchdog CLK and REG 19H bit 0 Watchdog Module enable
 
-        // Module enable control1
+        /** Module enable control 1 (REG 19H). */
         GAUGE_LOW_POWER,      ///< REG 19H bit 6 Low power mode
-        // RESERVED,          ///< REG 19H bit 5 Reserved
         BOOST,                ///< REG 19H bit 4 Boost converter
         BUCK,                 ///< REG 19H bit 3 Buck converter
         CHGLED,               ///< REG 19H bit 2 Charge LED
         CHARGE,               ///< REG 19H bit 1 Charger
 
-        MPPT,                  ///< REG 2H bit 0 MPPT configure
+        MPPT,                 ///< REG 22H bit 0 MPPT configure
     };
 
     /**
@@ -63,8 +75,8 @@ public:
      * @note   The master switch for each functional module (e.g. boost, buck, charger,
      *         LED, BC1.2, TCPC, gauge, watchdog, etc.).
      * @param  module: The module to enable/disable.
-     * @param  enable: True to enable, false to disable.
-     * @retval True on success, false on failure.
+     * @param  enable: true to enable, false to disable.
+     * @retval true on success, false on register access failure.
      */
     bool enableModule(Module module, bool enable);
 
@@ -72,9 +84,51 @@ public:
      * @brief  Check if a module is enabled.
      * @note   This function checks the status of a specific functional module.
      * @param  module: The module to check.
-     * @retval True if the module is enabled, false otherwise.
+     * @retval true if the module is enabled, false otherwise.
      */
     bool isModuleEnabled(Module module);
+
+    /**
+     * @brief Return the current platform millisecond counter.
+     * @return Milliseconds from the active HAL, or 0 when no HAL is attached.
+     */
+    uint32_t millis()
+    {
+        return hal ? hal->millis() : 0;
+    }
+
+    /**
+     * @brief Delay using the active platform HAL.
+     * @param ms Delay duration in milliseconds.
+     */
+    void delayMs(uint32_t ms)
+    {
+        if (hal) {
+            hal->delay(ms);
+        }
+    }
+
+    /**
+     * @brief Configure a platform GPIO pin through the active HAL.
+     * @param pin Platform GPIO number.
+     * @param mode Platform-specific pin mode value.
+     */
+    void pinMode(uint8_t pin, uint8_t mode)
+    {
+        if (hal) {
+            hal->pinMode(pin, mode);
+        }
+    }
+
+    /**
+     * @brief Read a platform GPIO pin through the active HAL.
+     * @param pin Platform GPIO number.
+     * @return Pin logic level, or 1 if no HAL is attached.
+     */
+    uint8_t digitalRead(uint8_t pin)
+    {
+        return hal ? hal->digitalRead(pin) : 1;
+    }
 
 private:
     /**

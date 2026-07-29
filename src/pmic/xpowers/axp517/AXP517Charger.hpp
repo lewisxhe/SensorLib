@@ -26,81 +26,99 @@
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2026-03-12
  *
+ * @brief     Battery charger configuration and status interface for AXP517.
  */
 #pragma once
 
 #include "../../PmicChargerBase.hpp"
 #include "AXP517Core.hpp"
 
+/**
+ * @brief AXP517 battery charger driver.
+ *
+ * Provides charge enable, charge-current configuration, charge-voltage
+ * configuration, termination-current configuration, and coarse charger status.
+ */
 class AXP517Charger : public PmicChargerBase
 {
 public:
+    /**
+     * @brief Construct an AXP517 charger driver.
+     * @param core Shared AXP517 register transport.
+     */
     explicit AXP517Charger(AXP517Core &core);
 
     ~AXP517Charger() = default;
 
     /**
-    * @brief Enable/disable charging.
-    */
+     * @brief Enable or disable charging.
+     * @param enable true to enable charging, false to disable it.
+     * @retval true on success, false on register access failure.
+     */
     bool enableCharging(bool enable) override;
 
     /**
      * @brief Check whether charger is currently charging (best-effort).
-     * @return true if charging, false otherwise.
+     * @retval true if charging, false otherwise.
      */
     bool isCharging() override;
 
     /**
      * @brief Set pre-charge current.
      * @param mA Desired current in milliamps, range 0-960mA, steps 64mA.
-     * @return true on success, false on failure.
+     * @retval true on success, false on register access failure.
      */
     bool setPreChargeCurrent(uint16_t mA) override;
 
     /**
      * @brief Get pre-charge current.
+     * @return Pre-charge current in milliamps, or 0 on register access failure.
      */
     uint16_t getPreChargeCurrent() override;
 
     /**
      * @brief Set fast charge (constant-current) current.
      * @param mA Desired current in milliamps, range 0-5120mA, steps 64mA.
-     * @return true on success, false on failure.
+     * @retval true on success, false on register access failure.
      */
     bool setFastChargeCurrent(uint16_t mA) override;
 
     /**
      * @brief Get fast charge (constant-current) current.
+     * @return Fast charge current in milliamps, or 0 on register access failure.
      */
     uint16_t getFastChargeCurrent() override;
 
     /**
      * @brief Set termination current.
      * @param mA Desired current in milliamps, range 0-960mA, steps 64mA.
-     * @return true on success, false on failure.
+     * @retval true on success, false on register access failure.
      */
     bool setTerminationCurrent(uint16_t mA) override;
 
     /**
      * @brief Get termination current.
+     * @return Termination current in milliamps, or 0 on register access failure.
      */
     uint16_t getTerminationCurrent() override;
 
     /**
      * @brief Set charge voltage (CV).
      * @param mV Desired voltage in millivolts, range 3600-5000mV.
-     * [mV]:3600,3800,4000,4100,4200,4350,4400,5000
-     * @return true on success, false on failure.
+     *           Allowed values: 3600, 3800, 4000, 4100, 4200, 4350, 4400, 5000.
+     * @retval true on success, false on register access failure.
      */
     bool setChargeVoltage(uint16_t mV) override;
 
     /**
      * @brief Get charge voltage (CV).
+     * @return Charge voltage in millivolts, or 0 on register access failure.
      */
     uint16_t getChargeVoltage() override;
 
     /**
      * @brief Get current charger status (best-effort).
+     * @return Charger status mapped to the common PMIC status enum.
      */
     Status getStatus() override;
 
@@ -113,10 +131,11 @@ private:
      * @param max Maximum allowed current in milliamps.
      * @param step Step size for adjusting current.
      * @param mask Bitmask for the relevant bits in the register.
-     * @return true on success, false on failure.
+     * @retval true on success, false on register access failure.
      */
     bool setCurrentWithStep(uint8_t reg, uint16_t milliamps,
                             uint16_t max, uint16_t step, uint8_t mask);
+
     /**
      * @brief Get current with step.
      * @param reg Register to read.
@@ -126,5 +145,5 @@ private:
      */
     uint16_t getCurrentWithStep(uint8_t reg, uint16_t step, uint8_t mask);
 
-    AXP517Core &_core;
+    AXP517Core &_core; ///< Shared AXP517 register transport.
 };

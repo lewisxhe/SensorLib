@@ -26,77 +26,84 @@
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2026-03-12
  *
+ * @brief     PWRON button timing control for AXP517.
  */
 #pragma once
+
 #include "AXP517Core.hpp"
 #include "../../PmicButtonBase.hpp"
 
+/**
+ * @brief AXP517 PWRON button configuration driver.
+ *
+ * Provides debounce and interrupt timing controls for the PMIC PWRON input.
+ */
 class AXP517Pwron : public PmicButtonBase
 {
 public:
     /**
-     * @brief  Construct an AXP517Pwron instance
-     * @param  core: Reference to the AXP517Core communication object
+     * @brief Construct an AXP517 PWRON button driver.
+     * @param core Shared AXP517 register transport.
      */
     explicit AXP517Pwron(AXP517Core &core);
 
     /**
-     * @brief  Set the power-on debounce duration
+     * @brief  Set the power-on debounce duration.
      * @note   Allowed values: 128ms, 512ms, 1000ms, 2000ms.
      *         Input is rounded up to the nearest allowed value.
-     * @param  ms: Desired on-level duration in milliseconds
-     * @retval True on success, false on I2C failure
+     * @param  ms Desired on-level duration in milliseconds.
+     * @retval true on success, false on register access failure.
      */
     bool setOnDurationMs(uint16_t ms) override;
 
     /**
-     * @brief  Get the current power-on debounce duration
-     * @param  ms: Output parameter receiving the on-level in milliseconds
-     * @retval True on success, false on I2C failure
+     * @brief  Get the current power-on debounce duration.
+     * @param  ms Output parameter receiving the on-level duration in milliseconds.
+     * @retval true on success, false on register access failure.
      */
     bool getOnDurationMs(uint16_t &ms) const override;
 
     /**
-     * @brief  Set the power-off debounce duration
+     * @brief  Set the power-off debounce duration.
      * @note   Allowed values: 4000ms, 6000ms, 8000ms, 10000ms.
      *         Input is rounded up to the nearest allowed value.
-     * @param  ms: Desired off-level duration in milliseconds
-     * @retval True on success, false on I2C failure
+     * @param  ms Desired off-level duration in milliseconds.
+     * @retval true on success, false on register access failure.
      */
     bool setOffDurationMs(uint16_t ms) override;
 
     /**
-     * @brief  Get the current power-off debounce duration
-     * @param  ms: Output parameter receiving the off-level in milliseconds
-     * @retval True on success, false on I2C failure
+     * @brief  Get the current power-off debounce duration.
+     * @param  ms Output parameter receiving the off-level duration in milliseconds.
+     * @retval true on success, false on register access failure.
      */
     bool getOffDurationMs(uint16_t &ms) const override;
 
     /**
-     * @brief  Set the button IRQ trigger duration
+     * @brief  Set the button IRQ trigger duration.
      * @note   Allowed values: 1000ms, 1500ms, 2000ms, 2500ms.
      *         Input is rounded up to the nearest allowed value.
-     * @param  ms: Desired IRQ-level duration in milliseconds
-     * @retval True on success, false on I2C failure
+     * @param  ms Desired IRQ-level duration in milliseconds.
+     * @retval true on success, false on register access failure.
      */
     bool setIrqDurationMs(uint16_t ms) override;
 
     /**
-     * @brief  Get the current button IRQ trigger duration
-     * @param  ms: Output parameter receiving the IRQ-level in milliseconds
-     * @retval True on success, false on I2C failure
+     * @brief  Get the current button IRQ trigger duration.
+     * @param  ms Output parameter receiving the IRQ-level duration in milliseconds.
+     * @retval true on success, false on register access failure.
      */
     bool getIrqDurationMs(uint16_t &ms) const override;
 
 private:
     /**
-     * @brief  Read-modify-write a subset of bits in REG 0x1C
-     * @param  mask: Bitmask of bits to modify
-     * @param  value: Pre-shifted value to write (only bits in mask are used)
-     * @retval True on success, false on I2C failure
+     * @brief  Read-modify-write a subset of bits in REG 0x1C.
+     * @param  mask Bitmask of bits to modify.
+     * @param  value Pre-shifted value to write; only bits in mask are used.
+     * @retval true on success, false on register access failure.
      */
     bool updateBits(uint8_t mask, uint8_t value);
 
 private:
-    AXP517Core &_core;
+    AXP517Core &_core; ///< Shared AXP517 register transport.
 };

@@ -26,13 +26,26 @@
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2026-03-12
  *
+ * @brief     Charge LED control interface for AXP517.
  */
+#pragma once
+
 #include "../../PmicLedBase.hpp"
 #include "AXP517Core.hpp"
 
+/**
+ * @brief AXP517 charge LED driver.
+ *
+ * Controls the AXP517 charge LED output type, automatic/manual mode, and manual
+ * output state.
+ */
 class AXP517Led : public PmicLedBase
 {
 public:
+    /**
+     * @brief Construct an AXP517 LED driver.
+     * @param core Shared AXP517 register transport.
+     */
     explicit AXP517Led(AXP517Core &core);
 
     ~AXP517Led() = default;
@@ -41,7 +54,7 @@ public:
      * @brief  Set the LED output type.
      * @note   This function sets the output type for the LED.
      * @param  type: The output type to set.
-     * @retval True if successful, false otherwise.
+     * @retval true on success, false on register access failure.
      */
     bool setOutputType(OutputType type) override;
 
@@ -49,32 +62,32 @@ public:
      * @brief  Set the LED mode.
      * @note   This function sets the mode for the LED.
      * @param  mode: The mode to set.
-     * @retval True if successful, false otherwise.
+     * @retval true on success, false on register access failure.
      */
     bool setMode(Mode mode) override;
 
     /**
-    * @brief  Get LED operating mode.
-    * @note   This retrieves the current LED behavior (e.g. auto/manual).
-    * @retval Current operating mode.
-    */
+     * @brief  Get LED operating mode.
+     * @note   This retrieves the current LED behavior (e.g. auto/manual).
+     * @return Current operating mode.
+     */
     Mode getMode() override;
 
     /**
      * @brief  Set the LED manual state.
      * @note   This function sets the manual state for the LED.
      * @param  state: The manual state to set.
-     * @retval True if successful, false otherwise.
+     * @retval true on success, false on register access failure.
      */
     bool setManualState(ManualState state) override;
 
     /**
-    * @brief  Get manual LED state (only meaningful when Mode::Manual is active).
-    * @note   This retrieves the current LED behavior (e.g. on/off/Hi-Z).
-    * @retval Current manual state.
-    */
+     * @brief  Get manual LED state (only meaningful when Mode::Manual is active).
+     * @note   This retrieves the current LED behavior (e.g. on/off/Hi-Z).
+     * @return Current manual state.
+     */
     ManualState getManualState() override;
 
 private:
-    AXP517Core &_core;
+    AXP517Core &_core; ///< Shared AXP517 register transport.
 };
