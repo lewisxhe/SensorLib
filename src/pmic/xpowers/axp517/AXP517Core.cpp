@@ -31,6 +31,12 @@
 #include "AXP517Regs.hpp"
 #include "AXP517TcpcRegs.hpp"
 
+namespace
+{
+static constexpr uint16_t AXP517_VENDOR_ID_ALT = 0xE0C5;
+static constexpr uint8_t TCPC_POWER_STATUS_UNINIT = 0x40;
+} // namespace
+
 
 bool AXP517Core::enableModule(Module module, bool enable)
 {
@@ -100,29 +106,35 @@ bool AXP517Core::initImpl(uint8_t param)
     // Wait for CC module ready
     hal->delay(20);
 
-    writeReg(axp517::tcpc::CC_GENERAL_CONTROL, axp517::tcpc::SW_RESET);
-    hal->delay(20);
-    writeReg(axp517::tcpc::CC_GENERAL_CONTROL, 0x00);
-    hal->delay(20);
+    if (writeReg(axp517::tcpc::CC_GENERAL_CONTROL, axp517::tcpc::SW_RESET) < 0) {
+        SENSORLIB_LOG_E("Failed to assert TCPC software reset");
+        return false;
+    }
+    hal->delay(50);
+    if (writeReg(axp517::tcpc::CC_GENERAL_CONTROL, 0x00) < 0) {
+        SENSORLIB_LOG_E("Failed to release TCPC software reset");
+        return false;
+    }
+    hal->delay(300);
 
-    int retry_count = 0;
+    int powerStatus = 0;
     bool tcpc_initial = false;
-    do {
-        int val = readReg(axp517::tcpc::POWER_STATUS);
-        if (val < 0) {
+    for (uint8_t i = 0; i < 40; ++i) {
+        powerStatus = readReg(axp517::tcpc::POWER_STATUS);
+        if (powerStatus < 0) {
             SENSORLIB_LOG_E("Failed to read TCPC power status");
             return false;
         }
-        tcpc_initial = !(val & 0x40);
+        tcpc_initial = (powerStatus & TCPC_POWER_STATUS_UNINIT) == 0;
         if (tcpc_initial) {
             break;
         }
-        retry_count++;
-        hal->delay(8);
-    } while (retry_count < 10);
+        hal->delay(50);
+    }
 
     if (!tcpc_initial) {
-        SENSORLIB_LOG_E("TCPC initialization failed");
+        SENSORLIB_LOG_E("TCPC initialization failed, POWER_STATUS: 0x%" PRIx32,
+                        static_cast<uint32_t>(powerStatus));
         return false;
     }
 
@@ -131,27 +143,14 @@ bool AXP517Core::initImpl(uint8_t param)
         return false;
     }
     vendorId = (buffer[1] << 8) | buffer[0];
-    if (vendorId != axp517::tcpc::VENDOR_ID) {
-        SENSORLIB_LOG_E("AXP517 not found, vendor ID: 0x%" PRIx32, vendorId);
+    if (vendorId != axp517::tcpc::VENDOR_ID && vendorId != AXP517_VENDOR_ID_ALT) {
+        SENSORLIB_LOG_E("AXP517 not found, vendor ID: 0x%" PRIx32,
+                        static_cast<uint32_t>(vendorId));
         return false;
     }
 
-    SENSORLIB_LOG_D("AXP517: Init complete, initializing...");
+    SENSORLIB_LOG_D("AXP517: Init complete, initializing... Vendor ID: 0x%" PRIx32,
+                    static_cast<uint32_t>(vendorId));
 
-#if 0
-    int cur = readReg(axp517_regs::ctrl::INPUT_VOLT_LIMIT);
-    if (cur < 0) return false;
-    cur &= 0x80;
-    // Set volt limit to 4700mV
-    if (cur < 12) {
-        if (writeReg(axp517_regs::ctrl::INPUT_VOLT_LIMIT, cur | 12) < 0) {
-            return false;
-        }
-    }
-    cur = readReg(axp517_regs::ctrl::INPUT_VOLT_LIMIT);
-    if (cur < 0) return false;
-    cur &= 0x7F;
-    return cur == 12;
-#endif
     return true;
 }
