@@ -115,7 +115,7 @@ void setup()
     // touch.setMirrorXY(true, true);
 
     //Register touch plane interrupt pin
-    attachInterrupt(TOUCH_IRQ, []() {
+    attachInterrupt(TOUCH_IRQ, +[]() {
         isPressed = true;
     }, FALLING);
 

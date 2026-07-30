@@ -404,7 +404,7 @@ void setup()
 
 #if PMIC_IRQ != -1
     pinMode(PMIC_IRQ, INPUT_PULLUP);
-    attachInterrupt(PMIC_IRQ, []() {
+    attachInterrupt(PMIC_IRQ, +[]() {
         irqTriggered = true;
     }, FALLING);
 #endif

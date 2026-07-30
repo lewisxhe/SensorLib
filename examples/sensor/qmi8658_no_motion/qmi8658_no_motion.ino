@@ -166,7 +166,7 @@ void setup()
 
     int irq = digitalPinToInterrupt(IMU_IRQ);
     if (irq >= 0) {
-        attachInterrupt(irq, []() {
+        attachInterrupt(irq, +[]() {
             irqTriggered = true;
         }, CHANGE);
     }

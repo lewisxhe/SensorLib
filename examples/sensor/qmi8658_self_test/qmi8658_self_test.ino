@@ -240,7 +240,7 @@ void setup()
 
     int irq = digitalPinToInterrupt(IMU_IRQ);
     if (irq >= 0) {
-        attachInterrupt(irq, []() {
+        attachInterrupt(irq, +[]() {
             isInterruptTriggered = true;
         }, CHANGE);
         serialPrintFmt("IRQ attached on pin %d (CHANGE trigger)\n", IMU_IRQ);

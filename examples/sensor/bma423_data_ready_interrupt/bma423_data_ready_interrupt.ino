@@ -72,7 +72,7 @@ void setup()
     while (!Serial);
 
     pinMode(SENSOR_IRQ, INPUT);
-    attachInterrupt(SENSOR_IRQ, []() {
+    attachInterrupt(SENSOR_IRQ, +[]() {
         isInterruptTriggered = true;
     }, RISING);
 

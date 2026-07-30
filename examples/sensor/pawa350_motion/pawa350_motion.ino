@@ -96,7 +96,7 @@ void setup()
 #endif
     // Sensor Motion Interrupt Pin, LOW is active
     pinMode(SENSOR_IRQ, INPUT);
-    attachInterrupt(SENSOR_IRQ, []() {
+    attachInterrupt(SENSOR_IRQ, +[]() {
         motionIrqTriggered = true;
     }, FALLING);
 
