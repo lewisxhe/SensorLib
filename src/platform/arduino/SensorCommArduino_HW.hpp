@@ -33,6 +33,10 @@
 
 #ifdef ARDUINO
 
+#if defined(ARDUINO_API_VERSION) || defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_MBED) || defined(ARDUINO_ARCH_ZEPHYR)
+#define SENSORLIB_ARDUINO_HAS_TYPED_GPIO_API 1
+#endif
+
 class HalArduino : public SensorHal
 {
 public:
@@ -41,7 +45,7 @@ public:
         if (modeCallback) {
             modeCallback(pin, mode);
         } else {
-#if defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_MBED) || defined(ARDUINO_ARCH_ZEPHYR) || defined(ARDUINO_ARCH_STM32)
+#if defined(SENSORLIB_ARDUINO_HAS_TYPED_GPIO_API)
             ::pinMode(pin, static_cast<PinMode>(mode));
 #else
             ::pinMode(pin, mode);
@@ -54,7 +58,7 @@ public:
         if (writeCallback) {
             writeCallback(pin, level);
         } else {
-#if defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_MBED) || defined(ARDUINO_ARCH_ZEPHYR) || defined(ARDUINO_ARCH_STM32)
+#if defined(SENSORLIB_ARDUINO_HAS_TYPED_GPIO_API)
             ::digitalWrite(pin, static_cast<PinStatus>(level));
 #else
             ::digitalWrite(pin, level);
@@ -85,5 +89,7 @@ public:
         ::delayMicroseconds(us);
     }
 };
+
+#undef SENSORLIB_ARDUINO_HAS_TYPED_GPIO_API
 
 #endif  //*ARDUINO

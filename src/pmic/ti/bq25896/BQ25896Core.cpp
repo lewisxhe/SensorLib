@@ -136,7 +136,9 @@ bool BQ25896Core::initImpl(uint8_t param)
     (void)param;
     uint8_t rev = getDeviceRevision();
     if (rev != BQ25896_DEV_REV) {
-        SENSORLIB_LOG_E("Device revision mismatch: expected 0x%" PRIx32 ", got 0x%" PRIx32, BQ25896_DEV_REV, rev);
+        SENSORLIB_LOG_E("Device revision mismatch: expected 0x%02x, got 0x%02x",
+                        static_cast<unsigned int>(BQ25896_DEV_REV),
+                        static_cast<unsigned int>(rev));
         return false;
     }
 
