@@ -380,9 +380,9 @@ void loop() {
 
 Relevant examples:
 
-- `examples/PowerManagement/Pmic/AXP517/AXP517_PdVoltage/`
-- `examples/PowerManagement/Pmic/AXP517/AXP517_PdAutoRequest/`
-- `examples/PowerManagement/Pmic/AXP517/AXP517_Interrupt/`
+- `examples/power/axp517_pd_voltage/`
+- `examples/power/axp517_pd_auto_request/`
+- `examples/power/axp517_interrupt/`
 
 ---
 
@@ -390,41 +390,20 @@ Relevant examples:
 
 Examples are organized by category in the `examples/` directory:
 
+Directory names and `.ino` files use lowercase `snake_case`; folder names do not use hyphens.
+
 ```
 examples/
-├── Actuators/
-│   ├── Haptic/               # DRV2605, AW86224 haptic motors
-│   └── LED/                  # AW9364 LED driver
-├── IO/
-│   └── Expander/             # XL9555, PCA9570
-├── Platform/
-│   └── idf-examples/         # ESP-IDF framework examples
-├── PowerManagement/
-│   ├── Gauge/                # AXP2602, BQ27220 battery gauges
-│   └── Pmic/
-│       ├── AXP192/           # TODO
-│       ├── AXP202/           # TODO
-│       ├── AXP2101/          # TODO
-│       ├── AXP517/           # Basic, BC1.2, Charger, WebMonitor, Interrupt, LED, PD, Power
-│       ├── BQ25896_Charger/  # TI charger
-│       ├── SY6970_Charger/   # Silergy charger
-│       └── ...               # PMIC Probe, xxxx WebPanel, etc.
-├── Sensors/
-│   ├── Accelerometer/        # BMA422, BMA423, BMA456H, Universal
-│   ├── FingerNavigation/     # PAW-A350
-│   ├── IMU/
-│   │   ├── BHI260AP/         # 6DoF, Euler, StepCounter, Klio, GPIO...
-│   │   ├── BHI360/           # 6DoF, Euler, MultiTap, aux BMM350...
-│   │   ├── QMI8658/          # BasicRead, FIFO, Pedometer, Tap, SyncMode...
-│   │   └── QMI8658_Deprecated/  # Legacy API examples
-│   ├── LightSensor/          # CM32181, LTR553
-│   ├── Magnetometer/         # BMM150, QMC5883L/P, QMC6309, QMC6310
-│   └── Touch/                # GT911, GT9895, FT6232, CST series, CHSC5816, HI8561
-├── Time/
-│   └── RTC/                  # PCF85063, PCF8563
-└── Utilities/
-    ├── CustomCallback/       # Custom callback patterns
-    └── SensorWireHelper/     # I2C scanning & debugging
+├── actuator/                 # Haptic motors, LED drivers
+├── io/                       # GPIO expanders and bus helper demos
+├── platform/                 # ESP-IDF framework projects
+│   ├── esp_idf_sensor_hub/
+│   └── esp_idf_touch/
+├── power/                    # PMIC, charger, gauge examples
+├── sensor/                   # IMU, accelerometer, light, magnetometer, navigation
+├── touch/                    # Touch panel drivers and touch interface examples
+├── rtc/                      # PCF85063, PCF8563, RTC helpers
+└── utility/                  # Callback and I2C scan/debug helpers
 ```
 
 ### Using Examples
@@ -433,12 +412,12 @@ examples/
 
 ```ini
 [platformio]
-src_dir = examples/Sensors/IMU/QMI8658/BasicRead
+src_dir = examples/sensor/qmi8658_basic_read
 ```
 
 **Arduino IDE**: `File` → `Open` → navigate to the `.ino` file in `examples/`.
 
-**ESP-IDF**: See `examples/Platform/idf-examples/` for ESP-IDF specific projects.
+**ESP-IDF**: See `examples/platform/` for ESP-IDF specific projects.
 
 ## Supported Devices
 
@@ -526,7 +505,7 @@ src_dir = examples/Sensors/IMU/QMI8658/BasicRead
 - **SPI devices**: QMI8658, BHI260AP, BHI360 support SPI. Touch and PMIC devices are I2C only.
 - **I2C addresses**: Some devices have configurable addresses (e.g., GT911 has `GT911_SLAVE_ADDRESS_L` / `GT911_SLAVE_ADDRESS_H`). Check the header file for available constants.
 - **AXP517 USB-PD**: PD voltage negotiation requires `PMIC_IRQ` wiring. Pass the IRQ pin during initialization and use `pmic.irq().readStatus(true)` in interrupt-driven code so normal PMIC IRQs and TCPC PD alerts are both drained.
-- **Troubleshooting**: If a device is not detected, verify wiring, address selection, and I2C speed. Use `examples/Utilities/SensorWireHelper/` to scan the I2C bus.
+- **Troubleshooting**: If a device is not detected, verify wiring, address selection, and I2C speed. Use `examples/utility/wire_helper/` to scan the I2C bus.
 
 ## License
 
