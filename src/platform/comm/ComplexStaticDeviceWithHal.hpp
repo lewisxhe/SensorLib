@@ -45,15 +45,9 @@ public:
      */
     bool begin(TwoWire &wire, uint8_t addr, int sda = -1, int scl = -1)
     {
-        beforeBegin();
-        if (!beginCommonStatic<SensorCommI2C, HalArduino>(comm, staticComm, hal, wire, addr, sda, scl)) return false;
-        _addr = addr; _iface = COMM_I2C;
-        afterCommReady();
-        if (!initImpl(_addr)) {
-            return fail();
-        }
-        afterInitSuccess(_addr);
-        return true;
+        return beginLifecycle(addr, COMM_I2C, addr, [&]() {
+            return beginCommonStatic<SensorCommI2C, HalArduino>(comm, staticComm, hal, wire, addr, sda, scl);
+        });
     }
 
     /**
@@ -67,15 +61,9 @@ public:
     */
     bool begin(SPIClass &spi, uint8_t csPin, int mosi = -1, int miso = -1, int sck = -1)
     {
-        beforeBegin();
-        if (!beginCommonStatic<SensorCommSPI, HalArduino>(comm, staticComm, hal, spi, csPin, mosi, miso, sck)) return false;
-        _addr = 0; _iface = COMM_SPI;
-        afterCommReady();
-        if (!initImpl(_iface)) {
-            return fail();
-        }
-        afterInitSuccess(_iface);
-        return true;
+        return beginLifecycle(0, COMM_SPI, COMM_SPI, [&]() {
+            return beginCommonStatic<SensorCommSPI, HalArduino>(comm, staticComm, hal, spi, csPin, mosi, miso, sck);
+        });
     }
 
 #elif defined(ESP_PLATFORM)
@@ -90,15 +78,9 @@ public:
      */
     bool begin(i2c_port_t port_num, uint8_t addr, int sda = -1, int scl = -1)
     {
-        beforeBegin();
-        if (!beginCommonStatic<SensorCommI2C, HalEspIDF>(comm, staticComm, hal, port_num, addr, sda, scl)) return false;
-        _addr = addr; _iface = COMM_I2C;
-        afterCommReady();
-        if (!initImpl(_addr)) {
-            return fail();
-        }
-        afterInitSuccess(_addr);
-        return true;
+        return beginLifecycle(addr, COMM_I2C, addr, [&]() {
+            return beginCommonStatic<SensorCommI2C, HalEspIDF>(comm, staticComm, hal, port_num, addr, sda, scl);
+        });
     }
 #else
     /**
@@ -109,15 +91,9 @@ public:
      */
     bool begin(i2c_master_bus_handle_t handle, uint8_t addr)
     {
-        beforeBegin();
-        if (!beginCommonStatic<SensorCommI2C, HalEspIDF>(comm, staticComm, hal, handle, addr)) return false;
-        _addr = addr; _iface = COMM_I2C;
-        afterCommReady();
-        if (!initImpl(_iface)) {
-            return fail();
-        }
-        afterInitSuccess(_iface);
-        return true;
+        return beginLifecycle(addr, COMM_I2C, addr, [&]() {
+            return beginCommonStatic<SensorCommI2C, HalEspIDF>(comm, staticComm, hal, handle, addr);
+        });
     }
 #endif
     /**
@@ -133,15 +109,9 @@ public:
     bool begin(spi_host_device_t host, spi_device_handle_t handle,
                uint8_t csPin, int mosi = -1, int miso = -1, int sck = -1)
     {
-        beforeBegin();
-        if (!beginCommonStatic<SensorCommSPI, HalEspIDF>(comm, staticComm, hal, host, handle, csPin, mosi, miso, sck)) return false;
-        _addr = 0; _iface = COMM_SPI;
-        afterCommReady();
-        if (!initImpl(_iface)) {
-            return fail();
-        }
-        afterInitSuccess(_iface);
-        return true;
+        return beginLifecycle(0, COMM_SPI, COMM_SPI, [&]() {
+            return beginCommonStatic<SensorCommSPI, HalEspIDF>(comm, staticComm, hal, host, handle, csPin, mosi, miso, sck);
+        });
     }
 #endif
     /**
@@ -158,25 +128,17 @@ public:
                SensorCommCustomHal::CustomHalCallback hal_callback,
                uint8_t addr = 0)
     {
-        beforeBegin();
-        if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(
-                    interface, callback, hal_callback, addr, comm, hal)) {
-            return false;
-        }
-        _addr = addr; _iface = interface;
-        afterCommReady();
-        if (!initImpl(_iface)) {
-            return fail();
-        }
-        afterInitSuccess(_iface);
-        return true;
+        return beginLifecycle(addr, interface, interface, [&]() {
+            return beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(
+                       interface, callback, hal_callback, addr, comm, hal);
+        });
     }
 protected:
     /**
     * @brief Ensure the communication interface is valid.
     *  @return True if valid, false otherwise.
     */
-    bool ensureValid() const
+    bool ensureValid() const override
     {
         if (!comm || !hal) return false;
         return true;

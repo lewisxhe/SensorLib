@@ -45,18 +45,9 @@ public:
     */
     bool begin(SPIClass &spi, uint8_t csPin, int mosi = -1, int miso = -1, int sck = -1)
     {
-        beforeBegin();
-        if (!beginCommon<SensorCommSPI, HalArduino>(comm, hal, spi, csPin, mosi, miso, sck)) {
-            return fail();
-        }
-        _addr = 0;
-        _iface = COMM_SPI;
-        afterCommReady();
-        if (!initImpl(_iface)) {
-            return fail();
-        }
-        afterInitSuccess(_iface);
-        return true;
+        return beginLifecycle(0, COMM_SPI, COMM_SPI, [&]() {
+            return beginCommon<SensorCommSPI, HalArduino>(comm, hal, spi, csPin, mosi, miso, sck);
+        });
     }
 #elif defined(ESP_PLATFORM)
     /**
@@ -68,18 +59,9 @@ public:
     bool begin(spi_host_device_t host, spi_device_handle_t handle,
                uint8_t csPin, int mosi = -1, int miso = -1, int sck = -1)
     {
-        beforeBegin();
-        if (!beginCommon<SensorCommSPI, HalEspIDF>(comm, hal, host, handle, csPin, mosi, miso, sck)) {
-            return fail();
-        }
-        _addr = 0;
-        _iface = COMM_SPI;
-        afterCommReady();
-        if (!initImpl(_iface)) {
-            return fail();
-        }
-        afterInitSuccess(_iface);
-        return true;
+        return beginLifecycle(0, COMM_SPI, COMM_SPI, [&]() {
+            return beginCommon<SensorCommSPI, HalEspIDF>(comm, hal, host, handle, csPin, mosi, miso, sck);
+        });
     }
 #endif
     /**
@@ -93,19 +75,10 @@ public:
     bool begin(SensorCommCustom::CustomCallback callback,
                SensorCommCustomHal::CustomHalCallback hal_callback)
     {
-        beforeBegin();
-        if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(
-                    COMM_CUSTOM, callback, hal_callback, 0x00, comm, hal)) {
-            return fail();
-        }
-        _addr = 0x00;
-        _iface = COMM_CUSTOM;
-        afterCommReady();
-        if (!initImpl(_iface)) {
-            return fail();
-        }
-        afterInitSuccess(_iface);
-        return true;
+        return beginLifecycle(0, COMM_CUSTOM, COMM_CUSTOM, [&]() {
+            return beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(
+                       COMM_CUSTOM, callback, hal_callback, 0x00, comm, hal);
+        });
     }
 
 protected:

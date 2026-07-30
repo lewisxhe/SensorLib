@@ -91,8 +91,7 @@ bool beginCommon(
         hal.reset();
         return false;
     }
-    comm->init();
-    return true;
+    return comm->init();
 }
 
 template <typename CommType, typename HalType>
@@ -111,8 +110,7 @@ bool beginCommCustomCallback(CommInterface interface,
     if (!comm) {
         return false;
     }
-    comm->init();
-    return true;
+    return comm->init();
 }
 
 inline void addrToBeBuf(uint32_t addr, uint8_t buf[4]) {

@@ -83,6 +83,40 @@ protected:
         return false;
     }
 
+    void clearCommState()
+    {
+        staticComm.reset();
+        if (comm) {
+            comm->deinit();
+        }
+        comm.reset();
+        hal.reset();
+        _addr = 0;
+        _iface = COMM_CUSTOM;
+    }
+
+    template<typename CreateComm>
+    bool beginLifecycle(uint8_t addr, uint8_t iface, uint8_t initParam, CreateComm createComm)
+    {
+        beforeBegin();
+        if (!createComm()) {
+            clearCommState();
+            return fail();
+        }
+
+        _addr = addr;
+        _iface = iface;
+        afterCommReady();
+
+        if (!initImpl(initParam)) {
+            clearCommState();
+            return fail();
+        }
+
+        afterInitSuccess(initParam);
+        return true;
+    }
+
 protected:
     std::unique_ptr<SensorCommBase>   comm;
     std::unique_ptr<SensorHal>        hal;

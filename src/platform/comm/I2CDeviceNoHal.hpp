@@ -45,17 +45,10 @@ public:
      */
     bool begin(TwoWire &wire, uint8_t addr, int sda = -1, int scl = -1)
     {
-        beforeBegin();
-        comm = std::make_unique<SensorCommI2C>(wire, addr, sda, scl);
-        if (!comm) return false;
-        comm->init();
-        _addr = addr; _iface = COMM_I2C;
-        afterCommReady();
-        if (!initImpl(_addr)) {
-            return fail();
-        }
-        afterInitSuccess(_addr);
-        return true;
+        return beginLifecycle(addr, COMM_I2C, addr, [&]() {
+            comm = std::make_unique<SensorCommI2C>(wire, addr, sda, scl);
+            return comm && comm->init();
+        });
     }
 #elif defined(ESP_PLATFORM)
 #if defined(SENSORLIB_USE_I2C_LEGACY)
@@ -69,17 +62,10 @@ public:
      */
     bool begin(i2c_port_t port_num, uint8_t addr, int sda = -1, int scl = -1)
     {
-        beforeBegin();
-        comm = std::make_unique<SensorCommI2C>(port_num, addr, sda, scl);
-        if (!comm) return false;
-        comm->init();
-        _addr = addr; _iface = COMM_I2C;
-        afterCommReady();
-        if (!initImpl(_addr)) {
-            return fail();
-        }
-        afterInitSuccess(_addr);
-        return true;
+        return beginLifecycle(addr, COMM_I2C, addr, [&]() {
+            comm = std::make_unique<SensorCommI2C>(port_num, addr, sda, scl);
+            return comm && comm->init();
+        });
     }
 #else
     /**
@@ -90,17 +76,10 @@ public:
      */
     bool begin(i2c_master_bus_handle_t handle, uint8_t addr)
     {
-        beforeBegin();
-        comm = std::make_unique<SensorCommI2C>(handle, addr);
-        if (!comm) return false;
-        comm->init();
-        _addr = addr; _iface = COMM_I2C;
-        afterCommReady();
-        if (!initImpl(_addr)) {
-            return fail();
-        }
-        afterInitSuccess(_addr);
-        return true;
+        return beginLifecycle(addr, COMM_I2C, addr, [&]() {
+            comm = std::make_unique<SensorCommI2C>(handle, addr);
+            return comm && comm->init();
+        });
     }
 #endif
 #endif
@@ -114,16 +93,9 @@ public:
      */
     bool begin(SensorCommCustom::CustomCallback callback, uint8_t addr)
     {
-        beforeBegin();
-        comm = std::make_unique<SensorCommCustom>(callback, addr);
-        if (!comm) return false;
-        comm->init();
-        _addr = addr; _iface = COMM_CUSTOM;
-        afterCommReady();
-        if (!initImpl(_addr)) {
-            return fail();
-        }
-        afterInitSuccess(_addr);
-        return true;
+        return beginLifecycle(addr, COMM_CUSTOM, addr, [&]() {
+            comm = std::make_unique<SensorCommCustom>(callback, addr);
+            return comm && comm->init();
+        });
     }
 };

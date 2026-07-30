@@ -45,15 +45,9 @@ public:
      */
     bool begin(TwoWire &wire, uint8_t addr, int sda = -1, int scl = -1)
     {
-        beforeBegin();
-        if (!beginCommon<SensorCommI2C, HalArduino>(comm, hal, wire, addr, sda, scl)) return false;
-        _addr = addr; _iface = COMM_I2C;
-        afterCommReady();
-        if (!initImpl(_addr)) {
-            return fail();
-        }
-        afterInitSuccess(_addr);
-        return true;
+        return beginLifecycle(addr, COMM_I2C, addr, [&]() {
+            return beginCommon<SensorCommI2C, HalArduino>(comm, hal, wire, addr, sda, scl);
+        });
     }
 
 #elif defined(ESP_PLATFORM)
@@ -68,15 +62,9 @@ public:
      */
     bool begin(i2c_port_t port, uint8_t addr, int sda = -1, int scl = -1)
     {
-        beforeBegin();
-        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, port, addr, sda, scl)) return false;
-        _addr = addr; _iface = COMM_I2C;
-        afterCommReady();
-        if (!initImpl(_addr)) {
-            return fail();
-        }
-        afterInitSuccess(_addr);
-        return true;
+        return beginLifecycle(addr, COMM_I2C, addr, [&]() {
+            return beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, port, addr, sda, scl);
+        });
     }
 #else
     /**
@@ -87,15 +75,9 @@ public:
      */
     bool begin(i2c_master_bus_handle_t handle, uint8_t addr)
     {
-        beforeBegin();
-        if (!beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, handle, addr)) return false;
-        _addr = addr; _iface = COMM_I2C;
-        afterCommReady();
-        if (!initImpl(_addr)) {
-            return fail();
-        }
-        afterInitSuccess(_addr);
-        return true;
+        return beginLifecycle(addr, COMM_I2C, addr, [&]() {
+            return beginCommon<SensorCommI2C, HalEspIDF>(comm, hal, handle, addr);
+        });
     }
 #endif  //SENSORLIB_USE_I2C_LEGACY
 #endif  //ARDUINO
@@ -112,16 +94,10 @@ public:
                SensorCommCustomHal::CustomHalCallback hal_cb,
                uint8_t addr)
     {
-        beforeBegin();
-        if (!beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(COMM_CUSTOM, cb, hal_cb, addr, comm, hal))
-            return false;
-        _addr = addr; _iface = COMM_CUSTOM;
-        afterCommReady();
-        if (!initImpl(_addr)) {
-            return fail();
-        }
-        afterInitSuccess(_addr);
-        return true;
+        return beginLifecycle(addr, COMM_CUSTOM, addr, [&]() {
+            return beginCommCustomCallback<SensorCommCustom, SensorCommCustomHal>(
+                       COMM_CUSTOM, cb, hal_cb, addr, comm, hal);
+        });
     }
 protected:
     /**
