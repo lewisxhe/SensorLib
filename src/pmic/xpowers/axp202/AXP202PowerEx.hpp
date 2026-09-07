@@ -4,9 +4,9 @@
  * @date      2026-05-02
  * @brief     AXP202-specific power management extensions
  *
- * Features not covered by AXP1xxPower template: DCDC PWM mode control,
- * APS warning thresholds, VBUS detection/SRP, over-temperature shutdown,
- * DCDC frequency setting.
+ * Features not covered by AXP1xxPower template: power-key shutdown control,
+ * LDO3 and DCDC operating modes, APS warning thresholds, VBUS detection/SRP,
+ * over-temperature shutdown, and DCDC frequency setting.
  *
  */
 #pragma once
@@ -16,7 +16,49 @@
 class AXP202PowerEx
 {
 public:
+    enum class LDO3Mode : uint8_t {
+        LDO = 0,
+        DCIN = 1,
+    };
+
     explicit AXP202PowerEx(AXP202Core &core) : _core(core) {}
+
+    // ---- Power Key Configuration (REG 36H) ----
+
+    /**
+     * @brief Enable automatic power-off when the power key is held 
+     */
+    void enableLongPressShutdown()
+    {
+        _core.setRegBit(axp202_regs::pmu::POK_SET, 3);
+    }
+
+    /**
+     * @brief Disable automatic power-off when the power key is held 
+     */
+    void disableLongPressShutdown()
+    {
+        _core.clrRegBit(axp202_regs::pmu::POK_SET, 3);
+    }
+
+    // ---- LDO3 Operating Mode (REG 29H) ----
+
+    /**
+     * @brief Select the LDO3 regulated output or DCIN pass-through path
+     * @param mode LDO for regulated output, DCIN for pass-through
+     * @return true on success
+     */
+    bool setLDO3Mode(LDO3Mode mode)
+    {
+        switch (mode) {
+        case LDO3Mode::LDO:
+            return _core.clrRegBit(axp202_regs::pmu::LDO3OUT_VOL, 7);
+        case LDO3Mode::DCIN:
+            return _core.setRegBit(axp202_regs::pmu::LDO3OUT_VOL, 7);
+        default:
+            return false;
+        }
+    }
 
     // ---- DCDC Operating Mode (REG 80H) ----
 
