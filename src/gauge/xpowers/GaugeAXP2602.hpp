@@ -311,7 +311,7 @@ public:
      */
     uint16_t getChipID() override
     {
-        return readReg(REG_ID);
+        return readReg(REG_AXP2602_ID);
     }
 
     /**
@@ -836,7 +836,7 @@ private:
 protected:
     GaugeData data;
 
-    static constexpr uint8_t REG_ID = 0x00;
+    static constexpr uint8_t REG_AXP2602_ID = 0x00;
     static constexpr uint8_t REG_BROM = 0x01;
     static constexpr uint8_t REG_MODE = 0x02;
     static constexpr uint8_t REG_PARA_CONFIG = 0x03;
