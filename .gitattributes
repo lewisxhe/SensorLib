@@ -1,3 +1,20 @@
-*.hpp linguist-language=C++
 * text=auto eol=lf
 
+# Windows command scripts require CRLF line endings.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary assets should not be normalized, diffed, or merged as text.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.bmp  binary
+*.ico  binary
+*.pdf  binary
+*.stl  binary
+*.zip  binary
+*.gz   binary
+*.mp3  binary
+*.wav  binary
+*.bin  binary
