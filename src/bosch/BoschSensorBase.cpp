@@ -47,6 +47,7 @@ BoschSensorBase::BoschSensorBase(): comm(nullptr),
     hal(nullptr),
     staticComm(nullptr),
     _rst(-1), _error_code(0),
+    _last_fifo_error_code(BHY2_OK),
     _processBuffer(nullptr),
     _processBufferSize(BOSCH_SMART_SENSOR_FIFO_PARSE_BUFFER_SIZE),
     _firmware_stream(nullptr),
@@ -167,13 +168,25 @@ void BoschSensorBase::reset()
     }
 }
 
-void BoschSensorBase::update()
+bool BoschSensorBase::update()
 {
     if (!_processBuffer) {
         SENSORLIB_LOG_E("Process buffer is not allocated.");
-        return;
+        return false;
     }
-    bhy2_get_and_process_fifo(_processBuffer, _processBufferSize, dev.get());
+    _error_code = bhy2_get_and_process_fifo(_processBuffer, _processBufferSize, dev.get());
+    if (_error_code != BHY2_OK) {
+        if (_last_fifo_error_code != _error_code) {
+            SENSORLIB_LOG_E("Failed to get and process FIFO, error code %d", _error_code);
+            _last_fifo_error_code = _error_code;
+        }
+        return false;
+    }
+    if (_last_fifo_error_code != BHY2_OK) {
+        SENSORLIB_LOG_D("FIFO processing recovered");
+        _last_fifo_error_code = BHY2_OK;
+    }
+    return true;
 }
 
 bhy2_dev *BoschSensorBase::getDev()

@@ -198,8 +198,9 @@ public:
      * @brief Update sensor data by processing the FIFO.
      * @note This function should be called periodically to read and process sensor data.
      *       It triggers registered callbacks for available sensor data.
+     * @return true if FIFO processing succeeded, false otherwise.
      */
-    void update();
+    bool update();
 
     /**
      * @brief Get the native BHY API device handle.
@@ -532,6 +533,7 @@ protected:
     uint8_t             _chipID;
     int                 _rst;                   ///< Reset pin number
     int8_t              _error_code;            ///< Last error code
+    int8_t              _last_fifo_error_code;  ///< Last logged FIFO error code
     uint8_t            *_processBuffer;         ///< FIFO processing buffer
     size_t              _processBufferSize;     ///< Size of processing buffer
     const uint8_t      *_firmware_stream;       ///< Pointer to firmware data

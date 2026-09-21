@@ -41,41 +41,47 @@ AXP2101Irq::AXP2101Irq(AXP2101Core &core) : _core(core)
 
 bool AXP2101Irq::enable(uint64_t mask)
 {
-    uint8_t buffer[3];
-    if (_core.readRegBuff(axp2101_regs::irq::ENABLE1, buffer, sizeof(buffer)) < 0) {
-        return false;
+    for (uint8_t i = 0; i < 3; ++i) {
+        const uint8_t byte_mask = static_cast<uint8_t>((mask >> (i * 8)) & 0xFF);
+        if (byte_mask == 0) continue;
+
+        const int current = _core.readReg(axp2101_regs::irq::ENABLE1 + i);
+        if (current < 0) return false;
+
+        const uint8_t next = static_cast<uint8_t>(current) | byte_mask;
+        if (next != static_cast<uint8_t>(current) &&
+                _core.writeReg(axp2101_regs::irq::ENABLE1 + i, next) < 0) {
+            return false;
+        }
     }
-    uint64_t current = (static_cast<uint64_t>(buffer[2]) << 16) |
-                       (static_cast<uint64_t>(buffer[1]) << 8) |
-                       (static_cast<uint64_t>(buffer[0]));
-    current |= mask;
-    buffer[2] = static_cast<uint8_t>((current >> 16) & 0xFF);
-    buffer[1] = static_cast<uint8_t>((current >> 8) & 0xFF);
-    buffer[0] = static_cast<uint8_t>(current & 0xFF);
-    return _core.writeRegBuff(axp2101_regs::irq::ENABLE1, buffer, sizeof(buffer)) >= 0;
+    return true;
 }
 
 bool AXP2101Irq::disable(uint64_t mask)
 {
-    uint8_t buffer[3];
-    if (_core.readRegBuff(axp2101_regs::irq::ENABLE1, buffer, sizeof(buffer)) < 0) {
-        return false;
+    for (uint8_t i = 0; i < 3; ++i) {
+        const uint8_t byte_mask = static_cast<uint8_t>((mask >> (i * 8)) & 0xFF);
+        if (byte_mask == 0) continue;
+
+        const int current = _core.readReg(axp2101_regs::irq::ENABLE1 + i);
+        if (current < 0) return false;
+
+        const uint8_t next = static_cast<uint8_t>(current) & ~byte_mask;
+        if (next != static_cast<uint8_t>(current) &&
+                _core.writeReg(axp2101_regs::irq::ENABLE1 + i, next) < 0) {
+            return false;
+        }
     }
-    uint64_t current = (static_cast<uint64_t>(buffer[2]) << 16) |
-                       (static_cast<uint64_t>(buffer[1]) << 8) |
-                       (static_cast<uint64_t>(buffer[0]));
-    current &= ~mask;
-    buffer[2] = static_cast<uint8_t>((current >> 16) & 0xFF);
-    buffer[1] = static_cast<uint8_t>((current >> 8) & 0xFF);
-    buffer[0] = static_cast<uint8_t>(current & 0xFF);
-    return _core.writeRegBuff(axp2101_regs::irq::ENABLE1, buffer, sizeof(buffer)) >= 0;
+    return true;
 }
 
 uint64_t AXP2101Irq::readStatus(bool clear)
 {
     uint8_t buffer[3];
-    if (_core.readRegBuff(axp2101_regs::irq::STATUS1, buffer, sizeof(buffer)) < 0) {
-        return 0;
+    for (uint8_t i = 0; i < 3; ++i) {
+        const int value = _core.readReg(axp2101_regs::irq::STATUS1 + i);
+        if (value < 0) return 0;
+        buffer[i] = static_cast<uint8_t>(value);
     }
     uint64_t mask = (static_cast<uint64_t>(buffer[2]) << 16) |
                     (static_cast<uint64_t>(buffer[1]) << 8) |
@@ -83,15 +89,23 @@ uint64_t AXP2101Irq::readStatus(bool clear)
     if (clear && mask != 0) {
         // Only clear the bits that were actually read to avoid losing
         // IRQs that arrived between the read and the clear (W1C race).
-        _core.writeRegBuff(axp2101_regs::irq::STATUS1, buffer, sizeof(buffer));
+        for (uint8_t i = 0; i < 3; ++i) {
+            if (buffer[i] != 0) {
+                _core.writeReg(axp2101_regs::irq::STATUS1 + i, buffer[i]);
+            }
+        }
     }
     return mask;
 }
 
 bool AXP2101Irq::clearStatus()
 {
-    uint8_t buffer[3] = {0xFF, 0xFF, 0xFF};
-    return _core.writeRegBuff(axp2101_regs::irq::STATUS1, buffer, sizeof(buffer)) >= 0;
+    for (uint8_t i = 0; i < 3; ++i) {
+        if (_core.writeReg(axp2101_regs::irq::STATUS1 + i, 0xFF) < 0) {
+            return false;
+        }
+    }
+    return true;
 }
 
 #endif
