@@ -1,6 +1,6 @@
 {
   "name": "SensorLib",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Commonly used I2C , SPI device multi-platform libraries",
   "keywords": [
     "QMC6309",
