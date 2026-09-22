@@ -28,7 +28,7 @@ jobs:
 
     container: espressif/idf:${{ matrix.idf_ver }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
         with:
           submodules: "recursive"
       - name: Build esp_idf_touch
