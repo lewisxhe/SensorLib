@@ -1,0 +1,74 @@
+name: Deploy Doxygen documentation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "src/**"
+      - "!src/bosch/**"
+      - "examples/**"
+      - "README.md"
+      - "library.properties"
+      - "Doxyfile"
+      - ".github/workflows/docs.yml"
+  push:
+    branches:
+      - master
+    paths:
+      - "src/**"
+      - "!src/bosch/**"
+      - "examples/**"
+      - "README.md"
+      - "library.properties"
+      - "Doxyfile"
+      - ".github/workflows/docs.yml"
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Doxygen
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes doxygen graphviz
+
+      - name: Build documentation
+        shell: bash
+        run: |
+          project_version="$(sed -n 's/^version=//p' library.properties)"
+          mkdir -p build/doxygen
+          {
+            printf 'PROJECT_NUMBER = "%s"\n' "$project_version"
+            cat Doxyfile
+          } | doxygen -
+          touch build/doxygen/html/.nojekyll
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: build/doxygen/html
+          include-hidden-files: true
+
+  deploy:
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

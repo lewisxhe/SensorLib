@@ -16,6 +16,7 @@
   <a href="https://registry.platformio.org/libraries/lewisxhe/SensorLib"><img src="https://badges.registry.platformio.org/packages/lewisxhe/library/SensorLib.svg" /></a>
   <a href="https://components.espressif.com/components/lewisxhe/sensorlib">
   <img src="https://img.shields.io/badge/ESP--IDF%20Registry-v0.4.1-success?logo=espressif&logoColor=white&color=009688&style=flat-square" alt="ESP-IDF Component Registry"></a>
+  <a href="https://lewisxhe.github.io/SensorLib/"><img src="https://img.shields.io/badge/API-Doxygen-2C4AA8?logo=doxygen&logoColor=white" alt="Doxygen API documentation" /></a>
 </p>
 
 <p align="center">
