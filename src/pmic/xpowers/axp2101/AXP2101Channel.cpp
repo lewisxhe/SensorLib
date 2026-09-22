@@ -44,7 +44,7 @@ bool AXP2101Channel::enable(uint8_t channel, bool enable)
 
     if (isDCDC(channel)) {
         return enable ? _core.setRegBit(axp2101_regs::dcdc::ONOFF_DVM_CTRL, channel)
-                      : _core.clrRegBit(axp2101_regs::dcdc::ONOFF_DVM_CTRL, channel);
+               : _core.clrRegBit(axp2101_regs::dcdc::ONOFF_DVM_CTRL, channel);
     }
 
     uint8_t ldoIdx = channel - DCDC_COUNT;

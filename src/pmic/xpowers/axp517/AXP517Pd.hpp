@@ -161,7 +161,10 @@ public:
      * Call this after Hard Reset because the TCPC hardware resets its GoodCRC
      * counter and software message IDs must be synchronized with that state.
      */
-    void resetMsgId() { _msgId = 0; }
+    void resetMsgId()
+    {
+        _msgId = 0;
+    }
 
 private:
     /**

@@ -53,8 +53,7 @@
  */
 struct axp202_regs {
     // -------------------- Status --------------------
-    struct bmu
-    {
+    struct bmu {
         static constexpr uint8_t STATUS           = 0x00;
         static constexpr uint8_t MODE_CHGSTATUS   = 0x01;
         static constexpr uint8_t OTG_STATUS       = 0x02;
@@ -66,8 +65,7 @@ struct axp202_regs {
     };
 
     // -------------------- Power Control --------------------
-    struct pmu
-    {
+    struct pmu {
         static constexpr uint8_t LDO234_DC23_CTL   = 0x12;
         static constexpr uint8_t DC2OUT_VOL        = 0x23;
         static constexpr uint8_t DC3OUT_VOL        = 0x27;
@@ -115,8 +113,7 @@ struct axp202_regs {
     };
 
     // -------------------- Charger --------------------
-    struct chg
-    {
+    struct chg {
         static constexpr uint8_t CHARGE1           = 0x33;
         static constexpr uint8_t CHARGE2           = 0x34;
         static constexpr uint8_t BACKUP_CHG        = 0x35;
@@ -132,8 +129,7 @@ struct axp202_regs {
     };
 
     // -------------------- IRQ --------------------
-    struct irq
-    {
+    struct irq {
         static constexpr uint8_t ENABLE1           = 0x40;
         static constexpr uint8_t ENABLE2           = 0x41;
         static constexpr uint8_t ENABLE3           = 0x42;
@@ -147,8 +143,7 @@ struct axp202_regs {
     };
 
     // -------------------- ADC --------------------
-    struct adc
-    {
+    struct adc {
         static constexpr uint8_t ADC_EN1           = 0x82;
         static constexpr uint8_t ADC_EN2           = 0x83;
         static constexpr uint8_t ADC_SPEED         = 0x84;
@@ -188,8 +183,7 @@ struct axp202_regs {
     };
 
     // -------------------- GPIO --------------------
-    struct gpio
-    {
+    struct gpio {
         static constexpr uint8_t GPIO0_CTL         = 0x90;
         static constexpr uint8_t GPIO0_VOL         = 0x91;
         static constexpr uint8_t GPIO1_CTL         = 0x92;
@@ -199,8 +193,7 @@ struct axp202_regs {
     };
 
     // -------------------- Coulomb Counter --------------------
-    struct coulomb
-    {
+    struct coulomb {
         static constexpr uint8_t BAT_CHGCOULOMB3    = 0xB0;
         static constexpr uint8_t BAT_CHGCOULOMB2    = 0xB1;
         static constexpr uint8_t BAT_CHGCOULOMB1    = 0xB2;
@@ -213,14 +206,12 @@ struct axp202_regs {
     };
 
     // -------------------- Timer / Watchdog --------------------
-    struct timer
-    {
+    struct timer {
         static constexpr uint8_t TIMER_CTL         = 0x8A;
     };
 
     // -------------------- Factory ADC conversion factors --------------------
-    struct factory
-    {
+    struct factory {
         static constexpr float FACTORY_VBUS_VOLTAGE   = 1.7f;
         static constexpr float FACTORY_VBUS_CURRENT   = 0.375f;
         static constexpr float FACTORY_VBAT_VOLTAGE   = 1.1f;

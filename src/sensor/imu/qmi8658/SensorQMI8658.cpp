@@ -2364,7 +2364,7 @@ bool SensorQMI8658::hardwareSelfTest(bool includeAccel, bool includeGyro)
                 fabs(_hw_st_accel_result[1]) <= HW_ST_ACCEL_THRESHOLD_MG ||
                 fabs(_hw_st_accel_result[2]) <= HW_ST_ACCEL_THRESHOLD_MG) {
             SENSORLIB_LOG_E("HW Self-test Accel failed: X=%.1f Y=%.1f Z=%.1f mg",
-                  _hw_st_accel_result[0], _hw_st_accel_result[1], _hw_st_accel_result[2]);
+                            _hw_st_accel_result[0], _hw_st_accel_result[1], _hw_st_accel_result[2]);
             if (accel_en) enableAccel();
             if (gyro_en) enableGyro();
             return false;
@@ -2413,7 +2413,7 @@ bool SensorQMI8658::hardwareSelfTest(bool includeAccel, bool includeGyro)
                 fabs(_hw_st_gyro_result[1]) <= HW_ST_GYRO_THRESHOLD_DPS ||
                 fabs(_hw_st_gyro_result[2]) <= HW_ST_GYRO_THRESHOLD_DPS) {
             SENSORLIB_LOG_E("HW Self-test Gyro failed: X=%.1f Y=%.1f Z=%.1f dps",
-                  _hw_st_gyro_result[0], _hw_st_gyro_result[1], _hw_st_gyro_result[2]);
+                            _hw_st_gyro_result[0], _hw_st_gyro_result[1], _hw_st_gyro_result[2]);
             if (accel_en) enableAccel();
             if (gyro_en) enableGyro();
             return false;

@@ -71,13 +71,13 @@ public:
     BMA4XXCapability::Capability getCapabilities() const override
     {
         return BMA4XXCapability::Capability::SupportDataReady
-             | BMA4XXCapability::Capability::SupportAnyMotion
-             | BMA4XXCapability::Capability::SupportNoMotion
-             | BMA4XXCapability::Capability::SupportTap
-             | BMA4XXCapability::Capability::SupportStepDetector
-             | BMA4XXCapability::Capability::SupportStepCounter
-             | BMA4XXCapability::Capability::SupportActivity
-             | BMA4XXCapability::Capability::SupportAxisRemap;
+               | BMA4XXCapability::Capability::SupportAnyMotion
+               | BMA4XXCapability::Capability::SupportNoMotion
+               | BMA4XXCapability::Capability::SupportTap
+               | BMA4XXCapability::Capability::SupportStepDetector
+               | BMA4XXCapability::Capability::SupportStepCounter
+               | BMA4XXCapability::Capability::SupportActivity
+               | BMA4XXCapability::Capability::SupportAxisRemap;
     }
 
     /**
@@ -532,8 +532,8 @@ public:
         any_mot_config.duration = duration;
 
         SENSORLIB_LOG_D("Configuring motion detection: threshold=%u LSB (%.2f mG), duration=%u LSB (%.2f ms at 50Hz)",
-              threshold, threshold * 0.48f,
-              duration, duration * 20.0f);
+                        threshold, threshold * 0.48f,
+                        duration, duration * 20.0f);
 
         if (any_motion) {
             if (bma456h_set_any_mot_config(&any_mot_config, dev.get()) != 0) {
@@ -566,7 +566,7 @@ public:
         uint16_t duration_lsb = static_cast<uint16_t>(duration_ms / 20.0f + 0.5f);
 
         SENSORLIB_LOG_D("Converting: %.2f mg -> %u LSB, %.2f ms -> %u LSB",
-              threshold_mg, threshold_lsb, duration_ms, duration_lsb);
+                        threshold_mg, threshold_lsb, duration_ms, duration_lsb);
 
         return configAnyMotion(threshold_lsb, duration_lsb);
     }
@@ -588,7 +588,7 @@ public:
         uint16_t duration_lsb = static_cast<uint16_t>(duration_ms / 20.0f + 0.5f);
 
         SENSORLIB_LOG_D("Converting: %.2f mg -> %u LSB, %.2f ms -> %u LSB",
-              threshold_mg, threshold_lsb, duration_ms, duration_lsb);
+                        threshold_mg, threshold_lsb, duration_ms, duration_lsb);
 
         return configNoMotion(threshold_lsb, duration_lsb);
     }
@@ -613,8 +613,8 @@ public:
         duration_ms = any_mot_config.duration * 20.0f;
 
         SENSORLIB_LOG_D("Current config: threshold=%u LSB (%.2f mg), duration=%u LSB (%.2f ms)",
-              any_mot_config.threshold, threshold_mg,
-              any_mot_config.duration, duration_ms);
+                        any_mot_config.threshold, threshold_mg,
+                        any_mot_config.duration, duration_ms);
 
         return true;
     }
@@ -639,8 +639,8 @@ public:
         duration_ms = no_mot_config.duration * 20.0f;
 
         SENSORLIB_LOG_D("Current no-motion config: threshold=%u LSB (%.2f mg), duration=%u LSB (%.2f ms)",
-              no_mot_config.threshold, threshold_mg,
-              no_mot_config.duration, duration_ms);
+                        no_mot_config.threshold, threshold_mg,
+                        no_mot_config.duration, duration_ms);
 
         return true;
     }

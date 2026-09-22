@@ -311,7 +311,7 @@ void setup()
     Serial.println(conf.step_counter_increment);    /* scale factor of step counter */
     Serial.print("     - <step_duration_pp_enabled>: ");
     Serial.println(conf.step_duration_pp_enabled);  /* enable post-process of duration between steps */
-    Serial.print("     - <step_dur_thres>: ");  
+    Serial.print("     - <step_dur_thres>: ");
     Serial.println(conf.step_dur_thres);    /* gain threshold of mean step duration in post-processing check */
     Serial.print("     - <en_mcr_pp>: ");
     Serial.println(conf.en_mcr_pp); /* enable post-process of mean crossings */

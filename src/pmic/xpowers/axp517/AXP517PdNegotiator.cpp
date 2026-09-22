@@ -354,7 +354,7 @@ bool AXP517PdNegotiator::parseSourceCaps(const AXP517Tcpc::RxFifoMsg &rx, Source
 }
 
 bool AXP517PdNegotiator::selectFixedOffer(const SourceCaps &caps, const RequestParams &req,
-                                          FixedOffer &outOffer)
+        FixedOffer &outOffer)
 {
     if (caps.fixedCount == 0) return false;
 

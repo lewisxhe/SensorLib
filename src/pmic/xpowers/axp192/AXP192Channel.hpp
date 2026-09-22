@@ -130,7 +130,10 @@ public:
     Info getInfo(uint8_t channel) const override;
 
 private:
-    bool isDCDC(uint8_t channel) const { return channel < DCDC_COUNT; }
+    bool isDCDC(uint8_t channel) const
+    {
+        return channel < DCDC_COUNT;
+    }
 
     AXP192Core &_core;
 };

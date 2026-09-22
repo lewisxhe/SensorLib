@@ -39,7 +39,7 @@ public:
     {
     }
     static int8_t sensor_static_read_data(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr);
-    static int8_t sensor_static_write_data(uint8_t reg_addr,const uint8_t *reg_data, uint32_t length, void *intf_ptr);
+    static int8_t sensor_static_write_data(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr);
     static void   sensor_static_delay_us(uint32_t us, void *private_data);
 protected:
     SensorCommBase  *comm;

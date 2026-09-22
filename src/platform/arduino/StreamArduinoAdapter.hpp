@@ -33,20 +33,22 @@
 #include <Arduino.h>
 #include <stdarg.h>
 
-class ArduinoStreamPrinter {
+class ArduinoStreamPrinter
+{
 private:
-    Stream& stream;
-    
+    Stream &stream;
+
 public:
     ArduinoStreamPrinter(Stream& s) : stream(s) {}
-    
-    int operator()(const char* format, ...) const {
+
+    int operator()(const char* format, ...) const
+    {
         char buffer[256];
         va_list args;
         va_start(args, format);
         int len = vsnprintf(buffer, sizeof(buffer), format, args);
         va_end(args);
-        
+
         if (len > 0) {
             stream.print(buffer);
         }

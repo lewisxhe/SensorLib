@@ -146,13 +146,31 @@ public:
      */
     Gesture getGesture() const;
 
-    TouchPoint& operator[](uint8_t index) { return getPoint(index); }
-    const TouchPoint& operator[](uint8_t index) const { return getPoint(index); }
+    TouchPoint &operator[](uint8_t index)
+    {
+        return getPoint(index);
+    }
+    const TouchPoint &operator[](uint8_t index) const
+    {
+        return getPoint(index);
+    }
 
-    TouchPoint* begin() { return points; }
-    TouchPoint* end() { return points + pointCount; }
-    const TouchPoint* begin() const { return points; }
-    const TouchPoint* end() const { return points + pointCount; }
+    TouchPoint *begin()
+    {
+        return points;
+    }
+    TouchPoint *end()
+    {
+        return points + pointCount;
+    }
+    const TouchPoint *begin() const
+    {
+        return points;
+    }
+    const TouchPoint *end() const
+    {
+        return points + pointCount;
+    }
 
 private:
     TouchPoint points[MAX_POINTS]; /**< Array of touch points. */

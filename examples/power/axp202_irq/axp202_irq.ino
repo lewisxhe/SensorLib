@@ -69,24 +69,24 @@ void setup()
     // Enable selected interrupt sources
     // Shared interrupts (also available on AXP192)
     pmic.irq().enable(
-        AXP202Irq::IRQ_VBUS_INSERT |
-        AXP202Irq::IRQ_VBUS_REMOVE |
-        AXP202Irq::IRQ_BAT_INSERT |
-        AXP202Irq::IRQ_BAT_REMOVE |
-        AXP202Irq::IRQ_BAT_CHG_START |
-        AXP202Irq::IRQ_BAT_CHG_DONE |
-        AXP202Irq::IRQ_PEKEY_SHORT_PRESS |
-        AXP202Irq::IRQ_PEKEY_LONG_PRESS |
-        AXP202Irq::IRQ_GPIO0_EDGE |
-        AXP202Irq::IRQ_GPIO1_EDGE |
-        // AXP202-specific interrupts
-        AXP202Irq::IRQ_PKEY_POSITIVE |
-        AXP202Irq::IRQ_PKEY_NEGATIVE |
-        AXP202Irq::IRQ_GPIO3_EDGE |
-        AXP202Irq::IRQ_LOW_VOLT_LEVEL1 |
-        AXP202Irq::IRQ_LOW_VOLT_LEVEL2 |
-        AXP202Irq::IRQ_TIMER_TIMEOUT
-    );
+            AXP202Irq::IRQ_VBUS_INSERT |
+            AXP202Irq::IRQ_VBUS_REMOVE |
+            AXP202Irq::IRQ_BAT_INSERT |
+            AXP202Irq::IRQ_BAT_REMOVE |
+            AXP202Irq::IRQ_BAT_CHG_START |
+            AXP202Irq::IRQ_BAT_CHG_DONE |
+            AXP202Irq::IRQ_PEKEY_SHORT_PRESS |
+            AXP202Irq::IRQ_PEKEY_LONG_PRESS |
+            AXP202Irq::IRQ_GPIO0_EDGE |
+            AXP202Irq::IRQ_GPIO1_EDGE |
+            // AXP202-specific interrupts
+            AXP202Irq::IRQ_PKEY_POSITIVE |
+            AXP202Irq::IRQ_PKEY_NEGATIVE |
+            AXP202Irq::IRQ_GPIO3_EDGE |
+            AXP202Irq::IRQ_LOW_VOLT_LEVEL1 |
+            AXP202Irq::IRQ_LOW_VOLT_LEVEL2 |
+            AXP202Irq::IRQ_TIMER_TIMEOUT
+        );
 
     Serial.println("IRQ sources enabled");
 

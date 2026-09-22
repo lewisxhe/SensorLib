@@ -377,7 +377,7 @@ uint8_t AXP2101Power::getLowBatShutdownThreshold()
 bool AXP2101Power::enableDieTempDetection(bool enable)
 {
     return enable ? _core.setRegBit(axp2101_regs::ctrl::DIE_TEMP_CFG, 0)
-                  : _core.clrRegBit(axp2101_regs::ctrl::DIE_TEMP_CFG, 0);
+           : _core.clrRegBit(axp2101_regs::ctrl::DIE_TEMP_CFG, 0);
 }
 
 bool AXP2101Power::isDieTempDetectionEnabled()
@@ -409,7 +409,7 @@ bool AXP2101Power::setDCDCForcePWM(uint8_t dc_id, bool force)
     // DCDC1-4 map to bits 2-5 of REG 81. DCDC5 has no PWM control.
     if (dc_id == 0 || dc_id > 4) return false;
     return force ? _core.setRegBit(axp2101_regs::dcdc::FORCE_PWM_CTRL, dc_id + 1)
-                 : _core.clrRegBit(axp2101_regs::dcdc::FORCE_PWM_CTRL, dc_id + 1);
+           : _core.clrRegBit(axp2101_regs::dcdc::FORCE_PWM_CTRL, dc_id + 1);
 }
 
 bool AXP2101Power::isDCDCForcePWM(uint8_t dc_id)
@@ -421,7 +421,7 @@ bool AXP2101Power::isDCDCForcePWM(uint8_t dc_id)
 bool AXP2101Power::setDCDCForceCCM(bool enable)
 {
     return enable ? _core.setRegBit(axp2101_regs::dcdc::ONOFF_DVM_CTRL, 6)
-                  : _core.clrRegBit(axp2101_regs::dcdc::ONOFF_DVM_CTRL, 6);
+           : _core.clrRegBit(axp2101_regs::dcdc::ONOFF_DVM_CTRL, 6);
 }
 
 bool AXP2101Power::isDCDCForceCCM()
@@ -432,7 +432,7 @@ bool AXP2101Power::isDCDCForceCCM()
 bool AXP2101Power::setDVMRampSlow(bool slow)
 {
     return slow ? _core.setRegBit(axp2101_regs::dcdc::ONOFF_DVM_CTRL, 5)
-                : _core.clrRegBit(axp2101_regs::dcdc::ONOFF_DVM_CTRL, 5);
+           : _core.clrRegBit(axp2101_regs::dcdc::ONOFF_DVM_CTRL, 5);
 }
 
 bool AXP2101Power::isDVMRampSlow()
@@ -443,7 +443,7 @@ bool AXP2101Power::isDVMRampSlow()
 bool AXP2101Power::setFrequencySpreadEnable(bool enable)
 {
     return enable ? _core.setRegBit(axp2101_regs::dcdc::FORCE_PWM_CTRL, 7)
-                  : _core.clrRegBit(axp2101_regs::dcdc::FORCE_PWM_CTRL, 7);
+           : _core.clrRegBit(axp2101_regs::dcdc::FORCE_PWM_CTRL, 7);
 }
 
 bool AXP2101Power::isFrequencySpreadEnabled()
@@ -454,7 +454,7 @@ bool AXP2101Power::isFrequencySpreadEnabled()
 bool AXP2101Power::setFrequencySpreadRange(bool wide)
 {
     return wide ? _core.setRegBit(axp2101_regs::dcdc::FORCE_PWM_CTRL, 6)
-                : _core.clrRegBit(axp2101_regs::dcdc::FORCE_PWM_CTRL, 6);
+           : _core.clrRegBit(axp2101_regs::dcdc::FORCE_PWM_CTRL, 6);
 }
 
 bool AXP2101Power::getFrequencySpreadRange()
@@ -480,7 +480,7 @@ uint8_t AXP2101Power::getDCDCUVPDebounce()
 bool AXP2101Power::enableFastPowerOn(bool enable)
 {
     return enable ? _core.setRegBit(axp2101_regs::pmu::FAST_PWRON_CTRL, 7)
-                  : _core.clrRegBit(axp2101_regs::pmu::FAST_PWRON_CTRL, 7);
+           : _core.clrRegBit(axp2101_regs::pmu::FAST_PWRON_CTRL, 7);
 }
 
 bool AXP2101Power::isFastPowerOnEnabled()
@@ -491,7 +491,7 @@ bool AXP2101Power::isFastPowerOnEnabled()
 bool AXP2101Power::enableFastWakeup(bool enable)
 {
     return enable ? _core.setRegBit(axp2101_regs::pmu::FAST_PWRON_CTRL, 6)
-                  : _core.clrRegBit(axp2101_regs::pmu::FAST_PWRON_CTRL, 6);
+           : _core.clrRegBit(axp2101_regs::pmu::FAST_PWRON_CTRL, 6);
 }
 
 bool AXP2101Power::isFastWakeupEnabled()

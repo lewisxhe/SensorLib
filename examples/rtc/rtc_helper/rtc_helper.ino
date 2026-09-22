@@ -25,9 +25,9 @@
  * @file      rtc_helper.ino
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2025-02-24
- * @note      The SensorRtcHelper class supports automatic determination of the commonly 
- *            used PCF8563 and PCF8503 real-time clock chips. There are some differences in the registers 
- *            between the two. This class is added to facilitate switching between different chips without 
+ * @note      The SensorRtcHelper class supports automatic determination of the commonly
+ *            used PCF8563 and PCF8503 real-time clock chips. There are some differences in the registers
+ *            between the two. This class is added to facilitate switching between different chips without
  *            having to worry about the specific model used.
  */
 #include <RtcDrv.hpp>

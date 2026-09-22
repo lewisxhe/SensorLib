@@ -86,7 +86,7 @@ const char *bc12TypeName(PmicBc12Base::PortType type)
     case PmicBc12Base::PortType::DCP:       return "DCP";
     case PmicBc12Base::PortType::Apple_1A:  return "Apple 1A";
     case PmicBc12Base::PortType::Apple_2A:  return "Apple 2A";
-    case PmicBc12Base::PortType::Apple_2_4A:return "Apple 2.4A";
+    case PmicBc12Base::PortType::Apple_2_4A: return "Apple 2.4A";
     default:                                return "Unknown";
     }
 }

@@ -163,12 +163,12 @@ void setup()
     // Accelerometer: FS_2G(000), FS_4G(001), FS_8G(010), FS_16G(011)
     // ODR: 1000, 500, 250, 125, 62.5, 31.25, 128, 21, 11, 3 Hz (6DOF: 448/224/112/56/28 Hz)
     imu.configAccel(AccelFullScaleRange::FS_8G,
-                   125.0f);
+                    125.0f);
 
     // Gyroscope: FS_125_DPS, FS_250_DPS, FS_500_DPS, FS_1000_DPS, FS_2000_DPS, FS_4000_DPS
     // ODR: 7174/3587/1793/896/448/224/112/56/28 Hz
     imu.configGyro(GyroFullScaleRange::FS_1000_DPS,
-                  112.0f);
+                   112.0f);
 
     imu.configFifo(SensorQMI8658::FifoMode::STREAM,
                    SensorQMI8658::FifoSamples::SAMPLES_32,
@@ -203,9 +203,9 @@ void loop()
 
         for (uint16_t i = 0; i < samples && i < 5; ++i) {
             serialPrintFmt("  [%u] Accel: %7.3f %7.3f %7.3f | Gyro: %8.3f %8.3f %8.3f\n",
-                         i,
-                         accelFifo[i].mps2.x, accelFifo[i].mps2.y, accelFifo[i].mps2.z,
-                         gyroFifo[i].dps.x, gyroFifo[i].dps.y, gyroFifo[i].dps.z);
+                           i,
+                           accelFifo[i].mps2.x, accelFifo[i].mps2.y, accelFifo[i].mps2.z,
+                           gyroFifo[i].dps.x, gyroFifo[i].dps.y, gyroFifo[i].dps.z);
         }
         Serial.println();
     }

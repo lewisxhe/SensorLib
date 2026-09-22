@@ -31,7 +31,8 @@
 
 #include "AXP1xxAdc.hpp"
 
-namespace axp1xx {
+namespace axp1xx
+{
 
 template<typename CoreType, typename RegTraits>
 bool AXP1xxAdc<CoreType, RegTraits>::enableChannels(uint32_t mask)

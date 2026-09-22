@@ -215,7 +215,7 @@ void recognition_event_callback(uint8_t pattern_id, float count, void *user_data
 
 void beginRecognition()
 {
-// Define an array to hold the IDs of the patterns to be written to the KLIO sensor.
+    // Define an array to hold the IDs of the patterns to be written to the KLIO sensor.
     // 'action1_pattern_id' and 'action2_pattern_id' are predefined pattern IDs.
     uint8_t patterns_ids[] = {action1_pattern_id, action2_pattern_id};
 
@@ -308,7 +308,7 @@ void setup()
 
     // Output all sensors info to Serial
     BoschSensorInfo info = bhy.getSensorInfo();
-    
+
 #ifdef ARDUINO
     ArduinoStreamPrinter printer(Serial);
     info.printInfo(printer);

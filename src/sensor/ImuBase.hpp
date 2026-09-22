@@ -257,5 +257,5 @@ public:
      * @return Number of samples read, or 0 on error.
      */
     virtual uint16_t readFromFifo(AccelerometerData *accel_data, uint16_t accel_count,
-                                   GyroscopeData *gyro_data, uint16_t gyro_count) = 0;
+                                  GyroscopeData *gyro_data, uint16_t gyro_count) = 0;
 };

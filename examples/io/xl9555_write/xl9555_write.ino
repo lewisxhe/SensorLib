@@ -69,7 +69,7 @@ void setup()
         }
     }
 
-    // Set PORT0 as output 
+    // Set PORT0 as output
     expander.configPins(IoExpanderXL9555::PORT_ALL, OUTPUT);
 }
 

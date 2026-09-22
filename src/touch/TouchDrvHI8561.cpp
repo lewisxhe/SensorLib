@@ -40,7 +40,7 @@ void TouchDrvHI8561::sleep()
 const TouchPoints &TouchDrvHI8561::getTouchPoints()
 {
     static constexpr uint8_t POINT_BUFFER_SIZE = (MAX_FINGER_NUM * BYTES_PER_POINT);
-    
+
     uint8_t buffer[POINT_BUFFER_SIZE] = {0};
 
     _touchPoints.clear(); // Clear cached touch points

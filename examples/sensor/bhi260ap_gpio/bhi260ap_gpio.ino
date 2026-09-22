@@ -182,7 +182,7 @@ void setup()
 
     // Output all sensors info to Serial
     BoschSensorInfo info = bhy.getSensorInfo();
-    
+
 #ifdef ARDUINO
     ArduinoStreamPrinter printer(Serial);
     info.printInfo(printer);
@@ -220,7 +220,7 @@ void loop()
 {
     //Call the update functions using the activeCommander pointer
     cmd.update();
-    
+
 #ifdef USING_SENSOR_IRQ_METHOD
     if (isInterruptTriggered) {
         isInterruptTriggered = false;

@@ -275,7 +275,7 @@ public:
 
         if (!x_ok || !y_ok || !z_ok) {
             SENSORLIB_LOG_W("Self-test data out of range: X=%d, Y=%d, Z=%d (expected abs in 1..50)",
-                  x_result, y_result, z_result);
+                            x_result, y_result, z_result);
         }
 
         return x_ok && y_ok && z_ok;

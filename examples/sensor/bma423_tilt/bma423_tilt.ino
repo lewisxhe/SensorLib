@@ -111,11 +111,11 @@ void setup()
         while (1);
     }
 
-    
+
     // This setting affects tilt detection. Allowed values are SMARTPHONE or WRISTBAND
     SensorBMA423::Platform platform = SensorBMA423::Platform::SMARTPHONE;
     accelSensor.selectPlatform(platform);
-    
+
     // @warning The correct axis must be set for proper tilt detection.
     // Enable tilt detector feature
     rslt = accelSensor.enableTiltDetector(feature_enable, interrupt_enable, pin_map);

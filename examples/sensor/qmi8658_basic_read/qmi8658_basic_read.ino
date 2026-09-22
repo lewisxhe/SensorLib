@@ -151,14 +151,14 @@ void setup()
     // Accelerometer: FS_2G(000), FS_4G(001), FS_8G(010), FS_16G(011)
     // ODR: 1000, 500, 250, 125, 62.5, 31.25, 128, 21, 11, 3 Hz (6DOF: 448/224/112/56/28 Hz)
     imu.configAccel(AccelFullScaleRange::FS_8G,
-                   1000.0f,
-                   SensorQMI8658::LpfMode::MODE_0);
+                    1000.0f,
+                    SensorQMI8658::LpfMode::MODE_0);
 
     // Gyroscope: FS_125_DPS, FS_250_DPS, FS_500_DPS, FS_1000_DPS, FS_2000_DPS, FS_4000_DPS
     // ODR: 7174/3587/1793/896/448/224/112/56/28 Hz
     imu.configGyro(GyroFullScaleRange::FS_1000_DPS,
-                  1000.0f,
-                  SensorQMI8658::LpfMode::MODE_0);
+                   1000.0f,
+                   SensorQMI8658::LpfMode::MODE_0);
 
     // In 6DOF mode (ACC+GYR both enabled), synchronized ODR base
     // is derived from gyroscope natural frequency.
@@ -179,8 +179,8 @@ void loop()
         imu.readGyro(gyro);
 
         serialPrintFmt("Accel: %7.3f %7.3f %7.3f | Gyro: %8.3f %8.3f %8.3f\n",
-                     accel.mps2.x, accel.mps2.y, accel.mps2.z,
-                     gyro.dps.x, gyro.dps.y, gyro.dps.z);
+                       accel.mps2.x, accel.mps2.y, accel.mps2.z,
+                       gyro.dps.x, gyro.dps.y, gyro.dps.z);
     }
 
     delay(10);

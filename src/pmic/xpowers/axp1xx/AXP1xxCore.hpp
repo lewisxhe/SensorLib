@@ -30,7 +30,8 @@
 #pragma once
 #include <stdint.h>
 
-namespace axp1xx {
+namespace axp1xx
+{
 
 /**
  * @brief Register-bit pair identifying a power module.

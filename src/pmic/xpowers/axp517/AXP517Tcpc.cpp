@@ -224,7 +224,8 @@ bool AXP517Tcpc::getCc(CcStatus &cc1, CcStatus &cc2)
     if (!r8(CC_STATUS, cc)) return false;
 
     auto decodeSinkCc = [](uint8_t raw) -> CcStatus {
-        switch (raw & 0x03) {
+        switch (raw & 0x03)
+        {
         case 1: return CcStatus::RP_DEF;
         case 2: return CcStatus::RP_1_5;
         case 3: return CcStatus::RP_3_0;

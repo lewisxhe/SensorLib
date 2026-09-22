@@ -255,12 +255,12 @@ void SensorBHI260AP_Klio::klio_log_call_local(uint8_t sensor_id, const uint8_t *
     bhy2_klio_log_frame_t data;
     memcpy(&data, data_ptr, sizeof(data));
     SENSORLIB_LOG_D("ax: %.9g, ay: %.9g, az: %.9g, gx: %.9g, gy: %.9g, gz: %.9g\n",
-          data.accel[0],
-          data.accel[1],
-          data.accel[2],
-          data.gyro[0],
-          data.gyro[1],
-          data.gyro[2]);
+                    data.accel[0],
+                    data.accel[1],
+                    data.accel[2],
+                    data.gyro[0],
+                    data.gyro[1],
+                    data.gyro[2]);
 }
 
 bool SensorBHI260AP_Klio::getParameter(KlioParameter id, uint8_t *parameter_data, uint16_t *size)

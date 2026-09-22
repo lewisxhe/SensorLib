@@ -175,7 +175,7 @@ bool TouchDrvCST226::initImpl(uint8_t)
     checksum |= buffer[4];
 
     SENSORLIB_LOG_I("Chip ic version:0x%" PRIx32 ", checksum:0x%" PRIx32,
-          fwVersion, checksum);
+                    fwVersion, checksum);
 
     if (fwVersion == 0xA5A5A5A5) {
         SENSORLIB_LOG_E("Chip ic don't have firmware.");

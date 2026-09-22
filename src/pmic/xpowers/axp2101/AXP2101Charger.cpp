@@ -296,7 +296,7 @@ uint8_t AXP2101Charger::getThermalRegulationThreshold()
 bool AXP2101Charger::enableJeita(bool enable)
 {
     return enable ? _core.setRegBit(axp2101_regs::jeita::EN_CTRL, 0)
-                  : _core.clrRegBit(axp2101_regs::jeita::EN_CTRL, 0);
+           : _core.clrRegBit(axp2101_regs::jeita::EN_CTRL, 0);
 }
 
 bool AXP2101Charger::isJeitaEnabled()
@@ -379,7 +379,7 @@ uint8_t AXP2101Charger::getHighTempHysteresis()
 bool AXP2101Charger::setJeitaWarmCurrentReduction(bool reduce)
 {
     return reduce ? _core.setRegBit(axp2101_regs::jeita::SET0, 6)
-                  : _core.clrRegBit(axp2101_regs::jeita::SET0, 6);
+           : _core.clrRegBit(axp2101_regs::jeita::SET0, 6);
 }
 
 bool AXP2101Charger::getJeitaWarmCurrentReduction()
@@ -390,7 +390,7 @@ bool AXP2101Charger::getJeitaWarmCurrentReduction()
 bool AXP2101Charger::setJeitaCoolCurrentReduction(bool reduce)
 {
     return reduce ? _core.setRegBit(axp2101_regs::jeita::SET0, 4)
-                  : _core.clrRegBit(axp2101_regs::jeita::SET0, 4);
+           : _core.clrRegBit(axp2101_regs::jeita::SET0, 4);
 }
 
 bool AXP2101Charger::getJeitaCoolCurrentReduction()

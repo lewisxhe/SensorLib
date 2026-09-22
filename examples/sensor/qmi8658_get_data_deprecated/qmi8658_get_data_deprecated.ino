@@ -226,7 +226,7 @@ void setup()
 
 
 #if IMU_IRQ > 0
-// If you want to enable interrupts, then turn on the interrupt enable
+    // If you want to enable interrupts, then turn on the interrupt enable
     qmi.enableINT(SensorQMI8658::INTERRUPT_PIN_1, true);
     qmi.enableINT(SensorQMI8658::INTERRUPT_PIN_2, false);
 #endif

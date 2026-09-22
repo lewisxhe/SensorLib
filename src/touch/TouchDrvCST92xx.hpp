@@ -32,7 +32,7 @@
 #if !SENSORLIB_EXCLUDE_TOUCH_CST92XX
 
 #include "TouchDrvInterface.hpp"
-    
+
 static constexpr uint8_t   CST92XX_SLAVE_ADDRESS = (0x5A);
 
 class TouchDrvCST92xx : public TouchDrvInterface
@@ -113,7 +113,7 @@ protected:
 
     static constexpr uint16_t  CST9220_CHIP_ID             = (0x9220);
     static constexpr uint16_t  CST9217_CHIP_ID             = (0x9217);
-    
+
     static constexpr uint16_t  REG_READ                    = (0xD000);
     static constexpr uint16_t  REG_DEBUG_MODE              = (0xD101);
     static constexpr uint16_t  REG_SLEEP_MODE              = (0xD105);
@@ -124,7 +124,7 @@ protected:
     static constexpr uint16_t  REG_BASE_LINE_MODE          = (0xD10E);
     static constexpr uint16_t  REG_LOW_POWER_MODE          = (0xD10F);
     static constexpr uint16_t  REG_FACTORY_MODE            = (0xD114);
-    
+
     static constexpr uint8_t   CST92XX_BOOT_ADDRESS        = (0x5A);
     static constexpr uint8_t   CST92XX_ACK                 = (0xAB);
     static constexpr uint32_t  CST92XX_MEM_SIZE            = (0x007F80);// 31KB

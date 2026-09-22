@@ -211,7 +211,7 @@ void touch_loop()
     uint32_t io_num;
     // if (xQueueReceive(xQueue, &io_num, pdMS_TO_TICKS(10))) {
     // if (gpio_get_level((gpio_num_t)CONFIG_SENSOR_IRQ) == 0) {
-        touch_drv_isr_handler();
+    touch_drv_isr_handler();
     // }
     // }
 }

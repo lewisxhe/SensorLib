@@ -116,7 +116,7 @@ void dataReadyISR()
 }
 #endif /*USING_SENSOR_IRQ_METHOD*/
 
-void parse_bme280_sensor_data(uint8_t sensor_id,const uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
+void parse_bme280_sensor_data(uint8_t sensor_id, const uint8_t *data_ptr, uint32_t len, uint64_t *timestamp, void *user_data)
 {
     float humidity = 0;
     float temperature = 0;
@@ -252,7 +252,7 @@ void setup()
 
     // Output all sensors info to Serial
     BoschSensorInfo info = bhy.getSensorInfo();
-    
+
 #ifdef ARDUINO
     ArduinoStreamPrinter printer(Serial);
     info.printInfo(printer);

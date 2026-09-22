@@ -36,7 +36,8 @@
 #include "AXP202AdcTraits.hpp"
 #include "AXP202Regs.hpp"
 
-namespace axp1xx {
+namespace axp1xx
+{
 
 inline uint32_t AdcTraitsBase<AXP202Core>::getChannelMask(PmicAdcBase::Channel ch)
 {
@@ -92,32 +93,28 @@ inline bool AdcTraitsBase<AXP202Core>::readChannel(AXP202Core &core, PmicAdcBase
     }
 
     switch (ch) {
-    case PmicAdcBase::Channel::VBUS_VOLTAGE:
-    {
+    case PmicAdcBase::Channel::VBUS_VOLTAGE: {
         uint16_t raw = readRegisterH8L4(core, axp202_regs::adc::VBUS_VOL_H, axp202_regs::adc::VBUS_VOL_L);
         if (raw == 0xFFFF) return false;
         out = static_cast<float>(raw) * axp202_regs::factory::FACTORY_VBUS_VOLTAGE;
         break;
     }
 
-    case PmicAdcBase::Channel::VBUS_CURRENT:
-    {
+    case PmicAdcBase::Channel::VBUS_CURRENT: {
         uint16_t raw = readRegisterH8L4(core, axp202_regs::adc::VBUS_CUR_H, axp202_regs::adc::VBUS_CUR_L);
         if (raw == 0xFFFF) return false;
         out = static_cast<float>(raw) * axp202_regs::factory::FACTORY_VBUS_CURRENT;
         break;
     }
 
-    case PmicAdcBase::Channel::BAT_VOLTAGE:
-    {
+    case PmicAdcBase::Channel::BAT_VOLTAGE: {
         uint16_t raw = readRegisterH8L4(core, axp202_regs::adc::BAT_AVERVOL_H, axp202_regs::adc::BAT_AVERVOL_L);
         if (raw == 0xFFFF) return false;
         out = static_cast<float>(raw) * axp202_regs::factory::FACTORY_VBAT_VOLTAGE;
         break;
     }
 
-    case PmicAdcBase::Channel::BAT_CURRENT:
-    {
+    case PmicAdcBase::Channel::BAT_CURRENT: {
         int s0 = core.readReg(axp202_regs::status::STATUS);
         if (s0 < 0) return false;
         bool charging = (s0 >> 2) & 0x01;
@@ -139,16 +136,14 @@ inline bool AdcTraitsBase<AXP202Core>::readChannel(AXP202Core &core, PmicAdcBase
         break;
     }
 
-    case PmicAdcBase::Channel::VSYS_VOLTAGE:
-    {
+    case PmicAdcBase::Channel::VSYS_VOLTAGE: {
         uint16_t raw = readRegisterH8L4(core, axp202_regs::adc::APS_AVERVOL_H, axp202_regs::adc::APS_AVERVOL_L);
         if (raw == 0xFFFF) return false;
         out = static_cast<float>(raw) * axp202_regs::factory::FACTORY_APS_VOLTAGE;
         break;
     }
 
-    case PmicAdcBase::Channel::DIE_TEMPERATURE:
-    {
+    case PmicAdcBase::Channel::DIE_TEMPERATURE: {
         uint16_t raw = readRegisterH8L4(core, axp202_regs::adc::INTERNAL_TEMP_H, axp202_regs::adc::INTERNAL_TEMP_L);
         if (raw == 0xFFFF) return false;
         out = static_cast<float>(raw) * axp202_regs::factory::FACTORY_INTERNAL_TEMP - axp202_regs::factory::FACTORY_INTERNAL_OFFSET;
@@ -158,8 +153,7 @@ inline bool AdcTraitsBase<AXP202Core>::readChannel(AXP202Core &core, PmicAdcBase
     case PmicAdcBase::Channel::BAT_TEMPERATURE:
         return false;
 
-    case PmicAdcBase::Channel::BAT_PERCENTAGE:
-    {
+    case PmicAdcBase::Channel::BAT_PERCENTAGE: {
         int val = core.readReg(axp202_regs::adc::BATT_PERCENTAGE);
         if (val < 0) return false;
         out = static_cast<float>(val & 0x7F);

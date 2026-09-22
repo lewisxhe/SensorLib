@@ -134,7 +134,10 @@ private:
      * @param channel Channel index.
      * @return true if channel < DCDC_COUNT.
      */
-    bool isDCDC(uint8_t channel) const { return channel < DCDC_COUNT; }
+    bool isDCDC(uint8_t channel) const
+    {
+        return channel < DCDC_COUNT;
+    }
 
     AXP2101Core &_core;
 };

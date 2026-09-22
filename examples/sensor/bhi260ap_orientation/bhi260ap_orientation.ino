@@ -268,7 +268,7 @@ void setup()
 
     // Output all sensors info to Serial
     BoschSensorInfo info = bhy.getSensorInfo();
-    
+
 #ifdef ARDUINO
     ArduinoStreamPrinter printer(Serial);
     info.printInfo(printer);
@@ -289,9 +289,9 @@ void setup()
 #ifdef USING_DATA_HELPER
     orientation.enable(sample_rate, report_latency_ms);
 #else
-// Enable direction detection
+    // Enable direction detection
     bhy.configure(BoschSensorID::DEVICE_ORIENTATION, sample_rate, report_latency_ms);
-// Set the direction detection result output processing function
+    // Set the direction detection result output processing function
     bhy.onResultEvent(BoschSensorID::DEVICE_ORIENTATION, orientation_process_callback);
 #endif
 

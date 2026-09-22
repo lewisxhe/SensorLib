@@ -223,7 +223,7 @@ private:
         // static const IDF_RX_BUF_DISABLE =  0;  /*!< I2C master doesn't need buffer */
 
         i2c_param_config(_i2cNum, &i2c_conf);
-        if(ESP_OK != i2c_driver_install(_i2cNum, i2c_conf.mode, 0, 0, 0)) {
+        if (ESP_OK != i2c_driver_install(_i2cNum, i2c_conf.mode, 0, 0, 0)) {
             setError(SENSOR_ERR_COMM_INIT);
             return false;
         }

@@ -160,13 +160,12 @@ bool AXP2101Adc::read(Channel ch, float &out)
             return false;
         out = static_cast<float>(((buffer[0] & 0x3F) << 8 | buffer[1])) * axp2101_regs::factory::TS_STEP;
         break;
-    case Channel::BAT_PERCENTAGE:
-        {
-            int val = _core.readReg(axp2101_regs::gauge::BAT_PERCENT);
-            if (val < 0) return false;
-            out = static_cast<float>(val);
-        }
-        break;
+    case Channel::BAT_PERCENTAGE: {
+        int val = _core.readReg(axp2101_regs::gauge::BAT_PERCENT);
+        if (val < 0) return false;
+        out = static_cast<float>(val);
+    }
+    break;
     default:
         return false;
     }

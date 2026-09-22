@@ -41,8 +41,14 @@ public:
         }
     }
 
-    uint8_t getAddress() const { return _addr; }
-    uint8_t getInterface() const { return _iface; }
+    uint8_t getAddress() const
+    {
+        return _addr;
+    }
+    uint8_t getInterface() const
+    {
+        return _iface;
+    }
 
 protected:
     DeviceBeginCommon() = default;
@@ -55,17 +61,17 @@ protected:
         return true;
     }
 
-    virtual SensorCommBase* getComm() const override
+    virtual SensorCommBase *getComm() const override
     {
         return comm.get();
     }
 
     // ---- Hooks functions  ----
-    
+
     // 1) Before comm/hal/staticComm is created (some parameters can be prepared).
     virtual void beforeBegin() {}
 
-    // 2) comm/hal/staticComm has been created + comm->init() has been completed, 
+    // 2) comm/hal/staticComm has been created + comm->init() has been completed,
     //    but initImpl has not yet run
     //    Typical use case: Touch driver sets hal->setCustomMode/Read/Write
     virtual void afterCommReady() {}

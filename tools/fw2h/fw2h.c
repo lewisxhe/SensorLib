@@ -49,34 +49,25 @@ int main(int argc, char *argv[])
     unsigned char fw[N_ROWS];
 
     printf("Utility to convert binary files to .h\n");
-    if (argc == 1)
-    {
+    if (argc == 1) {
         printf("Pass a firmware file as an argument. Exiting\n");
         exit(-1);
-    }
-    else
-    {
-        for (int i = 1; i < argc; i++)
-        {
+    } else {
+        for (int i = 1; i < argc; i++) {
             input_file = fopen(argv[i], "rb");
-            if (input_file)
-            {
+            if (input_file) {
                 sprintf(output_file_name, "%s" ".h", (char *)argv[i]);
                 printf("Copying firmware to %s\n", output_file_name);
                 output_file = fopen(output_file_name, "w");
-                if (output_file)
-                {
+                if (output_file) {
                     fprintf(output_file, "const unsigned char bhy2_firmware_image[] = {\n");
                     unsigned char bytes_read = 0;
                     unsigned char j = 0;
-                    do
-                    {
+                    do {
                         bytes_read = (uint8_t)fread(fw, 1, N_ROWS, input_file);
-                        if (bytes_read)
-                        {
+                        if (bytes_read) {
                             fprintf(output_file, "  ");
-                            for (j = 0; j < bytes_read; j++)
-                            {
+                            for (j = 0; j < bytes_read; j++) {
                                 fprintf(output_file, "0x%02x, ", fw[j]);
                             }
 
@@ -85,14 +76,10 @@ int main(int argc, char *argv[])
                     } while (bytes_read != 0);
                     fprintf(output_file, "};\n");
                     fclose(output_file);
-                }
-                else
-                {
+                } else {
                     printf("Could not create %s\n", output_file_name);
                 }
-            }
-            else
-            {
+            } else {
                 printf("Could not open %s.\n", argv[i]);
             }
 

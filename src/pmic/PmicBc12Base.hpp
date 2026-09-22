@@ -30,7 +30,7 @@
  *
  * A portable interface to start BC1.2 detection and read detected source type.
  * Implementations may support auto-detect or manual trigger.
- * The prerequisite is that the hardware DP/DM is already connected; 
+ * The prerequisite is that the hardware DP/DM is already connected;
  * otherwise, the status detection is invalid.
  */
 #pragma once

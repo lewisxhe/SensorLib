@@ -34,7 +34,8 @@
 #include <math.h>
 #include "../../PmicAdcBase.hpp"
 
-namespace axp1xx {
+namespace axp1xx
+{
 
 /**
  * @brief Generic ADC implementation for AXP1xx-based PMICs

@@ -591,7 +591,7 @@ public:
 // *INDENT-ON*
 
 protected:
-    
+
     SensorHalCustom::CustomMode  _halModeCallback;                ///< Custom GPIO mode callback
     SensorHalCustom::CustomWrite _halWriteCallback;               ///< Custom GPIO write callback
     SensorHalCustom::CustomRead  _halReadCallback;                ///< Custom GPIO read callback

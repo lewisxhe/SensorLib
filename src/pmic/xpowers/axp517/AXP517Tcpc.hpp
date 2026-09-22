@@ -145,7 +145,10 @@ public:
      * @brief Clear all PD alert bits.
      * @retval true on success, false on register access failure.
      */
-    bool clearAllAlerts() { return clearAlert(0xFFFF); }
+    bool clearAllAlerts()
+    {
+        return clearAlert(0xFFFF);
+    }
 
     /**
      * @brief Read the TCPC FAULT_STATUS register.
@@ -275,16 +278,28 @@ public:
     }
 
     /** @brief Return the platform millisecond counter. */
-    uint32_t millis() { return _core.millis(); }
+    uint32_t millis()
+    {
+        return _core.millis();
+    }
 
     /** @brief Delay using the active platform HAL. */
-    void delayMs(uint32_t ms) { _core.delayMs(ms); }
+    void delayMs(uint32_t ms)
+    {
+        _core.delayMs(ms);
+    }
 
     /** @brief Configure a platform GPIO pin through the active HAL. */
-    void pinMode(uint8_t pin, uint8_t mode) { _core.pinMode(pin, mode); }
+    void pinMode(uint8_t pin, uint8_t mode)
+    {
+        _core.pinMode(pin, mode);
+    }
 
     /** @brief Read a platform GPIO pin through the active HAL. */
-    uint8_t digitalRead(uint8_t pin) { return _core.digitalRead(pin); }
+    uint8_t digitalRead(uint8_t pin)
+    {
+        return _core.digitalRead(pin);
+    }
 
 private:
     /**

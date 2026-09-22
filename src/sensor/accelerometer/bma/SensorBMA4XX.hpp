@@ -102,7 +102,8 @@ enum class ActivityType {
  * Used to indicate which features are available in a specific BMA4XX implementation.
  * Users can query capabilities through the base class pointer.
  */
-namespace BMA4XXCapability {
+namespace BMA4XXCapability
+{
 enum class Capability : uint32_t {
     None              = 0,
     SupportDataReady  = (1 << 0),
@@ -648,10 +649,10 @@ public:
         int8_t result = bma4_map_interrupt(int_line, interrupt_sources, enable, dev.get());
         if (result != 0) {
             SENSORLIB_LOG_E("Failed to %s interrupt 0x%04X on pin %d: %d",
-                  enable ? "enable" : "disable",
-                  interrupt_sources,
-                  (pin_map == InterruptPinMap::PIN1) ? 1 : 2,
-                  result);
+                            enable ? "enable" : "disable",
+                            interrupt_sources,
+                            (pin_map == InterruptPinMap::PIN1) ? 1 : 2,
+                            result);
             return false;
         }
 
@@ -796,8 +797,8 @@ public:
      * @brief  Enable or disable any-motion detection (default: not supported)
      */
     virtual bool enableAnyMotionDetection(const MotionAxesConfig &cfg, bool enable,
-                                           bool interrupt_enable = false,
-                                           InterruptPinMap pin_map = InterruptPinMap::PIN1)
+                                          bool interrupt_enable = false,
+                                          InterruptPinMap pin_map = InterruptPinMap::PIN1)
     {
         (void)cfg;
         (void)enable;
@@ -810,8 +811,8 @@ public:
      * @brief  Enable or disable no-motion detection (default: not supported)
      */
     virtual bool enableNoMotionDetection(const MotionAxesConfig &cfg, bool enable,
-                                          bool interrupt_enable = false,
-                                          InterruptPinMap pin_map = InterruptPinMap::PIN1)
+                                         bool interrupt_enable = false,
+                                         InterruptPinMap pin_map = InterruptPinMap::PIN1)
     {
         (void)cfg;
         (void)enable;
@@ -876,7 +877,7 @@ public:
      * @brief  Enable or disable tap detection (default: not supported)
      */
     virtual bool enableTapDetector(bool enable, bool interrupt_enable = false,
-                                    InterruptPinMap pin_map = InterruptPinMap::PIN1)
+                                   InterruptPinMap pin_map = InterruptPinMap::PIN1)
     {
         (void)enable;
         (void)interrupt_enable;
@@ -888,7 +889,7 @@ public:
      * @brief  Enable or disable step counter (default: not supported)
      */
     virtual bool enableStepCounter(bool enable, uint16_t step_counter_wm = 1,
-                                    bool reset_counter = false)
+                                   bool reset_counter = false)
     {
         (void)enable;
         (void)step_counter_wm;
@@ -900,7 +901,7 @@ public:
      * @brief  Enable or disable step detector (default: not supported)
      */
     virtual bool enableStepDetector(bool enable, bool interrupt_enable = false,
-                                     InterruptPinMap pin_map = InterruptPinMap::PIN1)
+                                    InterruptPinMap pin_map = InterruptPinMap::PIN1)
     {
         (void)enable;
         (void)interrupt_enable;
@@ -912,7 +913,7 @@ public:
      * @brief  Enable or disable activity recognition (default: not supported)
      */
     virtual bool enableActivityRecognition(bool enable, bool interrupt_enable = false,
-                                            InterruptPinMap pin_map = InterruptPinMap::PIN1)
+                                           InterruptPinMap pin_map = InterruptPinMap::PIN1)
     {
         (void)enable;
         (void)interrupt_enable;
@@ -924,7 +925,7 @@ public:
      * @brief  Enable or disable tilt detection (default: not supported)
      */
     virtual bool enableTiltDetector(bool enable, bool interrupt_enable = false,
-                                     InterruptPinMap pin_map = InterruptPinMap::PIN1)
+                                    InterruptPinMap pin_map = InterruptPinMap::PIN1)
     {
         (void)enable;
         (void)interrupt_enable;
@@ -1024,7 +1025,7 @@ private:
         _half_scale = powf(2.0f, (float)dev->resolution) / 2.0f;
 
         SENSORLIB_LOG_D("Half scale calculated: %.0f (for %d-bit sensor)",
-              _half_scale, dev->resolution);
+                        _half_scale, dev->resolution);
 
         // Set default full scale range to 2g
         if (!setFullScaleRange(AccelFullScaleRange::FS_2G)) {

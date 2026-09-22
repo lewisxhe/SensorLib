@@ -43,20 +43,20 @@
  *
  * @section Important Note About NTC Temperature
  * @warning The BAT_TEMPERATURE channel returns NTC percentage, NOT temperature!
- * 
+ *
  * The ADC reads the NTC thermistor voltage as a percentage of REGN (the internal
  * voltage reference used in the NTC divider circuit).
  * - Formula: NTC/REGN = 21% + [TSPCT] * 0.465%
  * - Range: 21% (cold) to 80% (hot)
- * 
+ *
  * This value cannot be directly converted to temperature without knowing:
  * 1. The NTC thermistor's Beta value (typically 3380, 3950, 4100, etc.)
  * 2. The pull-up resistor value in your specific battery pack circuit
  * 3. The REGN voltage which varies based on charger configuration
- * 
+ *
  * Different battery packs use different NTC specifications (e.g., 10kΩ at 25°C
  * with different Beta values), so no universal conversion is possible.
- * 
+ *
  * To convert to temperature, you would need to use the Steinhart-Hart equation
  * with parameters from your battery pack's specification sheet.
  *

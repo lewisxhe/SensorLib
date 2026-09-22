@@ -27,7 +27,7 @@ public:
     bool enable(bool enable)
     {
         return enable ? _core.setRegBit(axp202_regs::coulomb::COULOMB_CTL, 7)
-                      : _core.clrRegBit(axp202_regs::coulomb::COULOMB_CTL, 7);
+               : _core.clrRegBit(axp202_regs::coulomb::COULOMB_CTL, 7);
     }
 
     bool isEnabled()

@@ -32,7 +32,8 @@
 #include <stdint.h>
 #include "../../PmicAdcBase.hpp"
 
-namespace axp1xx {
+namespace axp1xx
+{
 
 /**
  * @brief Base traits class for AXP1xxAdc template specialization

@@ -147,12 +147,12 @@ void setup()
     // Accelerometer: FS_2G(000), FS_4G(001), FS_8G(010), FS_16G(011)
     // ODR: 1000, 500, 250, 125, 62.5, 31.25, 128, 21, 11, 3 Hz (6DOF: 448/224/112/56/28 Hz)
     imu.configAccel(AccelFullScaleRange::FS_8G,
-                   1000.0f);
+                    1000.0f);
 
     // Gyroscope: FS_125_DPS, FS_250_DPS, FS_500_DPS, FS_1000_DPS, FS_2000_DPS, FS_4000_DPS
     // ODR: 7174/3587/1793/896/448/224/112/56/28 Hz
     imu.configGyro(GyroFullScaleRange::FS_1000_DPS,
-                  1000.0f);
+                   1000.0f);
 
     // In 6DOF mode (ACC+GYR both enabled), ODR synchronization
     // is derived from gyroscope natural frequency.
@@ -175,7 +175,7 @@ void setup()
     if (imu.calibrate(&gyro_x, &gyro_y, &gyro_z)) {
         Serial.println("Calibration successful!");
         serialPrintFmt("Gyro gains - X: 0x%04X, Y: 0x%04X, Z: 0x%04X\n",
-                     gyro_x, gyro_y, gyro_z);
+                       gyro_x, gyro_y, gyro_z);
 
         delay(500);
 
@@ -227,7 +227,7 @@ void loop()
             int16_t accelOff[3], gyroOff[3];
             imu.getStaticCalibrationOffsets(accelOff, gyroOff);
             serialPrintFmt("[CAL] Static calibration complete. Gyro offsets: %d %d %d\n",
-                          gyroOff[0], gyroOff[1], gyroOff[2]);
+                           gyroOff[0], gyroOff[1], gyroOff[2]);
             staticCalDonePrinted = true;
         }
         serialPrintFmt("Gyro: %8.3f %8.3f %8.3f\n", gyro.dps.x, gyro.dps.y, gyro.dps.z);
@@ -236,7 +236,7 @@ void loop()
         if ((failCount % 20) == 1) {
             bool enG = imu.enableGyro();
             serialPrintFmt("[WARN] readGyro failed (%lu), trying enableGyro: %s\n",
-                          static_cast<unsigned long>(failCount), enG ? "OK" : "FAIL");
+                           static_cast<unsigned long>(failCount), enG ? "OK" : "FAIL");
         }
     }
     delay(100);

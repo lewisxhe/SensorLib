@@ -172,9 +172,9 @@ void setup()
     }
 
     serialPrintFmt("No-Motion config any=%s no=%s enable=%s\n",
-                  cfgAny ? "OK" : "FAIL",
-                  cfg ? "OK" : "FAIL",
-                  en ? "OK" : "FAIL");
+                   cfgAny ? "OK" : "FAIL",
+                   cfg ? "OK" : "FAIL",
+                   en ? "OK" : "FAIL");
     Serial.println("Keep sensor still to trigger No-Motion.");
 
 

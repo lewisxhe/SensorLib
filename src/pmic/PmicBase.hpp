@@ -60,7 +60,8 @@
  * Used to indicate which features are available in a specific PMIC implementation.
  * These flags help determine which sub-modules can be accessed.
  */
-namespace PmicCapability {
+namespace PmicCapability
+{
 enum class Capability : uint32_t {
     PmicNone        = 0,    ///< No capabilities (should not occur)
     PmicSupportCharger     = (1 << 0),  ///< Battery charger support

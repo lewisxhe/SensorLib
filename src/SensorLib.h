@@ -54,16 +54,26 @@
 //  Core utilities in namespace sensorlib
 // ═══════════════════════════════════════════════════════════════════════════
 
-namespace sensorlib {
+namespace sensorlib
+{
 
 // ── Bit shift helpers (constexpr, type-safe) ────────────────────────────────
 
-constexpr uint32_t _bv(uint8_t b) { return static_cast<uint32_t>(1) << b; }
+constexpr uint32_t _bv(uint8_t b)
+{
+    return static_cast<uint32_t>(1) << b;
+}
 
 // ── Byte extraction ─────────────────────────────────────────────────────────
 
-constexpr uint8_t _lowByte(uint16_t w)  { return static_cast<uint8_t>(w & 0xFF); }
-constexpr uint8_t _highByte(uint16_t w) { return static_cast<uint8_t>(w >> 8);   }
+constexpr uint8_t _lowByte(uint16_t w)
+{
+    return static_cast<uint8_t>(w & 0xFF);
+}
+constexpr uint8_t _highByte(uint16_t w)
+{
+    return static_cast<uint8_t>(w >> 8);
+}
 
 // ── Bit manipulation (template, type-safe) ──────────────────────────────────
 

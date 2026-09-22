@@ -263,7 +263,7 @@ void setup()
     bool rslt = false;
     rslt = bhy.configure(BoschSensorID::IAQ, sample_rate, report_latency_ms);
     printResult(BoschSensorID::IAQ, sample_rate, rslt);
-    
+
     // Register BME688 data parse callback function
     bhy.onResultEvent(BoschSensorID::IAQ, parse_sensor_data);
 #endif

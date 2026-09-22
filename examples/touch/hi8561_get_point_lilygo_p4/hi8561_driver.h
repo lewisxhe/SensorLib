@@ -21,8 +21,7 @@
  * @brief LCD panel initialization commands.
  *
  */
-typedef struct
-{
+typedef struct {
     int cmd;               /*<! The specific LCD command */
     const void *data;      /*<! Buffer that holds the command specific data */
     size_t data_bytes;     /*<! Size of `data` in memory, in bytes */
@@ -35,15 +34,13 @@ typedef struct
  * @note  This structure needs to be passed to the `vendor_config` field in `esp_lcd_panel_dev_config_t`.
  *
  */
-typedef struct
-{
+typedef struct {
     const hi8561_lcd_init_cmd_t *init_cmds; /*!< Pointer to initialization commands array. Set to NULL if using default commands.
                                              *   The array should be declared as `static const` and positioned outside the function.
                                              *   Please refer to `vendor_specific_init_default` in source file.
                                              */
     uint16_t init_cmds_size;                /*<! Number of commands in above array */
-    struct
-    {
+    struct {
         esp_lcd_dsi_bus_handle_t dsi_bus;             /*!< MIPI-DSI bus configuration */
         const esp_lcd_dpi_panel_config_t *dpi_config; /*!< MIPI-DPI panel configuration */
         uint8_t lane_num;                             /*!< Number of MIPI-DSI lanes, defaults to 2 if set to 0 */

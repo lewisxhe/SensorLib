@@ -222,13 +222,13 @@ public:
             .chipIdValue = 0,
             .channelCount = 0,
             .capabilities = PmicCapability::Capability::PmicSupportCharger |
-                            PmicCapability::Capability::PmicSupportPower |
-                            PmicCapability::Capability::PmicSupportAdc |
-                            PmicCapability::Capability::PmicSupportGpio |
-                            PmicCapability::Capability::PmicSupportLed |
-                            PmicCapability::Capability::PmicSupportIrq |
-                            PmicCapability::Capability::PmicSupportBc12 |
-                            PmicCapability::Capability::PmicSupportTypeC,
+            PmicCapability::Capability::PmicSupportPower |
+            PmicCapability::Capability::PmicSupportAdc |
+            PmicCapability::Capability::PmicSupportGpio |
+            PmicCapability::Capability::PmicSupportLed |
+            PmicCapability::Capability::PmicSupportIrq |
+            PmicCapability::Capability::PmicSupportBc12 |
+            PmicCapability::Capability::PmicSupportTypeC,
             // REG62H[6:0]: ICC = 64*N mA, N=0..80
             .chargeCurrentMin  = 0,
             .chargeCurrentMax  = 5120,

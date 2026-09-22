@@ -53,7 +53,7 @@ public:
     enum Port {
         PORT_ALL = 0x0F
     };
-    
+
     /**
      * @brief Construct a new IoExpanderPCA9570 object.
      *
@@ -239,7 +239,7 @@ protected:
         (void)partID;
         (void)revision;
         SENSORLIB_LOG_D("ManufacturerID:0x%" PRIx16 ", PartID:0x%" PRIx16 ", Revision:0x%" PRIx8,
-              manufacturerID, partID, revision);
+                        manufacturerID, partID, revision);
         return true;
     }
 

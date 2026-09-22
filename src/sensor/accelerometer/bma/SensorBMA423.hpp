@@ -163,14 +163,14 @@ public:
     BMA4XXCapability::Capability getCapabilities() const override
     {
         return BMA4XXCapability::Capability::SupportDataReady
-             | BMA4XXCapability::Capability::SupportAnyMotion
-             | BMA4XXCapability::Capability::SupportNoMotion
-             | BMA4XXCapability::Capability::SupportTap
-             | BMA4XXCapability::Capability::SupportStepDetector
-             | BMA4XXCapability::Capability::SupportStepCounter
-             | BMA4XXCapability::Capability::SupportActivity
-             | BMA4XXCapability::Capability::SupportTilt
-             | BMA4XXCapability::Capability::SupportAxisRemap;
+               | BMA4XXCapability::Capability::SupportAnyMotion
+               | BMA4XXCapability::Capability::SupportNoMotion
+               | BMA4XXCapability::Capability::SupportTap
+               | BMA4XXCapability::Capability::SupportStepDetector
+               | BMA4XXCapability::Capability::SupportStepCounter
+               | BMA4XXCapability::Capability::SupportActivity
+               | BMA4XXCapability::Capability::SupportTilt
+               | BMA4XXCapability::Capability::SupportAxisRemap;
     }
 
     /**
@@ -305,11 +305,11 @@ public:
                     _mon_cfg.motion_feature_enabled != motion_to_enable) {
                 if (bma423_feature_enable(_mon_cfg.motion_feature_enabled, 0, dev.get()) != 0) {
                     SENSORLIB_LOG_E("Failed to disable motion feature 0x%02X",
-                          _mon_cfg.motion_feature_enabled);
+                                    _mon_cfg.motion_feature_enabled);
                     return false;
                 }
                 SENSORLIB_LOG_D("Disabled previous motion feature 0x%02X",
-                      _mon_cfg.motion_feature_enabled);
+                                _mon_cfg.motion_feature_enabled);
             }
         }
 
@@ -322,7 +322,7 @@ public:
 
         if (bma423_feature_enable(feature, enable, dev.get()) != 0) {
             SENSORLIB_LOG_E("Failed to %s feature 0x%04X",
-                  enable ? "enable" : "disable", feature);
+                            enable ? "enable" : "disable", feature);
             return false;
         }
 
@@ -650,8 +650,8 @@ public:
         }
 
         SENSORLIB_LOG_D("BMA423 motion config (raw): threshold=0x%04X, duration=%u, type: %s",
-              threshold, duration,
-              any_motion ? "Any-motion" : "No-motion");
+                        threshold, duration,
+                        any_motion ? "Any-motion" : "No-motion");
 
         return bma423_set_any_motion_config(&any_motion_cfg, dev.get()) == 0;
     }

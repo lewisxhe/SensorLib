@@ -490,7 +490,7 @@ public:
      * @return true if configuration successful, false otherwise.
      */
     bool configFifo(FifoMode mode, FifoSamples samples = FifoSamples::SAMPLES_16,
-                   uint8_t watermark_samples = 16);
+                    uint8_t watermark_samples = 16);
 
     /**
      * @brief Reset the FIFO.

@@ -25,7 +25,7 @@
  * @file      ImuGyroscopeAdapter.hpp
  * @author    Lewis He (lewishe@outlook.com)
  * @date      2026-03-08
- * 
+ *
  */
 #pragma once
 

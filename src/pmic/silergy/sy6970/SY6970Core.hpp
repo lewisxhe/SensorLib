@@ -42,33 +42,61 @@
 
 #include "../../../platform/comm/I2CDeviceWithHal.hpp"
 
-namespace SY6970Faults {
-    constexpr uint8_t WATCHDOG_TIMEOUT = 0x80;
-    constexpr uint8_t BOOST_FAULT = 0x40;
-    constexpr uint8_t CHARGE_FAULT_MASK = 0x30;  // Bits 5-4
-    constexpr uint8_t CHARGE_FAULT_NORMAL = 0x00;
-    constexpr uint8_t CHARGE_FAULT_INPUT = 0x10;  // Bit 4: BUS OVP or VBAT<BUS<3.8V
-    constexpr uint8_t CHARGE_FAULT_THERMAL = 0x20;  // Bit 5: Thermal shutdown
-    constexpr uint8_t CHARGE_FAULT_TIMER = 0x30;  // Bits 5+4: Safety timer expiration
-    constexpr uint8_t BATTERY_FAULT = 0x08;
-    constexpr uint8_t NTC_FAULT_MASK = 0x07; // Bits 2-0
+namespace SY6970Faults
+{
+constexpr uint8_t WATCHDOG_TIMEOUT = 0x80;
+constexpr uint8_t BOOST_FAULT = 0x40;
+constexpr uint8_t CHARGE_FAULT_MASK = 0x30;  // Bits 5-4
+constexpr uint8_t CHARGE_FAULT_NORMAL = 0x00;
+constexpr uint8_t CHARGE_FAULT_INPUT = 0x10;  // Bit 4: BUS OVP or VBAT<BUS<3.8V
+constexpr uint8_t CHARGE_FAULT_THERMAL = 0x20;  // Bit 5: Thermal shutdown
+constexpr uint8_t CHARGE_FAULT_TIMER = 0x30;  // Bits 5+4: Safety timer expiration
+constexpr uint8_t BATTERY_FAULT = 0x08;
+constexpr uint8_t NTC_FAULT_MASK = 0x07; // Bits 2-0
 
-    inline bool isWatchdogTimeout(uint8_t fault) { return (fault & WATCHDOG_TIMEOUT) != 0; }
-    inline bool isBoostFault(uint8_t fault) { return (fault & BOOST_FAULT) != 0; }
-    inline bool isChargeFault(uint8_t fault) { return (fault & CHARGE_FAULT_MASK) != 0; }
-    inline uint8_t getChargeFaultType(uint8_t fault) { return fault & CHARGE_FAULT_MASK; }
-    inline bool isChargeInputFault(uint8_t fault) { return (fault & CHARGE_FAULT_MASK) == CHARGE_FAULT_INPUT; }
-    inline bool isChargeThermalFault(uint8_t fault) { return (fault & CHARGE_FAULT_MASK) == CHARGE_FAULT_THERMAL; }
-    inline bool isChargeTimerFault(uint8_t fault) { return (fault & CHARGE_FAULT_MASK) == CHARGE_FAULT_TIMER; }
-    inline bool isBatteryFault(uint8_t fault) { return (fault & BATTERY_FAULT) != 0; }
-    inline uint8_t getNtcFault(uint8_t fault) { return fault & NTC_FAULT_MASK; }
+inline bool isWatchdogTimeout(uint8_t fault)
+{
+    return (fault & WATCHDOG_TIMEOUT) != 0;
+}
+inline bool isBoostFault(uint8_t fault)
+{
+    return (fault & BOOST_FAULT) != 0;
+}
+inline bool isChargeFault(uint8_t fault)
+{
+    return (fault & CHARGE_FAULT_MASK) != 0;
+}
+inline uint8_t getChargeFaultType(uint8_t fault)
+{
+    return fault & CHARGE_FAULT_MASK;
+}
+inline bool isChargeInputFault(uint8_t fault)
+{
+    return (fault & CHARGE_FAULT_MASK) == CHARGE_FAULT_INPUT;
+}
+inline bool isChargeThermalFault(uint8_t fault)
+{
+    return (fault & CHARGE_FAULT_MASK) == CHARGE_FAULT_THERMAL;
+}
+inline bool isChargeTimerFault(uint8_t fault)
+{
+    return (fault & CHARGE_FAULT_MASK) == CHARGE_FAULT_TIMER;
+}
+inline bool isBatteryFault(uint8_t fault)
+{
+    return (fault & BATTERY_FAULT) != 0;
+}
+inline uint8_t getNtcFault(uint8_t fault)
+{
+    return fault & NTC_FAULT_MASK;
+}
 }
 
 class SY6970Core : public I2CDeviceWithHal
 {
 public:
     SY6970Core() = default;
-    
+
     ~SY6970Core() = default;
 
     /**

@@ -133,15 +133,15 @@ uint8_t peakWindow = 20;
 void tapCallback(SensorQMI8658::TapEvent event)
 {
     switch (event) {
-        case SensorQMI8658::TapEvent::SINGLE:
-            Serial.println("[TAP] Single tap detected!");
-            break;
-        case SensorQMI8658::TapEvent::DOUBLE:
-            Serial.println("[TAP] Double tap detected!");
-            break;
-        default:
-            Serial.println("[TAP] Invalid tap");
-            break;
+    case SensorQMI8658::TapEvent::SINGLE:
+        Serial.println("[TAP] Single tap detected!");
+        break;
+    case SensorQMI8658::TapEvent::DOUBLE:
+        Serial.println("[TAP] Double tap detected!");
+        break;
+    default:
+        Serial.println("[TAP] Invalid tap");
+        break;
     }
 }
 
@@ -160,7 +160,7 @@ void applyTapConfig()
     imu.enableTap(SensorQMI8658::IntPin::PIN1);
 
     serialPrintFmt("[TAP CFG] peak=%.3f quiet=%.3f peakWin=%u tapWin=%u dblWin=%u\n",
-                  peakThreshold, quietThreshold, peakWindow, tapWindow, doubleTapWindow);
+                   peakThreshold, quietThreshold, peakWindow, tapWindow, doubleTapWindow);
 }
 
 void printCommandHelp()
@@ -246,14 +246,14 @@ void handleSerialCommands()
         }
         if (c >= '1' && c <= '8') {
             switch (c) {
-                case '1': applyCommand("p-"); break;
-                case '2': applyCommand("p+"); break;
-                case '3': applyCommand("q-"); break;
-                case '4': applyCommand("q+"); break;
-                case '5': applyCommand("w-"); break;
-                case '6': applyCommand("w+"); break;
-                case '7': applyCommand("d-"); break;
-                case '8': applyCommand("d+"); break;
+            case '1': applyCommand("p-"); break;
+            case '2': applyCommand("p+"); break;
+            case '3': applyCommand("q-"); break;
+            case '4': applyCommand("q+"); break;
+            case '5': applyCommand("w-"); break;
+            case '6': applyCommand("w+"); break;
+            case '7': applyCommand("d-"); break;
+            case '8': applyCommand("d+"); break;
             }
             continue;
         }
@@ -297,8 +297,8 @@ void setup()
     // Accelerometer: FS_2G(000), FS_4G(001), FS_8G(010), FS_16G(011)
     // ODR: 1000, 500, 250, 125, 62.5, 31.25, 128, 21, 11, 3 Hz (6DOF: 448/224/112/56/28 Hz)
     imu.configAccel(AccelFullScaleRange::FS_2G,
-                   500.0f,
-                   SensorQMI8658::LpfMode::OFF);
+                    500.0f,
+                    SensorQMI8658::LpfMode::OFF);
 
     imu.enableAccel();
 

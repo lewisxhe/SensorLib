@@ -134,7 +134,7 @@ protected:
     static constexpr uint32_t REG_CMD        = (0x010174);
     static constexpr uint32_t REG_POINT      = (0x010308);
     static constexpr uint32_t REG_NUM_POINT  = (0x01030A);
-    
+
     static constexpr uint32_t CHIP_PID       = (0x9895);
 };
 

@@ -26,7 +26,7 @@ public:
     // ---- Power Key Configuration (REG 36H) ----
 
     /**
-     * @brief Enable automatic power-off when the power key is held 
+     * @brief Enable automatic power-off when the power key is held
      */
     void enableLongPressShutdown()
     {
@@ -34,7 +34,7 @@ public:
     }
 
     /**
-     * @brief Disable automatic power-off when the power key is held 
+     * @brief Disable automatic power-off when the power key is held
      */
     void disableLongPressShutdown()
     {
@@ -70,7 +70,7 @@ public:
     bool setDCDC2PWMMode(bool pwm)
     {
         return pwm ? _core.setRegBit(axp202_regs::pmu::DCDC_MODESET, 2)
-                   : _core.clrRegBit(axp202_regs::pmu::DCDC_MODESET, 2);
+               : _core.clrRegBit(axp202_regs::pmu::DCDC_MODESET, 2);
     }
 
     bool isDCDC2PWMMode()
@@ -86,7 +86,7 @@ public:
     bool setDCDC3PWMMode(bool pwm)
     {
         return pwm ? _core.setRegBit(axp202_regs::pmu::DCDC_MODESET, 1)
-                   : _core.clrRegBit(axp202_regs::pmu::DCDC_MODESET, 1);
+               : _core.clrRegBit(axp202_regs::pmu::DCDC_MODESET, 1);
     }
 
     bool isDCDC3PWMMode()
@@ -138,7 +138,7 @@ public:
     bool enableOverTemperatureShutdown(bool enable)
     {
         return enable ? _core.setRegBit(axp202_regs::pmu::HOTOVER_CTL, 2)
-                      : _core.clrRegBit(axp202_regs::pmu::HOTOVER_CTL, 2);
+               : _core.clrRegBit(axp202_regs::pmu::HOTOVER_CTL, 2);
     }
 
     bool isOverTemperatureShutdownEnabled()
@@ -173,7 +173,7 @@ public:
     bool enableVBUSDetection(bool enable)
     {
         return enable ? _core.setRegBit(axp202_regs::pmu::VBUS_DET_SRP, 3)
-                      : _core.clrRegBit(axp202_regs::pmu::VBUS_DET_SRP, 3);
+               : _core.clrRegBit(axp202_regs::pmu::VBUS_DET_SRP, 3);
     }
 
     bool isVBUSDetectionEnabled()

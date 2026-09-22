@@ -83,7 +83,8 @@
 
 #include <stdint.h>
 
-namespace SY6970Regs {
+namespace SY6970Regs
+{
 
 
 // ==============================================
@@ -315,7 +316,7 @@ static constexpr uint8_t MASK_TMR2X_EN    = 0x40;   ///< Timer 2x enable
 static constexpr uint8_t MASK_BATFET_DIS   = 0x20;   ///< Battery FET disable
 static constexpr uint8_t MASK_JEITA_VSET   = 0x10;   ///< JEITA voltage selection
 static constexpr uint8_t MASK_BATFET_DLY   = 0x08;   ///< Battery FET delay
-static constexpr uint8_t MASK_BATFET_RST_EN= 0x04;   ///< Battery FET reset enable
+static constexpr uint8_t MASK_BATFET_RST_EN = 0x04;  ///< Battery FET reset enable
 static constexpr uint8_t MASK_PUMPX_UP     = 0x02;   ///< PumpEX up
 static constexpr uint8_t MASK_PUMPX_DN     = 0x01;   ///< PumpEX down
 

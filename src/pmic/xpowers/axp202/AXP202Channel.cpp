@@ -50,22 +50,22 @@ bool AXP202Channel::enable(uint8_t channel, bool enable)
     switch (channel) {
     case CH_DCDC2:
         return enable ? _core.setRegBit(axp202_regs::power::LDO234_DC23_CTL, axp202_regs::BIT_DCDC2)
-                      : _core.clrRegBit(axp202_regs::power::LDO234_DC23_CTL, axp202_regs::BIT_DCDC2);
+               : _core.clrRegBit(axp202_regs::power::LDO234_DC23_CTL, axp202_regs::BIT_DCDC2);
     case CH_DCDC3:
         return enable ? _core.setRegBit(axp202_regs::power::LDO234_DC23_CTL, axp202_regs::BIT_DCDC3)
-                      : _core.clrRegBit(axp202_regs::power::LDO234_DC23_CTL, axp202_regs::BIT_DCDC3);
+               : _core.clrRegBit(axp202_regs::power::LDO234_DC23_CTL, axp202_regs::BIT_DCDC3);
     case CH_LDO2:
         return enable ? _core.setRegBit(axp202_regs::power::LDO234_DC23_CTL, axp202_regs::BIT_LDO2)
-                      : _core.clrRegBit(axp202_regs::power::LDO234_DC23_CTL, axp202_regs::BIT_LDO2);
+               : _core.clrRegBit(axp202_regs::power::LDO234_DC23_CTL, axp202_regs::BIT_LDO2);
     case CH_LDO3:
         return enable ? _core.setRegBit(axp202_regs::power::LDO234_DC23_CTL, axp202_regs::BIT_LDO3)
-                      : _core.clrRegBit(axp202_regs::power::LDO234_DC23_CTL, axp202_regs::BIT_LDO3);
+               : _core.clrRegBit(axp202_regs::power::LDO234_DC23_CTL, axp202_regs::BIT_LDO3);
     case CH_LDO4:
         return enable ? _core.setRegBit(axp202_regs::power::LDO234_DC23_CTL, axp202_regs::BIT_LDO4)
-                      : _core.clrRegBit(axp202_regs::power::LDO234_DC23_CTL, axp202_regs::BIT_LDO4);
+               : _core.clrRegBit(axp202_regs::power::LDO234_DC23_CTL, axp202_regs::BIT_LDO4);
     case CH_EXTEN:
         return enable ? _core.setRegBit(axp202_regs::power::LDO234_DC23_CTL, axp202_regs::BIT_EXTEN)
-                      : _core.clrRegBit(axp202_regs::power::LDO234_DC23_CTL, axp202_regs::BIT_EXTEN);
+               : _core.clrRegBit(axp202_regs::power::LDO234_DC23_CTL, axp202_regs::BIT_EXTEN);
     case CH_LDOio: {
         int val = _core.readReg(axp202_regs::gpio::GPIO0_CTL);
         if (val < 0) return false;

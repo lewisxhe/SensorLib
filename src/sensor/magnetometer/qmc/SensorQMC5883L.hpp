@@ -36,7 +36,7 @@
 
 static constexpr uint8_t QMC5883L_SLAVE_ADDRESS = 0x0D;
 
-class SensorQMC5883L : public MagnetometerBase , public I2CDeviceWithHal
+class SensorQMC5883L : public MagnetometerBase, public I2CDeviceWithHal
 {
 public:
 
@@ -418,7 +418,7 @@ private:
     static constexpr uint8_t REG_0x0D_CHIP_ID = 0x0D;
     static constexpr uint8_t QMC5883L_CHIP_ID = 0xFF;
 
-    bool initImpl(uint8_t param) override   
+    bool initImpl(uint8_t param) override
     {
         reset();
 

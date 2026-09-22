@@ -36,6 +36,6 @@ class SensorCommInterface
 {
 public:
     virtual bool ensureValid() const = 0;
-    virtual SensorCommBase* getComm() const = 0;
+    virtual SensorCommBase *getComm() const = 0;
     virtual ~SensorCommInterface() = default;
 };

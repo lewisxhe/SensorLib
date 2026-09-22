@@ -2284,8 +2284,8 @@ protected:
 
         if (comm->readRegister(QMI8658_REG_DVX_L, usid, 6) != -1) {
             SENSORLIB_LOG_D("USID :%02X%02X%02X%02X%02X%02X",
-                  usid[0], usid[1], usid[2],
-                  usid[3], usid[4], usid[5]);
+                            usid[0], usid[1], usid[2],
+                            usid[3], usid[4], usid[5]);
         }
 
         return true;

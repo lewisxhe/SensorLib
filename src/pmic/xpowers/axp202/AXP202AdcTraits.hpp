@@ -42,7 +42,8 @@
 #include "AXP202Regs.hpp"
 #include "../axp1xx/AXP1xxAdcTraits.hpp"
 
-namespace axp1xx {
+namespace axp1xx
+{
 
 /**
  * @brief AXP202 ADC traits specialization

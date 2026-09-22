@@ -246,7 +246,7 @@ void initSensor(SensorBHI260AP &sensor, int rst, int sda, int scl, int irq,
 
     // Output all sensors info to Serial
     BoschSensorInfo info = sensor.getSensorInfo();
-    
+
 #ifdef ARDUINO
     ArduinoStreamPrinter printer(Serial);
     info.printInfo(printer);

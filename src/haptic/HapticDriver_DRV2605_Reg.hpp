@@ -31,7 +31,8 @@
 
 #include <stdint.h>
 
-namespace DRV2605Regs {
+namespace DRV2605Regs
+{
 
 // -----------------------
 // Chip IDs (STATUS[7:5])

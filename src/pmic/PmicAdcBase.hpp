@@ -156,7 +156,7 @@ protected:
 inline PmicAdcBase::Channel operator|(PmicAdcBase::Channel a, PmicAdcBase::Channel b)
 {
     return static_cast<PmicAdcBase::Channel>(
-        static_cast<uint16_t>(a) | static_cast<uint16_t>(b));
+               static_cast<uint16_t>(a) | static_cast<uint16_t>(b));
 }
 
 /**

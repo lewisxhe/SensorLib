@@ -31,7 +31,8 @@
 
 #include <stdint.h>
 
-namespace AW86224Regs {
+namespace AW86224Regs
+{
 
 
 static constexpr uint8_t SOFTRESET_VAL = 0xAA;

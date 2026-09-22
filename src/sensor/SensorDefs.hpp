@@ -151,7 +151,7 @@ enum SensorDirection {
     // |                |
     // |________________|
     DIRECTION_TOP_RIGHT,
-    
+
     //  ________________
     // |                |
     // |  *             |

@@ -126,7 +126,10 @@ public:
      * @brief Check whether a valid IRQ pin is configured.
      * @retval true if an IRQ pin has been configured.
      */
-    bool hasIrqPin() const { return _irqPin >= 0; }
+    bool hasIrqPin() const
+    {
+        return _irqPin >= 0;
+    }
 
     /**
      * @brief Initialize the TCPC sink and configure the PD receive path.
@@ -193,17 +196,26 @@ public:
     /**
      * @brief Return the current negotiation state.
      */
-    State state() const { return _state; }
+    State state() const
+    {
+        return _state;
+    }
 
     /**
      * @brief Check whether negotiation completed successfully.
      */
-    bool isSuccess() const { return _state == State::Success; }
+    bool isSuccess() const
+    {
+        return _state == State::Success;
+    }
 
     /**
      * @brief Check whether negotiation reached a terminal state.
      */
-    bool isDone() const { return _state == State::Success || _state == State::Failed; }
+    bool isDone() const
+    {
+        return _state == State::Success || _state == State::Failed;
+    }
 
     /**
      * @brief Reset message IDs and return to the initial wait state.
