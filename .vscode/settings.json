@@ -1,0 +1,7 @@
+{
+    "cSpell.words": [
+        "MOSI"
+    ],
+    "astyle.astylerc": "${workspaceFolder}/.astylerc",
+    "astyle.additional_languages": []
+}

@@ -1,0 +1,13 @@
+# Shared by CI and VS Code.
+style=kr
+indent=spaces=4
+convert-tabs
+align-pointer=name
+align-reference=name
+keep-one-line-statements
+pad-header
+pad-oper
+max-code-length=200
+break-after-logical
+indent-col1-comments
+suffix=none

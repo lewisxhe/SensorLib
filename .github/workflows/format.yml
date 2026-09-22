@@ -1,0 +1,107 @@
+name: Format with AStyle
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "**/*.c"
+      - "**/*.cc"
+      - "**/*.cpp"
+      - "**/*.cxx"
+      - "**/*.h"
+      - "**/*.hh"
+      - "**/*.hpp"
+      - "**/*.hxx"
+      - "**/*.ino"
+      - "!src/bosch/**"
+      - ".astylerc"
+      - ".github/workflows/format.yml"
+  push:
+    branches:
+      - "**"
+    paths:
+      - "**/*.c"
+      - "**/*.cc"
+      - "**/*.cpp"
+      - "**/*.cxx"
+      - "**/*.h"
+      - "**/*.hh"
+      - "**/*.hpp"
+      - "**/*.hxx"
+      - "**/*.ino"
+      - "!src/bosch/**"
+      - ".astylerc"
+      - ".github/workflows/format.yml"
+
+permissions:
+  contents: read
+
+env:
+  ASTYLE_VERSION: "3.6.14"
+  ASTYLE_SHA256: "528903da8c4a13573d89655ce46115fc3c8e0c43f6d2495c7c6a7c5f82bed7f0"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.sha || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Build AStyle
+        shell: bash
+        run: |
+          archive="$RUNNER_TEMP/astyle.tar.gz"
+          source_dir="$RUNNER_TEMP/astyle-$ASTYLE_VERSION"
+          curl --fail --location --retry 3 \
+            --output "$archive" \
+            "https://gitlab.com/saalen/astyle/-/archive/$ASTYLE_VERSION/astyle-$ASTYLE_VERSION.tar.gz"
+          echo "$ASTYLE_SHA256  $archive" | sha256sum --check -
+          tar --extract --gzip --file "$archive" --directory "$RUNNER_TEMP"
+          make --directory "$source_dir/AStyle/build/gcc"
+          sudo install "$source_dir/AStyle/build/gcc/bin/astyle" /usr/local/bin/astyle
+          astyle --version
+
+      - name: Format source files
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          list_files() {
+            case "$GITHUB_EVENT_NAME" in
+              pull_request)
+                git diff --name-only --diff-filter=ACMR -z "$BASE_SHA" "$GITHUB_SHA"
+                ;;
+              push)
+                if [[ "$BEFORE_SHA" =~ ^0+$ ]]; then
+                  git ls-files -z
+                else
+                  git diff --name-only --diff-filter=ACMR -z "$BEFORE_SHA" "$GITHUB_SHA"
+                fi
+                ;;
+              *)
+                git ls-files -z
+                ;;
+            esac
+          }
+
+          files=()
+          while IFS= read -r -d '' file; do
+            case "$file" in
+              src/bosch/*) ;;
+              *.c|*.cc|*.cpp|*.cxx|*.h|*.hh|*.hpp|*.hxx|*.ino) files+=("./$file") ;;
+            esac
+          done < <(list_files)
+
+          if ((${#files[@]})); then
+            astyle --options=.astylerc "${files[@]}"
+          fi
+
+      - name: Commit formatting changes
+        uses: autofix-ci/action@c5b2d67aa2274e7b5a18224e8171550871fc7e4a
