@@ -1,24 +1,30 @@
 {
   "name": "SensorLib",
   "version": "0.5.0",
-  "description": "Commonly used I2C , SPI device multi-platform libraries",
+  "description": "Multi-platform I2C and SPI sensor and power device library",
   "keywords": [
     "QMC6309",
     "QMC6310N",
     "QMC6310U",
     "QMI8658",
     "PCF8563",
+    "HYM8563",
     "PCF85063",
     "XL9555",
+    "PCA9570",
+    "BMA422",
     "BMA423",
+    "BMA456H",
     "BHI260AP",
     "BHI360",
+    "BMM150",
     "DRV2605",
     "AW86224",
     "CM32181",
     "LTR553",
     "FT5206",
     "FT3267",
+    "FT6206",
     "FT6236",
     "FT6336",
     "CST816S",
@@ -31,11 +37,21 @@
     "CST9217",
     "CST9220",
     "CST3240",
+    "CST3530",
+    "GT9895",
     "HI8561",
     "AW9364",
     "QMC5883L",
     "QMC5883P",
-    "PAW-A350"
+    "PAW-A350",
+    "AXP192",
+    "AXP202",
+    "AXP2101",
+    "AXP517",
+    "BQ25896",
+    "SY6970",
+    "BQ27220",
+    "AXP2602"
   ],
   "authors": [
     {
@@ -55,9 +71,16 @@
       "library.json",
       "library.properties",
       "README.md",
+      "CHANGELOG.md",
+      "docs/migration-v0.5.md",
       "keywords.txt",
       "src/*",
       "examples/*"
+    ],
+    "exclude": [
+      "examples/**/build/**",
+      "examples/**/dependencies.lock",
+      "examples/**/sdkconfig*"
     ]
   },
   "frameworks": [

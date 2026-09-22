@@ -15,7 +15,7 @@
   <a href="https://www.ardu-badge.com/SensorLib"><img src="https://www.ardu-badge.com/badge/SensorLib.svg?" /></a>
   <a href="https://registry.platformio.org/libraries/lewisxhe/SensorLib"><img src="https://badges.registry.platformio.org/packages/lewisxhe/library/SensorLib.svg" /></a>
   <a href="https://components.espressif.com/components/lewisxhe/sensorlib">
-  <img src="https://img.shields.io/badge/ESP--IDF%20Registry-v0.4.1-success?logo=espressif&logoColor=white&color=009688&style=flat-square" alt="ESP-IDF Component Registry"></a>
+  <img src="https://img.shields.io/badge/ESP--IDF%20Registry-v0.5.0-success?logo=espressif&logoColor=white&color=009688&style=flat-square" alt="ESP-IDF Component Registry"></a>
   <a href="https://lewisxhe.github.io/SensorLib/"><img src="https://img.shields.io/badge/API-Doxygen-2C4AA8?logo=doxygen&logoColor=white" alt="Doxygen API documentation" /></a>
 </p>
 
@@ -37,10 +37,14 @@
 - One library for **Arduino / PlatformIO / ESP-IDF**
 - Supports both **I2C** and **SPI** buses
 
+See the [changelog](CHANGELOG.md) for release details. Projects upgrading from
+v0.4.x should also read the [v0.5 migration guide](docs/migration-v0.5.md).
+
 ---
 
 ## Contents
 - [Contents](#contents)
+- [Upgrading from v0.4.x](#upgrading-from-v04x)
 - [Installation](#installation)
   - [Arduino IDE](#arduino-ide)
   - [PlatformIO](#platformio)
@@ -63,6 +67,13 @@
 - [Notes](#notes)
 - [License](#license)
   - [Third-party licenses](#third-party-licenses)
+
+## Upgrading from v0.4.x
+
+v0.5.0 reorganizes driver headers and expands several common interfaces. Most
+legacy top-level headers remain as deprecated compatibility wrappers, but some
+projects require source changes. Review the [v0.5 migration guide](docs/migration-v0.5.md)
+before upgrading.
 
 ## Installation
 
@@ -102,7 +113,7 @@ platform = espressif32
 board = esp32dev
 framework = arduino
 lib_deps =
-  lewisxhe/SensorLib@^0.4.0
+  lewisxhe/SensorLib@^0.5.0
 ```
 
 <details>
@@ -128,7 +139,7 @@ SensorLib is published in the [ESP-IDF Component Registry](https://components.es
 ```yaml
 dependencies:
   lewisxhe/sensorlib:
-    version: "^0.4.0"
+    version: "^0.5.0"
 ```
 
 **2. Use in your code**:

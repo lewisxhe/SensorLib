@@ -1,5 +1,5 @@
-version: "0.4.1"
-description: "Commonly used I2C & SPI sensor drivers for ESP-IDF / Arduino"
+version: "0.5.0"
+description: "Multi-platform I2C and SPI sensor and power device drivers for ESP-IDF and Arduino"
 license: "MIT"
 url: "https://github.com/lewisxhe/SensorLib"
 repository: "https://github.com/lewisxhe/SensorLib.git"
@@ -22,6 +22,7 @@ files:
     - ".gitattributes"
 tags:
   - PCF8563
+  - HYM8563
   - PCF85063
   - QMI8658
   - BHI260AP
@@ -55,12 +56,19 @@ tags:
   - CST9217
   - CST9220
   - CST3240
+  - CST3530
   - GT9895
   - HI8561
   - AW9364
   - BQ27220
   - AXP2602
   - PAW-A350
+  - AXP192
+  - AXP202
+  - AXP2101
+  - AXP517
+  - BQ25896
+  - SY6970
 dependencies:
   idf:
     version: ">=4.4"
