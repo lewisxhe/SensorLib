@@ -208,8 +208,8 @@ private:
         i2c_config_t i2c_conf;
         memset(&i2c_conf, 0, sizeof(i2c_conf));
         i2c_conf.mode = I2C_MODE_MASTER;
-        i2c_conf.sda_io_num = sda;
-        i2c_conf.scl_io_num = scl;
+        i2c_conf.sda_io_num = (gpio_num_t)sda;
+        i2c_conf.scl_io_num = (gpio_num_t)scl;
         i2c_conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
         i2c_conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
         i2c_conf.master.clk_speed = SENSORLIB_I2C_MASTER_SPEED;

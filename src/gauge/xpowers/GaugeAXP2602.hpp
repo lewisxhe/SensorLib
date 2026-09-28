@@ -29,6 +29,8 @@
 
 #pragma once
 
+#include <math.h>
+
 #include "../../SensorBuildOpt.h"
 #if !SENSORLIB_EXCLUDE_GAUGE_AXP2602
 
@@ -455,7 +457,7 @@ public:
      */
     float getAbsolutePower()
     {
-        return fabs(data.power);
+        return fabsf(data.power);
     }
 
     /**
