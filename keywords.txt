@@ -9,6 +9,7 @@
 IoExpanderBase	KEYWORD1
 IoExpanderXL9555	KEYWORD1
 IoExpanderPCA9570	KEYWORD1
+IoExpanderAW9523	KEYWORD1
 
 SensorPCF8563	KEYWORD1
 SensorQMC6310	KEYWORD1
@@ -89,6 +90,16 @@ removePinEvent	KEYWORD2
 update	KEYWORD2
 setClock	KEYWORD2
 getClock	KEYWORD2
+
+### AW9523 Coloring Map ###
+setPort0PushPull	KEYWORD2
+setLedCurrentRange	KEYWORD2
+setLedMode	KEYWORD2
+setLedModes	KEYWORD2
+analogWrite	KEYWORD2
+enableInterrupt	KEYWORD2
+enableInterrupts	KEYWORD2
+softwareReset	KEYWORD2
 
 
 ### PCF8563 Coloring Map ###
@@ -400,7 +411,5 @@ getBrightness    KEYWORD2
 #######################################
 # Constants (LITERAL1)
 #######################################
-
-
 
 

@@ -270,6 +270,10 @@ menu "SensorLib Configuration"
                 bool "Exclude PCA9570 IO expander"
                 default n
 
+            config SENSORLIB_EXCLUDE_IO_EXPANDER_AW9523
+                bool "Exclude AW9523 IO expander"
+                default n
+
             config SENSORLIB_EXCLUDE_IO_EXPANDER_SPI
                 bool "Exclude SPI IO expander helper"
                 default n

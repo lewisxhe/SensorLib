@@ -31,7 +31,7 @@
 
 ### Highlights
 
-- **44+ devices** across 11 categories — Touch, PMIC, IMU, Magnetometer, Accelerometer, RTC, Gauge, Haptic, Light Sensor, I/O Expander, LED
+- **45+ devices** across 11 categories — Touch, PMIC, IMU, Magnetometer, Accelerometer, RTC, Gauge, Haptic, Light Sensor, I/O Expander, LED
 - **Ready-to-run examples** covering supported devices and common workflows
 - **Full PMIC subsystem** — charger, ADC, GPIO, IRQ, LED, power channels, coulomb counter, BC1.2, Type-C/USB-PD where supported
 - One library for **Arduino / PlatformIO / ESP-IDF**
@@ -434,7 +434,7 @@ src_dir = examples/sensor/qmi8658_basic_read
 ## Supported Devices
 
 <details>
-<summary>44 supported devices (click to expand)</summary>
+<summary>45 supported devices (click to expand)</summary>
 
 | Device | Description | I2C | SPI | Header |
 |--------|-------------|:---:|:---:|--------|
@@ -458,6 +458,7 @@ src_dir = examples/sensor/qmi8658_basic_read
 | **I/O Expander** |||||
 | XL9555 | 16-bit I/O Expander | ✔️ | ❌ | `IoExpanderDrv.hpp` |
 | PCA9570 | 4-bit I/O Expander | ✔️ | ❌ | `IoExpanderDrv.hpp` |
+| AW9523 / AW9523B | 16-bit I/O Expander and LED Driver | ✔️ | ❌ | `IoExpanderDrv.hpp` |
 | **Haptic** |||||
 | DRV2605 | Haptic Driver (TI) | ✔️ | ❌ | `HapticDrivers.hpp` |
 | AW86224 | Haptic Driver (Awinic) | ✔️ | ❌ | `HapticDrivers.hpp` |
