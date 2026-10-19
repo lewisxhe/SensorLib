@@ -257,6 +257,7 @@ public:
     {
         int val = 0;  // initialize with some value to avoid compilation errors
         comm->writeRegister(QMI8658_REG_RESET, QMI8658_REG_RESET_DEFAULT);
+        hal->delay(2);   // chip NACKs while it is resetting. https://github.com/lewisxhe/SensorLib/issues/46
         // Maximum 15ms for the Reset process to be finished
         if (waitResult) {
             uint32_t start = hal->millis();

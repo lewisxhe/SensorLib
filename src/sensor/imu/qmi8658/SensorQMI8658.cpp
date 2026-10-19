@@ -300,7 +300,7 @@ bool SensorQMI8658::reset()
     if (!hal) return false;
 
     writeReg(REG_RESET, QMI8658_RESET_VAL);
-
+    hal->delay(2);   // chip NACKs while it is resetting. https://github.com/lewisxhe/SensorLib/issues/46
     uint32_t start = hal->millis();
     while (hal->millis() - start < 500) {
         uint8_t val = readReg(REG_RST_RESULT);
