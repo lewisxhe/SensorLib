@@ -38,6 +38,10 @@
 #include "expander/IoExpanderPCA9570.hpp"
 #endif
 
+#if !SENSORLIB_EXCLUDE_IO_EXPANDER_AW9523
+#include "expander/IoExpanderAW9523.hpp"
+#endif
+
 #if !SENSORLIB_EXCLUDE_IO_EXPANDER_SPI
 #include "expander/IoExpanderSPI.hpp"
 #endif

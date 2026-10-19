@@ -74,6 +74,7 @@ set(sensorlib_exclude_options
     GAUGE_BQ27220
     IO_EXPANDER_XL9555
     IO_EXPANDER_PCA9570
+    IO_EXPANDER_AW9523
     IO_EXPANDER_SPI
     AW9364
     PAWA350
