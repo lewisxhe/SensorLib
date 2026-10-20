@@ -8,6 +8,25 @@ migration guide.
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-10-20
+
+This patch release improves AXP517 reliability, adds AW9523 support, and fixes
+an initial QMI8658 I2C read error.
+
+### Added
+
+- Added AW9523 GPIO, LED, and 5x7 keypad examples and public driver support.
+
+### Fixed
+
+- Fixed AXP517 ADC reads across multiplexed channels and conversion boundaries.
+- Fixed AXP517 IRQ register access on devices without auto-incrementing register
+  windows.
+- Fixed AXP517 charger phase reporting and added battery TS protection control.
+- Fixed AXP517 ship-mode register control and status reporting.
+- Fixed the first QMI8658 read being rejected with an I2C NACK.
+- Fixed ESP-IDF 6.x compilation issues.
+
 ## [0.5.0] - 2026-09-22
 
 v0.5.0 is a major pre-1.0 update. It adds a complete PMIC subsystem, introduces
@@ -85,5 +104,6 @@ category. Projects upgrading from v0.4.x should read the
 - Fixed BHI260 error propagation.
 - Fixed touch byte helpers for ESP-IDF and non-Arduino builds.
 
-[Unreleased]: https://github.com/lewisxhe/SensorLib/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/lewisxhe/SensorLib/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/lewisxhe/SensorLib/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/lewisxhe/SensorLib/compare/v0.4.1...v0.5.0

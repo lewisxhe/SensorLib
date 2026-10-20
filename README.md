@@ -15,7 +15,7 @@
   <a href="https://www.ardu-badge.com/SensorLib"><img src="https://www.ardu-badge.com/badge/SensorLib.svg?" /></a>
   <a href="https://registry.platformio.org/libraries/lewisxhe/SensorLib"><img src="https://badges.registry.platformio.org/packages/lewisxhe/library/SensorLib.svg" /></a>
   <a href="https://components.espressif.com/components/lewisxhe/sensorlib">
-  <img src="https://img.shields.io/badge/ESP--IDF%20Registry-v0.5.0-success?logo=espressif&logoColor=white&color=009688&style=flat-square" alt="ESP-IDF Component Registry"></a>
+  <img src="https://img.shields.io/badge/ESP--IDF%20Registry-v0.5.1-success?logo=espressif&logoColor=white&color=009688&style=flat-square" alt="ESP-IDF Component Registry"></a>
   <a href="https://lewisxhe.github.io/SensorLib/"><img src="https://img.shields.io/badge/API-Doxygen-2C4AA8?logo=doxygen&logoColor=white" alt="Doxygen API documentation" /></a>
 </p>
 
@@ -54,9 +54,8 @@ v0.4.x should also read the [v0.5 migration guide](docs/migration-v0.5.md).
   - [Bosch Firmware Files](#bosch-firmware-files)
 - [Quick Start](#quick-start)
   - [Including Headers](#including-headers)
-    - [Option A: Per-driver Include (Recommended)](#option-a-per-driver-include-recommended)
+    - [Option A: Vendor-specific Include (Recommended)](#option-a-vendor-specific-include-recommended)
     - [Option B: Aggregate Include (Quick Prototyping)](#option-b-aggregate-include-quick-prototyping)
-    - [Which should I use?](#which-should-i-use)
   - [Minimal Example: Touch](#minimal-example-touch)
   - [Minimal Example: PMIC](#minimal-example-pmic)
   - [AXP517 USB-C PD](#axp517-usb-c-pd)
@@ -70,7 +69,7 @@ v0.4.x should also read the [v0.5 migration guide](docs/migration-v0.5.md).
 
 ## Upgrading from v0.4.x
 
-v0.5.0 reorganizes driver headers and expands several common interfaces. Most
+v0.5.x reorganizes driver headers and expands several common interfaces. Most
 legacy top-level headers remain as deprecated compatibility wrappers, but some
 projects require source changes. Review the [v0.5 migration guide](docs/migration-v0.5.md)
 before upgrading.
@@ -113,7 +112,7 @@ platform = espressif32
 board = esp32dev
 framework = arduino
 lib_deps =
-  lewisxhe/SensorLib@^0.5.0
+  lewisxhe/SensorLib@^0.5.1
 ```
 
 <details>
@@ -139,7 +138,7 @@ SensorLib is published in the [ESP-IDF Component Registry](https://components.es
 ```yaml
 dependencies:
   lewisxhe/sensorlib:
-    version: "^0.5.0"
+    version: "^0.5.1"
 ```
 
 **2. Use in your code**:

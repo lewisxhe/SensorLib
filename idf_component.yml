@@ -1,4 +1,4 @@
-version: "0.5.0"
+version: "0.5.1"
 description: "Multi-platform I2C and SPI sensor and power device drivers for ESP-IDF and Arduino"
 license: "MIT"
 url: "https://github.com/lewisxhe/SensorLib"
