@@ -49,6 +49,20 @@ bool AXP517Charger::isCharging()
     return getStatus().charging;
 }
 
+bool AXP517Charger::enableBatteryTemperatureProtection(bool enable)
+{
+    // REG50[4]=1 disconnects TS from the charger; REG50[3:2]=00 turns its
+    // current source off. When enabled, use the ADC-gated current-source mode.
+    return _core.updateBits(axp517_regs::ts::PIN_CFG, 0x1C,
+                            enable ? 0x04 : 0x10) >= 0;
+}
+
+bool AXP517Charger::isBatteryTemperatureProtectionEnabled()
+{
+    int regValue = _core.readReg(axp517_regs::ts::PIN_CFG);
+    return regValue >= 0 && (regValue & 0x10) == 0;
+}
+
 bool AXP517Charger::setPreChargeCurrent(uint16_t mA)
 {
     return setCurrentWithStep(axp517_regs::chg::IPRECHG_ITRICHG, mA, 960, 64, 0x0F);
@@ -129,13 +143,14 @@ uint16_t AXP517Charger::getChargeVoltage()
 AXP517Charger::Status AXP517Charger::getStatus()
 {
     Status status {};
-    uint8_t buffer[2] {};
-    if (_core.readRegBuff(axp517_regs::bmu::STATUS0, buffer, sizeof(buffer)) < 0) {
+    int status0 = _core.readReg(axp517_regs::bmu::STATUS0);
+    int status1 = _core.readReg(axp517_regs::bmu::STATUS1);
+    if (status0 < 0 || status1 < 0) {
         return status;
     }
     status.online = true;
-    status.vbusPresent = (buffer[0] >> 5) & 0x01;
-    status.batteryPresent = (buffer[0] >> 3) & 0x01;
+    status.vbusPresent = (status0 >> 5) & 0x01;
+    status.batteryPresent = (status0 >> 3) & 0x01;
     ///< 000: tri_charge
     ///< 001: pre_charge
     ///< 010: constant charge(CC)
@@ -143,13 +158,32 @@ AXP517Charger::Status AXP517Charger::getStatus()
     ///< 100: charge done
     ///< 101: not charging
     ///< 11X: Reserved
-    if (status.batteryPresent && status.vbusPresent) {
-        uint8_t charging_status = buffer[1] & 0x03;
-        status.charging = charging_status < 3;
-        status.chargeDone = charging_status == 4;
-    } else {
-        status.charging = false;
-        status.chargeDone = false;
+    if (!status.batteryPresent || !status.vbusPresent) {
+        return status;
+    }
+
+    const uint8_t chargingStatus = static_cast<uint8_t>(status1) & 0x07;
+    switch (chargingStatus) {
+    case 0: // Trickle charge
+    case 1: // Pre-charge
+        status.charging = true;
+        status.chargingStatus = ChargingStatus::PRE_CHARGE;
+        break;
+    case 2: // Constant-current charge
+    case 3: // Constant-voltage charge
+        status.charging = true;
+        status.chargingStatus = ChargingStatus::FAST_CHARGE;
+        break;
+    case 4: // Charge done
+        status.chargeDone = true;
+        status.chargingStatus = ChargingStatus::TERMINATION;
+        break;
+    case 5: // Not charging
+        status.chargingStatus = ChargingStatus::NO_CHARGING;
+        break;
+    default:
+        status.chargingStatus = ChargingStatus::UNKNOWN;
+        break;
     }
     status.fault = false; //TODO: Implement fault detection
     return status;

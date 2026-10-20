@@ -64,6 +64,18 @@ public:
     bool isCharging() override;
 
     /**
+     * @brief Enable or disable TS-pin battery temperature protection.
+     * @note Disabling selects the external fixed-input function and turns off
+     *       the TS current source, so an absent NTC cannot inhibit charging.
+     * @param enable true to use TS as the battery thermistor input.
+     * @retval true on success, false on register access failure.
+     */
+    bool enableBatteryTemperatureProtection(bool enable);
+
+    /** @brief Return true when the TS pin can affect charging. */
+    bool isBatteryTemperatureProtectionEnabled();
+
+    /**
      * @brief Set pre-charge current.
      * @param mA Desired current in milliamps, range 0-960mA, steps 64mA.
      * @retval true on success, false on register access failure.
