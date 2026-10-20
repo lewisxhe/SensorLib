@@ -38,6 +38,48 @@ AXP517Adc::AXP517Adc(AXP517Core &core) : _core(core)
 {
 }
 
+namespace
+{
+bool readRegisterPair(AXP517Core &core, uint8_t highReg, uint8_t lowReg,
+                      uint8_t &high, uint8_t &low)
+{
+    // The AXP517 PMIC register window does not auto-increment on a burst read.
+    // Read each address explicitly and retry if the high byte changed at a
+    // conversion boundary.
+    for (uint8_t attempt = 0; attempt < 3; ++attempt) {
+        int highBefore = core.readReg(highReg);
+        int lowValue = core.readReg(lowReg);
+        int highAfter = core.readReg(highReg);
+        if (highBefore < 0 || lowValue < 0 || highAfter < 0) return false;
+        if (highBefore == highAfter) {
+            high = static_cast<uint8_t>(highBefore);
+            low = static_cast<uint8_t>(lowValue);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool selectAndReadAdcData(AXP517Core &core, uint8_t selector,
+                          uint8_t &high, uint8_t &low)
+{
+    int dataSelect = core.readReg(axp517_regs::adc::DATA_SEL);
+    if (dataSelect < 0) return false;
+
+    if ((dataSelect & 0x0F) != selector) {
+        const uint8_t next = static_cast<uint8_t>((dataSelect & 0xF0) | selector);
+        if (core.writeReg(axp517_regs::adc::DATA_SEL, next) < 0) return false;
+
+        // REG9C/9D retains the previous multiplexed channel briefly after
+        // REG9B changes. Allow a fresh conversion before consuming the data.
+        core.delayMs(10);
+    }
+
+    return readRegisterPair(core, axp517_regs::adc::DATA_H,
+                            axp517_regs::adc::DATA_L, high, low);
+}
+} // namespace
+
 static uint8_t axp517_channelToMask(PmicAdcBase::Channel ch)
 {
     switch (ch) {
@@ -89,11 +131,12 @@ bool AXP517Adc::read(Channel ch, float &out)
     if (ch == Channel::VBUS_VOLTAGE || ch == Channel::VBUS_CURRENT ||
             ch == Channel::BAT_VOLTAGE || ch == Channel::BAT_CURRENT) {
 
-        if (_core.readRegBuff(axp517_regs::bmu::STATUS0, buffer, sizeof(buffer)) < 0) {
+        int status0 = _core.readReg(axp517_regs::bmu::STATUS0);
+        if (status0 < 0) {
             return false;
         }
-        bool vbusPresent = (buffer[0] >> 5) & 0x01;
-        bool batPresent = (buffer[0] >> 3) & 0x01;
+        bool vbusPresent = (status0 >> 5) & 0x01;
+        bool batPresent = (status0 >> 3) & 0x01;
 
         if (ch == Channel::VBUS_VOLTAGE || ch == Channel::VBUS_CURRENT) {
             if (!vbusPresent) {
@@ -114,36 +157,38 @@ bool AXP517Adc::read(Channel ch, float &out)
 
     switch (ch) {
     case Channel::VBUS_VOLTAGE:
-        if (_core.readRegBuff(axp517_regs::adc::VBUS_VOLT_H, buffer, sizeof(buffer)) < 0)
+        if (!readRegisterPair(_core, axp517_regs::adc::VBUS_VOLT_H,
+                              axp517_regs::adc::VBUS_VOLT_L, buffer[0], buffer[1]))
             return false;
         out = ((buffer[0] & 0x3F) << 8 | buffer[1]) * axp517_regs::factory::FACTORY_VBUS_VOLTAGE;
         break;
     case Channel::VBUS_CURRENT:
-        if (_core.readRegBuff(axp517_regs::adc::VBUS_CURR_H, buffer, sizeof(buffer)) < 0)
+        if (!readRegisterPair(_core, axp517_regs::adc::VBUS_CURR_H,
+                              axp517_regs::adc::VBUS_CURR_L, buffer[0], buffer[1]))
             return false;
         adcVal = (static_cast<int16_t>((buffer[0] & 0x3F) << 8 | buffer[1]));
         out = adcVal * axp517_regs::factory::FACTORY_VBUS_CURRENT;
         break;
     case Channel::BAT_VOLTAGE:
-        if (_core.readRegBuff(axp517_regs::adc::BAT_VOLT_H, buffer, sizeof(buffer)) < 0)
+        if (!readRegisterPair(_core, axp517_regs::adc::BAT_VOLT_H,
+                              axp517_regs::adc::BAT_VOLT_L, buffer[0], buffer[1]))
             return false;
         out = ((buffer[0] & 0x3F) << 8 | buffer[1]) * axp517_regs::factory::FACTORY_VBAT_VOLTAGE;
         break;
     case Channel::BAT_CURRENT:
-        if (_core.readRegBuff(axp517_regs::adc::BAT_CURR_H, buffer, sizeof(buffer)) < 0)
+        if (!readRegisterPair(_core, axp517_regs::adc::BAT_CURR_H,
+                              axp517_regs::adc::BAT_CURR_L, buffer[0], buffer[1]))
             return false;
         adcVal = (static_cast<int16_t>(buffer[0]) << 8) | buffer[1];
         out = static_cast<float>(adcVal) * axp517_regs::factory::FACTORY_BAT_CURRENT;
         break;
     case Channel::VSYS_VOLTAGE:
-        if (_core.writeReg(axp517_regs::adc::DATA_SEL, 0x01) < 0) return false;
-        if (_core.readRegBuff(axp517_regs::adc::DATA_H, buffer, 2) < 0) return false;
+        if (!selectAndReadAdcData(_core, 0x01, buffer[0], buffer[1])) return false;
         adcVal = ((buffer[0] & 0x3F) << 8) | buffer[1];
         out = static_cast<int16_t>((buffer[0] & 0x3F) << 8 | buffer[1]) * axp517_regs::factory::FACTORY_VSYS_VOLTAGE;
         break;
     case Channel::DIE_TEMPERATURE:
-        if (_core.writeReg(axp517_regs::adc::DATA_SEL, 0x00) < 0) return false;
-        if (_core.readRegBuff(axp517_regs::adc::DATA_H, buffer, 2) < 0) return false;
+        if (!selectAndReadAdcData(_core, 0x00, buffer[0], buffer[1])) return false;
         adcVal = ((buffer[0] & 0x3F) << 8) | buffer[1];
         out = (3552.0f - adcVal) / 1.79f + 25.0f;
         break;
