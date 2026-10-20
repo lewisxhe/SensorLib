@@ -118,12 +118,13 @@ uint16_t AXP517Power::getBoostVoltage() const
 
 bool AXP517Power::enableShipMode(bool enable)
 {
-    return _core.setRegBit(axp517_regs::ctrl::BATFET_CTRL, 2);
+    return _core.updateBits(axp517_regs::ctrl::BATFET_CTRL, 0x08,
+                            enable ? 0x08 : 0x00) >= 0;
 }
 
 bool AXP517Power::isShipModeEnabled() const
 {
-    return _core.getRegBit(axp517_regs::bmu::STATUS0, 4);
+    return _core.getRegBit(axp517_regs::ctrl::BATFET_CTRL, 3);
 }
 
 bool AXP517Power::enableRBFET(bool enable) const
