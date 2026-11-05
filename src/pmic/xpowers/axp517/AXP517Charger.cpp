@@ -63,6 +63,18 @@ bool AXP517Charger::isBatteryTemperatureProtectionEnabled()
     return regValue >= 0 && (regValue & 0x10) == 0;
 }
 
+bool AXP517Charger::enableBatteryDetection(bool enable)
+{
+    return _core.updateBits(axp517_regs::chg::BAT_DETECT_CTRL, 0x01,
+                            enable ? 0x01 : 0x00) >= 0;
+}
+
+bool AXP517Charger::isBatteryDetectionEnabled()
+{
+    const int regValue = _core.readReg(axp517_regs::chg::BAT_DETECT_CTRL);
+    return regValue >= 0 && (regValue & 0x01) != 0;
+}
+
 bool AXP517Charger::setPreChargeCurrent(uint16_t mA)
 {
     return setCurrentWithStep(axp517_regs::chg::IPRECHG_ITRICHG, mA, 960, 64, 0x0F);

@@ -76,6 +76,18 @@ public:
     bool isBatteryTemperatureProtectionEnabled();
 
     /**
+     * @brief Enable or disable automatic battery presence detection.
+     * @note Controls REG68H bit 0. When disabled, the PMU assumes a battery
+     *       is always present.
+     * @param enable true to detect battery presence, false to force present.
+     * @retval true on success, false on register access failure.
+     */
+    bool enableBatteryDetection(bool enable);
+
+    /** @brief Return whether automatic battery presence detection is enabled. */
+    bool isBatteryDetectionEnabled();
+
+    /**
      * @brief Set pre-charge current.
      * @param mA Desired current in milliamps, range 0-960mA, steps 64mA.
      * @retval true on success, false on register access failure.
