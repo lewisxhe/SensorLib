@@ -79,11 +79,11 @@ public:
      * @note   This function initializes the touch driver with the specified I2C parameters.
      * @param  &wire: The I2C wire object to use for communication.
      * @param  addr: The I2C address of the touch driver.
-     * @param  sda: The SDA pin number.
-     * @param  scl: The SCL pin number.
+     * @param  sda: The SDA pin number, default is -1 (use board default).
+     * @param  scl: The SCL pin number, default is -1 (use board default).
      * @retval True if successful, false otherwise.
      */
-    bool begin(TwoWire &wire, uint8_t addr, int sda, int scl) override;
+    bool begin(TwoWire &wire, uint8_t addr, int sda = -1, int scl = -1) override;
 #elif defined(ESP_PLATFORM)
 #if defined(SENSORLIB_USE_I2C_LEGACY)
     /**
