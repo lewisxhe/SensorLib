@@ -1,6 +1,6 @@
 {
   "name": "SensorLib",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Multi-platform I2C and SPI sensor and power device library",
   "keywords": [
     "QMC6309",

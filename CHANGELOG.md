@@ -8,6 +8,28 @@ migration guide.
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-11-11
+
+This patch release adds AXP517 battery detection control, improves CST touch
+initialization defaults, and updates build and CI coverage.
+
+### Added
+
+- Added APIs to enable and query automatic battery presence detection on
+  AXP517 devices.
+- Added separate PlatformIO environments for ESP32-S3 boards with and without
+  OPI PSRAM.
+
+### Changed
+
+- Added default SDA and SCL pin arguments to the Arduino CST touch driver.
+- Updated the GitHub Actions cache integration to v6.
+
+### Fixed
+
+- Fixed shell quoting and exit-status handling in Arduino and ESP-IDF CI
+  workflows so they pass actionlint's ShellCheck validation.
+
 ## [0.5.1] - 2026-10-20
 
 This patch release improves AXP517 reliability, adds AW9523 support, and fixes
@@ -104,6 +126,7 @@ category. Projects upgrading from v0.4.x should read the
 - Fixed BHI260 error propagation.
 - Fixed touch byte helpers for ESP-IDF and non-Arduino builds.
 
-[Unreleased]: https://github.com/lewisxhe/SensorLib/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/lewisxhe/SensorLib/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/lewisxhe/SensorLib/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/lewisxhe/SensorLib/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/lewisxhe/SensorLib/compare/v0.4.1...v0.5.0

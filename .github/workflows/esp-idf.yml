@@ -35,13 +35,13 @@ jobs:
         shell: bash
         run: |
           pwd
-          . ${IDF_PATH}/export.sh
+          . "$IDF_PATH/export.sh"
           cd examples/platform/esp_idf_touch
           idf.py build
       - name: Build esp_idf_sensor_hub
         shell: bash
         run: |
           pwd
-          . ${IDF_PATH}/export.sh
+          . "$IDF_PATH/export.sh"
           cd examples/platform/esp_idf_sensor_hub
           idf.py build

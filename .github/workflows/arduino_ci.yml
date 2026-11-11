@@ -56,12 +56,11 @@ jobs:
       - name: Install Arduino CLI
         run: |
           echo "Installing Arduino CLI..."
-          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
-          if [ $? -ne 0 ]; then
+          if ! curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh; then
             echo "Failed to install Arduino CLI."
             exit 1
           fi
-          echo "./bin" >> $GITHUB_PATH
+          echo "./bin" >> "$GITHUB_PATH"
           echo "Arduino CLI installed successfully."
 
       - name: Install board
@@ -71,17 +70,15 @@ jobs:
           arduino-cli config set library.enable_unsafe_install true
           if [ -n "${{ matrix.board.url }}" ]; then
             echo "Adding additional board manager URL: ${{ matrix.board.url }}"
-            arduino-cli config add board_manager.additional_urls ${{ matrix.board.url }}
+            arduino-cli config add board_manager.additional_urls "${{ matrix.board.url }}"
           fi
           echo "Updating board index..."
-          arduino-cli core update-index
-          if [ $? -ne 0 ]; then
+          if ! arduino-cli core update-index; then
             echo "Failed to update board index."
             exit 1
           fi
           echo "Installing board platform: ${{ matrix.board.platform }}"
-          arduino-cli core install ${{ matrix.board.platform }}
-          if [ $? -ne 0 ]; then
+          if ! arduino-cli core install "${{ matrix.board.platform }}"; then
             echo "Failed to install board platform."
             exit 1
           fi
@@ -90,26 +87,27 @@ jobs:
       - name: Install libraries
         run: |
           echo "Installing required libraries..."
-          arduino-cli lib install --git-url https://github.com/ThingPulse/esp8266-oled-ssd1306.git
-          arduino-cli lib install --git-url https://github.com/arduino-libraries/MadgwickAHRS.git
-          arduino-cli lib install --git-url https://github.com/CreativeRobotics/Commander.git
-          arduino-cli lib install --git-url https://github.com/adafruit/SdFat.git
-          if [ $? -ne 0 ]; then
-            echo "Failed to install libraries."
-            exit 1
-          fi
+          for library_url in \
+            https://github.com/ThingPulse/esp8266-oled-ssd1306.git \
+            https://github.com/arduino-libraries/MadgwickAHRS.git \
+            https://github.com/CreativeRobotics/Commander.git \
+            https://github.com/adafruit/SdFat.git; do
+            if ! arduino-cli lib install --git-url "$library_url"; then
+              echo "Failed to install library: $library_url"
+              exit 1
+            fi
+          done
           echo "Libraries installed successfully."
 
       - name: Install adafruit-nrfutil
         if: matrix.board.platform == 'adafruit:nrf52'
         run: |
-          pip install adafruit-nrfutil
-          if [ $? -ne 0 ]; then
+          if ! pip install adafruit-nrfutil; then
             echo "Failed to install adafruit-nrfutil."
             exit 1
           fi
           echo "adafruit-nrfutil installed successfully."
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Find .ino files in examples directory
         id: find-examples
@@ -118,7 +116,7 @@ jobs:
           if [ -d "./examples" ]; then
             examples=$(find ./examples -name "*.ino" -print0 | tr '\0' ' ')
             echo "Found examples: $examples"
-            echo "examples=$examples" >> $GITHUB_OUTPUT
+            echo "examples=$examples" >> "$GITHUB_OUTPUT"
           else
             echo "The './examples' directory does not exist."
             exit 1
@@ -128,8 +126,7 @@ jobs:
         run: |
           for example in ${{ steps.find-examples.outputs.examples }}; do
             echo "Compiling example: $example"
-            arduino-cli compile --library . -b ${{ matrix.board.fqbn }} $example
-            if [ $? -ne 0 ]; then
+            if ! arduino-cli compile --library . -b "${{ matrix.board.fqbn }}" "$example"; then
               echo "Compilation failed for example: $example"
               exit 1
             fi

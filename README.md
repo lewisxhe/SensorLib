@@ -15,7 +15,7 @@
   <a href="https://www.ardu-badge.com/SensorLib"><img src="https://www.ardu-badge.com/badge/SensorLib.svg?" /></a>
   <a href="https://registry.platformio.org/libraries/lewisxhe/SensorLib"><img src="https://badges.registry.platformio.org/packages/lewisxhe/library/SensorLib.svg" /></a>
   <a href="https://components.espressif.com/components/lewisxhe/sensorlib">
-  <img src="https://img.shields.io/badge/ESP--IDF%20Registry-v0.5.1-success?logo=espressif&logoColor=white&color=009688&style=flat-square" alt="ESP-IDF Component Registry"></a>
+  <img src="https://img.shields.io/badge/ESP--IDF%20Registry-v0.5.2-success?logo=espressif&logoColor=white&color=009688&style=flat-square" alt="ESP-IDF Component Registry"></a>
   <a href="https://lewisxhe.github.io/SensorLib/"><img src="https://img.shields.io/badge/API-Doxygen-2C4AA8?logo=doxygen&logoColor=white" alt="Doxygen API documentation" /></a>
 </p>
 
@@ -112,7 +112,7 @@ platform = espressif32
 board = esp32dev
 framework = arduino
 lib_deps =
-  lewisxhe/SensorLib@^0.5.1
+  lewisxhe/SensorLib@^0.5.2
 ```
 
 <details>
@@ -138,7 +138,7 @@ SensorLib is published in the [ESP-IDF Component Registry](https://components.es
 ```yaml
 dependencies:
   lewisxhe/sensorlib:
-    version: "^0.5.1"
+    version: "^0.5.2"
 ```
 
 **2. Use in your code**:
